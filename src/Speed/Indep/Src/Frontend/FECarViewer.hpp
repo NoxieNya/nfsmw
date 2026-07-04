@@ -7,18 +7,25 @@
 
 #include "Speed/Indep/Src/World/CarInfo.hpp"
 
-typedef enum { SET_RIDE_INFO_REASON_VINYL = 0, SET_RIDE_INFO_REASON_LOAD_CAR = 1, SET_RIDE_INFO_REASON_CATCHALL = 2 } eSetRideInfoReasons;
+enum eSetRideInfoReasons {
+    SET_RIDE_INFO_REASON_VINYL = 0,
+    SET_RIDE_INFO_REASON_LOAD_CAR = 1,
+    SET_RIDE_INFO_REASON_CATCHALL = 2,
+};
 
-typedef enum { eCARVIEWER_PLAYER1_CAR = 0, eCARVIEWER_PLAYER2_CAR = 1 } eCarViewerWhichCar;
+enum eCarViewerWhichCar {
+    eCARVIEWER_PLAYER1_CAR = 0,
+    eCARVIEWER_PLAYER2_CAR = 1,
+};
 
-typedef enum {
+enum eCarViewerDramaticMode {
     CARVIEW_DRAMATIC_MODE_MAIN_MENU = 0,
     CARVIEW_DRAMATIC_MODE_UNDERGROUND_MAIN = 1,
     CARVIEW_DRAMATIC_MODE_UNDERGROUND_STATUS = 2,
     CARVIEW_DRAMATIC_MODE_ONLINE = 3,
     CARVIEW_DRAMATIC_MODE_OFF = 4,
-    NUMBER_OF_CARVIEW_DRAMATIC_MODES = 4
-} eCarViewerDramaticMode;
+    NUMBER_OF_CARVIEW_DRAMATIC_MODES = 4,
+};
 
 class CarViewer {
   private:

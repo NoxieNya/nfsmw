@@ -7,13 +7,24 @@
 #define SNDUPG_ENGINE_EXTREME (0x01) << 2 // :15
 
 // Decl: speed/indep/src/eaxsound/EAXAudioParams.hpp:17
-typedef enum { SNDGM_FREEROAM = 0, SNDGM_RACE = 1, SNDGM_FRONTEND = 2, SNDGM_SPLITSCREEN = 3 } eGAMEMODE;
+enum eGAMEMODE {
+    SNDGM_FREEROAM = 0,
+    SNDGM_RACE = 1,
+    SNDGM_FRONTEND = 2,
+    SNDGM_SPLITSCREEN = 3,
+};
 
 // Decl: speed/indep/src/eaxsound/EAXAudioParams.hpp:26
-typedef enum { AUDIO_MODE_MONO = 0, AUDIO_MODE_STEREO = 1, AUDIO_MODE_PROLOGIC = 2, AUDIO_MODE_MIN = 0, AUDIO_MODE_MAX = 2 } eSndAudioMode;
+enum eSndAudioMode {
+    AUDIO_MODE_MONO = 0,
+    AUDIO_MODE_STEREO = 1,
+    AUDIO_MODE_PROLOGIC = 2,
+    AUDIO_MODE_MIN = 0,
+    AUDIO_MODE_MAX = 2,
+};
 
 // Decl: speed/indep/src/eaxsound/EAXAudioParams.hpp:52
-typedef enum {
+enum eSndGameMode {
     SND_MODE_NONE = 0,
     SND_FRONTEND = 1,
     SND_DRAGRACE = 2,
@@ -25,6 +36,6 @@ typedef enum {
     SND_CARSHOW = 8,
     SND_LOADING_SCREEN = 9,
     SND_PURSUITBREAKER = 10
-} eSndGameMode;
+};
 
 #endif

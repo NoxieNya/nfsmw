@@ -29,14 +29,14 @@
 #define MsgTargetValue_Input -6                       // :40
 
 // Decl: speed/indep/src/feng/fengine.h:52
-typedef enum {
+enum FE_PACKAGE_PRIORITY {
     FE_PACKAGE_PRIORITY_FIFTH_CLOSEST = 100,
     FE_PACKAGE_PRIORITY_FOURTH_CLOSEST = 101,
     FE_PACKAGE_PRIORITY_THIRD_CLOSEST = 102,
     FE_PACKAGE_PRIORITY_SECOND_CLOSEST = 103,
     FE_PACKAGE_PRIORITY_CLOSEST = 104,
-    FE_PACKAGE_PRIORITY_ERROR = 105
-} FE_PACKAGE_PRIORITY;
+    FE_PACKAGE_PRIORITY_ERROR = 105,
+};
 
 // total size: 0x8
 // Decl: speed/indep/src/feng/fengine.h:68

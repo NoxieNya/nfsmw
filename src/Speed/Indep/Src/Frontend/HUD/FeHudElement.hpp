@@ -1,6 +1,9 @@
 #ifndef FEHUDELEMENT_H
 #define FEHUDELEMENT_H
 
+#include "Speed/Indep/Src/FEng/FEGroup.h"
+#include "Speed/Indep/Src/FEng/FEImage.h"
+#include "Speed/Indep/Src/FEng/FEMultiImage.h"
 #include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/Interfaces/SimEntities/IPlayer.h"
 #include "Speed/Indep/Src/World/Car.hpp"

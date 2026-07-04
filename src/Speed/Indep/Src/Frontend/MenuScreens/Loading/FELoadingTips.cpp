@@ -196,10 +196,12 @@ bool LoadingTips::TipTestFirstTimeOutOfSafeHouse(LoadingScreen::LoadingScreenTyp
     if (!career->HasDoneCareerIntro()) {
         return false;
     }
+#ifndef EA_BUILD_A124
     if (career->HasDoneMapLoadigTip()) {
         return false;
     }
     career->SetHasDoneMapLoadigTip();
+#endif
     return true;
 }
 

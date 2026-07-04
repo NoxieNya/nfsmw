@@ -186,8 +186,11 @@ bool DoesCategoryHaveNewUnlock(eUnlockableEntity ent) {
 }
 
 int QuickRaceUnlocker::IsUnlockableUnlocked(eUnlockFilters filter, eUnlockableEntity ent, int level, int player, bool backroom) {
-    return level <= TheUnlockData[ent].QuickRaceUnlockLevel || UnlockAllThings != 0 ||
-           FEDatabase->GetUserProfile(0)->GetCareer()->HasBeatenCareer() || FEDatabase->GetUserProfile(0)->CareerModeHasBeenCompletedAtLeastOnce;
+    return level <= TheUnlockData[ent].QuickRaceUnlockLevel || UnlockAllThings != 0
+#ifndef EA_BUILD_A124
+           || FEDatabase->GetUserProfile(0)->GetCareer()->HasBeatenCareer()
+#endif
+           || FEDatabase->GetUserProfile(0)->CareerModeHasBeenCompletedAtLeastOnce;
 }
 
 int QuickRaceUnlocker::IsCarPartUnlocked(eUnlockFilters filter, int carslot, CarPart *part, int player, bool backroom) {
@@ -330,7 +333,9 @@ bool QuickRaceUnlocker::IsCarUnlocked(eUnlockFilters filter, unsigned int car, i
     }
     if (handle < 0x3D8A6D2) {
         if (handle == 0x3A94520) {
+#ifndef EA_BUILD_A124
             return FEDatabase->GetCareerSettings()->HasBeatenCareer();
+#endif
         }
         if (handle != 0x3D3401A) {
             return false;
@@ -344,7 +349,9 @@ bool QuickRaceUnlocker::IsCarUnlocked(eUnlockFilters filter, unsigned int car, i
         if (handle != 0x2CF370F0) {
             return false;
         }
+#ifndef EA_BUILD_A124
         return FEDatabase->GetCareerSettings()->HasBeatenCareer();
+#endif
     }
     if (handle != 0x34498EB2) {
         return false;
@@ -395,8 +402,11 @@ bool OnlineUnlocker::IsBackroomAvailable(eUnlockFilters filter, eUnlockableEntit
 }
 
 bool CareerUnlocker::IsUnlockableUnlocked(eUnlockFilters filter, eUnlockableEntity ent, int level, bool backroom) {
-    bool answer = (level <= TheUnlockData[ent].CareerUnlockLevel) | UnlockAllThings | FEDatabase->GetUserProfile(0)->GetCareer()->HasBeatenCareer() |
-                  FEDatabase->GetUserProfile(0)->CareerModeHasBeenCompletedAtLeastOnce;
+    bool answer = (level <= TheUnlockData[ent].CareerUnlockLevel) | UnlockAllThings
+#ifndef EA_BUILD_A124
+                  | FEDatabase->GetUserProfile(0)->GetCareer()->HasBeatenCareer()
+#endif
+                  | FEDatabase->GetUserProfile(0)->CareerModeHasBeenCompletedAtLeastOnce;
 
     if (!backroom)
         return answer;

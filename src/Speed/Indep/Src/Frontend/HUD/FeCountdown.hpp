@@ -9,14 +9,14 @@
 
 // File: speed/indep/src/frontend/hud/FeCountdown.hpp
 // Decl: speed/indep/src/frontend/hud/FeCountdown.hpp:13
-typedef enum {
+enum eRaceCountdownNumber {
     RACE_COUNTDOWN_NUMBER_NONE = -1,
     RACE_COUNTDOWN_NUMBER_GO = 0,
     RACE_COUNTDOWN_NUMBER_1 = 1,
     RACE_COUNTDOWN_NUMBER_2 = 2,
     RACE_COUNTDOWN_NUMBER_3 = 3,
-    RACE_COUNTDOWN_NUMBER_4 = 4
-} eRaceCountdownNumber;
+    RACE_COUNTDOWN_NUMBER_4 = 4,
+};
 
 // total size: 0x48
 // Decl: speed/indep/src/frontend/hud/FeCountdown.hpp:25

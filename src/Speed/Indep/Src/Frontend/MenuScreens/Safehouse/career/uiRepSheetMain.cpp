@@ -256,10 +256,12 @@ void uiRepSheetMain::UpdateInfo() {
     }
 
     bBossBeaten = false;
+#ifndef EA_BUILD_A124
     if (FEDatabase->GetCareerSettings()->HasBeatenCareer() ||
         static_cast<int>(iCurrentViewBin) > static_cast<int>(FEDatabase->GetCareerSettings()->GetCurrentBin())) {
         bBossBeaten = true;
     }
+#endif
 
     FEngSetInvisible(GetPackageName(), 0x34d4433b);
 

@@ -2,6 +2,8 @@
 #define FEMINIMAPWRAPPER_H
 
 #include "Speed/Indep/Libs/Support/Utility/UTypes.h"
+#include "Speed/Indep/Src/Gameplay/GIcon.h"
+#include "Speed/Indep/Src/World/TrackInfo.hpp"
 #include "Speed/Indep/bWare/Inc/bMath.hpp"
 #include "Speed/Indep/Src/Frontend/HUD/FeHudElement.hpp"
 #include "Speed/Indep/Src/FEng/FEMultiImage.h"

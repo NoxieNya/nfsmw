@@ -9,7 +9,12 @@
 // Decl: speed/indep/src/frontend/hud/FeHudResourceManager.hpp:10
 class HudResourceManager {
   public:
-    typedef enum { HRM_NOT_LOADED = 0, HRM_LOADING_IN_PROGRESS = 1, HRM_LOADED = 2, HRM_UNLOADING_IN_PROGRESS = 3 } HudResourceLoadStates;
+    enum HudResourceLoadStates {
+        HRM_NOT_LOADED = 0,
+        HRM_LOADING_IN_PROGRESS = 1,
+        HRM_LOADED = 2,
+        HRM_UNLOADING_IN_PROGRESS = 3,
+    };
 
   private:
     HudResourceLoadStates mHudResourcesState; // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/hud/FeHudResourceManager.hpp:20

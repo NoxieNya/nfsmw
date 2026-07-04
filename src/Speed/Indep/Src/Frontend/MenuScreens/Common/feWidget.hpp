@@ -11,10 +11,22 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/Slider.hpp"
 
 // Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:30
-typedef enum { eSD_PREV = -1, eSD_NEXT = 1, eSD_PAGE_PREV = -10000, eSD_PAGE_NEXT = 10000, eSD_NONE = 10001 } eScrollDir;
+enum eScrollDir {
+    eSD_PREV = -1,
+    eSD_NEXT = 1,
+    eSD_PAGE_PREV = -10000,
+    eSD_PAGE_NEXT = 10000,
+    eSD_NONE = 10001,
+};
 
 // Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:41
-typedef enum { eSA_TOP = 0, eSA_MIDDLE = 1, eSA_BOTTOM = 2, eSA_LEFT = 0, eSA_RIGHT = 2 } eScrollerAlignment;
+enum eScrollerAlignment {
+    eSA_TOP = 0,
+    eSA_MIDDLE = 1,
+    eSA_BOTTOM = 2,
+    eSA_LEFT = 0,
+    eSA_RIGHT = 2,
+};
 
 // total size: 0x34
 // Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:66

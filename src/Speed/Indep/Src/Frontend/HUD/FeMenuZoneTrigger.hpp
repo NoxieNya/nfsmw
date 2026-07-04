@@ -11,12 +11,14 @@
 // Decl: speed/indep/src/frontend/hud/FeMenuZoneTrigger.hpp:14
 class MenuZoneTrigger : public HudElement, public IMenuZoneTrigger {
   public:
-    typedef enum {
-        ENGAGE_DPAD_ELEMENT_UP = 0,
-        ENGAGE_DPAD_ELEMENT_DOWN = 1,
-        ENGAGE_DPAD_ELEMENT_LEFT = 2,
-        ENGAGE_DPAD_ELEMENT_RIGHT = 3
-    } ENGAGE_DPAD_ELEMENT_DIRECTION;
+    enum ENGAGE_DPAD_ELEMENT_DIRECTION {
+        ENGAGE_DPAD_ELEMENT_NONE = 0,
+        ENGAGE_DPAD_ELEMENT_UP = 1,
+        ENGAGE_DPAD_ELEMENT_DOWN = 2,
+        ENGAGE_DPAD_ELEMENT_LEFT = 3,
+        ENGAGE_DPAD_ELEMENT_RIGHT = 4,
+        ENGAGE_DPAD_ELEMENT_NUM = 5,
+    };
 
     MenuZoneTrigger(UTL::COM::Object *pOuter, const char *pkg_name, int player_number);
     ~MenuZoneTrigger() override {} // Decl: speed/indep/src/frontend/hud/FeMenuZoneTrigger.hpp:36

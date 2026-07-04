@@ -3,7 +3,8 @@
 
 namespace BuildRegion {
 
-typedef enum {
+// Decl: speed/indep/src/misc/BuildRegion.hpp:45
+enum eBuildRegion {
     BUILD_REGION_AMERICA = 0,
     BUILD_REGION_EU = 1,
     BUILD_REGION_KOREA = 2,
@@ -19,8 +20,8 @@ typedef enum {
     BUILD_REGION_THAILAND = 12,
     BUILD_REGION_SOUTHAMERICA = 13,
     BUILD_REGION_ASIA = 10,
-    BUILD_REGION_EUROPE = 1
-} eBuildRegion;
+    BUILD_REGION_EUROPE = 1,
+};
 
 eBuildRegion GetBuildRegion();
 

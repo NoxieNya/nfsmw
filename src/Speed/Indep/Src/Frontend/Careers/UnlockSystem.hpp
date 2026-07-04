@@ -22,9 +22,17 @@ struct UnlockDatum {
 
 // File: speed/indep/src/database/datalogic/UnlockSystem.hpp
 // Decl: speed/indep/src/database/datalogic/UnlockSystem.hpp:35
-typedef enum { UNLOCK_QUICK_RACE = 1, UNLOCK_CAREER_MODE = 2, UNLOCK_ONLINE = 4, UNLOCK_BACKROOM = 10 } eUnlockFilters;
+enum eUnlockFilters {
+    UNLOCK_QUICK_RACE = 1,
+    UNLOCK_CAREER_MODE = 2,
+    UNLOCK_ONLINE = 4,
+    UNLOCK_BACKROOM = 10,
+};
 
-typedef enum { UNLOCK_IS_OLD = -1, UNLOCK_LEVEL_ANY = -2 } eUnlockNewStatus;
+enum eUnlockNewStatus {
+    UNLOCK_IS_OLD = -1,
+    UNLOCK_LEVEL_ANY = -2,
+};
 
 // total size: 0x1
 // Decl: speed/indep/src/database/datalogic/UnlockSystem.hpp:53
@@ -79,7 +87,7 @@ class OnlineUnlocker {
 
 class FEMarkerManager {
   public:
-    typedef enum {
+    enum ePossibleMarker {
         MARKER_NONE = 0,
         MARKER_BRAKES = 1,
         MARKER_ENGINE = 2,
@@ -105,10 +113,14 @@ class FEMarkerManager {
         MARKER_ADD_IMPOUND_BOX = 20,
         MARKER_IMPOUND_RELEASE = 21,
         MARKER_FIRST = 1,
-        MARKER_LAST = 21
-    } ePossibleMarker;
+        MARKER_LAST = 21,
+    };
 
-    typedef enum { MARKER_STATE_NOT_OWNED = 0, MARKER_STATE_OWNED = 1, MARKER_STATE_USED = 2 } eMarkerStates;
+    enum eMarkerStates {
+        MARKER_STATE_NOT_OWNED = 0,
+        MARKER_STATE_OWNED = 1,
+        MARKER_STATE_USED = 2,
+    };
 
     struct OwnedMarker {
         ePossibleMarker Marker; // offset 0x0

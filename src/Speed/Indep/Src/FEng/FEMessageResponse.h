@@ -40,7 +40,7 @@ class FEResponse {
     void SetParam(const char *pString);
 };
 
-typedef enum {
+enum FEMessageResponseCommands {
     MR_SetScript = 0,
     MR_PostMessageToFEng = 1,
     MR_PostMessageToGame = 2,
@@ -65,8 +65,8 @@ typedef enum {
     MR_IfScriptEquals = 768,
     MR_IfScriptNotEquals = 769,
     MR_Else = 1280,
-    MR_EndIf = 1281
-} FEMessageResponseCommands;
+    MR_EndIf = 1281,
+};
 
 // total size: 0x18
 // Decl: speed/indep/src/feng/FEMessageResponse.h:131

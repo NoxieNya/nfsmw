@@ -1,0 +1,48 @@
+
+#ifndef SNDPAUSE_H
+#define SNDPAUSE_H
+
+// Decl: speed/indep/src/eaxsound/soundpause.h:8
+enum eSNDPAUSE_REASON {
+    eSNDPAUSE_SMS_MESSAGE = 11,
+    eSNDPAUSE_PHOTOFINISH = 10,
+    eSNDPAUSE_NISON = 9,
+    eSNDPAUSE_QUITTOFE = 8,
+    eSNDPAUSE_STARTNEWGAME = 7,
+    eSNDPAUSE_MOVIE = 6,
+    eSNDPAUSE_ONLINE = 5,
+    eSNDPAUSE_MEMCARD = 4,
+    eSNDPAUSE_SIMSTATE_ACTIVE = 3,
+    eSNDPAUSE_SIMSTATE_INIT = 2,
+    eSNDPAUSE_SIMSTATE_IDLE = 1,
+    eSNDPAUSE_PAUSEMENU = 0,
+    ePAUSE_ERROR = -1,
+};
+
+// Decl: speed/indep/src/eaxsound/soundpause.h:29
+enum eSNDCTLSTATE {
+    MAX_SNDCTL_STATES = 18,
+    SNDSTATE_SYSTEM_HUD = 17,
+    SNDSTATE_ERROR = 16,
+    SNDSTATE_FADEOUT = 15,
+    SNDSTATE_MINILOAD = 14,
+    SNDSTATE_GAMESTARTRACE = 13,
+    SNDSTATE_STOP_MUSIC = 12,
+    SNDSTATE_FMV = 11,
+    SNDSTATE_NIS_ARREST = 10,
+    SNDSTATE_NIS_BLK = 9,
+    SNDSTATE_NIS_321 = 8,
+    SNDSTATE_NIS_INTRO = 7,
+    SNDSTATE_NIS_STORY = 6,
+    SNDSTATE_FE_SMS_MESSAGE = 5,
+    SNDSTATE_FE_UPSCREEN = 4,
+    SNDSTATE_FE = 3,
+    SNDSTATE_INGAME = 2,
+    SNDSTATE_PAUSE = 1,
+    SNDSTATE_OFF = 0,
+};
+
+#define TURNOFF(index) (1 << index)    // :57
+#define SEND_STATE(index) (1 << index) // :58
+
+#endif

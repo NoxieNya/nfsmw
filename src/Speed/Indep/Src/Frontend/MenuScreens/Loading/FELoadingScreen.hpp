@@ -18,7 +18,10 @@ class LoadingScreen : public MenuScreen {
 
     static void operator delete(void *ptr, char *msg) {} // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreen.hpp:22
 
-    typedef enum { LS_LOADING_FE = 0, LS_LOADING_GAME_FROM_FE = 1 } LoadingScreenTypes;
+    enum LoadingScreenTypes {
+        LS_LOADING_FE = 0,
+        LS_LOADING_GAME_FROM_FE = 1,
+    };
 
     LoadingScreen(ScreenConstructorData *sd);
     ~LoadingScreen() override;

@@ -10,7 +10,10 @@
 class FEPackage;
 
 // Decl: unknown, but probably here
-typedef enum { FR_UnnecessaryLoad = -0x80000000, FR_ShapeResource = 0x40000000 } FEResourceRequestFlags;
+enum FEResourceRequestFlags {
+    FR_UnnecessaryLoad = -0x80000000,
+    FR_ShapeResource = 0x40000000,
+};
 
 // File: speed/indep/src/feng/FEGameInterface.h
 // total size: 0x18
@@ -33,7 +36,11 @@ typedef struct {
 } FEObjectListEntry;
 
 // Decl: speed/indep/src/feng/FEGameInterface.h:56
-typedef enum { FEng_NonWarning = 0, FEng_SoftWarning = 1, FEng_HardWarning = 2 } FEng_WarningLevel;
+typedef enum FEng_WarningLevel {
+    FEng_NonWarning = 0,
+    FEng_SoftWarning = 1,
+    FEng_HardWarning = 2,
+} FEng_WarningLevel;
 
 // total size: 0x4
 // Decl: speed/indep/src/feng/FEGameInterface.h:66

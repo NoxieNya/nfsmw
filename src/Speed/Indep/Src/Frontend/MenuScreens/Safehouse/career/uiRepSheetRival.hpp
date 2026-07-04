@@ -10,12 +10,12 @@
 // total size: 0x8C
 class uiRepSheetRival : public MenuScreen {
   public:
-    typedef enum {
+    enum UIREPSHEETRIVAL {
         UIREPSHEETRIVAL_FE = 0,
         UIREPSHEETRIVAL_INGAME = 1,
         UIREPSHEETRIVAL_INGAME_MIDFLOW = 2,
-        UIREPSHEETRIVAL_INGAME_ONEOFF = 3
-    } UIREPSHEETRIVAL;
+        UIREPSHEETRIVAL_INGAME_ONEOFF = 3,
+    };
 
     uiRepSheetRival(ScreenConstructorData *sd);
     ~uiRepSheetRival() override;

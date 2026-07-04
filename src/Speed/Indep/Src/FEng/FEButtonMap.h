@@ -9,7 +9,12 @@
 class FEGameInterface;
 
 // Decl: speed/indep/src/feng/FEButtonMap.h:41
-typedef enum { Wrap_None = 0, Wrap_Horizontal = 1, Wrap_Vertical = 2, Wrap_Both = 3 } FEButtonWrapMode;
+typedef enum FEButtonWrapMode {
+    Wrap_None = 0,
+    Wrap_Horizontal = 1,
+    Wrap_Vertical = 2,
+    Wrap_Both = 3,
+} FEButtonWrapMode;
 
 // total size: 0x8
 // Decl: speed/indep/src/feng/FEButtonMap.h:53

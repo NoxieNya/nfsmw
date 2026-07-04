@@ -254,7 +254,11 @@ inline void eUnSwizzleWorldMatrix(const bMatrix4 &inMat, bMatrix4 &outMat) {
 eRenderTarget *eGetRenderTarget(int32 render_target);
 void eUpdateViewMode(void);
 
-typedef enum { EPOLY_APPLYASPECT = 1, EPOLY_APPLYZSORT = 2, EPOLY_MULTI_TEXT_MASK = 4 } epoly_flags;
+enum epoly_flags {
+    EPOLY_APPLYASPECT = 1,
+    EPOLY_APPLYZSORT = 2,
+    EPOLY_MULTI_TEXT_MASK = 4,
+};
 
 class ePoly {
     // total size: 0x94

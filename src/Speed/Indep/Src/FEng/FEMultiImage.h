@@ -4,9 +4,18 @@
 #include "FEImage.h"
 #include "Speed/Indep/Src/FEng/FEObject.h"
 
-typedef enum { FEMI_MASK = 1, FEMI_TILE_U = 2, FEMI_TILE_V = 4 } eFEMultiImageUsage;
+enum eFEMultiImageUsage {
+    FEMI_MASK = 1,
+    FEMI_TILE_U = 2,
+    FEMI_TILE_V = 4,
+};
 
-typedef enum { FEMI_TEXTURE_1 = 0, FEMI_TEXTURE_2 = 1, FEMI_TEXTURE_3 = 2, FEMI_NUM_TEXTURES = 3 } eFEMultiImageTexNum;
+enum eFEMultiImageTexNum {
+    FEMI_TEXTURE_1 = 0,
+    FEMI_TEXTURE_2 = 1,
+    FEMI_TEXTURE_3 = 2,
+    FEMI_NUM_TEXTURES = 3,
+};
 
 // File: speed/indep/src/feng/FEMultiImage.h
 // total size: 0x90

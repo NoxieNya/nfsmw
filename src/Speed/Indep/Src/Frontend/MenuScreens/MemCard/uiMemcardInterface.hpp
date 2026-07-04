@@ -5,7 +5,7 @@
 
 typedef void MemCardOpType(void *);
 
-typedef enum {
+enum MemcardFlowOperator {
     MCF_Modal = 1,
     MCF_Switch = 2,
     MCF_ModalSwitch = 3,
@@ -24,6 +24,7 @@ typedef enum {
     MCO_Unused3 = 192,
     MCO_AutoSaveOverwrite = 208,
     MCO_ShowTRCMessage = 224,
+    MCO_AutoLoad = 240,
     MCE_SendTermMessage = 256,
     MCE_PromptForSave = 512,
     MCE_SendCustomizedMessage = 1024,
@@ -52,12 +53,17 @@ typedef enum {
     MCP_ConfirmAutoSaveEnableFailed = 184549376,
     MCP_EnableAutoSave = 201326592,
     MCP_CorruptProfile = 218103808,
-    MCP_CardRemoved = 234881024
-} MemcardFlowOperator;
+    MCP_CardRemoved = 234881024,
+    MCP_ConfirmSignIn = 251658240,
+};
 
-typedef enum { MCFF_OK = 0, MCFF_DeleteOnly = 1, MCFF_Corrupted = 2 } MemCardFileFlag;
+enum MemCardFileFlag {
+    MCFF_OK = 0,
+    MCFF_DeleteOnly = 1,
+    MCFF_Corrupted = 2,
+};
 
-typedef enum {
+enum MCSaveFlow {
     MCSF_PromptForDestoryCreate = 1,
     MCSF_PromptForCreate = 2,
     MCSF_PromptForKeyboard = 3,
@@ -70,8 +76,8 @@ typedef enum {
     MCSF_AutoSaveWarning = 10,
     MCSF_AutoSaveWarning2 = 11,
     MCSF_DisableAutoSave = 12,
-    MCSF_CheckCard = 13
-} MCSaveFlow;
+    MCSF_CheckCard = 13,
+};
 
 struct MemoryCardSetup {
     uint32 mOp;

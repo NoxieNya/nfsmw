@@ -8,7 +8,11 @@
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/pvehicle.h"
 #include "Speed/Indep/Src/Physics/PhysicsUpgrades.hpp"
 
-typedef enum { PRT_TOP_SPEED = 0, PRT_HANDLING = 1, PRT_ACCELERATION = 2 } ePerformanceRatingType;
+enum ePerformanceRatingType {
+    PRT_TOP_SPEED = 0,
+    PRT_HANDLING = 1,
+    PRT_ACCELERATION = 2,
+};
 
 // File: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp
 // total size: 0x1C4

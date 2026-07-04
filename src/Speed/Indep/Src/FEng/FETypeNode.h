@@ -8,7 +8,7 @@
 // total size: 0x28
 class FEFieldNode;
 
-typedef enum {
+enum FEParamType {
     PT_Bool = 0,
     PT_Int = 1,
     PT_Float = 2,
@@ -16,12 +16,24 @@ typedef enum {
     PT_Vector3 = 4,
     PT_Quaternion = 5,
     PT_Color = 6,
-    PT_ParamTypeCount = 7
-} FEParamType;
+    PT_ParamTypeCount = 7,
+};
 
-typedef enum { IT_None = 0, IT_Linear = 1, IT_Spline = 2, IT_MoveToLinear = 3, IT_MoveToSpline = 4, IT_InterpTypeCount = 5 } FEInterpMethod;
+enum FEInterpMethod {
+    IT_None = 0,
+    IT_Linear = 1,
+    IT_Spline = 2,
+    IT_MoveToLinear = 3,
+    IT_MoveToSpline = 4,
+    IT_InterpTypeCount = 5,
+};
 
-typedef enum { AT_Once = 0, AT_Loop = 1, AT_PingPong = 2, AT_ActionTypeCount = 3 } FEPlayActions;
+enum FEPlayActions {
+    AT_Once = 0,
+    AT_Loop = 1,
+    AT_PingPong = 2,
+    AT_ActionTypeCount = 3,
+};
 
 // File: speed/indep/src/feng/FETypeNode.h
 // total size: 0x24

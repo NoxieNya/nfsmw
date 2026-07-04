@@ -5,14 +5,14 @@
 
 // File: speed/indep/src/frontend/FeManager.hpp
 // Decl: speed/indep/src/frontend/FeManager.hpp:25
-typedef enum {
+enum eGarageType {
     GARAGETYPE_NONE = 0,
     GARAGETYPE_MAIN_FE = 1,
     GARAGETYPE_CAREER_SAFEHOUSE = 2,
     GARAGETYPE_CUSTOMIZATION_SHOP = 3,
     GARAGETYPE_CUSTOMIZATION_SHOP_BACKROOM = 4,
-    GARAGETYPE_CAR_LOT = 5
-} eGarageType;
+    GARAGETYPE_CAR_LOT = 5,
+};
 
 // total size: 0x4C
 // Decl: speed/indep/src/frontend/FeManager.hpp:61

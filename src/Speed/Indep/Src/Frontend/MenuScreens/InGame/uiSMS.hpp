@@ -42,7 +42,11 @@ class SMSSlot : public ArraySlot {
     FEString *text; // offset 0x18, size 0x4
 };
 
-typedef enum { SMS_VOICE = 0, SMS_TEXT = 1, SMS_NUMTYPES = 2 } SMS_TYPE;
+enum SMS_TYPE {
+    SMS_VOICE = 0,
+    SMS_TEXT = 1,
+    SMS_NUMTYPES = 2,
+};
 
 // total size: 0x100
 class uiSMS : public ArrayScrollerMenu {

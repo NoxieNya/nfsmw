@@ -7,17 +7,17 @@
 #define CC_MAKE_HIWORD(_a) (_a << 16) // :63
 #define CC_GET_HIWORD(_a) (_a >> 16)  // :64
 
-typedef enum {
-    FEMSG_ADD_TO_CART = -0x6e20207c,
-    FEMSG_ICON_START = 0x5e6ea975,
-    FEMSG_EXIT_PURCHASE = 0x1720b124,
-    FEMSG_EXIT_NO_PURCHASE = 0x7a318ee0,
-    FEMSG_FROM_CART = -0x306e5533,
-    FEMSG_BACK_OUT = 0x5a928018,
-    FEMSG_MAX_OUT_PERFORMANCE = 0x6820e23e
-} eCustomizeScreenMessages;
+enum eCustomizeScreenMessages {
+    FEMSG_ADD_TO_CART = -1847599228,
+    FEMSG_ICON_START = 1584310645,
+    FEMSG_EXIT_PURCHASE = 388018468,
+    FEMSG_EXIT_NO_PURCHASE = 2050068192,
+    FEMSG_FROM_CART = -812537139,
+    FEMSG_BACK_OUT = 1519550488,
+    FEMSG_MAX_OUT_PERFORMANCE = 1746985534,
+};
 
-typedef enum {
+enum eCustomizeCategory {
     CC_TO_CAT_MASK = 65535,
     CC_FROM_CAT_MASK = -65536,
     CC_SCREEN_ID_MAIN = 2048,
@@ -83,10 +83,10 @@ typedef enum {
     CC_DECAL_SLOT_3 = 1539,
     CC_DECAL_SLOT_4 = 1540,
     CC_DECAL_SLOT_5 = 1541,
-    CC_DECAL_SLOT_6 = 1542
-} eCustomizeCategory;
+    CC_DECAL_SLOT_6 = 1542,
+};
 
-typedef enum {
+enum ePerformancePkgLevels {
     PPL_STOCK = 0,
     PPL_LEVEL_1 = 1,
     PPL_LEVEL_2 = 2,
@@ -94,26 +94,33 @@ typedef enum {
     PPL_LEVEL_4 = 4,
     PPL_LEVEL_5 = 5,
     PPL_LEVEL_6 = 6,
-    PPL_LEVEL_JUNKMAN = 7
-} ePerformancePkgLevels;
+    PPL_LEVEL_JUNKMAN = 7,
+};
 
 // File: speed/indep/src/frontend/menuscreens/customize/FECustomize.hpp
 // Decl: speed/indep/src/frontend/menuscreens/customize/FECustomize.hpp:82
-typedef enum { CEP_GAMEPLAY = 0, CEP_MAIN_MENU = 1, CEP_ONLINE_MENU = 2 } eCustomizeEntryPoint;
+enum eCustomizeEntryPoint {
+    CEP_GAMEPLAY = 0,
+    CEP_MAIN_MENU = 1,
+    CEP_ONLINE_MENU = 2,
+};
 
-typedef enum {
+enum eCustomizePartState {
     CPS_AVAILABLE = 1,
     CPS_LOCKED = 2,
     CPS_NEW = 3,
     CPS_INSTALLED = 16,
     CPS_IN_CART = 32,
     CPS_GAME_STATE_MASK = 15,
-    CPS_PLAYER_STATE_MASK = 240
-} eCustomizePartState;
+    CPS_PLAYER_STATE_MASK = 240,
+};
 
 // Decl: speed/indep/src/frontend/menuscreens/customize/FECustomize.hpp:106
-
-typedef enum { CCT_PART_PRICES = 0, CCT_TRADE_IN = 1, CCT_TOTAL = 2 } eCustomizeCartTotals;
+enum eCustomizeCartTotals {
+    CCT_PART_PRICES = 0,
+    CCT_TRADE_IN = 1,
+    CCT_TOTAL = 2,
+};
 
 // total size: 0x2C
 class SelectablePart : public bTNode<SelectablePart> {

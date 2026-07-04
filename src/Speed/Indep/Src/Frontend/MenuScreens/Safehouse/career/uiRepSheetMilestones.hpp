@@ -8,7 +8,10 @@
 #include "Speed/Indep/Src/Gameplay/GMilestone.h"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/quickrace/uiTrackMapStreamer.hpp"
 
-typedef enum { eTYPE_MILESTONE = 0, eTYPE_SPEEDTRAP = 1 } MILESTONE_TYPES;
+enum MILESTONE_TYPES {
+    eTYPE_MILESTONE = 0,
+    eTYPE_SPEEDTRAP = 1,
+};
 
 // total size: 0x28
 class MilestoneDatum : public ArrayDatum {

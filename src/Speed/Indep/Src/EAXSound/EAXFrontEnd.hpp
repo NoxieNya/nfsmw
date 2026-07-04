@@ -172,8 +172,10 @@ struct FEDriveOn { // 0x14
     void CommitMemberData();
 };
 
-typedef enum { FXSHIFTING01TYPETYPE_SHIFT = 0, FXSHIFTING01TYPETYPE_ATTACK_ = 1 } FXSHIFTING01TypeType;
-
+enum FXSHIFTING01TypeType {
+    FXSHIFTING01TYPETYPE_SHIFT = 0,
+    FXSHIFTING01TYPETYPE_ATTACK_ = 1,
+};
 struct FX_NITROUSStruct { // 0x24
     /* 0x00 */ int nIT_ID;
     /* 0x04 */ int nIT_volume;
@@ -734,9 +736,19 @@ struct FX_Scrape { // 0x28
     void CommitMemberData();
 };
 
-typedef enum { DRIVE_ON_NONE = -1, DRIVE_ON_IDLEING = 0, DRIVE_ON_ENTERING = 1, DRIVE_ON_LEAVING = 2, NUM_DRIVE_ON_STATES = 3 } DRIVE_ON_STATE;
+enum DRIVE_ON_STATE {
+    DRIVE_ON_NONE = -1,
+    DRIVE_ON_IDLEING = 0,
+    DRIVE_ON_ENTERING = 1,
+    DRIVE_ON_LEAVING = 2,
+    NUM_DRIVE_ON_STATES = 3,
+};
 
-typedef enum { CAR_1 = 0, CAR_2 = 1, NUM_CAR_INDEXS = 2 } DRIVE_ON_CAR_INDEX;
+enum DRIVE_ON_CAR_INDEX {
+    CAR_1 = 0,
+    CAR_2 = 1,
+    NUM_CAR_INDEXS = 2,
+};
 
 // total size: 0x110
 class EAXFrontEnd {

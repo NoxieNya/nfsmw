@@ -4,7 +4,7 @@
 #define EAXFECOMMONPLAYSTRUCTS //: 32
 
 // Decl: speed/indep/src/Frontend/../EAXSound/AemsDef.hpp:33
-typedef enum {
+enum eMenuSoundTriggers {
     UISND_NONE = -1,
     UISND_COMMON_UP = 0,
     UISND_COMMON_DOWN = 1,
@@ -111,9 +111,30 @@ typedef enum {
     UISND_RIV_BIO_CLOUD_ON = 158,
     UISND_RIV_BIO_LOGO_FLY_IN = 159,
     UISND_FRONTEND_MAX_NUM = 160
-} eMenuSoundTriggers;
+};
 
 typedef eMenuSoundTriggers reflection_typedef_eMenuSoundTriggers;
+
+// File: speed/indep/src/eaxsound/AemsDef.hpp
+// total size: 0x14
+// Decl: speed/indep/src/eaxsound/AemsDef.hpp:279
+typedef struct PlayCommonSampleSt {
+    int nHack;        // offset 0x0, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:280
+    int id;           // offset 0x4, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:282
+    int volume;       // offset 0x8, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:284
+    int pitch;        // offset 0xC, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:286
+    int azimuth;      // offset 0x10, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:288
+} PlayCommonSampleSt; // Decl: speed/indep/src/eaxsound/AemsDef.hpp:289
+
+// total size: 0x14
+// Decl: speed/indep/src/eaxsound/AemsDef.hpp:292
+typedef struct PlayFrontEndSampleSt {
+    int nHack;          // offset 0x0, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:293
+    int id;             // offset 0x4, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:295
+    int volume;         // offset 0x8, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:297
+    int pitch;          // offset 0xC, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:299
+    int azimuth;        // offset 0x10, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:301
+} PlayFrontEndSampleSt; // Decl: speed/indep/src/eaxsound/AemsDef.hpp:302
 
 #define AEMS_EVENT_NONE -1              // :305
 #define AEMS_EVENT_PLAYCOMMONSAMPLE 0   // :306

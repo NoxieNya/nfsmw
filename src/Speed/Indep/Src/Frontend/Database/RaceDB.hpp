@@ -13,6 +13,18 @@
 class RacingCar;
 class Race;
 
+enum ePostRaceOptions {
+    POST_RACE_OPT_NEXT_RACE = 0,
+    POST_RACE_OPT_QUIT = 1,
+    POST_RACE_OPT_RESTART_RACE = 2,
+    POST_RACE_OPT_RESTART_EVENT = 3,
+};
+
+enum eExitRacePlaces {
+    EXIT_RACE_FROM_PAUSE = 0,
+    EXIT_RACE_FROM_POSTRACE = 1,
+};
+
 // File: speed/indep/src/database/RaceDB.hpp
 // total size: 0x24
 // Decl: speed/indep/src/database/RaceDB.hpp:61
@@ -134,7 +146,7 @@ class cFinishedRaceStats {
     }
 };
 
-typedef enum {
+enum ePursuitDetailTypes {
     PD_PURUSIT_LENGTH = 0,
     PD_COPS_INVOLVED = 1,
     PD_COPS_DAMAGED = 2,
@@ -148,9 +160,14 @@ typedef enum {
     PD_BOUNTY = 9,
     PD_NUM_SINGLE_PURSUIT_TO_STORE = 10,
     PD_NUM_PD_TYPES = 10
-} ePursuitDetailTypes;
+};
 
-typedef enum { HS_RACE_TYPE_UNKNOWN = -1, HS_RACE_TYPE_SPRINT = 0, HS_RACE_TYPE_CIRCUIT = 1, NUM_HS_RACE_TYPES = 2 } eHighScoresRaceTypes;
+enum eHighScoresRaceTypes {
+    HS_RACE_TYPE_UNKNOWN = -1,
+    HS_RACE_TYPE_SPRINT = 0,
+    HS_RACE_TYPE_CIRCUIT = 1,
+    NUM_HS_RACE_TYPES = 2,
+};
 
 // total size: 0x8
 struct RaceTypeHighScores {
@@ -193,7 +210,7 @@ struct PursuitScore {
     int32 Value;     // offset 0x4, size 0x4
 };
 
-typedef enum {
+enum RAP_CTS_ITEM {
     RAP_CTS_HELI_SPAWN = 0,
     RAP_CTS_SUPPORT_VEHICLE_DEPLOYED = 1,
     RAP_CTS_COP_CAR_DEPLOYED = 2,
@@ -203,8 +220,8 @@ typedef enum {
     RAP_CTS_SPIKE_STRIP_DEPLOYED = 6,
     RAP_CTS_HELI_SPIKE_STRIP_DEPLOYED = 7,
     RAP_CTS_TRAFFIC_CAR_HIT = 8,
-    RAP_CTS_PROPERTY_DAMAGE = 9
-} RAP_CTS_ITEM;
+    RAP_CTS_PROPERTY_DAMAGE = 9,
+};
 
 // total size: 0x20
 struct CostToStateScores {

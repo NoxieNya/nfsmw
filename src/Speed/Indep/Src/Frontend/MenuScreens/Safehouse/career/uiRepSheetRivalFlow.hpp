@@ -6,7 +6,7 @@
 // total size: 0x8
 class uiRepSheetRivalFlow {
   public:
-    typedef enum {
+    enum Stage {
         CHALLENGE_SCREEN = 0,
         MARKER_SELECTION = 1,
         REGION_UNLOCK = 2,
@@ -14,8 +14,8 @@ class uiRepSheetRivalFlow {
         BIO_NEW_RIVAL = 4,
         BIO_MOVIE = 5,
         BACK_TO_FREE_ROAM = 6,
-        IN_GAME_BLACKLIST = 7
-    } Stage;
+        IN_GAME_BLACKLIST = 7,
+    };
 
     uiRepSheetRivalFlow();
     virtual ~uiRepSheetRivalFlow() {}

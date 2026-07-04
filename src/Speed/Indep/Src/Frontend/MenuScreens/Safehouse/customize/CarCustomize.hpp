@@ -14,15 +14,15 @@
 
 #include <types.h>
 
-typedef enum {
+enum eCustomizeMeterConstants {
     CM_STAGE_1 = 0,
     CM_STAGE_2 = 1,
     CM_STAGE_3 = 2,
     CM_STAGE_4 = 3,
     CM_STAGE_5 = 4,
     NUM_SLIDER_STAGES = 5,
-    NUM_STAGE_SEGMENTS = 10
-} eCustomizeMeterConstants;
+    NUM_STAGE_SEGMENTS = 10,
+};
 
 // total size: 0x50
 class CustomizeMeter {
@@ -378,7 +378,7 @@ class CustomizationScreen : public IconScrollerMenu {
     Timer ScrollTime;                        // offset 0x1E0, size 0x4
 };
 
-typedef enum {
+enum eCustomizeHUDTextures {
     CHT_TACH_FILL = 0,
     CHT_TACH_LINES = 1,
     CHT_TURBO_LINES = 2,
@@ -387,8 +387,8 @@ typedef enum {
     CHT_NUM_TEXTURES = 5,
     CHT_DEFAULT_FILL_COLOR = -15501,
     CHT_DEFAULT_NEEDLE_COLOR = -20928,
-    CHT_DEFAULT_LINE_COLOR = -1
-} eCustomizeHUDTextures;
+    CHT_DEFAULT_LINE_COLOR = -1,
+};
 
 // total size: 0x1F4
 class CustomizeParts : public CustomizationScreen {
@@ -423,14 +423,14 @@ class CustomizeParts : public CustomizationScreen {
     bool bTexturesNeedUnload; // offset 0x1F0, size 0x1
 };
 
-typedef enum {
+enum eCustomizeSpoilerFilter {
     CSF_NO_FILTER = -1,
     CSF_SPORT = 0,
     CSF_TUNER = 1,
     CSF_SPORT_CARBON = 2,
     CSF_TUNER_CARBON = 3,
-    CSF_NUM_FILTERS = 4
-} eCustomizeSpoilerFilter;
+    CSF_NUM_FILTERS = 4,
+};
 
 // total size: 0x1F8
 class CustomizeSpoiler : public CustomizationScreen {
@@ -527,7 +527,7 @@ class CustomizeRims : public CustomizationScreen {
     int MaxRadius;   // offset 0x1EC, size 0x4
 };
 
-typedef enum {
+enum eCustomizePaintConstants {
     CP_NUM_PAINT_SWATCHES = 80,
     CP_RIM_PAINT_FILTER = 0,
     CP_BASE_PAINT_FILTER_GLOSS = 0,
@@ -539,8 +539,8 @@ typedef enum {
     CP_VINYL_PAINT_LAYER_1 = 0,
     CP_VINYL_PAINT_LAYER_2 = 1,
     CP_VINYL_PAINT_LAYER_3 = 2,
-    CP_VINYL_NUM_COLORS = 3
-} eCustomizePaintConstants;
+    CP_VINYL_NUM_COLORS = 3,
+};
 
 // total size: 0x2C
 class CustomizePaintDatum : public ArrayDatum {

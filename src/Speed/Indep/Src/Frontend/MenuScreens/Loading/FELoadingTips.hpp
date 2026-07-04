@@ -7,7 +7,7 @@
 
 // File: speed/indep/src/frontend/menuscreens/loading/FELoadingScreenSelector.hpp
 // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreenSelector.hpp:15
-typedef enum {
+enum eGameTips {
     GAME_TIP_LAST_CAR_AND_2_STRIKES = 0,
     GAME_TIP_INTRO_TIP = 1,
     GAME_TIP_MAP_INTRO_TIP = 2,
@@ -39,11 +39,11 @@ typedef enum {
     GAME_TIP_USE_CONTROLLER_CONFIG = 27,
     GAME_TIP_NONE = 28,
     NUM_GAME_TIPS = 29,
-} eGameTips;
+};
 
 // total size: 0x10
 // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreenSelector.hpp:143
-typedef enum {
+enum eGameTipBins {
     GT_BIN_NONE = 0,
     GT_BIN_1 = 2,
     GT_BIN_2 = 4,
@@ -63,9 +63,9 @@ typedef enum {
     GT_BIN_16 = 65536,
     GT_BIN_UNIQUE = 131072,
     GT_BIN_ALL = -1,
-} eGameTipBins;
+};
 
-typedef enum {
+enum eGameTipType {
     GT_TYPE_NONE = 0,
     GT_TYPE_GENERAL = 1,
     GT_TYPE_BLACKLIST = 2,
@@ -73,9 +73,9 @@ typedef enum {
     GT_TYPE_QUICK_RACE = 8,
     GT_TYPE_FREE_ROAM = 16,
     GT_TYPE_ALL = 65535,
-} eGameTipType;
+};
 
-typedef enum {
+enum eGameTipFlags {
     GTF_NONE = 0,
     GFT_RACETYPE_CIRCUIT = 1,
     GFT_RACETYPE_DRAG = 2,
@@ -87,7 +87,7 @@ typedef enum {
     GTF_TRANSITION_TO_FE = 256,
     GTF_TRANSITION_TO_INGAME = 512,
     GFT_WAIT_FOR_BUTTON_PRESS = 1024,
-} eGameTipFlags;
+};
 
 struct GameTipInfo {
     char *Name;            // offset 0x0

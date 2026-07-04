@@ -15,18 +15,25 @@ enum eDialogTitle {
     dialog_countdown = 5,
 };
 
-typedef enum {
+enum eUsefulDialogMessages {
     dialog_message_ok = 886840300,
     dialog_message_yes = -799030365,
     dialog_message_no = 886840271,
     dialog_message_cancel = 531323288,
     dialog_message_cancelled = -1259476115,
-    DIALOG_MESSAGE_NOTHING = -1
-} eUsefulDialogMessages;
+    DIALOG_MESSAGE_NOTHING = -1,
+};
 
-typedef enum { text_hash_ok = 1098589697, text_hash_cancel = 438914477 } eUsefulDialogTextHashes;
+enum eUsefulDialogTextHashes {
+    text_hash_ok = 1098589697,
+    text_hash_cancel = 438914477,
+};
 
-typedef enum { first_dialog_button1 = 0, first_dialog_button2 = 1, first_dialog_button3 = 2 } eDialogFirstButtons;
+enum eDialogFirstButtons {
+    first_dialog_button1 = 0,
+    first_dialog_button2 = 1,
+    first_dialog_button3 = 2,
+};
 
 typedef int dialog_handle;
 

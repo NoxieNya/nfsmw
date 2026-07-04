@@ -57,9 +57,14 @@ class MemoryCard {
     friend class MemcardCallbacks;
 
   public:
-    typedef enum { ST_PROFILE = 0, ST_THUMBNAIL = 1, ST_IMAGE = 2, ST_MAX = 3 } SaveType;
+    enum SaveType {
+        ST_PROFILE = 0,
+        ST_THUMBNAIL = 1,
+        ST_IMAGE = 2,
+        ST_MAX = 3,
+    };
 
-    typedef enum {
+    enum _MemOp {
         MO_NONE = 0,
         MO_BootUp = 1,
         MO_CheckCard = 2,
@@ -70,8 +75,8 @@ class MemoryCard {
         MO_List = 7,
         MO_FakeLoad = 8,
         MO_LoadYNCF = 9,
-        MO_SetMonitor = 10
-    } _MemOp;
+        MO_SetMonitor = 10,
+    };
 
     // Inline functions
     static inline MemoryCard *GetInstance() {

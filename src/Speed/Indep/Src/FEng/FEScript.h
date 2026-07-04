@@ -8,7 +8,7 @@
 
 // File: speed/indep/src/feng/FEScript.h
 // Decl: speed/indep/src/feng/FEScript.h:30
-typedef enum {
+enum FEKeyTrack_Indices {
     FETrack_Color = 0,
     FETrack_Pivot = 1,
     FETrack_Position = 2,
@@ -22,7 +22,7 @@ typedef enum {
     FETrack_Color3 = 9,
     FETrack_Color4 = 10,
     Num_BaseFETracks = 11
-} FEKeyTrack_Indices;
+};
 
 static const u32 FEHash_Init = 0x1744b3; // size: 0x4, Decl: speed/indep/src/feng/FEScript.h:50
 

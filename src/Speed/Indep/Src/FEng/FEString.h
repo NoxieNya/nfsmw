@@ -8,14 +8,14 @@
 
 class FEString;
 
-typedef enum {
+enum FEStringFormatting {
     _FESTRING_JUSTIFY_HCENTER = 0,
     _FESTRING_JUSTIFY_HRIGHT = 1,
     _FESTRING_JUSTIFY_VCENTER = 2,
     _FESTRING_JUSTIFY_VBOTTOM = 3,
     _FESTRING_FORMAT_WORDWRAP = 4,
-    FESTRING_JUSTIFY_FORCEU32 = -1
-} FEStringFormatting;
+    FESTRING_JUSTIFY_FORCEU32 = -1,
+};
 
 static const u32 FESTRING_JUSTIFY_HCENTER = 1 << _FESTRING_JUSTIFY_HCENTER;                    // size: 0x4, Decl: speed/indep/src/feng/FEString.h:36
 static const u32 FESTRING_JUSTIFY_HRIGHT = 1 << _FESTRING_JUSTIFY_HRIGHT;                      // size: 0x4, Decl: speed/indep/src/feng/FEString.h:37

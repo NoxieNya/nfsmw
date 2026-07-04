@@ -136,7 +136,12 @@ class RCMP_SYSTEM {
 
 static RCMP_SYSTEM rcmp_sys;
 
-typedef enum { FRAME_MPC = 0, FRAME_MAD = 1, FRAME_PS2_SONY = 2 } FRAME_TYPE_ENUM;
+enum FRAME_TYPE_ENUM {
+    FRAME_MPC = 0,
+    FRAME_MAD = 1,
+    FRAME_PS2_SONY = 2,
+    FRAME_VP6 = 3,
+};
 
 // total size: 0x8
 struct FRAME {
@@ -241,7 +246,11 @@ struct STREAMER {
 typedef void (*GETDATACALLBACK)(/* parameters unknown */);
 typedef void (*RELEASEDATACALLBACK)(/* parameters unknown */);
 
-typedef enum { NOT_USEABLE = 0, USABILITY_UNSURE = 1, USEABLE = 2 } DETECTED_USABILITY_ENUM;
+enum DETECTED_USABILITY_ENUM {
+    NOT_USEABLE = 0,
+    USABILITY_UNSURE = 1,
+    USEABLE = 2,
+};
 
 // total size: 0x10
 struct CODEC_IDATA {

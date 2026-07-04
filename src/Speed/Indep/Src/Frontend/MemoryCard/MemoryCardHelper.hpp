@@ -11,20 +11,20 @@
 
 struct IAllocator;
 
-typedef enum {
-    IDLE_PRIORITY = -3,
-    LOW_PRIORITY = -2,
-    BELOW_PRIORITY = -1,
-    NORM_PRIORITY = 0,
-    ABOVE_PRIORITY = 1,
-    HIGH_PRIORITY = 2,
-    CRIT_PRIORITY = 3
-} Priority;
-
 typedef int (*ThreadEntryFunc)(void *);
 
 class IThread {
   public:
+    enum Priority {
+        IDLE_PRIORITY = -3,
+        LOW_PRIORITY = -2,
+        BELOW_PRIORITY = -1,
+        NORM_PRIORITY = 0,
+        ABOVE_PRIORITY = 1,
+        HIGH_PRIORITY = 2,
+        CRIT_PRIORITY = 3,
+    };
+
     virtual ~IThread() {}
     virtual int AddRef() = 0;
     virtual int Release() = 0;
@@ -223,7 +223,7 @@ struct IGameInterface {
 
 // File: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp
 // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:22
-typedef enum {
+enum MemoryCardJoyLoggableEvents {
     MJ_None = 0,
     MJ_ShowMesssage = 1,
     MJ_ClearMessage = 2,
@@ -241,8 +241,11 @@ typedef enum {
     MJ_CardChecked = 14,
     MJ_CardRemoved = 15,
     MJ_SetAutosaveDone = 16,
-    MJ_LoadReady = 17
-} MemoryCardJoyLoggableEvents;
+    MJ_LoadReady = 17,
+#ifndef EA_BUILD_A124
+    MJ_SetMonitorDone = 18,
+#endif
+};
 
 // total size: 0x1
 // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:47

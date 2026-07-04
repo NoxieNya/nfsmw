@@ -4,7 +4,6 @@
 #include <types.h>
 
 #include "RaceDB.hpp"
-#include "Speed/Indep/Src/Frontend/MenuScreens/InGame/uiWorldMap.hpp"
 #include "Speed/Indep/Src/Gameplay/GInfractionManager.h"
 #include "Speed/Indep/Src/Gameplay/GRace.h"
 #include "VehicleDB.hpp"
@@ -16,15 +15,6 @@
 #endif
 
 class GRaceCustom;
-
-typedef enum {
-    POST_RACE_OPT_NEXT_RACE = 0,
-    POST_RACE_OPT_QUIT = 1,
-    POST_RACE_OPT_RESTART_RACE = 2,
-    POST_RACE_OPT_RESTART_EVENT = 3
-} ePostRaceOptions;
-
-typedef enum { EXIT_RACE_FROM_PAUSE = 0, EXIT_RACE_FROM_POSTRACE = 1 } eExitRacePlaces;
 
 enum eFEGameModes {
     eFE_GAME_MODE_NONE = 0,
@@ -82,29 +72,53 @@ enum eLoadSaveGame {
     eLOADSAVE_SAVE = 1,
 };
 
-// total size: 0x20
-class GameplaySettings {
-  public:
-    GameplaySettings() {
-        Default();
-    }
-    void Default();
-    bool IsMapItemEnabled(eWorldMapItemType type);
-    void SetMapItem(eWorldMapItemType type, bool enabled);
-    bool operator==(const GameplaySettings &rhs) const;
+enum eWorldMapItemType {
+    WMIT_NONE = 0,
+    WMIT_PLAYER_CAR = 1 << 0,
+    WMIT_AI_RACE_CAR = 1 << 1,
+    WMIT_COP_CAR = 1 << 2,
+    WMIT_COP_HELI = 1 << 3,
+    WMIT_TRAFFIC_CAR = 1 << 4,
+    WMIT_ROADBLOCK = 1 << 5,
+    WMIT_CHECKPOINT = 1 << 6,
+    WMIT_CIRCUIT_RACE = 1 << 7,
+    WMIT_SPRINT_RACE = 1 << 8,
+    WMIT_LAP_KO_RACE = 1 << 9,
+    WMIT_DRAG_RACE = 1 << 10,
+    WMIT_SPEED_TRAP_RACE = 1 << 11,
+    WMIT_TOLLBOOTH_RACE = 1 << 12,
+    WMIT_MULTIPOINT_RACE = 1 << 13,
+    WMIT_CELL_PHONE_RACE = 1 << 14,
+    WMIT_RIVAL_RACE = 1 << 15,
+    WMIT_CASH_GRAB_RACE = 1 << 16,
+    WMIT_CASH_GRAB_SMALL = 1 << 17,
+    WMIT_CASH_GRAB_MED = 1 << 18,
+    WMIT_CASH_GRAB_LARGE = 1 << 19,
+    WMIT_CASH_GRAB_ALL = WMIT_CASH_GRAB_SMALL | WMIT_CASH_GRAB_MED | WMIT_CASH_GRAB_LARGE,
+    WMIT_SPEED_TRAP = 1 << 20,
+    WMIT_SAFEHOUSE = 1 << 21,
+    WMIT_SHOP = 1 << 22,
+    WMIT_CAR_LOT = 1 << 23,
+    WMIT_TOKEN = 1 << 24,
+    WMIT_HIDING_SPOT = 1 << 25,
+    WMIT_PURSUIT_BREAKER = 1 << 26,
+};
 
-    bool AutoSaveOn;            // offset 0x0, size 0x1
-    bool RearviewOn;            // offset 0x4, size 0x1
-    bool Damage;                // offset 0x8, size 0x1
-    uint8 SpeedoUnits;          // offset 0xC, size 0x1
-    uint8 RacingMiniMapMode;    // offset 0xD, size 0x1
-    uint8 ExploringMiniMapMode; // offset 0xE, size 0x1
-    uint32 MapItems;            // offset 0x10, size 0x4
-    uint8 LastMapZoom;          // offset 0x14, size 0x1
-    uint8 LastPursuitMapZoom;   // offset 0x15, size 0x1
-    uint8 LastMapView;          // offset 0x16, size 0x1
-    bool JumpCam;               // offset 0x18, size 0x1
-    float HighlightCam;         // offset 0x1C, size 0x4
+enum eWorldMapView {
+    WMV_NAVIGATION = 0,
+    WMV_EVENT = 1,
+    WMV_RACE = 2,
+    WMV_PURSUIT = 3,
+    NUM_WORLD_MAP_VIEWS = 4,
+};
+
+enum eWorldMapZoomLevels {
+    WMZ_ALL = 0,
+    WMZ_LEVEL_1 = 1,
+    WMZ_LEVEL_2 = 2,
+    WMZ_LEVEL_4 = 3,
+    WMZ_MAX_ZOOM = 3,
+    NUM_ZOOM_LEVELS = 4,
 };
 
 // total size: 0x2C
@@ -132,6 +146,31 @@ class PlayerSettings {
     uint8 SplitTimeType;           // offset 0x28, size 0x1
     uint8 Transmission;            // offset 0x29, size 0x1
     uint8 Handling;                // offset 0x2A, size 0x1
+};
+
+// total size: 0x20
+class GameplaySettings {
+  public:
+    GameplaySettings() {
+        Default();
+    }
+    void Default();
+    bool IsMapItemEnabled(eWorldMapItemType type);
+    void SetMapItem(eWorldMapItemType type, bool enabled);
+    bool operator==(const GameplaySettings &rhs) const;
+
+    bool AutoSaveOn;            // offset 0x0, size 0x1
+    bool RearviewOn;            // offset 0x4, size 0x1
+    bool Damage;                // offset 0x8, size 0x1
+    uint8 SpeedoUnits;          // offset 0xC, size 0x1
+    uint8 RacingMiniMapMode;    // offset 0xD, size 0x1
+    uint8 ExploringMiniMapMode; // offset 0xE, size 0x1
+    uint32 MapItems;            // offset 0x10, size 0x4
+    uint8 LastMapZoom;          // offset 0x14, size 0x1
+    uint8 LastPursuitMapZoom;   // offset 0x15, size 0x1
+    uint8 LastMapView;          // offset 0x16, size 0x1
+    bool JumpCam;               // offset 0x18, size 0x1
+    float HighlightCam;         // offset 0x1C, size 0x4
 };
 
 // total size: 0x10
@@ -218,7 +257,15 @@ typedef uint16 FESMSHandle;
 typedef uint8 FESMSHandle;
 #endif
 
-typedef enum { SMS_FLAG_UNREAD = 1, SMS_FLAG_READ = 2 } SMSMessageFlags;
+enum SMSMessageFlags {
+#ifdef EA_BUILD_A124
+    SMS_FLAG_UNREAD = 1,
+    SMS_FLAG_READ = 2,
+#else
+    SMS_FLAG_UNREAD = 2,
+    SMS_FLAG_READ = 4,
+#endif
+};
 
 // total size: 0x4
 class SMSMessage {
@@ -257,10 +304,10 @@ class SMSMessage {
         return FEngHashString("SMS_MESSAGE_%d_SUBJECT", GetHandle());
     }
     bool IsUnRead() {
-        return (Flags & 2) != 0;
+        return (Flags & SMS_FLAG_UNREAD) != 0;
     }
     bool IsRead() {
-        return (Flags & 4) != 0;
+        return (Flags & SMS_FLAG_READ) != 0;
     }
     bool IsValid() {
         return Handle != 0xFF;
@@ -270,6 +317,30 @@ class SMSMessage {
     FESMSHandle Handle; // offset 0x0, size 0x1
     uint8 Flags;        // offset 0x1, size 0x1
     uint16 SortOrder;   // offset 0x2, size 0x2
+};
+
+enum CS_SpecialFlags {
+    CS_CAREER_STARTED = 1 << 0,
+    CS_ONE_TIME_CASH_BONUS = 1 << 1,
+    CS_HAS_RAP_SHEET = 1 << 4,
+    CS_INTRO_DONE = 1 << 5,
+    CS_TUTORIAL_DRAG = 1 << 6,
+    CS_TUTORIAL_SPEEDTRAP = 1 << 7,
+    CS_TUTORIAL_TOLLBOOTH = 1 << 8,
+    CS_TUTORIAL_PURSUIT = 1 << 9,
+    CS_TUTORIAL_BOUNTY = 1 << 10,
+    CS_GAME_OVER = 1 << 11,
+    CS_BEEN_BUSTED_ONCE = 1 << 12,
+    CS_AWARDED_BK_REWARD = 1 << 13,
+    // TODO: #ifndef EA_BUILD_A124
+    CS_BEATEN_CAREER = 1 << 14,
+    CS_BEATEN_SPECIAL_CHALLENGE_EVENT = 1 << 15,
+    CS_BEATEN_CHALLENGE_SERIES = 1 << 16,
+    CS_DEMO_MARKER = 1 << 17,
+    CS_CASTROL_GT = 1 << 18,
+    CS_MAP_LOADING_TIP_DONE = 1 << 19,
+    CS_BEEN_AWARDED_EPIC_CAR = 1 << 20,
+    // #endif
 };
 
 // total size: 0x27C
@@ -300,37 +371,41 @@ class CareerSettings {
     int32 GetSaveBufferSize(bool bExcludeGameplay);
     void ResumeCareer();
     void StartNewCareer(bool bEnterGameplay);
+    // TODO: #ifndef EA_BUILD_A124
     bool HasBeenAwardedDemoMarker() {
-        return SpecialFlags & 0x20000;
+        return SpecialFlags & CS_DEMO_MARKER;
     }
     void SetAwardedDemoMarker() {
-        SpecialFlags |= 0x20000;
+        SpecialFlags |= CS_DEMO_MARKER;
     }
+    // #endif
     bool HasCareerStarted() {
-        return SpecialFlags & 1;
+        return SpecialFlags & CS_CAREER_STARTED;
     }
+    // TODO: #ifndef EA_BUILD_A124
     void TryAwardDemoMarker();
+    // #endif
     void SetGameOver() {
-        SpecialFlags |= 0x800;
+        SpecialFlags |= CS_GAME_OVER;
     }
     bool IsGameOver() {
-        return SpecialFlags & 0x800;
+        return SpecialFlags & CS_GAME_OVER;
     }
     bool HasCashBonusBeenAwarded() {
-        return SpecialFlags & 2;
+        return SpecialFlags & CS_ONE_TIME_CASH_BONUS;
     }
     void AwardOneTimeCashBonus(bool bOldSaveExists);
     bool HasBeenBustedOnce() {
-        return SpecialFlags & 0x1000;
+        return SpecialFlags & CS_BEEN_BUSTED_ONCE;
     }
     void SetBeenBustedOnce() {
-        SpecialFlags |= 0x1000;
+        SpecialFlags |= CS_BEEN_BUSTED_ONCE;
     }
     bool HasBeenAwardedBKReward() {
-        return SpecialFlags & 0x2000;
+        return SpecialFlags & CS_AWARDED_BK_REWARD;
     }
     void SetAwardedBKReward() {
-        SpecialFlags |= 0x2000;
+        SpecialFlags |= CS_AWARDED_BK_REWARD;
     }
     void SetAdaptiveDifficulty(float difficulty) {
         // TODO
@@ -353,78 +428,80 @@ class CareerSettings {
         CurrentCar = car;
     }
     void SetHasRapSheet() {
-        SpecialFlags |= 0x10;
+        SpecialFlags |= CS_HAS_RAP_SHEET;
     }
     bool HasRapSheet() {
-        return SpecialFlags & 0x10;
+        return SpecialFlags & CS_HAS_RAP_SHEET;
     }
     bool HasDoneCareerIntro() {
-        return SpecialFlags & 0x20;
+        return SpecialFlags & CS_INTRO_DONE;
     }
     void SetHasDoneCareerIntro() {
-        SpecialFlags |= 0x20;
+        SpecialFlags |= CS_INTRO_DONE;
     }
     bool HasDoneDragTutorial() {
-        return SpecialFlags & 0x40;
+        return SpecialFlags & CS_TUTORIAL_DRAG;
     }
     bool HasDoneSpeedTrapTutorial() {
-        return SpecialFlags & 0x80;
+        return SpecialFlags & CS_TUTORIAL_SPEEDTRAP;
     }
     bool HasDoneTollBoothTutorial() {
-        return SpecialFlags & 0x100;
+        return SpecialFlags & CS_TUTORIAL_TOLLBOOTH;
     }
     bool HasDonePursuitTutorial() {
-        return SpecialFlags & 0x200;
+        return SpecialFlags & CS_TUTORIAL_PURSUIT;
     }
     bool HasDoneBountyTutorial() {
-        return SpecialFlags & 0x400;
+        return SpecialFlags & CS_TUTORIAL_BOUNTY;
     }
     void SetHasDoneDragTutorial() {
-        SpecialFlags |= 0x40;
+        SpecialFlags |= CS_TUTORIAL_DRAG;
     }
     void SetHasDoneSpeedTrapTutorial() {
-        SpecialFlags |= 0x80;
+        SpecialFlags |= CS_TUTORIAL_SPEEDTRAP;
     }
     void SetHasDoneTollBoothTutorial() {
-        SpecialFlags |= 0x100;
+        SpecialFlags |= CS_TUTORIAL_TOLLBOOTH;
     }
     void SetHasDonePursuitTutorial() {
-        SpecialFlags |= 0x200;
+        SpecialFlags |= CS_TUTORIAL_PURSUIT;
     }
     void SetHasDoneBountyTutorial() {
-        SpecialFlags |= 0x400;
+        SpecialFlags |= CS_TUTORIAL_BOUNTY;
     }
+    // TODO: #ifndef EA_BUILD_A124
     bool HasBeatenCareer() {
-        return SpecialFlags & 0x4000;
+        return SpecialFlags & CS_BEATEN_CAREER;
     }
     void SetHasBeatenCareer() {
-        SpecialFlags |= 0x4000;
+        SpecialFlags |= CS_BEATEN_CAREER;
     }
     bool HasBeatenSpecialChallengeEvent() {
-        return SpecialFlags & 0x8000;
+        return SpecialFlags & CS_BEATEN_SPECIAL_CHALLENGE_EVENT;
     }
     void SetHasBeatenSpecialChallengeEvent() {
-        SpecialFlags |= 0x8000;
+        SpecialFlags |= CS_BEATEN_SPECIAL_CHALLENGE_EVENT;
     }
     bool HasBeatenChallengeSeries() {
-        return SpecialFlags & 0x100000;
+        return SpecialFlags & CS_BEATEN_CHALLENGE_SERIES;
     }
     void SetHasBeatenChallengeSeries() {
-        SpecialFlags |= 0x10000;
+        SpecialFlags |= CS_BEATEN_CHALLENGE_SERIES;
     }
     bool HasDoneMapLoadigTip() {
-        return SpecialFlags & 0x80000;
+        return SpecialFlags & CS_MAP_LOADING_TIP_DONE;
     }
     void SetHasDoneMapLoadigTip() {
-        SpecialFlags |= 0x80000;
+        SpecialFlags |= CS_MAP_LOADING_TIP_DONE;
     }
     bool HasBeenAwardedEpicCar() {
-        return SpecialFlags & 0x100000;
+        return SpecialFlags & CS_BEEN_AWARDED_EPIC_CAR;
     }
     void SetHasBeenAwardedEpicCar() {
-        SpecialFlags |= 0x100000;
+        SpecialFlags |= CS_BEEN_AWARDED_EPIC_CAR;
     }
     void SetPlayerHasBeatenTheGame();
+    // #endif
 
   private:
     char *SaveRaceData(void *save_to, void *maxptr);
@@ -616,55 +693,55 @@ class cFrontendDatabase {
         return bIsOptionsDirty;
     }
     bool IsSplitScreenMode() {
-        return FEGameMode & 4 && iNumPlayers == 2;
+        return FEGameMode & eFE_GAME_MODE_QUICK_RACE && iNumPlayers == 2;
     }
     bool IsQuickRaceMode() {
-        return FEGameMode & 4;
+        return FEGameMode & eFE_GAME_MODE_QUICK_RACE;
     }
     bool IsCareerMode() {
-        return FEGameMode & 1;
+        return FEGameMode & eFE_GAME_MODE_CAREER;
     }
     bool IsChallengeMode() {
-        return FEGameMode & 2;
+        return FEGameMode & eFE_GAME_MODE_CHALLENGE;
     }
     bool IsOnlineMode() {
-        return FEGameMode & 8;
+        return FEGameMode & eFE_GAME_MODE_ONLINE;
     }
     bool IsOnlineCustomizeMode() {
-        return FEGameMode & 40;
+        return FEGameMode & (eFE_GAME_MODE_ONLINE | eFE_GAME_MODE_CUSTOMIZE);
     }
     bool IsCustomizeMode() {
-        return FEGameMode & 32;
+        return FEGameMode & eFE_GAME_MODE_CUSTOMIZE;
     }
     bool IsOptionsMode() {
-        return FEGameMode & 16;
+        return FEGameMode & eFE_GAME_MODE_OPTIONS;
     }
     bool IsLANMode() {
-        return FEGameMode & 64;
+        return FEGameMode & eFE_GAME_MODE_LAN;
     }
     bool IsModeSelectMode() {
-        return FEGameMode & 1024;
+        return FEGameMode & eFE_GAME_MODE_MODE_SELECT;
     }
     bool IsRapSheetMode() {
-        return FEGameMode & 512;
+        return FEGameMode & eFE_GAME_MODE_RAP_SHEET;
     }
     bool IsProfileManagerMode() {
-        return FEGameMode & 128;
+        return FEGameMode & eFE_GAME_MODE_PROFILE_MANAGER;
     }
     bool IsCareerManagerMode() {
-        return FEGameMode & 256;
+        return FEGameMode & eFE_GAME_MODE_CAREER_MANAGER;
     }
     bool IsCarLotMode() {
-        return FEGameMode & 32768;
+        return FEGameMode & eFE_GAME_MODE_CAR_LOT;
     }
     bool IsSafehouseMode() {
-        return FEGameMode & 65536;
+        return FEGameMode & eFE_GAME_MODE_SAFEHOUSE;
     }
     bool IsPostRivalMode() {
-        return FEGameMode & 131072;
+        return FEGameMode & eFE_GAME_MODE_POST_RIVAL;
     }
     bool IsBeatGameMode() {
-        return FEGameMode & 262144;
+        return FEGameMode & eFE_GAME_MODE_BEAT_GAME;
     }
     bool MatchesGameMode(uint32 mode) {
         return FEGameMode & mode;

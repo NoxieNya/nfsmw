@@ -11,7 +11,7 @@
 
 namespace RealFontOld {
 
-typedef enum {
+enum FontState {
     FONT_COLOUR = 0,
     FONT_HEIGHT = 1,
     FONT_Z = 2,
@@ -28,10 +28,10 @@ typedef enum {
     FONT_ANGLE = 13,
     FONT_DANGLE = 14,
     FONT_BLEND = 15,
-    FONT_STATEMAX = 24
-} FontState;
+    FONT_STATEMAX = 24,
+};
 
-typedef enum {
+enum FontValue {
     FONT_FALSE = 0,
     FONT_TRUE = 1,
     FONT_FILTER_POINT = 0,
@@ -40,8 +40,8 @@ typedef enum {
     FONT_DEPTHWRITE_ENABLE = 1,
     FONT_BLEND_OFF = 0,
     FONT_BLEND_ALPHA = 1,
-    FONT_BLEND_ALPHATEST = 2
-} FontValue;
+    FONT_BLEND_ALPHATEST = 2,
+};
 
 // total size: 0x10
 struct Glyph {
@@ -66,7 +66,10 @@ struct FontGlyphList {
     float mY;            // offset 0x8, size 0x4
 };
 
-typedef enum { DRAWLISTSTART_NEW = 0, DRAWLISTSTART_CONTINUE = 1 } DrawListStart;
+enum DrawListStart {
+    DRAWLISTSTART_NEW = 0,
+    DRAWLISTSTART_CONTINUE = 1,
+};
 
 // total size: 0x80
 class Font {

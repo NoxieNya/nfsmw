@@ -330,8 +330,9 @@ void CareerSettings::StartNewCareer(bool bEnterGameplay) {
         rec = stable->CreateNewCareerCar(0x03A94520);
         CurrentCar = rec->Handle;
     }
-
+#ifndef EA_BUILD_A124
     TryAwardDemoMarker();
+#endif
 
     if (!bEnterGameplay) {
         return;
@@ -370,13 +371,14 @@ void CareerSettings::StartNewCareer(bool bEnterGameplay) {
         RaceStarter::StartCareerFreeRoam();
     }
 }
-
+#ifndef EA_BUILD_A124
 void CareerSettings::TryAwardDemoMarker() {
     if (!HasBeenAwardedDemoMarker() && gEasterEggs.IsEasterEggUnlocked(static_cast<EasterEggsSpecial>(5))) {
         TheFEMarkerManager.AddMarkerToInventory(FEMarkerManager::ePossibleMarker(2), 0);
         SetAwardedDemoMarker();
     }
 }
+#endif
 
 void CareerSettings::ResumeCareer() {
     bool bDDayCompleted = false;
@@ -431,9 +433,11 @@ void CareerSettings::AwardOneTimeCashBonus(bool bOldSaveExists) {
     CurrentCash = CurrentCash + 10000;
 }
 
+#ifndef EA_BUILD_A124
 void CareerSettings::SetPlayerHasBeatenTheGame() {
     SetHasBeatenCareer();
 }
+#endif
 
 void CareerSettings::GenerateCaseFileName() {
     const int SCOTTS_RAND_CASE_FILE_NUMBER_RANGE = 0x19B3;
@@ -663,7 +667,9 @@ void UserProfile::Default(int player_number, bool commit_default) {
     }
 
     PlayersCarStable.AwardBonusCars();
+#ifndef EA_BUILD_A124
     TheCareerSettings.TryAwardDemoMarker();
+#endif
 }
 
 void UserProfile::CommitHighScoresPauseQuit() {
@@ -724,7 +730,9 @@ bool UserProfile::LoadFromBuffer(void *buffer, int size, bool commit_changes, in
     buf = LoadSomeData(aVersion, buf, 0x10, maxbuf);
     if (!player_id) {
         buf = TheCareerSettings.LoadFromBuffer(buf, maxbuf);
+#ifndef EA_BUILD_A124
         TheCareerSettings.TryAwardDemoMarker();
+#endif
     } else {
         int careerSize = TheCareerSettings.GetSaveBufferSize(false);
         buf = buf + careerSize;

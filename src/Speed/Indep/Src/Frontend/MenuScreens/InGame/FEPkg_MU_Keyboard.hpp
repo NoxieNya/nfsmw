@@ -12,14 +12,14 @@
 // Decl: speed/indep/src/frontend/menuscreens/ingame/FEPkg_MU_Keyboard.hpp:25
 class FEKeyboard : public MenuScreen {
   public:
-    typedef enum {
+    enum MODE {
         MODE_ALL_KEYS = 0,
         MODE_ALPHANUMERIC = 1,
         MODE_ALPHANUMERIC_PASSWORD = 2,
         MODE_FILENAME = 3,
         MODE_EMAIL = 4,
-        MODE_PROFILE_ENTRY = 5
-    } MODE;
+        MODE_PROFILE_ENTRY = 5,
+    };
 
     FEKeyboard(ScreenConstructorData *sd);
     ~FEKeyboard() override {} // Decl: speed/indep/src/frontend/menuscreens/ingame/FEPkg_MU_Keyboard.hpp:29

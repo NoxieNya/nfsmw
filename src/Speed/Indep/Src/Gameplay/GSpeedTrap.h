@@ -12,7 +12,12 @@
 
 class GSpeedTrap {
   public:
-    typedef enum { kFlag_Unlocked = 1, kFlag_Active = 2, kFlag_Completed = 4, kFlag_KnockedOver = 8 } Flags;
+    enum Flags {
+        kFlag_Unlocked = 1,
+        kFlag_Active = 2,
+        kFlag_Completed = 4,
+        kFlag_KnockedOver = 8,
+    };
 
     GSpeedTrap();
     bool GetIsLocked() const {

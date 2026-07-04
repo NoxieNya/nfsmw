@@ -16,14 +16,18 @@
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 
-typedef enum {
+enum PostRaceScreenMode {
     POSTRACESCREENMODE_RESULTS = 0,
     POSTRACESCREENMODE_STATS = 1,
     POSTRACESCREENMODE_LAPSTATS = 2,
-    POSTRACESCREENMODE_NUMMODES = 3
-} PostRaceScreenMode;
+    POSTRACESCREENMODE_NUMMODES = 3,
+};
 
-typedef enum { POSTPURSUITSCREENMODE_PURSUIT = 0, POSTPURSUITSCREENMODE_INFRACTIONS = 1, POSTPURSUITSCREENMODE_MILESTONES = 2 } PostPursuitScreenMode;
+enum PostPursuitScreenMode {
+    POSTPURSUITSCREENMODE_PURSUIT = 0,
+    POSTPURSUITSCREENMODE_INFRACTIONS = 1,
+    POSTPURSUITSCREENMODE_MILESTONES = 2,
+};
 
 class RaceStat : public FEStatWidget {
   public:
@@ -438,19 +442,20 @@ class PursuitData {
 // total size: 0x38
 class PursuitResultsDatum : public ArrayDatum {
   public:
-    typedef enum {
+    enum PursuitResultsDatumType {
         PursuitResultsDatumType_Number = 0,
         PursuitResultsDatumType_Time = 1,
         PursuitResultsDatumType_Milestone_Number = 2,
         PursuitResultsDatumType_Milestone_Time = 3,
-        PursuitResultsDatumType_Check = 4
-    } PursuitResultsDatumType;
+        PursuitResultsDatumType_Milestone_Time_PursuitRemaining = 4,
+        PursuitResultsDatumType_Check = 5,
+    };
 
-    typedef enum {
+    enum PursuitResultsDatumCheckType {
         PursuitResultsDatumCheckType_Off = 0,
         PursuitResultsDatumCheckType_On = 1,
         PursuitResultsDatumCheckType_Greyed = 2,
-    } PursuitResultsDatumCheckType;
+    };
 
     PursuitResultsDatum(PursuitResultsDatumType type, uint32 itemName, float itemNumber, float itemGoal, PursuitResultsDatumCheckType itemChecked);
     void NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) override;

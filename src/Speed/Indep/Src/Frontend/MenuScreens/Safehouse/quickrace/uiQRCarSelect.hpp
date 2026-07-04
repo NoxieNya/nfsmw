@@ -17,7 +17,11 @@
 // Decl: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.hpp:15
 class QRCarSelectBustedManager {
   public:
-    typedef enum { BUSTED_ANIM_NOTHING = 0, BUSTED_ANIM_SHOW_STRIKE = 1, BUSTED_ANIM_SHOW_IMPOUNDED = 2 } eBustedAnimationTypes;
+    enum eBustedAnimationTypes {
+        BUSTED_ANIM_NOTHING = 0,
+        BUSTED_ANIM_SHOW_STRIKE = 1,
+        BUSTED_ANIM_SHOW_IMPOUNDED = 2,
+    };
 
     FECareerRecord *WorkingCareerRecord; // offset 0x0, size 0x4
     FECarRecord *WorkingCarRecord;       // offset 0x4, size 0x4
