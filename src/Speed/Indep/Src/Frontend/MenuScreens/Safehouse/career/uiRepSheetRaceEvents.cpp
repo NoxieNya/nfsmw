@@ -178,24 +178,26 @@ void UISafehouseRaceSheet::RefreshHeader() {
     FEImage *img = FEngFindImage(GetPackageName(), 0xf97ec5d5);
     FEngSetTextureHash(img, iconHash);
     for (int i = 0; i < GetNumSlots(); i++) {
-        RaceDatum *rdatum = static_cast<RaceDatum *>(GetDatumAt(i + GetStartDatumNum()));
+        RaceDatum *datum = static_cast<RaceDatum *>(GetDatumAt(i + GetStartDatumNum()));
         uint32 check_hash = FEngHashString("MEDAL_THUMB_%d", i + 1);
         FEngSetInvisible(FEngFindObject(GetPackageName(), check_hash));
-        if (rdatum == nullptr) {
+        if (datum == nullptr) {
             continue;
         }
-        if (rdatum->IsLocked()) {
+        if (datum->IsLocked()) {
             FEngSetVisible(FEngFindObject(GetPackageName(), check_hash));
             FEngSetTextureHash(FEngFindImage(GetPackageName(), check_hash), 0x18ed48);
-        } else if (rdatum->IsChecked()) {
+        } else if (datum->IsChecked()) {
             FEngSetVisible(FEngFindObject(GetPackageName(), check_hash));
             FEngSetTextureHash(FEngFindImage(GetPackageName(), check_hash), 0x28feadd);
         }
     }
+#ifndef EA_BUILD_A124
     if (currentIndex != GetCurrentDatumNum() - 1 && GetCurrentDatum() != nullptr) {
         TrackMapStreamer.Init(static_cast<RaceDatum *>(GetCurrentDatum())->race, TrackMap, 0, 0);
         currentIndex = GetCurrentDatumNum() - 1;
     }
+#endif
 }
 
 bool UISafehouseRaceSheet::AddRace(GRaceParameters *race) {
