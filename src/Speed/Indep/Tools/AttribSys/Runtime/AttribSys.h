@@ -576,8 +576,6 @@ class Attribute {
     bool SetLength(unsigned int);
     void SendChangeMsg() const;
     // TODO
-    template <typename T> const T &Get(unsigned int index, T &result) const;
-    // TODO
     template <typename T> const T &Get(unsigned int index) const;
 
     void operator delete(void *ptr, std::size_t bytes) {
@@ -596,7 +594,8 @@ class Attribute {
         return mInternal;
     }
 
-    template <typename T> bool Get(unsigned int index, T &result) {
+    // TODO const
+    template <typename T> bool Get(unsigned int index, T &result) const {
         const T *resultptr = reinterpret_cast<const T *>(GetElementPointer(index));
 
         if (resultptr != nullptr) {

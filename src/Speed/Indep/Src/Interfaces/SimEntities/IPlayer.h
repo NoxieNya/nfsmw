@@ -33,15 +33,8 @@ enum ePlayerList {
 
 class IPlayer : public UTL::COM::IUnknown, public UTL::Collections::ListableSet<IPlayer, 8, ePlayerList, PLAYER_MAX> {
   public:
-    static HINTERFACE _IHandle() {
-        return (HINTERFACE)_IHandle;
-    }
+    DECL_INTERFACE(IPlayer);
 
-  protected:
-    virtual ~IPlayer() {}
-    IPlayer(UTL::COM::Object *owner) : UTL::COM::IUnknown(owner, _IHandle()) {}
-
-  public:
     virtual ISimable *GetSimable() const;
 #ifndef EA_BUILD_A124
     virtual bool IsLocal() const;

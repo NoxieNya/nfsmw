@@ -12,6 +12,11 @@
 #include "UTypes.h"
 #include "UVectorMath.h"
 
+// TODO UEALibs not working???
+extern "C" void MATRIX4_multxrot(const UMath::Matrix4 *m4, float xbangle, UMath::Matrix4 *resultm);
+extern "C" void MATRIX4_multyrot(const UMath::Matrix4 *m4, float ybangle, UMath::Matrix4 *resultm);
+extern "C" void MATRIX4_multzrot(const UMath::Matrix4 *m4, float zbangle, UMath::Matrix4 *resultm);
+
 namespace UMath {
 // TODO apply these
 const float PI = 3.141592653589793f; // size: 0x4, Decl: UMath.h:15
@@ -46,15 +51,13 @@ inline float Cosr(const float r) {
     return VU0_Cos(RAD2ANGLE(r) * TWOPI);
 }
 
+inline float ASinr(const float x) {
 #ifndef EA_PLATFORM_PLAYSTATION2
-inline float ASinr(const float x) {
     return ANGLE2RAD(VU0_ASin(x));
-}
 #else
-inline float ASinr(const float x) {
     return asinf(x);
-}
 #endif
+}
 
 void BuildRotate(Matrix4 &m, float r, float x, float y, float z);
 
@@ -143,6 +146,10 @@ inline void RotateTranslate(const Vector4 &a, const Matrix4 &m, Vector4 &r) {
     VU0_MATRIX4_vect4mult(a, m, r);
 }
 
+inline void RotateTranslate(const Vector4 *a, const Matrix4 &m, Vector4 *r, int count) {
+    VU0_MATRIX4_vect4mult(a, m, r, count);
+}
+
 inline void Init(Matrix4 &m, const float xx, const float yy, const float zz) {
     VU0_MATRIX4Init(m, xx, yy, zz);
 }
@@ -151,7 +158,7 @@ inline void Init(Matrix4 &m, const float xx, const float yy, const float zz) {
 void Mult(const Vector4 &a, const Vector4 &b, Vector4 &r);
 #else
 inline void Mult(const Vector4 &a, const Vector4 &b, Vector4 &r) {
-    VU0_qmul(a, b, r);
+    VU0_qmul(b, a, r);
 }
 #endif
 
@@ -171,11 +178,17 @@ inline void Unitxyz(const Vector4 &a, Vector4 &r) {
     VU0_v4unitxyz(a, r);
 }
 
-// UEALibs not working???
-void MATRIX4_multyrot(const Matrix4 *m4, float ybangle, Matrix4 *resultm);
+inline void MultXRot(const UMath::Matrix4 &m, float a, UMath::Matrix4 &r) {
+    MATRIX4_multxrot(&m, a, &r);
+}
+
 inline void MultYRot(const Matrix4 &m, float a, Matrix4 &r) {
     r = m;
     MATRIX4_multyrot(&r, a, &r);
+}
+
+inline void MultZRot(const UMath::Matrix4 &m, float a, UMath::Matrix4 &r) {
+    MATRIX4_multzrot(&m, a, &r);
 }
 
 #ifdef EA_PLATFORM_XENON
@@ -236,6 +249,12 @@ inline void Scale(const Vector4 &a, const float s, Vector4 &r) {
 
 inline void Scale(Vector4 &r, const float s) {
     VU0_v4scale(r, s, r);
+}
+
+inline void Scale(UMath::Matrix4 &r, const UMath::Vector3 &s) {
+    for (int i = 0; i < 3; ++i) {
+        VU0_v4scalexyz(r[i], s[i], r[i]);
+    }
 }
 
 inline void ScaleAdd(const Vector3 &a, const float s, const Vector3 &b, Vector3 &r) {
@@ -442,6 +461,18 @@ inline float LengthSquare(const Vector3 &a) {
 #endif
 }
 
+inline float LengthSquare(const Vector4 &a) {
+    return VU0_v4lengthsquare(a);
+}
+
+inline float LengthSquarexyz(const UMath::Vector4 &a) {
+    return VU0_v4lengthsquarexyz(a);
+}
+
+inline float ASina(const float x) {
+    return VU0_ASin(x);
+}
+
 inline float Atan2d(float o, float a) {
     return ANGLE2DEG(VU0_Atan2(o, a));
 }
@@ -499,6 +530,10 @@ inline int Clamp(const int a, const int amin, const int amax) {
 
 inline float Clamp(const float a, const float amin, const float amax) {
     return VU0_floatmax(amin, VU0_floatmin(a, amax));
+}
+
+inline float Bound(const float a, const float alimit) {
+    return VU0_floatmax(-alimit, VU0_floatmin(a, alimit));
 }
 
 inline float Abs(const float a) {
@@ -568,18 +603,16 @@ inline size_t Max(const size_t a, const size_t b) {
 // Credits: Brawltendo
 // Limits the input value to the range [a,l]
 inline float Limit(const float a, const float l) {
-    float retval;
-    if (!(a * l > 0.f)) {
-        retval = a;
+    if (a * l <= 0.f) {
+        return a;
     } else {
         if (a > 0.f) {
-            retval = Min(a, l);
+            return Min(a, l);
 
         } else {
-            retval = Max(a, l);
+            return Max(a, l);
         }
     }
-    return retval;
 }
 
 } // namespace UMath

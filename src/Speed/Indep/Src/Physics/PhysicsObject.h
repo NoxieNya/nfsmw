@@ -1,14 +1,12 @@
-#ifndef PHYSICS_PHYSICSOBJECT_H
-#define PHYSICS_PHYSICSOBJECT_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef __PHYSICSOBJECT_H__
+#define __PHYSICSOBJECT_H__
 
 #include "Speed/Indep/Src/Interfaces/IBody.h"
 #include "Speed/Indep/Src/Interfaces/Simables/ISimable.h"
-#include "Speed/Indep/Src/Physics/Behavior.h"
 #include "Speed/Indep/Src/Sim/SimAttachable.h"
+#include "Speed/Indep/Src/Sim/SimObject.h"
+
+class Behavior;
 
 DECLARE_CONTAINER_TYPE(ID_POMechanics);
 DECLARE_CONTAINER_TYPE(ID_POBehaviors);

@@ -1,11 +1,8 @@
 #ifndef MAIN_EVENTSEQUENCER_H
 #define MAIN_EVENTSEQUENCER_H
 
+#include "Speed/Indep/Libs/Support/Miscellaneous/CARP.h"
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
-
 #include "Speed/Indep/Libs/Support/Utility/UCOM.h"
 #include "Speed/Indep/Libs/Support/Utility/UCollections.h"
 #include "Speed/Indep/Libs/Support/Utility/UCrc.h"
@@ -36,20 +33,16 @@ struct EventDynamicData {
 namespace EventSequencer {
 
 class System;
+class Engine;
 
 class IContext : public UTL::COM::IUnknown {
   public:
-    static HINTERFACE _IHandle() {
-        return (HINTERFACE)_IHandle;
-    }
-
-    IContext(UTL::COM::Object *owner) : UTL::COM::IUnknown(owner, _IHandle()) {}
-
-    virtual ~IContext() {}
+    DECL_INTERFACE(IContext);
 
     virtual bool SetDynamicData(const System *system, EventDynamicData *data);
 };
 
+// TODO DECLAREHANDLE in new UTL.h
 struct HENGINE__ {
     // total size: 0x4
     int unused; // offset 0x0, size 0x4
@@ -67,13 +60,9 @@ enum QueueMode {
 
 class IEngine : public UTL::COM::IUnknown, public UTL::Collections::Instanceable<HENGINE, IEngine, 434> {
   public:
-    static HINTERFACE _IHandle() {
-        return (HINTERFACE)_IHandle;
-    }
+    enum { InstanceLimit = 434 };
 
-    IEngine(UTL::COM::Object *owner) : UTL::COM::IUnknown(owner, _IHandle()) {}
-
-    virtual ~IEngine() {}
+    DECL_INTERFACE(IEngine);
 
     virtual void Release();
     virtual const char *Name() const;
@@ -89,7 +78,7 @@ class IEngine : public UTL::COM::IUnknown, public UTL::Collections::Instanceable
     virtual void SetAllSystemsState(float externalTime, unsigned int state);
     virtual bool ProcessStimulus(unsigned int systemID, unsigned int stimulus, float externalTime, IContext *ifiringcontext, QueueMode mode);
     virtual bool ProcessStimulus(unsigned int stimulus, float externalTime, IContext *ifiringcontext, QueueMode mode);
-    virtual bool Trigger(float externalTime, EventSequencer::IContext *ifiringcontext, QueueMode mode);
+    virtual bool Trigger(float externalTime, IContext *ifiringcontext, QueueMode mode);
     virtual bool FireEventTag(unsigned int, IContext *ifiringcontext);
     virtual void Flush();
     virtual void Stop(float externalTime, bool flush, IContext *ifiringcontext);
@@ -101,26 +90,97 @@ class IEngine : public UTL::COM::IUnknown, public UTL::Collections::Instanceable
 };
 
 // total size: 0x40
-struct System {
+class System {
+  public:
     enum {
         kQueueLength = 4,
     };
+
+    friend void Update(float externalTime);
+
     unsigned int ID() const;
 
-    // TODO it's EventSequencer::Engine
-    struct Engine *mEngine;               // offset 0x0, size 0x4
-    const struct EventSeqSystem *mSystem; // offset 0x4, size 0x4
-    const struct EventSeqState *mState;   // offset 0x8, size 0x4
-    const struct EventSeqAction *mAction; // offset 0xC, size 0x4
-    float mActionRate;                    // offset 0x10, size 0x4
-    float mActionTime;                    // offset 0x14, size 0x4
-    float mActionLast;                    // offset 0x18, size 0x4
-    float mPausedAt;                      // offset 0x1C, size 0x4
-    unsigned int mCurrentState;           // offset 0x20, size 0x4
-    unsigned int mEndState;               // offset 0x24, size 0x4
-    unsigned int mQueueEndState;          // offset 0x28, size 0x4
-    float mQueueDuration;                 // offset 0x2C, size 0x4
-    unsigned int mQueuedStimuli[4];       // offset 0x30, size 0x10
+    IContext *GetContext() const;
+    IEngine *GetEngine() const;
+
+    unsigned int GetState() const;
+
+    void SetState(float externalTime, unsigned int state);
+
+    bool IsInAction() const;
+    bool IsPaused() const;
+
+    float GetActionRate() const;
+    float GetActionTime() const;
+    float GetActionDuration() const;
+
+    float GetQueuedDuration() const;
+
+    void SetActionRate(float rate);
+
+    void Flush();
+    void Stop(float externalTime, bool flush, IContext *ifiringcontext);
+    void Complete(float externalTime, bool flush, IContext *ifiringcontext);
+    void Pause(float externalTime, IContext *ifiringcontext);
+    void Resume(float externalTime, IContext *ifiringcontext);
+    void Reset(float externalTime, float rate, IContext *ifiringcontext);
+
+    bool ProcessStimulus(unsigned int stimulus, float externalTime, IContext *ifiringcontext, enum EventSequencer::QueueMode mode);
+    bool Trigger(float externalTime, IContext *ifiringcontext, enum EventSequencer::QueueMode mode);
+
+    bool FireEventTag(unsigned int tag, IContext *ifiringcontext) const;
+
+  private:
+    System(EventSequencer::Engine *engine, const CARP::EventSeqSystem *system, float externalTime, float rate);
+    ~System();
+
+    bool Update(unsigned int index, float externalTime);
+
+    bool TerminateAction(unsigned int tag, unsigned int index, float externalTime, bool flushQueue, IContext *ifiringcontext);
+    bool InvokeStimulus(unsigned int stimulus, float externalTime, IContext *ifiringcontext);
+    void FireActionEventList(bool tagIndex, unsigned int index, struct IContext *ifiringcontext) const;
+    void FireTimedEvents(float startActionTime, float endActionTime) const;
+
+    void Relocate(unsigned int deltaAddress);
+
+    void Unload();
+
+    void InternalReset(float externalTime, float rate);
+
+    unsigned int GetActiveIndex() const;
+
+    unsigned int ExecuteFilter(const CARP::EventSeqState *state, unsigned int stimulus, IContext *ifiringcontext) const;
+
+    Engine *mEngine;                // offset 0x0, size 0x4
+    CARP::EventSeqSystem *mSystem;  // offset 0x4, size 0x4
+    CARP::EventSeqState *mState;    // offset 0x8, size 0x4
+    CARP::EventSeqAction *mAction;  // offset 0xC, size 0x4
+    float mActionRate;              // offset 0x10, size 0x4, Decl: speed/indep/tools/eventsys/runtime/common/../eventsequencer.h:379
+    float mActionTime;              // offset 0x14, size 0x4, Decl: speed/indep/tools/eventsys/runtime/common/../eventsequencer.h:380
+    float mActionLast;              // offset 0x18, size 0x4, Decl: speed/indep/tools/eventsys/runtime/common/../eventsequencer.h:381
+    float mPausedAt;                // offset 0x1C, size 0x4, Decl: speed/indep/tools/eventsys/runtime/common/../eventsequencer.h:383
+    unsigned int mCurrentState;     // offset 0x20, size 0x4, Decl: speed/indep/tools/eventsys/runtime/common/../eventsequencer.h:385
+    unsigned int mEndState;         // offset 0x24, size 0x4, Decl: speed/indep/tools/eventsys/runtime/common/../eventsequencer.h:386
+    unsigned int mQueueEndState;    // offset 0x28, size 0x4, Decl: speed/indep/tools/eventsys/runtime/common/../eventsequencer.h:387
+    float mQueueDuration;           // offset 0x2C, size 0x4
+    unsigned int mQueuedStimuli[4]; // offset 0x30, size 0x10, Decl: speed/indep/tools/eventsys/runtime/common/../eventsequencer.h:390
+};
+
+struct EventSeqEngine {
+    char *mName;        // offset 0x0, size 0x4
+    uint32 mNumSystems; // offset 0x4, size 0x4
+
+    // unsigned int * GetSystemIDs() {}
+
+    // struct EventSeqSystem * * GetSystems() {}
+
+    // const unsigned int FindSystemIndex(unsigned int ident) const {}
+
+    // const struct EventSeqSystem * FindSystem(unsigned int ident) const {}
+
+    // const unsigned int * GetSystemIDs() const {}
+
+    // const struct EventSeqSystem * const * GetSystems() const {}
 };
 
 void UpdateDelta(float deltaTime);

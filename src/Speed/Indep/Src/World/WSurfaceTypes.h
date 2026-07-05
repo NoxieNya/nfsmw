@@ -1,16 +1,12 @@
 #ifndef WORLD_WSURFACETYPES_H
 #define WORLD_WSURFACETYPES_H
 
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
-
+#include "Speed/Indep/Libs/Support/Miscellaneous/CARP.h"
 #include "Speed/Indep/Src/Physics/Dynamics/Collision.h"
+#include "Speed/Indep/Src/Sim/SimSurface.h"
 
-class WSurface : public CollisionSurface {
+class WSurface : public CARP::CollisionSurface {
   public:
-    static void InitSystem();
-
     WSurface() {
         fSurface = 0;
         fFlags = 0;
@@ -24,6 +20,12 @@ class WSurface : public CollisionSurface {
     WSurface(unsigned char surface, unsigned char flags) {
         fSurface = surface;
         fFlags = flags;
+    }
+
+    static void InitSystem();
+
+    const SimSurface &GetSimSurface() const {
+        return SimSurface::kNull;
     }
 
     unsigned int Surface() const {

@@ -22,7 +22,7 @@
 #include "Speed/Indep/Src/Interfaces/Simables/IVehicle.h"
 #include "Speed/Indep/Src/Interfaces/SimEntities/IPlayer.h"
 #include "Speed/Indep/Src/Misc/Timer.hpp"
-#include "Speed/Indep/Src/Physics/Common/VehicleSystem.h"
+#include "Speed/Indep/Src/Physics/PVehicle.h"
 
 extern int iCurrentViewBin;
 

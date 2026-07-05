@@ -1,9 +1,5 @@
-#ifndef PHYSICS_PHYSICSTUNINGS_H
-#define PHYSICS_PHYSICSTUNINGS_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef PHYSICS_TUNINGS_H
+#define PHYSICS_TUNINGS_H
 
 #include "Speed/Indep/bWare/Inc/bWare.hpp"
 

@@ -1,9 +1,5 @@
-#ifndef PHYSICS_DYNAMICS_INERTIA_H
-#define PHYSICS_DYNAMICS_INERTIA_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef DYNAMICS_INERTIA_H
+#define DYNAMICS_INERTIA_H
 
 #include "Speed/Indep/Libs/Support/Utility/UMath.h"
 #include "Speed/Indep/Libs/Support/Utility/UVector.h"
@@ -11,9 +7,8 @@
 namespace Dynamics {
 namespace Inertia {
 
+// total size: 0xC
 class Tensor : public UVector3 {
-    // total size: 0xC
-
   public:
     const Tensor &operator=(const UMath::Vector3 &From) {
         x = From.x;
@@ -23,27 +18,27 @@ class Tensor : public UVector3 {
     }
 
     void GetInverseWorldTensor(const UMath::Matrix4 &orientation, UMath::Matrix4 &result) const {
-        UMath::Matrix4 temp;
-        UMath::Init(result, x > UMath::Epsilon ? 1.0f / x : x, y > UMath::Epsilon ? 1.0f / y : y, z > UMath::Epsilon ? 1.0f / z : z);
+        UMath::Init(result, this->x > UMath::Epsilon ? 1.0f / this->x : this->x, this->y > UMath::Epsilon ? 1.0f / this->y : this->y,
+                    this->z > UMath::Epsilon ? 1.0f / this->z : this->z);
         UMath::Matrix4 orientationInv;
+        UMath::Matrix4 temp;
         UMath::Transpose(orientation, orientationInv);
         UMath::Mult(result, orientation, temp);
         UMath::Mult(orientationInv, temp, result);
     }
 };
 
+// total size: 0xC
 class Box : public Tensor {
-    // total size: 0xC
-
   public:
     Box(float mass, float width, float height, float length) {
         float x2 = width * width;
         float y2 = height * height;
         float z2 = length * length;
 
-        x = (y2 + z2) / 1.2f;
-        y = (x2 + z2) / 1.2f;
-        z = (x2 + y2) / 1.2f;
+        x = (y2 + z2) / 12.0f;
+        y = (x2 + z2) / 12.0f;
+        z = (x2 + y2) / 12.0f;
 
         *this *= mass;
     }

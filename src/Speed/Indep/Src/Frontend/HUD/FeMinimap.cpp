@@ -2,6 +2,7 @@
 
 #include "Speed/Indep/Libs/Support/Utility/UCOM.h"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
 #include "Speed/Indep/Src/Frontend/HUD/FeMinimapStreamer.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
@@ -15,10 +16,9 @@
 #include "Speed/Indep/Src/World/TrackInfo.hpp"
 #include "Speed/Indep/Src/World/OnlineManager.hpp"
 #include "Speed/Indep/Src/World/RaceParameters.hpp"
-
 #include "Speed/Indep/Src/AI/AITarget.h"
 #include "Speed/Indep/Src/Interfaces/Simables/ICollisionBody.h"
-#include "Speed/Indep/Src/Physics/Common/VehicleSystem.h"
+#include "Speed/Indep/Src/Physics/PVehicle.h"
 #include "Speed/Indep/bWare/Inc/bMath.hpp"
 
 extern bool GPS_IsEngaged();

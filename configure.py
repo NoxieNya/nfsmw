@@ -253,10 +253,11 @@ if config.platform == Platform.GC_WII:
         "-I src/Speed/Indep/Libs/Support/stlgc",
         "-I src/Speed/GameCube/Libs/stl/STLport-4.5/stlport",
         "-I src/Speed/GameCube/bWare/GameCube/SN/include",
-        "-I include",
+        "-I src/Packages/eathread/1.1.0/include",
         f"-I {dolphinsdk_root}/include",
         "-I src/Packages",
-        "-I ./",
+        "-I src/Speed/GameCube/bWare/GameCube/SN",
+        # "-I ./",
         "-I src",
         "-DEA_PLATFORM_GAMECUBE",
         "-DEA_REGION_AMERICA",
@@ -325,6 +326,7 @@ if config.platform == Platform.GC_WII:
         "-D_STLP_VENDOR_EXCEPT_STD=std",
         "-DCLANGD_DAMNIT",  # used in cases where intellisense breaks
         "-D__HONOR_STD",
+        "-Wno-writable-strings",
     ]
 
     cflags_dolphin = [
@@ -380,6 +382,7 @@ elif config.platform == Platform.X360:
         # "/Z7",  # /Zi enables debug info (pdb), /Zd for line numbers only (pdb), /Z7 generates debug info per obj file
         "/EHsc",  # enable exception handling (and extern C notthrow?)
         "/I src/Packages/xenonsdk/2.0.2135.2/installed/include/xbox",
+        "-I src/Packages/eathread/1.1.0/include",
         "/I src/Packages",
         "/I src",
         "/DEA_PLATFORM_XENON",
@@ -423,9 +426,10 @@ elif config.platform == Platform.PS2:
         "-I src/Speed/PSX2/bWare/src/ee/gcc/lib/gcc-lib/ee/2.9-ee-991111/include",
         "-I src/Speed/PSX2/bWare/src/ee/gcc/ee",
         "-I src/Speed/PSX2/bWare/src/ee/gcc/lib/gcc-lib/ee/2.9-ee-991111",
+        "-I src/Packages/eathread/1.1.0/include",
         "-I src/Packages",
         "-I src",
-        "-DEA_PLATFORM_PLAYSTATION2",
+        "-DEA_PLATFORM_PLAYSTATION2",  # TODO rename to PS2
         "-DEA_BUILD_A124",
         "-D_NOTHREADS",  # TODO is this necessary?
         f"-I build/{config.version}/include",
@@ -502,6 +506,7 @@ cflags_cmn = [
 ]
 
 cflags_libc = [*cflags_base_prodg]
+cflags_eathread = [*cflags_game]
 
 Matching = True  # Object matches and should be linked
 NonMatching = False  # Object does not match and should not be linked
@@ -1588,6 +1593,22 @@ if config.platform == Platform.GC_WII:
                     Object(NonMatching, "libc/kf_tan.c"),
                     Object(NonMatching, "libc/k_rem_pio2.c"),
                     Object(NonMatching, "libc/s_floor.c"),
+                ],
+            },
+            {
+                "lib": "eathread",
+                "toolchain_version": config.linker_version,
+                "cflags": cflags_eathread,
+                "progress_category": "libs",
+                "objects": [
+                    Object(
+                        Matching,
+                        "Packages/eathread/1.1.0/source/eathread_semaphore.cpp",
+                    ),
+                    Object(
+                        NonMatching,
+                        "Packages/eathread/1.1.0/source/eathread_thread.cpp",
+                    ),
                 ],
             },
         ]

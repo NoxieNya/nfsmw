@@ -94,6 +94,7 @@ void VU0_v3quatrotate(const UMath::Vector4 &q, const UMath::Vector3 &v, UMath::V
 void VU0_m4toquat(const UMath::Matrix4 &mat, UMath::Vector4 &result);
 void VU0_MATRIX4_vect3mult(const UMath::Vector3 &v, const UMath::Matrix4 &m, UMath::Vector3 &result);
 void VU0_MATRIX4_vect4mult(const UMath::Vector4 &v, const UMath::Matrix4 &m, UMath::Vector4 &result);
+void VU0_MATRIX4_vect4mult(const UMath::Vector4 *v, const UMath::Matrix4 &m, UMath::Vector4 *result, int count);
 void VU0_MATRIX4setyrot(UMath::Matrix4 &dest, const float yangle);
 void VU0_Matrix4ToEuler(const UMath::Matrix4 &m, UMath::Vector3 &e);
 
@@ -288,6 +289,11 @@ inline void VU0_MATRIX4_vect3mult(const UMath::Vector3 &v, const UMath::Matrix4 
                      "sqc2 vf6, %0"
                      : "=o"(result)
                      : "o"(v), "r"(&m));
+}
+
+// TODO
+inline float VU0_ASin(float x) {
+    return asinf(x) / (float)M_TWOPI;
 }
 
 #else
@@ -570,21 +576,23 @@ inline void VU0_qtranspose(const UMath::Vector4 &a, UMath::Vector4 &result) {
 }
 
 inline void VU0_MATRIX4Init(UMath::Matrix4 &dest, const float xx, const float yy, const float zz) {
-    dest[2][2] = zz;
-    dest[1][1] = yy;
     dest[0][0] = xx;
+    dest[1][1] = yy;
+    dest[2][2] = zz;
     dest[3][3] = 1.0f;
 
-    // TODO UNSOLVED
     dest[3][2] = 0.0f;
     dest[3][1] = 0.0f;
     dest[3][0] = 0.0f;
+
     dest[2][3] = 0.0f;
     dest[2][1] = 0.0f;
     dest[2][0] = 0.0f;
+
     dest[1][3] = 0.0f;
     dest[1][2] = 0.0f;
     dest[1][0] = 0.0f;
+
     dest[0][3] = 0.0f;
     dest[0][2] = 0.0f;
     dest[0][1] = 0.0f;
@@ -597,7 +605,6 @@ inline void VU0_MATRIX4_mult(const UMath::Matrix4 &m1, const UMath::Matrix4 &m2,
             temp[i][j] = m1[i][0] * m2[0][j] + m1[i][1] * m2[1][j] + m1[i][2] * m2[2][j] + m1[i][3] * m2[3][j];
         }
     }
-
     result = temp;
 }
 
