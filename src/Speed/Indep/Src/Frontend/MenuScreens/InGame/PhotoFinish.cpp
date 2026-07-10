@@ -155,7 +155,7 @@ PhotoFinishScreen::~PhotoFinishScreen() {
 
     TheICEManager.SetGenericCameraToPlay("", "");
     new ESndGameState(7, false);
-    SetSoundControlState(false, static_cast<eSNDCTLSTATE>(1), "PhotoFin");
+    SetSoundControlState(false, SNDSTATE_PAUSE, "PhotoFin");
     mActive = false;
 }
 
@@ -300,7 +300,7 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *, u32, u32) {
                 new ESndGameState(7, true);
                 SoundPause(true, static_cast<eSNDPAUSE_REASON>(0xA));
                 SetSoundControlState(false, static_cast<eSNDCTLSTATE>(0xF), "CinemSlow");
-                SetSoundControlState(true, static_cast<eSNDCTLSTATE>(1), "PhotoFinish");
+                SetSoundControlState(true, SNDSTATE_PAUSE, "PhotoFinish");
             }
             return;
         }

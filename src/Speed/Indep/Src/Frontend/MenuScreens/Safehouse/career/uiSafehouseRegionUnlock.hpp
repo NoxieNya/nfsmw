@@ -1,9 +1,5 @@
-#ifndef FRONTEND_MENUSCREENS_SAFEHOUSE_CAREER_UISAFEHOUSEREGIONUNLOCK_H
-#define FRONTEND_MENUSCREENS_SAFEHOUSE_CAREER_UISAFEHOUSEREGIONUNLOCK_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef __UI_SAFE_HOUSE_REGION_UNLOCK_HPP__
+#define __UI_SAFE_HOUSE_REGION_UNLOCK_HPP__
 
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 #include "Speed/Indep/Src/FEng/FEImage.h"

@@ -33,23 +33,6 @@
 
 extern int g_MaxSongs;
 
-// TODO where does sound go??
-namespace Sound {
-
-struct stSongInfo {
-    char *SongName;
-    char *Artist;
-    char *Album;
-    char *DefPlay;
-    int PathEvent;
-};
-
-} // namespace Sound
-
-typedef std::vector<Sound::stSongInfo *> SongInfoList;
-
-extern SongInfoList Songs;
-
 extern Attrib::Key HudConfigs[5][2];
 extern Attrib::Key DriveConfigs[5][2];
 
@@ -366,7 +349,7 @@ void CareerSettings::StartNewCareer(bool bEnterGameplay) {
         const char *firstDDayRace = GRaceDatabase::Get().GetDDayStartRace();
         GRaceParameters *parms = GRaceDatabase::Get().GetRaceFromName(firstDDayRace);
         GRaceCustom *race = GRaceDatabase::Get().AllocCustomRace(parms);
-        GRaceDatabase::Get().SetStartupRace(race, kRaceContext_Career);
+        GRaceDatabase::Get().SetStartupRace(race, GRace::kRaceContext_Career);
         GRaceDatabase::Get().FreeCustomRace(race);
         RaceStarter::StartCareerFreeRoam();
     }
@@ -404,7 +387,7 @@ void CareerSettings::ResumeCareer() {
             const char *nextRace = GRaceDatabase::Get().GetNextDDayRace();
             GRaceParameters *parms = GRaceDatabase::Get().GetRaceFromHash(Attrib::StringHash32(nextRace));
             GRaceCustom *custom = GRaceDatabase::Get().AllocCustomRace(parms);
-            GRaceDatabase::Get().SetStartupRace(custom, kRaceContext_Career);
+            GRaceDatabase::Get().SetStartupRace(custom, GRace::kRaceContext_Career);
             GRaceDatabase::Get().FreeCustomRace(custom);
             if (bStrCmp(nextRace, "16.1.0") != 0) {
                 MemoryCard::GetInstance()->CancelNextAutoSave();
@@ -414,7 +397,7 @@ void CareerSettings::ResumeCareer() {
     } else if (bTutorialCompleted) {
         GRaceParameters *parms = GRaceDatabase::Get().GetRaceFromHash(Attrib::StringHash32("1.8.1"));
         GRaceCustom *custom = GRaceDatabase::Get().AllocCustomRace(parms);
-        GRaceDatabase::Get().SetStartupRace(custom, kRaceContext_Career);
+        GRaceDatabase::Get().SetStartupRace(custom, GRace::kRaceContext_Career);
         GRaceDatabase::Get().FreeCustomRace(custom);
         RaceStarter::StartCareerFreeRoam();
         MemoryCard::GetInstance()->CancelNextAutoSave();
@@ -787,7 +770,9 @@ cFrontendDatabase::cFrontendDatabase() {
 void cFrontendDatabase::Default() {
     bProfileLoaded = false;
     bIsOptionsDirty = false;
+#ifndef EA_BUILD_A124
     bAutoSaveOverwriteConfirmed = false;
+#endif
     iNumPlayers = 1;
     bComingFromBoot = true;
     GetUserProfile(0)->Default(0, true);
@@ -818,7 +803,9 @@ void cFrontendDatabase::Default() {
 
 void cFrontendDatabase::DefaultProfile() {
     CurrentUserProfiles[0]->Default(0, true);
+#ifndef EA_BUILD_A124
     bAutoSaveOverwriteConfirmed = false;
+#endif
     DefaultRaceSettings();
     unsigned int default_car = GetDefaultCar();
     GetCareerSettings()->SetCurrentCar(default_car);

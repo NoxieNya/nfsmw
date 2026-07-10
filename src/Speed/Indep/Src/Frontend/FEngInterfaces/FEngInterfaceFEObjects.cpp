@@ -1,3 +1,4 @@
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/FEng/FEScript.h"
@@ -13,7 +14,7 @@
 #include "Speed/Indep/Src/Frontend/FEObjectCallbacks.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 
-FEObject *FEngFindObject(const char *pkg_name, unsigned int obj_hash) {
+FEObject *FEngFindObject(const char *pkg_name, uint32 obj_hash) {
     if (pkg_name != nullptr) {
         FEPackage *pkg = cFEng::Get()->FindPackage(pkg_name);
         if (pkg != nullptr) {
@@ -26,8 +27,8 @@ FEObject *FEngFindObject(const char *pkg_name, unsigned int obj_hash) {
     return nullptr;
 }
 
-FEGroup *FEngFindGroup(const char *pkg_name, unsigned int obj_hash) {
-    FEObject *obj = FEngFindObject(pkg_name, obj_hash);
+FEGroup *FEngFindGroup(const char *pkg_name, uint32 grp_hash) {
+    FEObject *obj = FEngFindObject(pkg_name, grp_hash);
     if (obj == nullptr || obj->Type != FE_Group) {
         return nullptr;
     }
@@ -97,26 +98,21 @@ FEScript *FEngGetScript(FEObject *object, uint32 script_hash) {
     return object->FindScript(script_hash);
 }
 
-FEScript *FEngGetScript(const char *pkg_name, unsigned int obj_hash, unsigned int script_hash) {
+FEScript *FEngGetScript(const char *pkg_name, uint32 obj_hash, uint32 script_hash) {
     FEObject *obj = FEngFindObject(pkg_name, obj_hash);
     return FEngGetScript(obj, script_hash);
 }
 
-bool FEngIsScriptSet(FEObject *obj, unsigned int script_hash);
-bool FEngIsScriptRunning(FEObject *object, unsigned int script_hash);
-
-bool FEngIsScriptSet(const char *pkg_name, unsigned int obj_hash, unsigned int script_hash) {
+bool FEngIsScriptSet(const char *pkg_name, uint32 obj_hash, uint32 script_hash) {
     FEObject *object = FEngFindObject(pkg_name, obj_hash);
     return FEngIsScriptSet(object, script_hash);
 }
 
-bool FEngIsScriptSet(FEObject *obj, unsigned int script_hash) {
+bool FEngIsScriptSet(FEObject *obj, uint32 script_hash) {
     if (obj == nullptr)
         return false;
-    FEScript *script = obj->pCurrentScript;
-    if (script == nullptr)
-        return false;
-    if (script->ID != script_hash)
+    FEScript *scr = obj->pCurrentScript;
+    if (scr == nullptr || scr->ID != script_hash)
         return false;
     return true;
 }
@@ -141,14 +137,11 @@ void FEngSetRotationZ(FEObject *obj, float angle_degrees) {
         float rad_angle = bDegToRad(angle_degrees);
         bMatrix4 b;
         bIdentity(&b);
-        float cosVal = bCos(rad_angle);
-        b.v1.y = cosVal;
-        b.v0.x = cosVal;
-        float sinVal = bSin(rad_angle);
-        b.v0.y = sinVal;
-        b.v1.x = -sinVal;
+        b.v0.x = b.v1.y = bCos(rad_angle);
+        b.v0.y = bSin(rad_angle);
+        b.v1.x = -b.v0.y;
         bQuaternion q;
-        bMatrixToQuaternion(q, b);
+        bMatrixToQuaternion(&q, &b);
         FEQuaternion feq;
         feq.x = q.x;
         feq.y = q.y;
@@ -159,12 +152,11 @@ void FEngSetRotationZ(FEObject *obj, float angle_degrees) {
 }
 
 void FEngSetMultiImageRot(FEMultiImage *image, float angle_degrees) {
-    if (image == nullptr) {
-        return;
+    if (image != nullptr) {
+        FEMultiImageData *image_data = reinterpret_cast<FEMultiImageData *>(image->pData);
+        image_data->PivotRot.z = angle_degrees;
+        image->Flags |= FF_DirtyCode;
     }
-    FEMultiImageData *image_data = static_cast<FEMultiImageData *>(image->GetObjData());
-    image_data->PivotRot.z = angle_degrees;
-    image->Flags |= FF_DirtyCode;
 }
 
 void FEngSetMultiImageBottomRightUVs(FEMultiImage *image, FEVector2 &bottomRightUVs, int textureNumber) {
@@ -200,11 +192,11 @@ void FEngGetTopLeft(FEObject *object, float &x, float &y) {
             FEngFont *pFont = FindFont(object->Handle);
             if (pFont != nullptr) {
                 FEString *pStr = static_cast<FEString *>(object);
-                const short *characters = nullptr;
                 int label_hash = pStr->GetLabelHash();
+                const i16 *characters = nullptr;
+                i16 localized_string_buffer[1024];
                 if (!(object->Flags & 2)) {
-                    short localized_string_buffer[1024];
-                    if (GetLocalizedWideString(localized_string_buffer, 0x800, label_hash)) {
+                    if (GetLocalizedWideString(localized_string_buffer, sizeof(localized_string_buffer), label_hash)) {
                         characters = localized_string_buffer;
                     }
                 }
@@ -290,11 +282,11 @@ void FEngGetBottomRight(FEObject *object, float &x, float &y) {
             FEngFont *pFont = FindFont(object->Handle);
             if (pFont != nullptr) {
                 FEString *pStr = static_cast<FEString *>(object);
-                const short *characters = nullptr;
                 int label_hash = pStr->GetLabelHash();
+                const i16 *characters = nullptr;
+                i16 localized_string_buffer[1024];
                 if (!(object->Flags & 2)) {
-                    short localized_string_buffer[1024];
-                    if (GetLocalizedWideString(localized_string_buffer, 0x800, label_hash)) {
+                    if (GetLocalizedWideString(localized_string_buffer, sizeof(localized_string_buffer), label_hash)) {
                         characters = localized_string_buffer;
                     }
                 }
@@ -364,11 +356,11 @@ void FEngGetCenter(FEObject *object, float &x, float &y) {
             FEngFont *pFont = FindFont(object->Handle);
             if (pFont != nullptr) {
                 FEString *pStr = static_cast<FEString *>(object);
-                const short *characters = nullptr;
                 int label_hash = pStr->GetLabelHash();
+                const i16 *characters = nullptr;
+                i16 localized_string_buffer[1024];
                 if (!(object->Flags & 2)) {
-                    short localized_string_buffer[1024];
-                    if (GetLocalizedWideString(localized_string_buffer, 0x800, label_hash)) {
+                    if (GetLocalizedWideString(localized_string_buffer, sizeof(localized_string_buffer), label_hash)) {
                         characters = localized_string_buffer;
                     }
                 }
@@ -412,8 +404,8 @@ void FEngSetCenter(FEObject *object, float x, float y) {
         case FE_String: {
             FEngFont *pFont = FindFont(object->Handle);
             if (pFont != nullptr) {
-                FEString *pStr = static_cast<FEString *>(object);
                 FEVector3 &size = data->Size;
+                FEString *pStr = static_cast<FEString *>(object);
                 float width = size.x * pFont->GetTextWidth(pStr->GetString(), 0);
                 float height = size.y * pFont->GetTextHeight(pStr->GetString(), pStr->Leading, 0, 0, false);
                 pos.x = x - (pFont->CalculateXOffset(pStr->Format, width) + width * 0.5f);
@@ -450,7 +442,7 @@ float FEngGetScaleX(FEObject *object) {
         case FE_ColoredImage:
         case FE_MultiImage: {
             TextureInfo *pTex = GetTextureInfo(object->Handle, 1, 0);
-            return data->Size.x / static_cast<float>(pTex->Width);
+            return data->Size.x / pTex->Width;
         }
         case FE_String:
             return data->Size.x;
@@ -472,7 +464,7 @@ float FEngGetScaleY(FEObject *object) {
         case FE_ColoredImage:
         case FE_MultiImage: {
             TextureInfo *pTex = GetTextureInfo(object->Handle, 1, 0);
-            return data->Size.y / static_cast<float>(pTex->Height);
+            return data->Size.y / pTex->Height;
         }
         case FE_String:
             return data->Size.y;
@@ -491,20 +483,26 @@ void FEngSetScaleX(FEObject *object, float x) {
     }
 
     FEObjData *data = object->GetObjData();
-    float size = data->Size.x;
     float scale = x;
+    float size = data->Size.x;
 
+    // UNSOLVED
     switch (object->Type) {
         case FE_Image:
         case FE_Movie:
         case FE_ColoredImage:
         case FE_MultiImage: {
             TextureInfo *pTex = GetTextureInfo(object->Handle, 1, 0);
-            scale = x * static_cast<float>(pTex->Width);
+            scale *= pTex->Width;
         }
         case FE_String:
         case FE_Group:
             data->Size.x = scale;
+            break;
+        case FE_Model:
+        case FE_List:
+        case FE_CodeList:
+        default:
             break;
     }
 
@@ -520,20 +518,26 @@ void FEngSetScaleY(FEObject *object, float y) {
     }
 
     FEObjData *data = object->GetObjData();
-    float size = data->Size.y;
     float scale = y;
+    float size = data->Size.y;
 
+    // UNSOLVED
     switch (object->Type) {
         case FE_Image:
         case FE_Movie:
         case FE_ColoredImage:
         case FE_MultiImage: {
             TextureInfo *pTex = GetTextureInfo(object->Handle, 1, 0);
-            scale = y * static_cast<float>(pTex->Height);
+            scale *= pTex->Height;
         }
         case FE_String:
         case FE_Group:
             data->Size.y = scale;
+            break;
+        case FE_Model:
+        case FE_List:
+        case FE_CodeList:
+        default:
             break;
     }
 
@@ -560,13 +564,12 @@ void FEngGetSize(FEObject *object, float &x, float &y) {
             return;
         case FE_String: {
             FEngFont *pFont = FindFont(object->Handle);
-            if (pFont == nullptr) {
-                return;
+            if (pFont != nullptr) {
+                FEVector3 &size = data->Size;
+                FEString *pStr = static_cast<FEString *>(object);
+                x = size.x * pFont->GetTextWidth(pStr->GetString(), 0);
+                y = size.y * pFont->GetTextHeight(pStr->GetString(), pStr->Leading, 0, 0, false);
             }
-            FEString *pStr = static_cast<FEString *>(object);
-            FEVector3 &size = data->Size;
-            x = size.x * pFont->GetTextWidth(pStr->GetString(), 0);
-            y = size.y * pFont->GetTextHeight(pStr->GetString(), pStr->Leading, 0, 0, false);
             break;
         }
         case FE_Model:
@@ -612,31 +615,29 @@ void FEngSetSize(FEObject *object, float x, float y) {
 void FEngGetBottomRightUV(FEImage *img, float &u, float &v) {
     if (img != nullptr) {
         TextureInfo *pTex = GetTextureInfo(img->Handle, 1, 0);
-        u = img->GetImageData()->LowerRight.x * static_cast<float>(pTex->Width);
-        v = img->GetImageData()->LowerRight.y * static_cast<float>(pTex->Height);
+        u = img->GetImageData()->LowerRight.x * pTex->Width;
+        v = img->GetImageData()->LowerRight.y * pTex->Height;
     }
 }
 
 void FEngSetBottomRightUV(FEImage *img, float u, float v) {
     if (img != nullptr) {
         TextureInfo *pTex = GetTextureInfo(img->Handle, 1, 0);
-        img->GetImageData()->LowerRight.x = u / static_cast<float>(pTex->Width);
-        img->GetImageData()->LowerRight.y = v / static_cast<float>(pTex->Height);
+        img->GetImageData()->LowerRight.x = u / pTex->Width;
+        img->GetImageData()->LowerRight.y = v / pTex->Height;
         img->Flags |= FF_DirtyCode;
     }
 }
 
-void FEngSetColor(FEObject *object, unsigned int color) {
+void FEngSetColor(FEObject *object, uint32 color) {
     if (object != nullptr) {
-        FEColor col(color);
-        object->SetColor(col, false);
+        object->SetColor(FEColor(color), false);
     }
 }
 
 FEColor FEngGetObjectColor(FEObject *obj) {
     if (obj != nullptr) {
-        FEObjData *data = obj->GetObjData();
-        return data->Col;
+        return obj->GetObjData()->Col;
     }
     return FEColor(0);
 }
@@ -654,34 +655,22 @@ void FixInvertedRect(FERect &rect) {
     }
 }
 
-inline float FEngGetCenterX(FEObject *obj) {
-    float x;
-    float y;
-    FEngGetCenter(obj, x, y);
-    return x;
-}
-
-inline float FEngGetCenterY(FEObject *obj) {
-    float x;
-    float y;
-    FEngGetCenter(obj, x, y);
-    return y;
-}
-
 bool FEngGet2DExtentsForMouse(FEObject *pObject, FERect &Rect, FEVector2 offset);
 
 bool FEngTestForIntersection(float xPos, float yPos, FEObject *obj) {
-    if (obj != nullptr) {
-        FERect Rect(-10000.0f, -10000.0f, 10000.0f, 10000.0f);
-        FEngGet2DExtentsForMouse(obj, Rect, FEVector2());
-        FixInvertedRect(Rect);
-        if (xPos >= Rect.left && xPos <= Rect.right && yPos >= Rect.top && yPos <= Rect.bottom) {
-            return true;
-        }
+    if (obj == nullptr) {
+        return false;
+    }
+    FERect Rect(40000.0f, 40000.0f, -40000.0f, -40000.0f);
+    FEngGet2DExtentsForMouse(obj, Rect, FEVector2());
+    FixInvertedRect(Rect);
+    if (xPos >= Rect.left && xPos <= Rect.right && yPos >= Rect.top && yPos <= Rect.bottom) {
+        return true;
     }
     return false;
 }
 
+// UNSOLVED
 bool FEngGet2DExtentsForMouse(FEObject *pObject, FERect &Rect, FEVector2 offset) {
     if (pObject == nullptr) {
         return false;
@@ -689,30 +678,24 @@ bool FEngGet2DExtentsForMouse(FEObject *pObject, FERect &Rect, FEVector2 offset)
 
     switch (pObject->Type) {
         case FE_Group: {
-            FEGroup *grp = static_cast<FEGroup *>(pObject);
-            FEObject *pChild = grp->GetFirstChild();
-            if (pChild != nullptr) {
-                do {
-                    FERect ChildRect(-10000.0f, -10000.0f, 10000.0f, 10000.0f);
-                    float cx = FEngGetCenterX(pObject);
-                    float cy = FEngGetCenterY(pObject);
-                    FEVector2 childOffset = offset + FEVector2(cx, cy);
-                    if (FEngGet2DExtentsForMouse(pChild, ChildRect, childOffset)) {
-                        if (ChildRect.left < Rect.left) {
-                            Rect.left = ChildRect.left;
-                        }
-                        if (ChildRect.right > Rect.right) {
-                            Rect.right = ChildRect.right;
-                        }
-                        if (ChildRect.top < Rect.top) {
-                            Rect.top = ChildRect.top;
-                        }
-                        if (ChildRect.bottom > Rect.bottom) {
-                            Rect.bottom = ChildRect.bottom;
-                        }
+            FEObject *pChild = static_cast<FEGroup *>(pObject)->GetFirstChild();
+            while (pChild != nullptr) {
+                FERect ChildRect(40000.0f, 40000.0f, -40000.0f, -40000.0f);
+                if (FEngGet2DExtentsForMouse(pChild, ChildRect, offset + FEVector2(FEngGetCenterX(pObject), FEngGetCenterY(pObject)))) {
+                    if (ChildRect.left < Rect.left) {
+                        Rect.left = ChildRect.left;
                     }
-                    pChild = pChild->GetNext();
-                } while (pChild != nullptr);
+                    if (ChildRect.right > Rect.right) {
+                        Rect.right = ChildRect.right;
+                    }
+                    if (ChildRect.top < Rect.top) {
+                        Rect.top = ChildRect.top;
+                    }
+                    if (ChildRect.bottom > Rect.bottom) {
+                        Rect.bottom = ChildRect.bottom;
+                    }
+                }
+                pChild = pChild->GetNext();
             }
             break;
         }
@@ -723,14 +706,6 @@ bool FEngGet2DExtentsForMouse(FEObject *pObject, FERect &Rect, FEVector2 offset)
         case FE_AnimImage:
         case FE_SimpleImage:
         case FE_MultiImage:
-            FEngGetTopLeft(pObject, Rect.left, Rect.top);
-            FEngGetBottomRight(pObject, Rect.right, Rect.bottom);
-
-            Rect.left += offset.x;
-            Rect.right += offset.x;
-            Rect.top += offset.y;
-            Rect.bottom += offset.y;
-            break;
         case FE_Model:
         case FE_List:
         case FE_CodeList:

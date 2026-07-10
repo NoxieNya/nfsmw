@@ -8,7 +8,7 @@
 
 class BountyDatum : public ArrayDatum {
   public:
-    BountyDatum(uint32 hash, uint32 desc, uint32 idx) : ArrayDatum(hash, desc), index(idx) {}
+    BountyDatum(uint32 hash, uint32 desc, uint32 index) : ArrayDatum(hash, desc), index(index) {}
     ~BountyDatum() override {}
     void NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) override;
 

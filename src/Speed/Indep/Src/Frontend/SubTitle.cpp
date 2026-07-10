@@ -1,5 +1,6 @@
 #include "SubTitle.hpp"
 #include "MoviePlayer/MoviePlayer.hpp"
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
@@ -11,7 +12,7 @@
 
 extern bool IsMovieTimerPrintf;
 
-SubTitler *SubTitler::gCurrentSubtitler_;
+SubTitler *SubTitler::gCurrentSubtitler_ = nullptr;
 
 SubTitler::SubTitler() {
     next_ = 0;
@@ -98,25 +99,27 @@ float SubTitler::GetElapsedTime() {
 
 void SubTitler::Update(uint32 msg) {
     if (gMoviePlayer != nullptr) {
-        int paused = gMoviePlayer->IsMoviePaused();
-        if (paused)
-            paused = 1;
-        mSubtitlePaused = paused;
-        if (msg == 0xC98356BA) {
+        if (gMoviePlayer->IsMoviePaused()) {
+            mSubtitlePaused = true;
+        } else {
+            mSubtitlePaused = false;
+        }
+        if (msg == FEMSG_SCREEN_TICK) {
             if (data_ != nullptr && lastTime != 0) {
                 float timenow = GetElapsedTime();
                 if (IsMovieTimerPrintf) {
-                    Timer timer(static_cast<int>(timenow * 4000.0f + 0.5f));
+                    Timer timer;
+                    timer.SetTime(timenow);
                     char timer_str[100];
                     timer.PrintToString(timer_str, 0);
                 }
-                unsigned short delta = static_cast<unsigned short>(timenow * 10.0f);
+                uint16 delta = static_cast<uint16>(timenow * 10.0f);
                 if (data_[next_].startTime <= delta) {
                     RefreshText();
                     next_++;
                 }
             }
-        } else if (msg == 0xC3960EB9) {
+        } else if (msg == FEMSG_MOVIE_FINISHED) {
             Unload();
         }
     }

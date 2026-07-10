@@ -259,7 +259,7 @@ void UIQRTrackOptions::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
                 if (isSplitScreen) {
                     custom->SetNumOpponents(1);
                 }
-                GRaceDatabase::Get().SetStartupRace(custom, kRaceContext_QuickRace);
+                GRaceDatabase::Get().SetStartupRace(custom, GRace::kRaceContext_QuickRace);
                 GRaceDatabase::Get().FreeCustomRace(custom);
             }
             {

@@ -816,7 +816,7 @@ void IconScrollerMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
 
 eMenuSoundTriggers IconScrollerMenu::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
     if ((msg == 0x48122792 || msg == 0x4ac5e165) && !Options.JustScrolled()) {
-        return static_cast<eMenuSoundTriggers>(-1);
+        return UISND_NONE;
     }
     return maybe;
 }

@@ -9,8 +9,10 @@
 // Decl: speed/indep/src/frontend/FEJoyInput.hpp:21
 class cFEngJoyInput {
   public:
-    static cFEngJoyInput *mInstance;      // size: 0x4, address: 0x8041B810, Decl: speed/indep/src/frontend/FEJoyInput.hpp:23
-    static struct cFEngJoyInput *Get() {} // Decl: speed/indep/src/frontend/FEJoyInput.hpp:24
+    static cFEngJoyInput *mInstance;     // size: 0x4, address: 0x8041B810, Decl: speed/indep/src/frontend/FEJoyInput.hpp:23
+    static struct cFEngJoyInput *Get() { // Decl: speed/indep/src/frontend/FEJoyInput.hpp:24
+        return mInstance;
+    }
 
     cFEngJoyInput();  // Decl: speed/indep/src/frontend/FEJoyInput.hpp:30
     ~cFEngJoyInput(); // Decl: speed/indep/src/frontend/FEJoyInput.hpp:31

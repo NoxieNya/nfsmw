@@ -50,8 +50,12 @@ UIQRMainMenu::UIQRMainMenu(ScreenConstructorData *sd) : IconScrollerMenu(sd) {
 
 void UIQRMainMenu::RefreshHeader() {
     IconScrollerMenu::RefreshHeader();
-    FEngSetLanguageHash(GetPackageName(), 0x3c458c1, 0xcdf0cc03);
-    FEngSetLanguageHash(GetPackageName(), 0xb5c74226, 0xcdf0cc03);
+
+    u32 hash = 0xcdf0cc03;
+    const u32 FEObj_TITLE = 0x3C458C1;
+    const u32 FEObj_TITLESHADOW = 0xB5C74226;
+    FEngSetLanguageHash(GetPackageName(), FEObj_TITLE, hash);
+    FEngSetLanguageHash(GetPackageName(), FEObj_TITLESHADOW, hash);
 }
 
 void UIQRMainMenu::Setup() {

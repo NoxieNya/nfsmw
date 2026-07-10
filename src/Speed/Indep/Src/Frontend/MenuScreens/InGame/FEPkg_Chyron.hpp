@@ -4,7 +4,7 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 #include "Speed/Indep/Src/Misc/Timer.hpp"
 
-static MenuScreen *ChyronScreenPtr;
+static MenuScreen *ChyronScreenPtr = nullptr;
 
 class Chyron : public MenuScreen {
   public:

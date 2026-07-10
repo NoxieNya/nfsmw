@@ -1,5 +1,6 @@
 #include "UnicodeFile.hpp"
 
+#include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/Src/Misc/bFile.hpp"
 #include "Speed/Indep/bWare/Inc/bWare.hpp"
 
@@ -35,17 +36,17 @@ void UnicodeFile::Unload() {
 }
 
 i16 *UnicodeFile::First() {
-    i16 *p = data_;
-    if (p == nullptr) {
+    if (data_ == nullptr) {
         return nullptr;
     }
-    next_ = p;
-    if (*p == static_cast<i16>(0xFEFF)) {
-        next_ = p + 1;
+    next_ = data_;
+    if (*data_ == static_cast<i16>(0xFEFF)) {
+        next_ = data_ + 1;
     }
     return next_;
 }
 
+// UNSOLVED
 i16 *UnicodeFile::Next() {
     if (data_ == nullptr || next_ == nullptr) {
         return nullptr;
@@ -75,20 +76,16 @@ done:
 }
 
 void UnicodeFile::FixEndian() {
-    i16 *p = data_;
-    while (p != end_) {
+    for (i16 *p = data_; p != end_; p++) {
         bEndianSwap(p);
-        p++;
     }
 }
 
 void UnicodeFile::FixEOLs() {
-    i16 *p = data_;
-    while (p != end_) {
+    for (i16 *p = data_; p != end_; p++) {
         if (*p == 10 || *p == 13) {
             *p = 0;
         }
-        p++;
     }
 }
 

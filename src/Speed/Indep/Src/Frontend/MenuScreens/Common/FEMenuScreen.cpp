@@ -266,7 +266,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
             soundToPlay = static_cast<eMenuSoundTriggers>(0x85);
             break;
         case 0x4A805994:
-            soundToPlay = static_cast<eMenuSoundTriggers>(2);
+            soundToPlay = UISND_COMMON_LEFT;
             break;
         case 0x4B680587:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x9b);
@@ -299,7 +299,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
             soundToPlay = static_cast<eMenuSoundTriggers>(0x76);
             break;
         case 0x52F69B81:
-            soundToPlay = static_cast<eMenuSoundTriggers>(7);
+            soundToPlay = UISND_COMMON_WRONG;
             break;
         case 0x54EBD897:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x7b);
@@ -401,7 +401,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
             soundToPlay = static_cast<eMenuSoundTriggers>(3);
             break;
         case 0x9B59E056:
-            soundToPlay = static_cast<eMenuSoundTriggers>(7);
+            soundToPlay = UISND_COMMON_WRONG;
             break;
         case 0x9F032957:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x89);

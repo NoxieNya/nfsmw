@@ -138,7 +138,7 @@ class FEManager {
     ~FEManager() {} // Decl: speed/indep/src/frontend/FeManager.hpp:252
 
   private:
-    static struct FEManager *mInstance; // size: 0x4, address: 0x8041B970, Decl: speed/indep/src/frontend/FEManager.cpp:109
+    static FEManager *mInstance;        // size: 0x4, address: 0x8041B970, Decl: speed/indep/src/frontend/FEManager.cpp:109
     static int mPauseRequest;           // size: 0x4, address: 0x8041B974
     static const char *mPauseReason[8]; // size: 0x20, address: 0x8041B978
 

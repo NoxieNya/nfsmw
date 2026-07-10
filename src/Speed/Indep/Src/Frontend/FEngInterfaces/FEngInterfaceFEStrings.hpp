@@ -11,7 +11,7 @@ void FEngSetLanguageHash(const char *pkg_name, uint32 obj_hash, uint32 language)
 unsigned int FEngHashString(const char *fmt /* r4 */, ...);
 int FEngSNPrintf(char *buffer /* r3 */, int buf_size /* r4 */, const char *fmt /* r5 */, ...);
 
-void FESetString(FEString *text /* r31 */, const short *string /* r4 */);
+void FESetString(FEString *text /* r31 */, const i16 *string /* r4 */);
 
 static int DoFEngPrintf(FEString *text, char *string, int len);
 

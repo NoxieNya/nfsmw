@@ -10,23 +10,7 @@
 #include "Speed/Indep/Src/FEng/FEString.h"
 
 class UIMemcardList;
-
-// total size: 0x24
-class FEMemWidget : public ScrollerDatum {
-  public:
-    static const int MAX_SIZE; // size: 0x4, address: 0xFFFFFFFF
-    MemCardFileFlag m_Flag;    // offset 0x18, size 0x4
-    int m_Size;                // offset 0x1C, size 0x4
-    UIMemcardList *m_pParent;  // offset 0x20, size 0x4
-
-    FEMemWidget() {}
-    ~FEMemWidget() override {}
-
-    void Act(const char *parent_pkg, uint32 data) {}
-    bool IsCorrupt() {}
-    int GetSize() const {}
-    const char *GetFileName() {}
-};
+class FEMemWidget;
 
 // total size: 0x104
 class UIMemcardList : public MenuScreen {

@@ -839,7 +839,7 @@ eMenuSoundTriggers UIQRCarSelect::NotifySoundMessage(u32 msg, eMenuSoundTriggers
     if (msg == 0x72619778 || msg == 0x911c0a4b || msg == 0xb205316c || msg == 0x480df13f) {
         unsigned int mode = FEDatabase->GetGameMode();
         if ((mode & 0x20) || (mode & 0x8000) || (mode & 1)) {
-            return static_cast<eMenuSoundTriggers>(-1);
+            return UISND_NONE;
         }
     }
     return reinterpret_cast<MenuScreen *>(this)->NotifySoundMessage(msg, maybe);

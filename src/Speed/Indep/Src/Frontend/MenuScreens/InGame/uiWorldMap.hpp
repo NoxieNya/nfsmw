@@ -27,8 +27,20 @@ enum eMiniMapModes {
 // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:37
 class MapItem : public bTNode<MapItem> {
   public:
-    MapItem(eWorldMapItemType type, FEObject *iconObj, bVector2 &map_pos, bVector2 &world_pos, float rot,
-            GIcon *icon); // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:40
+    // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:40
+    MapItem(eWorldMapItemType type, FEObject *iconObj, bVector2 &map_pos, bVector2 &world_pos, float rot, GIcon *icon)
+        : pIcon(iconObj), InitialPos(map_pos), WorldPos(world_pos), Rot(rot), TheType(type), TheIcon(icon), bHidden(false) {
+        if (!FEDatabase->GetGameplaySettings()->IsMapItemEnabled(type)) {
+            bHidden = true;
+            Hide();
+        } else {
+            bHidden = false;
+            Show();
+        }
+        FEngGetSize(pIcon, InitialSize.x, InitialSize.y);
+        FEngSetCenter(pIcon, InitialPos.x, InitialPos.y);
+        FEngSetRotationZ(pIcon, Rot);
+    };
 
     virtual ~MapItem() {} // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:61
 
@@ -103,8 +115,7 @@ class MapItem : public bTNode<MapItem> {
 class CopItem : public MapItem {
   public:
     CopItem(FEObject *icon, bVector2 &pos, bVector2 &world_pos, float rot, eWorldMapItemType type)
-        : MapItem(type, icon, pos, world_pos, rot, nullptr) { // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:158
-        FlashTimer = -1;
+        : MapItem(type, icon, pos, world_pos, rot, nullptr), FlashTimer(-1) { // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:158
     }
 
     ~CopItem() override {} // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:161
@@ -119,14 +130,12 @@ class CopItem : public MapItem {
 // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:172
 class HeliItem : public CopItem {
   public:
-    HeliItem(FEImage *view, FEObject *icon, bVector2 &pos, bVector2 &world_pos,
-             float rot) // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:175
-        : CopItem(icon, pos, world_pos, rot, WMIT_COP_HELI) {
-        pViewCone = view;
+    HeliItem(FEImage *view, FEObject *icon, bVector2 &pos, bVector2 &world_pos, float rot)
+        : CopItem(icon, pos, world_pos, rot, WMIT_COP_HELI), pViewCone(view) { // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:175
         InitialSize.x = FEngGetScaleX(pIcon);
         InitialSize.y = FEngGetScaleY(pIcon);
-        FEngSetCenter(static_cast<FEObject *>(pViewCone), pos.x, pos.y);
-        FEngSetRotationZ(static_cast<FEObject *>(pViewCone), rot);
+        FEngSetCenter(pViewCone, pos.x, pos.y);
+        FEngSetRotationZ(pViewCone, rot);
     }
 
     ~HeliItem() override {} // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:184
@@ -135,7 +144,7 @@ class HeliItem : public CopItem {
 
     void UpdatePos(bVector2 &pos) override { // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:188
         FEngSetCenter(pIcon, pos.x, pos.y);
-        FEngSetCenter(static_cast<FEObject *>(pViewCone), pos.x, pos.y);
+        FEngSetCenter(pViewCone, pos.x, pos.y);
     }
     void UpdateScale(float scale) override { // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:189
         FEngSetScaleX(pIcon, InitialSize.x * scale);
@@ -143,11 +152,11 @@ class HeliItem : public CopItem {
     }
     void Show() override { // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:191
         MapItem::Show();
-        FEngSetVisible(static_cast<FEObject *>(pViewCone));
+        FEngSetVisible(pViewCone);
     }
     void Hide() override { // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:192
         MapItem::Hide();
-        FEngSetInvisible(static_cast<FEObject *>(pViewCone));
+        FEngSetInvisible(pViewCone);
     }
 
     void ResetSize() override { // Decl: speed/indep/src/frontend/menuscreens/ingame/uiWorldMap.hpp:194
@@ -166,7 +175,7 @@ class ItemTypeToggle : public FEButtonWidget {
         NameHash = name_hash;
         pIcon = nullptr;
         bVisibility = vis;
-        bExiting = 0;
+        bExiting = false;
     };
     ~ItemTypeToggle() override {}
     void Act(const char *parent_pkg, uint32 data) override;
@@ -181,7 +190,7 @@ class ItemTypeToggle : public FEButtonWidget {
     eWorldMapItemType GetType() {
         return ItemType;
     }
-    int GetVisibility() {
+    bool GetVisibility() {
         return bVisibility;
     }
     void Show() override;
@@ -195,8 +204,8 @@ class ItemTypeToggle : public FEButtonWidget {
     uint32 NameHash;            // offset 0x44, size 0x4
     FEImage *pIcon;             // offset 0x48, size 0x4
     FEObject *pIconGroup;       // offset 0x4C, size 0x4
-    int bVisibility;            // offset 0x50, size 0x4
-    int bExiting;               // offset 0x54, size 0x4
+    bool bVisibility;           // offset 0x50, size 0x4
+    bool bExiting;              // offset 0x54, size 0x4
 };
 
 // total size: 0x19C

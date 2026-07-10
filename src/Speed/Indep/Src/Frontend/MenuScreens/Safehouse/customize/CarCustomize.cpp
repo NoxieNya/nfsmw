@@ -3569,13 +3569,13 @@ CustomizePaint::CustomizePaint(ScreenConstructorData *sd)
 eMenuSoundTriggers CustomizePaint::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
     if (static_cast<unsigned int>(maybe - 0x29) < 2) {
         if (Category == 0x303) {
-            return static_cast<eMenuSoundTriggers>(-1);
+            return UISND_NONE;
         }
         SelectablePart *temp = gCarCustomizeManager.GetTempColoredPart();
         if (temp) {
             CarPart *part = temp->GetPart();
             if (part && part->GetAppliedAttributeUParam(0x6212682b, 0) < 2) {
-                return static_cast<eMenuSoundTriggers>(-1);
+                return UISND_NONE;
             }
         }
     }
@@ -3610,10 +3610,10 @@ void CustomizePaint::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
 #endif
             break;
         case 0x5073ef13:
-            ScrollFilters(static_cast<eScrollDir>(-1));
+            ScrollFilters(eSD_PREV);
             break;
         case 0xd9feec59:
-            ScrollFilters(static_cast<eScrollDir>(1));
+            ScrollFilters(eSD_NEXT);
             break;
         case 0x406415e3:
             if (Category == 0x301 || Category == 0x303) {
@@ -3759,12 +3759,12 @@ void CustomizePaint::ScrollFilters(eScrollDir dir) {
     }
     int cur = TheFilter;
     int next;
-    if (dir == static_cast<eScrollDir>(-1)) {
+    if (dir == eSD_PREV) {
         next = cur - 1;
         if (next < 0) {
             next = maxFilter;
         }
-    } else if (dir == static_cast<eScrollDir>(1)) {
+    } else if (dir == eSD_NEXT) {
         next = cur + 1;
         if (next > maxFilter) {
             next = 0;

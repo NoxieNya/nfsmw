@@ -15,13 +15,6 @@
 #include "Speed/Indep/Src/Gameplay/GCharacter.h"
 #include "Speed/Indep/Src/Misc/PackedDecimal.h"
 
-enum Context {
-    kRaceContext_QuickRace = 0,
-    kRaceContext_Online = 1,
-    kRaceContext_Career = 2,
-    kRaceContext_Count = 3,
-};
-
 class GVault;
 class GRaceCustom;
 
@@ -490,7 +483,7 @@ class GRaceDatabase {
 
     GRaceCustom *GetStartupRace();
     void ClearStartupRace();
-    void SetStartupRace(GRaceCustom *custom, Context context);
+    void SetStartupRace(GRaceCustom *custom, GRace::Context context);
     void FreeCustomRace(GRaceCustom *custom);
     GRaceParameters *GetRaceFromHash(unsigned int hash);
     GRaceParameters *GetRaceFromActivity(GActivity *activity);
@@ -519,20 +512,24 @@ class GRaceDatabase {
         return CheckRaceScoreFlags(eventHash, kCompleted_ContextQuickRace);
     }
 
-    const char *GetBurgerKingRace() const {
-        return "19.8.31";
-    }
-
     const char *GetDDayStartRace() const {
-        return sDDayRaces[0];
+        return "16.1.0";
     }
 
     const char *GetDDayEndRace() const {
-        return sDDayRaces[7];
+        return "16.2.1";
     }
 
     const char *GetFinalBossRace() const {
-        return sDDayRaces[4];
+        return "1.2.3";
+    }
+
+    const char *GetFinalEpicChaseRace() const {
+        return "1.8.1";
+    }
+
+    const char *GetBurgerKingRace() const {
+        return "19.8.31";
     }
 
     bool CheckRaceScoreFlags(unsigned int eventHash, ScoreFlags mask);
@@ -552,26 +549,28 @@ class GRaceDatabase {
     GRaceBin *GetBin(unsigned int index);
     GRaceBin *GetBinNumber(int number);
 
-    static const char sDDayRaces[8][5];
+    static const char sDDayRaces[5][8];
 
   private:
-    unsigned int mRaceCountStatic;    // offset 0x0, size 0x4
-    unsigned int mRaceCountDynamic;   // offset 0x4, size 0x4
-    GRaceIndexData *mRaceIndex;       // offset 0x8, size 0x4
-    GRaceParameters *mRaceParameters; // offset 0xC, size 0x4
-    GRaceCustom *mRaceCustom[4];      // offset 0x10, size 0x10
-    unsigned int mBinCount;           // offset 0x20, size 0x4
-    GRaceBin *mBins;                  // offset 0x24, size 0x4
-    Attrib::Class *mGameplayClass;    // offset 0x28, size 0x4
-    GRaceCustom *mStartupRace;        // offset 0x2C, size 0x4
-    Context mStartupRaceContext;      // offset 0x30, size 0x4
-    unsigned int mNumInitialUnlocks;  // offset 0x34, size 0x4
-    unsigned int *mInitialUnlockHash; // offset 0x38, size 0x4
-    GRaceSaveInfo *mRaceScoreInfo;    // offset 0x3C, size 0x4
+    unsigned int mRaceCountStatic;      // offset 0x0, size 0x4
+    unsigned int mRaceCountDynamic;     // offset 0x4, size 0x4
+    GRaceIndexData *mRaceIndex;         // offset 0x8, size 0x4
+    GRaceParameters *mRaceParameters;   // offset 0xC, size 0x4
+    GRaceCustom *mRaceCustom[4];        // offset 0x10, size 0x10
+    unsigned int mBinCount;             // offset 0x20, size 0x4
+    GRaceBin *mBins;                    // offset 0x24, size 0x4
+    Attrib::Class *mGameplayClass;      // offset 0x28, size 0x4
+    GRaceCustom *mStartupRace;          // offset 0x2C, size 0x4
+    GRace::Context mStartupRaceContext; // offset 0x30, size 0x4
+    unsigned int mNumInitialUnlocks;    // offset 0x34, size 0x4
+    unsigned int *mInitialUnlockHash;   // offset 0x38, size 0x4
+    GRaceSaveInfo *mRaceScoreInfo;      // offset 0x3C, size 0x4
 
   public:
     static GRaceDatabase *mObj;
 };
+
+const char GRaceDatabase::sDDayRaces[5][8] = {"16.1.0", "16.2.2", "16.2.3", "16.1.1", "16.2.1"};
 
 bool GetIsCollectorsEdition();
 

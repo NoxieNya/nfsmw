@@ -4,7 +4,7 @@
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 
-int FEGameWonScreen::mCurrentScreen;
+int FEGameWonScreen::mCurrentScreen = 0;
 
 FEGameWonScreen::FEGameWonScreen(ScreenConstructorData *sd) : MenuScreen(sd) {
     switch (mCurrentScreen) {

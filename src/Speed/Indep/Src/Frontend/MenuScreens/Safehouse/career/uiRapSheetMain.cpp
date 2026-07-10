@@ -17,7 +17,7 @@ void uiRapSheetMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
             button_pressed = pobj->NameHash;
             break;
         case 0x35F8620B: {
-            unsigned char button = FEngGetLastButton(GetPackageName());
+            uint8 button = FEngGetLastButton(GetPackageName());
             if (button == 0) {
                 button = 1;
             }
@@ -56,20 +56,20 @@ void uiRapSheetMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
                     FEDatabase->ClearGameMode(eFE_GAME_MODE_RAP_SHEET);
                     break;
             }
-            FEngSetLastButton(GetPackageName(), static_cast<unsigned char>(button_num));
+            FEngSetLastButton(GetPackageName(), button_num);
             break;
         }
     }
 }
 
 void uiRapSheetMain::RefreshHeader() {
-    UserProfile *prof = FEDatabase->GetUserProfile(0);
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
-    HighScoresDatabase *scores = prof->GetHighScores();
-    FEPrintf(GetPackageName(), 0x1232703A, GetLocalizedString(0xE21D083C), prof->GetCareer()->GetCaseFileName());
-    FEPrintf(GetPackageName(), 0xE3DA78E7, GetLocalizedString(0x6031106E), prof->GetProfileName());
+    UserProfile &prof = *FEDatabase->GetUserProfile(0);
+    HighScoresDatabase *scores = prof.GetHighScores();
+    FEPrintf(GetPackageName(), 0x1232703A, GetLocalizedString(0xE21D083C), prof.GetCareer()->GetCaseFileName());
+    FEPrintf(GetPackageName(), 0xE3DA78E7, GetLocalizedString(0x6031106E), prof.GetProfileName());
     FEPrintf(GetPackageName(), 0xE3DA78E8, GetLocalizedString(0x364E4525), stable->GetTotalBounty());
-    FEPrintf(GetPackageName(), 0xE3DA78E9, GetLocalizedString(0xA355FEDD), scores->GetCareerPursuitScore(static_cast<ePursuitDetailTypes>(7)));
+    FEPrintf(GetPackageName(), 0xE3DA78E9, GetLocalizedString(0xA355FEDD), scores->GetCareerPursuitScore(PD_COST_TO_STATE));
     FEPrintf(GetPackageName(), 0xE3DA78EA, GetLocalizedString(0xB1E58DB1), stable->GetNumImpoundedCars());
     FEPrintf(GetPackageName(), 0xE3DA78EB, GetLocalizedString(0x79FB7D16), stable->GetTotalFines(true));
     FEPrintf(GetPackageName(), 0xE3DA78EC, GetLocalizedString(0x463B461B), stable->GetTotalEvadedPursuits());

@@ -878,12 +878,12 @@ eMenuSoundTriggers PostRaceResultsScreen::NotifySoundMessage(u32 msg, eMenuSound
         }
 
         if (mNumberOfRacers < 2 || mPostRaceScreenMode == POSTRACESCREENMODE_RESULTS) {
-            return static_cast<eMenuSoundTriggers>(-1);
+            return UISND_NONE;
         }
     }
 
     if (FEngIsScriptSet(GetPackageName(), 0x57EFB2FB, 0x0016A259)) {
-        return static_cast<eMenuSoundTriggers>(-1);
+        return UISND_NONE;
     }
 
     return maybe;

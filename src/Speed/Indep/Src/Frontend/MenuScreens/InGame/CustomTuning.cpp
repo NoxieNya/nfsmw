@@ -65,18 +65,18 @@ void TuningSlider::Position() {}
 void TuningSlider::SetFocus(const char *parent_pkg) {
     FEngSetCurrentButton(parent_pkg, reinterpret_cast<FEObject *>(GetTitleObject()));
     if (bActive) {
-        const u32 FEObj_Init = 0x7AB5521A;
+        const u32 FEObj_Init = 0x001744B3;
 
-        FEngSetScript(reinterpret_cast<FEObject *>(GetTitleObject()), FEObj_Init, true);
-        FEngSetScript(pSliderGroup, 0x001744B3, true);
+        FEngSetScript(reinterpret_cast<FEObject *>(GetTitleObject()), 0x7AB5521A, true);
+        FEngSetScript(pSliderGroup, FEObj_Init, true);
     }
 }
 
 void TuningSlider::UnsetFocus() {
     if (bActive) {
-        const u32 FEObj_Init = 0x7AB5521A;
-        FEngSetScript(reinterpret_cast<FEObject *>(GetTitleObject()), FEObj_Init, true);
-        FEngSetScript(pSliderGroup, 0x001744B3, true);
+        const u32 FEObj_Init = 0x001744B3;
+        FEngSetScript(reinterpret_cast<FEObject *>(GetTitleObject()), 0x7AB5521A, true);
+        FEngSetScript(pSliderGroup, FEObj_Init, true);
     } else {
         const u32 FEObj_GREY = 0x00163C76;
         FEngSetScript(reinterpret_cast<FEObject *>(GetTitleObject()), FEObj_GREY, true);

@@ -339,7 +339,7 @@ class GRaceStatus : public UTL::COM::Object, public IVehicleCache {
     };
 
     GRace::Type GetRaceType() const {
-        return mRaceParms ? mRaceParms->GetRaceType() : GRace::kRaceType_None;
+        return (mRaceParms != nullptr) ? mRaceParms->GetRaceType() : GRace::kRaceType_None;
     }
 
     GRaceParameters *GetRaceParameters() const {
@@ -367,7 +367,7 @@ class GRaceStatus : public UTL::COM::Object, public IVehicleCache {
     float GetRaceTimeElapsed() const;
 
     bool GetIsTimeLimited() const {
-        return mRaceParms && mRaceParms->GetTimeLimit() > 0.0f;
+        return (mRaceParms != nullptr) && mRaceParms->GetTimeLimit() > 0.0f;
     }
 
     float GetRaceTimeRemaining() const;

@@ -5,7 +5,10 @@
 
 class UIMemcardBoot : public UIMemcardBase {
   public:
-    UIMemcardBoot(ScreenConstructorData *sd) : UIMemcardBase(sd) {}
+    UIMemcardBoot(ScreenConstructorData *sd) : UIMemcardBase(sd) {
+        FEString *mpBlurb = FEngFindString(GetPackageName(), 0x1e2640fa);
+        mpBlurb->Flags &= ~0x200;
+    }
     ~UIMemcardBoot() override {}
 
     void NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) override;

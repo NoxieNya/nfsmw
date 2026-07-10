@@ -1,10 +1,9 @@
 #ifndef UIEATRAXJUKEBOX_H
 #define UIEATRAXJUKEBOX_H
 
+#include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feScrollerina.hpp"
-
-struct JukeboxEntry;
 
 class JukeBoxScrollerDatum : public ScrollerDatum {
   public:

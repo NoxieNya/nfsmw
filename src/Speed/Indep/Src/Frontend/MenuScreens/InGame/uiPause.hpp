@@ -97,7 +97,8 @@ class pm_SwitchToOptions : public IconOption {
 
 class pm_SwitchToTuning : public IconOption {
   public:
-    pm_SwitchToTuning(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {
+    pm_SwitchToTuning(uint32 tex_hash, uint32 name_hash, uint32 desc_hash, bool unlocked) : IconOption(tex_hash, name_hash, desc_hash) {
+        Locked = !unlocked;
         SetReactImmediately(true);
     }
     ~pm_SwitchToTuning() override {}

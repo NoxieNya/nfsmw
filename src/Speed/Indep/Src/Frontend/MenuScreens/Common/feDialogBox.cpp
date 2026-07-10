@@ -46,7 +46,7 @@ eMenuSoundTriggers feDialogScreen::NotifySoundMessage(u32 msg, eMenuSoundTrigger
                 return maybe;
             }
             if (!Config.bIsDismissable) {
-                return static_cast<eMenuSoundTriggers>(-1);
+                return UISND_NONE;
             }
             return maybe;
         }
@@ -59,7 +59,7 @@ eMenuSoundTriggers feDialogScreen::NotifySoundMessage(u32 msg, eMenuSoundTrigger
         mLastButtonHash = FEngGetCurrentButton(GetPackageName())->NameHash;
         return maybe;
     }
-    return static_cast<eMenuSoundTriggers>(-1);
+    return UISND_NONE;
 }
 
 void feDialogScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {

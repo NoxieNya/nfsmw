@@ -31,13 +31,17 @@ extern bool MinimapShowNonPursuitCops;
 extern bool MinimapShowPursuitCops;
 extern RaceParameters TheRaceParameters;
 
+Minimap::GameplayIconInfo
+    Minimap::kGameplayIconInfo[GIcon::kType_Count]; // size: 0x0, address: 0x8041BCA0, Decl: speed/indep/src/frontend/hud/FeMinimap.cpp:69
+
 void GetVehicleVectors(bVector2 *pos, bVector2 *dir, ISimable *isimable) {
     UMath::Vector3 position = isimable->GetPosition();
     pos->y = -position.x;
     pos->x = position.z;
+    UMath::Vector3 forwardVec;
     ICollisionBody *irigidbody;
-    if (reinterpret_cast<UTL::COM::IUnknown *>(isimable)->QueryInterface(&irigidbody)) {
-        UMath::Vector3 forwardVec = irigidbody->GetForwardVector();
+    if (isimable->QueryInterface(&irigidbody)) {
+        forwardVec = irigidbody->GetForwardVector();
         dir->y = -forwardVec.x;
         dir->x = forwardVec.z;
     }

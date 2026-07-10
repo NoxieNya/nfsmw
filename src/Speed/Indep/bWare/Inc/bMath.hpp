@@ -187,11 +187,11 @@ inline float bCeil(float a) {
     return t;
 }
 
+// TODO is this order correct?
 inline int bClamp(int a, int MINIMUM, int MAXIMUM) {
     return bMin(bMax(a, MINIMUM), MAXIMUM);
 }
 
-// TODO is this order correct?
 inline float bClamp(float a, float MINIMUM, float MAXIMUM) {
     return bMin(MAXIMUM, bMax(a, MINIMUM));
 }
@@ -330,6 +330,20 @@ inline bVector2 bVector2::operator+(const bVector2 &v) const {
     return bVector2(_x, _y);
 }
 
+inline bVector2 *bAdd(bVector2 *dest, const bVector2 *v1, const bVector2 *v2) {
+    float x1 = v1->x;
+    float y1 = v1->y;
+    float x2 = v2->x;
+    float y2 = v2->y;
+
+    return bFill(dest, x1 + x2, y1 + y2);
+}
+
+inline bVector2 &bVector2::operator+=(const bVector2 &v) {
+    bAdd(this, this, &v);
+    return *this;
+}
+
 inline bVector2 bVector2::operator-(const bVector2 &v) const {
     bVector2 *pv = const_cast<bVector2 *>(&v);
     float x1 = this->x;
@@ -344,7 +358,9 @@ inline bVector2 bVector2::operator-(const bVector2 &v) const {
 inline bVector2 *bScale(bVector2 *dest, const bVector2 *v, float scale) {
     float x = v->x * scale;
     float y = v->y * scale;
-    return bFill(dest, x, y);
+    dest->x = x;
+    dest->y = y;
+    return dest;
 }
 
 inline bVector2 bScale(const bVector2 &v, float scale) {
@@ -396,6 +412,10 @@ static inline float bDistBetween(const bVector2 *v1, const bVector2 *v2) {
     float x = v1->x - v2->x;
     float y = v1->y - v2->y;
     return bSqrt(x * x + y * y);
+}
+
+static inline float bDistBetween(const bVector2 &v1, const bVector2 &v2) {
+    return bDistBetween(&v1, &v2);
 }
 
 // total size: 0x10
@@ -1104,6 +1124,10 @@ struct bQuaternion {
 };
 
 void bMatrixToQuaternion(bQuaternion &quat, const bMatrix4 &m);
+
+inline void bMatrixToQuaternion(bQuaternion *quat, const bMatrix4 *m) {
+    return bMatrixToQuaternion(*quat, *m);
+}
 
 inline bQuaternion::bQuaternion(const bMatrix4 &m) {
     bMatrixToQuaternion(*this, m);

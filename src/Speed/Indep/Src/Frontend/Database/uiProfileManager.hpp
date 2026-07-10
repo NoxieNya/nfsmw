@@ -5,35 +5,45 @@
 
 class PMSave : public IconOption {
   public:
-    PMSave(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
+    PMSave(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {
+        SetReactImmediately(true);
+    }
     ~PMSave() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override;
 };
 
 class PMLoad : public IconOption {
   public:
-    PMLoad(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
+    PMLoad(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {
+        SetReactImmediately(true);
+    }
     ~PMLoad() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override;
 };
 
 class PMDelete : public IconOption {
   public:
-    PMDelete(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
+    PMDelete(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {
+        SetReactImmediately(true);
+    }
     ~PMDelete() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override;
 };
 
 class PMCreateNew : public IconOption {
   public:
-    PMCreateNew(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
+    PMCreateNew(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {
+        SetReactImmediately(true);
+    }
     ~PMCreateNew() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override;
 };
 
 class PMPopDelete : public IconOption {
   public:
-    PMPopDelete(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
+    PMPopDelete(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {
+        SetReactImmediately(true);
+    }
     ~PMPopDelete() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override;
 };

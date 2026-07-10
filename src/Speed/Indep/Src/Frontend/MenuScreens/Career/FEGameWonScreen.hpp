@@ -1,9 +1,5 @@
-#ifndef FRONTEND_MENUSCREENS_CAREER_FEGAMEWONSCREEN_H
-#define FRONTEND_MENUSCREENS_CAREER_FEGAMEWONSCREEN_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef __FEGAMEWON_HPP__
+#define __FEGAMEWON_HPP__
 
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 

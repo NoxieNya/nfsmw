@@ -463,6 +463,24 @@ typedef eMISC_SOUNDS reflection_typedef_eMISC_SOUNDS;
 
 // typedef eGameFlowSndState reflection_typedef_eGameFlowSndState;
 
+// TODO where does sound go??
+namespace Sound {
+
+struct stSongInfo {
+    char *SongName;
+    char *Artist;
+    char *Album;
+    char *DefPlay;
+    int PathEvent;
+};
+
+} // namespace Sound
+
+typedef std::vector<Sound::stSongInfo *> SongInfoList;
+
+extern SongInfoList Songs;
+// ENDTODO
+
 // File: speed/indep/src/eaxsound/EAXSOund.hpp
 // total size: 0xBC
 // Decl: speed/indep/src/eaxsound/EAXSOund.hpp:131
@@ -524,7 +542,7 @@ class EAXSound : public AudioMemBase {
 
     bool IsPlayingCarSounds() {} // Decl: speed/indep/src/eaxsound/EAXSOund.hpp:198
 
-    struct stSongInfo *GetNewSongInfo();
+    Sound::stSongInfo *GetNewSongInfo();
 
     void UpdateSongInfo();
 
@@ -690,7 +708,7 @@ class EAXSound : public AudioMemBase {
 
   private:
     char *m_pcsCsisName;                      // offset 0x5C, size 0x4, Decl: speed/indep/src/eaxsound/EAXSOund.hpp:359
-    stSongInfo *m_pNewSongInfoSt;             // offset 0x60, size 0x4
+    Sound::stSongInfo *m_pNewSongInfoSt;      // offset 0x60, size 0x4
     eEAXGameState m_streamManagerState;       // offset 0x64, size 0x4, Decl: speed/indep/src/eaxsound/EAXSOund.hpp:361
     char *m_pEAX_SysHeap;                     // offset 0x68, size 0x4, Decl: speed/indep/src/eaxsound/EAXSOund.hpp:363
     EAXFrontEnd *m_pFESnd;                    // offset 0x6C, size 0x4, Decl: speed/indep/src/eaxsound/EAXSOund.hpp:365

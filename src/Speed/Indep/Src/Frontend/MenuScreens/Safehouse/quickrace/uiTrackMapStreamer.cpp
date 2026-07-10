@@ -1,7 +1,6 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/quickrace/uiTrackMapStreamer.hpp"
 
 #include "Speed/Indep/Src/FEng/FEMultiImage.h"
-#include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/Src/Frontend/Database/RaceDB.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
@@ -9,45 +8,12 @@
 #include "Speed/Indep/Src/World/TrackStreamer.hpp"
 #include "Speed/Indep/Src/Ecstasy/Texture.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/bWare/Inc/bMath.hpp"
+#include "Speed/Indep/bWare/Inc/bWare.hpp"
 
-// struct Vector2 {
-//     float x;
-//     float y;
-// };
+static UITrackMapStreamer *pInstance = nullptr;
 
-// struct FEObject;
-
-// void FEngSetInvisible(FEObject *obj);
-// void FEngSetVisible(FEObject *obj);
-// void FEngSetTextureHash(FEImage *image, unsigned int texture_hash);
-// unsigned long FEHashUpper(const char *string);
-// unsigned int FEngHashString(const char *format, ...);
-// unsigned int CalcLanguageHash(const char *prefix, GRaceParameters *pRaceParams);
-
-// void eLoadStreamingTexture(unsigned int *name_hash_table, int num_hashes, void (*callback)(void *), void *param, int memory_pool_num);
-// void eUnloadStreamingTexture(unsigned int *name_hash_table, int num_hashes);
-
-// inline void eLoadStreamingTexture(unsigned int name_hash, void (*callback)(unsigned int), unsigned int param0, int memory_pool_num) {
-//     eLoadStreamingTexture(&name_hash, 1, reinterpret_cast<void (*)(void *)>(callback), reinterpret_cast<void *>(param0), memory_pool_num);
-// }
-
-// inline void eUnloadStreamingTexture(unsigned int name_hash) {
-//     eUnloadStreamingTexture(&name_hash, 1);
-// }
-
-// void eWaitForStreamingTexturePackLoading(const char *filename);
-// void eUnloadAllStreamingTextures(const char *filename);
-// void eUnloadStreamingTexturePack(const char *filename);
-// int eIsStreamingTexturePackLoaded(const char *filename);
-
-extern float RealTimeElapsed;
-
-// struct cPoint {
-//     static void SplineSeek(tCubic2D *p, float time);
-// };
-
-static UITrackMapStreamer *pInstance;
-
+// UNSOLVED
 UITrackMapStreamer::UITrackMapStreamer()
     : bMapPackLoaded(false),  //
       bLoadingMap(false),     //
@@ -65,26 +31,31 @@ UITrackMapStreamer::UITrackMapStreamer()
     PanCubic.SetFlags(0);
     ZoomCubic.SetVal(1.0f, 1.0f);
 
-    bMakeSpaceInPoolComplete = false;
     MemPoolNum = 0;
+#ifndef EA_BUILD_A124
+    bMakeSpaceInPoolComplete = false;
+#endif
 
     bUseTrackStreamerMem = TheGameFlowManager.IsInGame();
 
     if (bUseTrackStreamerMem) {
+        int mem_needed = 0x60000;
+
         MemPoolNum = 7;
         TheTrackStreamer.DisableZoneSwitching();
-        TheTrackStreamer.MakeSpaceInPool(0x60000, MakeSpaceInPoolCallbackBridge, reinterpret_cast<int>(this));
+        TheTrackStreamer.MakeSpaceInPool(mem_needed, MakeSpaceInPoolCallbackBridge, reinterpret_cast<int32>(this));
     } else {
-        eLoadStreamingTexturePack("TRACKS\\L2RA\\TrackMaps.bin", reinterpret_cast<void (*)(void *)>(MapPackLoadCallback),
-                                  reinterpret_cast<void *>(this), 0);
+        eLoadStreamingTexturePack("TRACKS\\L2RA\\TrackMaps.bin", MapPackLoadCallback, reinterpret_cast<uint32>(this), BMEMORY_DEFAULT_POOL);
     }
 }
 
 UITrackMapStreamer::~UITrackMapStreamer() {
     if (bUseTrackStreamerMem) {
+#ifndef EA_BUILD_A124
         if (!bMakeSpaceInPoolComplete) {
             TheTrackStreamer.WaitForCurrentLoadingToComplete();
         }
+#endif
         TheTrackStreamer.EnableZoneSwitching();
         TheTrackStreamer.RefreshLoading();
     }
@@ -98,16 +69,17 @@ UITrackMapStreamer::~UITrackMapStreamer() {
 }
 
 void UITrackMapStreamer::MakeSpaceInPoolCallback() {
+#ifndef EA_BUILD_A124
     bMakeSpaceInPoolComplete = true;
-    eLoadStreamingTexturePack("TRACKS\\L2RA\\TrackMaps.bin", reinterpret_cast<void (*)(void *)>(MapPackLoadCallback), reinterpret_cast<void *>(this),
-                              0);
+#endif
+    eLoadStreamingTexturePack("TRACKS\\L2RA\\TrackMaps.bin", MapPackLoadCallback, reinterpret_cast<uint32>(this), BMEMORY_DEFAULT_POOL);
 }
 
 void UITrackMapStreamer::Init(GRaceParameters *track, FEMultiImage *map, int unused, int region_unlock) {
     RegionUnlock = region_unlock;
     pCurrentTrack = track;
     TrackMap = map;
-    FEngSetInvisible(static_cast<FEObject *>(map));
+    FEngSetInvisible(map);
     if (bMapPackLoaded && !bLoadingMap) {
         eUnloadStreamingTexture(MapHash);
         eWaitForStreamingTexturePackLoading("TRACKS\\L2RA\\TrackMaps.bin");
@@ -117,22 +89,28 @@ void UITrackMapStreamer::Init(GRaceParameters *track, FEMultiImage *map, int unu
     }
 }
 
-void UITrackMapStreamer::MapPackLoadCallback(unsigned int screenPtr) {
+void UITrackMapStreamer::MapPackLoadCallback(uint32 screenPtr) {
     reinterpret_cast<UITrackMapStreamer *>(screenPtr)->SetMapPackLoaded();
 }
 
-void UITrackMapStreamer::MapLoadCallback(unsigned int texture) {
+void UITrackMapStreamer::MapLoadCallback(uint32 texture) {
     pInstance->SetMapLoaded(texture);
 }
 
-unsigned int UITrackMapStreamer::CalcMapTextureHash() {
-    if (pCurrentTrack) {
-        return CalcLanguageHash("TRACK_MAP_", pCurrentTrack);
-    } else if (!RegionUnlock) {
-        return FEHashUpper("TRACK_MAP");
+uint32 UITrackMapStreamer::CalcMapTextureHash() {
+    uint32 hash;
+
+    if (pCurrentTrack != nullptr) {
+        hash = CalcLanguageHash("TRACK_MAP_", pCurrentTrack);
     } else {
-        return FEngHashString("TRACK_MAP_UNLOCK_%d", RegionUnlock);
+        if (RegionUnlock) {
+            hash = FEngHashString("TRACK_MAP_UNLOCK_%d", RegionUnlock);
+        } else {
+            hash = FEHashUpper("TRACK_MAP");
+        }
     }
+
+    return hash;
 }
 
 void UITrackMapStreamer::SetMapPackLoaded() {
@@ -144,19 +122,17 @@ void UITrackMapStreamer::SetMapPackLoaded() {
     }
 }
 
-void UITrackMapStreamer::SetMapLoaded(unsigned int texture) {
-    unsigned int hash = CalcMapTextureHash();
+void UITrackMapStreamer::SetMapLoaded(uint32 texture) {
+    uint32 hash = CalcMapTextureHash();
     if (hash != texture) {
-        unsigned int old_texture = texture;
-        eUnloadStreamingTexture(old_texture);
+        eUnloadStreamingTexture(texture);
         MapHash = hash;
-        FEngSetInvisible(static_cast<FEObject *>(TrackMap));
-        unsigned int new_hash = MapHash;
-        eLoadStreamingTexture(&new_hash, 1, reinterpret_cast<void (*)(void *)>(MapLoadCallback), reinterpret_cast<void *>(new_hash), MemPoolNum);
+        FEngSetInvisible(TrackMap);
+        eLoadStreamingTexture(MapHash, MapLoadCallback, reinterpret_cast<uint32>(MapHash), MemPoolNum);
     } else {
         bLoadingMap = false;
-        FEngSetTextureHash(static_cast<FEImage *>(TrackMap), hash);
-        FEngSetVisible(static_cast<FEObject *>(TrackMap));
+        FEngSetTextureHash(TrackMap, hash);
+        FEngSetVisible(TrackMap);
         if (bUsingTrackForAnim) {
             ZoomToTrack();
             PanToTrack();
@@ -165,48 +141,47 @@ void UITrackMapStreamer::SetMapLoaded(unsigned int texture) {
 }
 
 void UITrackMapStreamer::UpdateMap() {
-    if (TrackMap != nullptr) {
-        bVector2 mapTL(0.0f, 0.0f);
-        bVector2 mapBR(0.0f, 0.0f);
-        bVector2 zoom;
-        bVector2 pan;
-        bVector2 *pMapTL = &mapTL;
-        bVector2 *pMapBR = &mapBR;
-        bVector2 *pZoom = &zoom;
-        bVector2 *pPan = &pan;
-
-        ZoomCubic.GetVal(pZoom);
-        PanCubic.GetVal(pPan);
-
-        pMapTL->x = pPan->x - pZoom->x * 0.5f;
-        pMapTL->y = pPan->y - pZoom->y * 0.5f;
-        pMapBR->x = pZoom->x * 0.5f + pPan->x;
-        pMapBR->y = pZoom->y * 0.5f + pPan->y;
-
-        float halfSizeX = (pMapBR->x - pMapTL->x) * 0.5f;
-        float halfSizeY = (pMapBR->y - pMapTL->y) * 0.5f;
-        float halfSize = bMax(halfSizeX, halfSizeY);
-
-        FEVector2 mapCenter(pMapTL->x + halfSizeX, pMapTL->y + halfSizeY);
-        FEVector2 TL(mapCenter.x - halfSize, mapCenter.y - halfSize);
-        FEVector2 BR(mapCenter.x + halfSize, mapCenter.y + halfSize);
-
-        TrackMap->SetTopLeft(TL, false);
-        TrackMap->SetBottomRight(BR, false);
+    if (TrackMap == nullptr) {
+        return;
     }
+
+    bVector2 mapTL(0.0f, 0.0f);
+    bVector2 mapBR(0.0f, 0.0f);
+
+    bVector2 zoom;
+    ZoomCubic.GetVal(&zoom);
+    bVector2 pan;
+    PanCubic.GetVal(&pan);
+
+    mapTL.x = pan.x - (zoom.x / 2);
+    mapTL.y = pan.y - (zoom.y / 2);
+
+    mapBR.x = pan.x + (zoom.x / 2);
+    mapBR.y = pan.y + (zoom.y / 2);
+
+    float halfSizeX = (mapBR.x - mapTL.x) / 2;
+    float halfSizeY = (mapBR.y - mapTL.y) / 2;
+    float halfSize = bMax(halfSizeX, halfSizeY);
+
+    FEVector2 mapCenter(mapTL.x + halfSizeX, mapTL.y + halfSizeY);
+    FEVector2 TL(mapCenter.x - halfSize, mapCenter.y - halfSize);
+    FEVector2 BR(mapCenter.x + halfSize, mapCenter.y + halfSize);
+
+    TrackMap->SetTopLeft(TL, false);
+    TrackMap->SetBottomRight(BR, false);
 }
 
 void UITrackMapStreamer::CalcBoundsForRace(bVector2 &top_left, bVector2 &bottom_right) {
-    if (pCurrentTrack != nullptr) {
-        UMath::Vector2 topLeftMap;
-        UMath::Vector2 botRightMap;
-        pCurrentTrack->GetBoundingBox(topLeftMap, botRightMap);
-        float margin = 0.125f;
-        top_left.x = topLeftMap.x - margin;
-        top_left.y = topLeftMap.y + margin;
-        bottom_right.x = botRightMap.x + margin;
-        bottom_right.y = botRightMap.y - margin;
+    if (pCurrentTrack == nullptr) {
+        return;
     }
+    UMath::Vector2 topLeftMap;
+    UMath::Vector2 botRightMap;
+    pCurrentTrack->GetBoundingBox(topLeftMap, botRightMap);
+    top_left.x = topLeftMap.x - 0.125f;
+    top_left.y = topLeftMap.y + 0.125f;
+    bottom_right.x = botRightMap.x + 0.125f;
+    bottom_right.y = botRightMap.y - 0.125f;
 }
 
 void UITrackMapStreamer::UpdateAnimation() {
@@ -239,31 +214,28 @@ void UITrackMapStreamer::PanTo(const bVector2 &pos) {
 }
 
 void UITrackMapStreamer::ZoomToTrack() {
+    bUsingTrackForAnim = true;
+
     bVector2 mapTL(0.0f, 0.0f);
     bVector2 mapBR(1.0f, 1.0f);
-    bUsingTrackForAnim = true;
     CalcBoundsForRace(mapTL, mapBR);
-    bVector2 zoom_to(mapBR.x - mapTL.x, mapTL.y - mapBR.y);
+
+    bVector2 zoom_to;
+    zoom_to.x = mapBR.x - mapTL.x;
+    zoom_to.y = mapTL.y - mapBR.y;
     ZoomTo(zoom_to);
 }
 
 void UITrackMapStreamer::PanToTrack() {
-    bVector2 mapTL;
-    bVector2 mapBR;
-    bVector2 pan_to;
-    bVector2 *pMapTL = &mapTL;
-    bVector2 *pMapBR = &mapBR;
-    bVector2 *pPanTo = &pan_to;
-
     bUsingTrackForAnim = true;
-    pMapTL->x = 0.0f;
-    pMapTL->y = 0.0f;
-    pMapBR->x = 1.0f;
-    pMapBR->y = 1.0f;
+
+    bVector2 mapTL(0.0f, 0.0f);
+    bVector2 mapBR(1.0f, 1.0f);
     CalcBoundsForRace(mapTL, mapBR);
 
-    pPanTo->x = (pMapTL->x + pMapBR->x) * 0.5f;
-    pPanTo->y = (pMapTL->y + pMapBR->y) * 0.5f;
+    bVector2 pan_to;
+    pan_to.x = (mapTL.x + mapBR.x) * 0.5f;
+    pan_to.y = (mapTL.y + mapBR.y) * 0.5f;
     PanTo(pan_to);
 }
 

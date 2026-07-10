@@ -4,6 +4,7 @@
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feDialogBox.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEAnyTutorialScreen.hpp"
@@ -12,21 +13,25 @@
 #include "Speed/Indep/Src/Frontend/RaceStarter.hpp"
 #include "Speed/Indep/Src/Gameplay/GManager.h"
 #include "Speed/Indep/Src/Generated/Events/ERaceSheetOff.hpp"
+#include "Speed/Indep/Tools/AttribSys/Runtime/AttribSys.h"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 
 extern int iCurrentViewBin;
-extern const char *gTUTORIAL_MOVIE_PURSUIT;
 
-MilestoneDatum *theMilestone;
+MilestoneDatum *theMilestone = nullptr;
+const char *gTUTORIAL_MOVIE_PURSUIT = "pursuit_tutorial";
 
 void MilestoneDatum::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
-    if (msg != 0xc407210) {
-        return;
-    }
-    if (!IsChecked()) {
+    if (msg == 0xc407210) {
+#ifdef EA_BUILD_A124
         theMilestone = this;
-    } else {
-        theMilestone = nullptr;
+#else
+        if (!IsChecked()) {
+            theMilestone = this;
+        } else {
+            theMilestone = nullptr;
+        }
+#endif
     }
 }
 
@@ -34,11 +39,11 @@ uiRepSheetMilestones::uiRepSheetMilestones(ScreenConstructorData *sd) : ArrayScr
     bIsInGame = sd->Arg != 0;
     TrackMapStreamer = nullptr;
     theMilestone = nullptr;
-    TrackMapStreamer = new (__FILE__, __LINE__) UITrackMapStreamer();
+    TrackMapStreamer = new ("UITrackMapStreamer", 0) UITrackMapStreamer();
     for (int i = 0; i < GetWidth() * GetHeight(); i++) {
         FEImage *img = FEngFindImage(GetPackageName(), FEngHashString("EVENT_ICON_%d", i + 1));
-        if (img) {
-            AddSlot(new (__FILE__, __LINE__) ImageArraySlot(img));
+        if (img != nullptr) {
+            AddSlot(new ("ImageArraySlot", 0) ImageArraySlot(img));
         }
     }
     TrackMap = reinterpret_cast<FEMultiImage *>(FEngFindObject(GetPackageName(), FEngHashString("TRACK_MAP")));
@@ -51,194 +56,159 @@ uiRepSheetMilestones::uiRepSheetMilestones(ScreenConstructorData *sd) : ArrayScr
 }
 
 eMenuSoundTriggers uiRepSheetMilestones::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
-    eMenuSoundTriggers result = ArrayScrollerMenu::NotifySoundMessage(msg, maybe);
+    maybe = ArrayScrollerMenu::NotifySoundMessage(msg, maybe);
     if (msg == 0x7b6b89d7 && bIsInGame) {
-        return static_cast<eMenuSoundTriggers>(-1);
+        return UISND_NONE;
     }
-    return result;
+    return maybe;
 }
 
 void uiRepSheetMilestones::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     int currentIndex = GetNumDatum() - 1;
     ArrayScrollerMenu::NotificationMessage(msg, obj, param1, param2);
-    if (msg == 0x911c0a4b) {
-        goto refresh;
-    }
-    if (msg <= 0x911c0a4b) {
-        if (msg == 0x34dc1bcf) {
-            return;
-        }
-        if (msg <= 0x34dc1bcf) {
-            if (msg == 0xc407210) {
-                goto handleActivate;
+
+    // UNSOLVED
+    switch (msg) {
+        case 0xc407210: {
+            if (theMilestone == nullptr) {
+                break;
             }
+            if (theMilestone->IsChecked()) {
+                g_pEAXSound->PlayUISoundFX(UISND_COMMON_WRONG);
+                break;
+            }
+            if (!bIsInGame) {
+                int joyPort = FEngMapJoyParamToJoyport(param1);
+                FEDatabase->SetPlayersJoystickPort(0, joyPort);
+            }
+            const char *dialog = "";
+            if (bIsInGame) {
+                dialog = "InGameDialog.fng";
+            }
+            uint32 messageHash = 0xa5a8409a;
+            if (theMilestone->GetType() != 0) {
+                messageHash = 0xbf1dcd38;
+            }
+            DialogInterface::ShowTwoButtons(GetPackageName(), dialog, dialog_alert, 0x70e01038, 0x417b25e4, 0xd05fc3a3, 0x34dc1bcf, 0x34dc1bcf,
+                                            first_dialog_button2, messageHash);
+            break;
+        }
+        case 0xc519bfc3:
+            if (!bIsInGame) {
+                const u32 FEObj_MASTERBLASTER = 0x99344537;
+                const u32 FEObj_HIDE = 0x16a259;
+                FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_HIDE, true);
+                FEAnyTutorialScreen::LaunchMovie(gTUTORIAL_MOVIE_PURSUIT, GetPackageName());
+            }
+            break;
+        case 0xc3960eb9: {
+            if (bIsInGame) {
+                const u32 FEObj_BACKGROUND = 0x2716cdbf;
+                FEngSetVisible(FEngFindObject("InGameBackground.fng", FEObj_BACKGROUND));
+            }
+            const u32 FEObj_MASTERBLASTER = 0x99344537;
+            const u32 FEObj_Init = 0x1744b3;
+
+            FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_Init, true);
+            if (theMilestone == nullptr) {
+                return;
+            }
+            Attrib::Key marker;
+            bool pursuit = false;
+            if (theMilestone->GetType() == 0) {
+                GMilestone *pMilestone = theMilestone->my_milestone;
+                marker = pMilestone->GetJumpMarkerKey();
+                pursuit = true;
+            } else {
+                GSpeedTrap *pSpeedTrap = static_cast<SpeedTrapDatum *>(theMilestone)->my_speedtrap;
+                marker = pSpeedTrap->GetJumpMarkerKey();
+            }
+            if (bIsInGame) {
+                new ERaceSheetOff();
+                GManager::Get().WarpToMarker(marker, pursuit);
+                return;
+            }
+            GManager::Get().OverrideFreeRoamStartMarker(marker);
+            if (pursuit) {
+                GManager::Get().QueueFreeRoamPursuit(0.0f);
+            }
+            RaceStarter::StartCareerFreeRoam();
             return;
         }
-        if (msg == 0x72619778) {
-            goto refresh;
-        }
-        if (msg == 0x911ab364) {
-            goto handlePackageSwitch;
-        }
-        return;
-    }
-    if (msg == 0xc3960eb9) {
-        goto handleWarp;
-    }
-    if (msg <= 0xc3960eb9) {
-        if (msg == 0x9120409e || msg == 0xb5971bf1) {
-            goto refresh;
-        }
-        return;
-    }
-    if (msg == 0xc98356ba) {
-        goto handleUpdateAnimation;
-    }
-    if (msg <= 0xc98356ba) {
-        if (msg == 0xc519bfc3) {
-            goto handleTutorial;
-        }
-        return;
-    }
-    if (msg == 0xd05fc3a3) {
-        goto handleTutorialAccept;
-    }
-    return;
-
-handleActivate: {
-    if (theMilestone == nullptr) {
-        return;
-    }
-    if (theMilestone->IsChecked()) {
-        g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(7));
-        return;
-    }
-    if (!bIsInGame) {
-        signed char joyPort = static_cast<signed char>(FEngMapJoyParamToJoyport(param1));
-        FEDatabase->SetPlayersJoystickPort(0, joyPort);
-    }
-    const char *dialog = "";
-    if (bIsInGame) {
-        dialog = "InGameDialog.fng";
-    }
-    unsigned int messageHash = 0xa5a8409a;
-    if (theMilestone->GetType() != 0) {
-        messageHash = 0xbf1dcd38;
-    }
-    DialogInterface::ShowTwoButtons(GetPackageName(), dialog, dialog_alert, 0x70e01038, 0x417b25e4, 0xd05fc3a3, 0x34dc1bcf, 0x34dc1bcf,
-                                    first_dialog_button2, messageHash);
-    return;
-}
-
-handleTutorial: {
-    if (bIsInGame) {
-        return;
-    }
-    FEngSetScript(GetPackageName(), 0x99344537, 0x16a259, true);
-    FEAnyTutorialScreen::LaunchMovie(gTUTORIAL_MOVIE_PURSUIT, GetPackageName());
-    return;
-}
-
-handleWarp: {
-    if (bIsInGame) {
-        FEngSetVisible(FEngFindObject("InGameBackground.fng", 0x2716cdbf));
-    }
-    FEngSetScript(GetPackageName(), 0x99344537, 0x1744b3, true);
-    if (theMilestone == nullptr) {
-        return;
-    }
-    unsigned int marker;
-    bool pursuit = false;
-    if (theMilestone->GetType() == 0) {
-        GMilestone *pMilestone = theMilestone->my_milestone;
-        marker = pMilestone->GetJumpMarkerKey();
-        pursuit = true;
-    } else {
-        SpeedTrapDatum *st = static_cast<SpeedTrapDatum *>(theMilestone);
-        GSpeedTrap *pSpeedTrap = st->my_speedtrap;
-        marker = pSpeedTrap->GetJumpMarkerKey();
-    }
-    if (bIsInGame) {
-        new ERaceSheetOff();
-        GManager::Get().WarpToMarker(marker, pursuit);
-        return;
-    }
-    GManager::Get().OverrideFreeRoamStartMarker(marker);
-    if (pursuit) {
-        GManager::Get().QueueFreeRoamPursuit(0.0f);
-    }
-    RaceStarter::StartCareerFreeRoam();
-    return;
-}
-
-handleUpdateAnimation:
-    if (TrackMapStreamer != nullptr) {
-        TrackMapStreamer->UpdateAnimation();
-    }
-    return;
-
-refresh: {
-    int newIndex = GetNumDatum() - 1;
-    if (currentIndex != newIndex && GetCurrentDatum() != nullptr) {
-        RefreshTrack();
-    }
-    return;
-}
-
-handleTutorialAccept: {
-    CareerSettings *career = FEDatabase->GetCareerSettings();
-    if (((career->SpecialFlags >> 9) & 1) == 0) {
-        if (bIsInGame) {
+        case 0xc98356ba:
             if (TrackMapStreamer != nullptr) {
-                delete TrackMapStreamer;
+                TrackMapStreamer->UpdateAnimation();
             }
-            TrackMapStreamer = nullptr;
-            InGameAnyTutorialScreen::LaunchMovie(gTUTORIAL_MOVIE_PURSUIT, GetPackageName());
-            FEngSetInvisible(FEngFindObject("InGameBackground.fng", 0x2716cdbf));
-        } else {
-            FEAnyTutorialScreen::LaunchMovie(gTUTORIAL_MOVIE_PURSUIT, GetPackageName());
+            break;
+        case 0x911c0a4b:
+        case 0x9120409e:
+        case 0xb5971bf1:
+        case 0x72619778: {
+            if (currentIndex != GetNumDatum() - 1 && GetCurrentDatum() != nullptr) {
+                RefreshTrack();
+            }
+            break;
         }
-        FEngSetScript(GetPackageName(), 0x99344537, 0x16a259, true);
-        FEngSetInvisible(FEngFindObject(GetPackageName(), FEngHashString("TRACK_MAP")));
-        career->SpecialFlags |= 0x200;
-        return;
+        case 0xd05fc3a3: {
+            UserProfile *prof = FEDatabase->GetUserProfile(0);
+            CareerSettings *career = FEDatabase->GetCareerSettings();
+            if (!career->HasDonePursuitTutorial()) {
+                if (bIsInGame) {
+                    if (TrackMapStreamer != nullptr) {
+                        delete TrackMapStreamer;
+                    }
+                    TrackMapStreamer = nullptr;
+                    InGameAnyTutorialScreen::LaunchMovie(gTUTORIAL_MOVIE_PURSUIT, GetPackageName());
+                    const u32 FEObj_BACKGROUND = 0x2716cdbf;
+                    FEngSetInvisible(FEngFindObject("InGameBackground.fng", FEObj_BACKGROUND));
+                } else {
+                    FEAnyTutorialScreen::LaunchMovie(gTUTORIAL_MOVIE_PURSUIT, GetPackageName());
+                }
+                const u32 FEObj_MASTERBLASTER = 0x99344537;
+                const u32 FEObj_HIDE = 0x16a259;
+                FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_HIDE, true);
+                FEngSetInvisible(FEngFindObject(GetPackageName(), FEngHashString("TRACK_MAP")));
+                career->SpecialFlags |= 0x200;
+                return;
+            }
+            cFEng::Get()->QueueGameMessage(0xc3960eb9, GetPackageName(), 0xff);
+            break;
+        }
+        case 0x911ab364:
+            if (bIsInGame) {
+                cFEng::Get()->QueuePackageSwitch("InGameReputationOverview.fng", 1, 0, false);
+            } else {
+                cFEng::Get()->QueuePackageSwitch("SafeHouseReputationOverview.fng", 0, 0, false);
+            }
+            break;
+        case 0x34dc1bcf:
+            break;
     }
-    cFEng::Get()->QueueGameMessage(0xc3960eb9, GetPackageName(), 0xff);
-    return;
-}
-
-handlePackageSwitch:
-    if (bIsInGame) {
-        cFEng::Get()->QueuePackageSwitch("InGameReputationOverview.fng", 1, 0, false);
-    } else {
-        cFEng::Get()->QueuePackageSwitch("SafeHouseReputationOverview.fng", 0, 0, false);
-    }
-    return;
 }
 
 void uiRepSheetMilestones::Setup() {
     ClearData();
-    GMilestone *ms = GManager::Get().GetFirstMilestone(false, iCurrentViewBin);
-    while (ms != nullptr) {
-        AddMilestone(ms);
-        if (ms->GetIsLocked()) {
+    GMilestone *pMilestone = GManager::Get().GetFirstMilestone(false, iCurrentViewBin);
+    while (pMilestone != nullptr) {
+        AddMilestone(pMilestone);
+        if (pMilestone->GetIsLocked()) {
             GetDatumAt(GetNumDatum() - 1)->SetLocked(true);
         }
-        if (ms->GetIsAwarded()) {
+        if (pMilestone->GetIsAwarded()) {
             GetDatumAt(GetNumDatum() - 1)->SetChecked(true);
         }
-        ms = GManager::Get().GetNextMilestone(ms, false, iCurrentViewBin);
+        pMilestone = GManager::Get().GetNextMilestone(pMilestone, false, iCurrentViewBin);
     }
-    GSpeedTrap *st = GManager::Get().GetFirstSpeedTrap(false, iCurrentViewBin);
-    while (st != nullptr) {
-        AddSpeedtrap(st);
-        if (st->GetIsLocked()) {
+    GSpeedTrap *pSpeedTrap = GManager::Get().GetFirstSpeedTrap(false, iCurrentViewBin);
+    while (pSpeedTrap != nullptr) {
+        AddSpeedtrap(pSpeedTrap);
+        if (pSpeedTrap->GetIsLocked()) {
             GetDatumAt(GetNumDatum() - 1)->SetLocked(true);
         }
-        if (st->GetIsCompleted()) {
+        if (pSpeedTrap->GetIsCompleted()) {
             GetDatumAt(GetNumDatum() - 1)->SetChecked(true);
         }
-        st = GManager::Get().GetNextSpeedTrap(st, false, iCurrentViewBin);
+        pSpeedTrap = GManager::Get().GetNextSpeedTrap(pSpeedTrap, false, iCurrentViewBin);
     }
     SetDescLabel(0xB5117FDE);
     SetInitialPosition(0);
@@ -248,62 +218,59 @@ void uiRepSheetMilestones::Setup() {
 
 void uiRepSheetMilestones::RefreshTrack() {
     if (GetCurrentDatum() != nullptr) {
+        Attrib::Key key;
         bVector2 position;
         float rotation = 0.0f;
+
         if (TrackMapStreamer != nullptr) {
             TrackMapStreamer->Init(nullptr, TrackMap, 0, 0);
             TrackMapStreamer->ResetZoom(false);
         }
+
         MilestoneDatum *d = static_cast<MilestoneDatum *>(GetCurrentDatum());
-        unsigned int key;
-        if (d->GetType() == 0) {
-            GMilestone *pMilestone = d->my_milestone;
+        if (d->GetType() == eTYPE_MILESTONE) {
+            GMilestone *pMilestone = static_cast<MilestoneDatum *>(GetCurrentDatum())->my_milestone;
             key = pMilestone->GetJumpMarkerKey();
         } else {
-            SpeedTrapDatum *sdt = static_cast<SpeedTrapDatum *>(d);
-            GSpeedTrap *pSpeedTrap = sdt->my_speedtrap;
+            GSpeedTrap *pSpeedTrap = static_cast<SpeedTrapDatum *>(GetCurrentDatum())->my_speedtrap;
             key = pSpeedTrap->GetJumpMarkerKey();
         }
+
         GManager::Get().CalcMapCoordsForMarker(key, position, rotation);
         if (TrackMapStreamer != nullptr) {
             TrackMapStreamer->PanTo(position);
-            bVector2 zoom(0.5f, 0.5f);
-            TrackMapStreamer->ZoomTo(zoom);
+            TrackMapStreamer->ZoomTo(bVector2(0.27f, 0.27f));
         }
         FEngSetRotationZ(FEngFindObject(GetPackageName(), 0xaf51dd73), rotation);
     }
 }
 
-void uiRepSheetMilestones::AddMilestone(GMilestone *milestone) {
-    ArrayScroller *scroller = this;
-    MilestoneDatum *datum = new MilestoneDatum(FEDatabase->GetMilestoneIconHash(milestone->GetTypeKey(), true),
-                                               FEDatabase->GetMilestoneHeaderHash(milestone->GetLocalizationTag()), milestone);
-    scroller->AddDatum(datum);
+void uiRepSheetMilestones::AddMilestone(GMilestone *pMilestone) {
+    AddDatum(new ("MilestoneDatum", 0) MilestoneDatum(FEDatabase->GetMilestoneIconHash(pMilestone->GetTypeKey(), true),
+                                                      FEDatabase->GetMilestoneHeaderHash(pMilestone->GetLocalizationTag()), pMilestone));
 }
 
-void uiRepSheetMilestones::AddSpeedtrap(GSpeedTrap *trap) {
-    ArrayScroller *scroller = this;
-    SpeedTrapDatum *datum = new SpeedTrapDatum(FEDatabase->GetRaceIconHash(static_cast<GRace::Type>(5)), 0xF3B3D8DC, trap);
-    scroller->AddDatum(datum);
+void uiRepSheetMilestones::AddSpeedtrap(GSpeedTrap *pSpeedTrap) {
+    AddDatum(new ("SpeedTrapDatum", 0) SpeedTrapDatum(FEDatabase->GetRaceIconHash(GRace::kRaceType_SpeedTrap), 0xF3B3D8DC, pSpeedTrap));
 }
 
+// UNSOLVED
 void uiRepSheetMilestones::RefreshHeader() {
     ArrayScrollerMenu::RefreshHeader();
-    ArrayDatum *currentDatum = GetCurrentDatum();
     FEPrintf(GetPackageName(), 0x5a856a34, "%d", GetCurrentDatumNum());
     FEPrintf(GetPackageName(), 0x2d4d22c8, "%d", GetNumDatum());
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
     FEPrintf(GetPackageName(), 0xb514e2d8, "%s %$d", GetLocalizedString(0xce6b99b1), stable->GetTotalBounty());
     FEPrintf(GetPackageName(), 0xf91a59f6, "%s %$d", GetLocalizedString(0x73b79e0), FEDatabase->GetCareerSettings()->GetCash());
-    if (currentDatum != nullptr) {
-        MilestoneDatum *d = static_cast<MilestoneDatum *>(currentDatum);
-        if (d->GetType() == 0) {
+    MilestoneDatum *d = static_cast<MilestoneDatum *>(GetCurrentDatum());
+    if (d != nullptr) {
+        if (d->GetType() == eTYPE_MILESTONE) {
             GMilestone *pMilestone = d->my_milestone;
             FEngSetTextureHash(GetPackageName(), 0xf97ec5d5, FEDatabase->GetMilestoneIconHash(pMilestone->GetTypeKey(), true));
             FEPrintf(GetPackageName(), 0xb21d69bd, "%$0.0f", pMilestone->GetBounty());
             float goal = pMilestone->GetRequiredValue();
             if (FEDatabase->IsMilestoneTimeFormat(pMilestone->GetTypeKey())) {
-                goal = goal * 0.001f;
+                goal = goal / 60;
             }
             char buf[32];
             bSNPrintf(buf, 32, "%$0.0f", goal);
@@ -314,24 +281,25 @@ void uiRepSheetMilestones::RefreshHeader() {
             GSpeedTrap *pSpeedTrap = p->my_speedtrap;
             FEngSetTextureHash(GetPackageName(), 0xf97ec5d5, FEDatabase->GetRaceIconHash(GRace::kRaceType_SpeedTrap));
             FEPrintf(GetPackageName(), 0xb21d69bd, "%$0.0f", pSpeedTrap->GetBounty());
-            float value;
             const char *distUnits;
-            if (FEDatabase->GetGameplaySettings()->SpeedoUnits == 1) {
-                value = static_cast<float>(static_cast<int>(pSpeedTrap->GetTriggerSpeed() * 2.23699f));
-                distUnits = GetLocalizedString(0x8569a25f);
-            } else {
-                value = static_cast<float>(static_cast<int>(pSpeedTrap->GetTriggerSpeed() * 3.6f));
+            float value;
+            if (FEDatabase->GetGameplaySettings()->SpeedoUnits == 0) {
+                value = MPS2KPH(pSpeedTrap->GetTriggerSpeed());
                 distUnits = GetLocalizedString(0x8569ab44);
+            } else {
+                value = MPS2MPH(pSpeedTrap->GetTriggerSpeed());
+                distUnits = GetLocalizedString(0x8569a25f);
             }
             char buf[32];
             bSNPrintf(buf, 32, "%$0.0f %s", value, distUnits);
             FEPrintf(GetPackageName(), 0x28049d6, "%s %s", GetLocalizedString(0xb14018bd), buf);
         }
+
         for (int i = 0; i < GetNumSlots(); i++) {
             ArrayDatum *datum = GetDatumAt(i + GetStartDatumNum());
-            unsigned int check_hash = FEngHashString("MEDAL_THUMB_%d", i + 1);
+            uint32 check_hash = FEngHashString("MEDAL_THUMB_%d", i + 1);
             FEngSetInvisible(GetPackageName(), check_hash);
-            if (datum) {
+            if (datum != nullptr) {
                 if (datum->IsLocked()) {
                     FEngSetVisible(GetPackageName(), check_hash);
                     FEngSetTextureHash(GetPackageName(), check_hash, 0x18ed48);

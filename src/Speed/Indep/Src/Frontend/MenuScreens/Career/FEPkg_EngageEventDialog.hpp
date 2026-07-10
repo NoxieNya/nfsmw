@@ -1,10 +1,6 @@
 
-#ifndef FRONTEND_MENUSCREENS_CAREER_FEPKG_ENGAGEEVENTDIALOG_H
-#define FRONTEND_MENUSCREENS_CAREER_FEPKG_ENGAGEEVENTDIALOG_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef FEPKG_ENGAGEEVENTDIALOG_HPP
+#define FEPKG_ENGAGEEVENTDIALOG_HPP
 
 #include "Speed/Indep/Src/FEng/FEMultiImage.h"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"

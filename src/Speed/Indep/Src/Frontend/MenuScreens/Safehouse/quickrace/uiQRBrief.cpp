@@ -1,33 +1,20 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/quickrace/uiQRBrief.hpp"
 
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
+#include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/Database/VehicleDB.hpp"
 #include "Speed/Indep/Src/Frontend/Careers/UnlockSystem.hpp"
 #include "Speed/Indep/Src/Frontend/FECarViewer.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/FEPkg_GarageMain.hpp"
 #include "Speed/Indep/Src/Frontend/RaceStarter.hpp"
 #include "Speed/Indep/Src/Gameplay/GRaceDatabase.h"
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/frontend.h"
 #include "Speed/Indep/Src/World/CarInfo.hpp"
-
-// extern FEImage *FEngFindImage(const char *pkg, int hash);
-// extern void FEngSetTextureHash(FEImage *img, unsigned int hash);
-// struct TextureInfo;
-// extern TextureInfo *GetTextureInfo(unsigned int hash, int, int);
-// extern unsigned int CalcLanguageHash(const char *prefix, GRaceParameters *params);
-// extern bool DoesStringExist(unsigned int hash);
-// extern int FEPrintf(const char *pkg, int hash, const char *fmt, ...);
-// extern void FEngSetLanguageHash(const char *pkg, unsigned int hash, unsigned int lang_hash);
-// extern const char *GetLocalizedString(unsigned int hash);
-// extern void FEngSetScript(const char *pkg, unsigned int hash, unsigned int script, bool);
-// extern void SetRideInfo(RideInfo *ride, eSetRideInfoReasons reason, eCarViewerWhichCar car);
-// extern void PlayUISoundFX(EAXSound *snd, eMenuSoundTriggers trigger);
-// // extern EAXSound *g_pEAXSound;
-// extern void StartRace();
 
 UIQRBrief::UIQRBrief(ScreenConstructorData *sd)
     : MenuScreen(sd),          //
@@ -284,7 +271,7 @@ void UIQRBrief::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 par
             cust_rec->WritePhysicsIntoRecord(pveh);
             GRaceCustom *custom = GRaceDatabase::Get().AllocCustomRace(pSelectedTrack->pRaceParams);
             FEDatabase->FillCustomRace(custom, &raceSettings);
-            GRaceDatabase::Get().SetStartupRace(custom, kRaceContext_QuickRace);
+            GRaceDatabase::Get().SetStartupRace(custom, GRace::kRaceContext_QuickRace);
             GRaceDatabase::Get().FreeCustomRace(custom);
             RaceStarter::StartRace();
             break;

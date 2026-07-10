@@ -3,18 +3,20 @@
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
-#include "Speed/Indep/Src/Gameplay/GRaceDatabase.h"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/FEPkg_GarageMain.hpp"
 #include "Speed/Indep/Src/Generated/Events/EFadeScreenOff.hpp"
 #include "Speed/Indep/Src/Generated/Events/ERaceSheetOff.hpp"
 #include "Speed/Indep/Src/Misc/ResourceLoader.hpp"
 #include "Speed/Indep/Src/World/CarInfo.hpp"
 #include "Speed/Indep/Src/Frontend/FECarViewer.hpp"
+#include "Speed/Indep/bWare/Inc/bWare.hpp"
 
-extern int iCurrentViewBin;
-extern int selection;
+static int selection = 0;
+int iCurrentViewBin = 0;
 
-void RepSheetIcon::React(const char *pkg_name, uint32 data, struct FEObject *obj, uint32 param1, uint32 param2) {
+void RepSheetIcon::React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) {
     if (data != 0xc407210)
         return;
     selection = id;
@@ -44,7 +46,7 @@ uiRepSheetMain::~uiRepSheetMain() {
 
 eMenuSoundTriggers uiRepSheetMain::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
     if (bBossBeaten && msg == 0x7b6b89d7) {
-        return static_cast<eMenuSoundTriggers>(-1);
+        return UISND_NONE;
     }
     return maybe;
 }
@@ -54,92 +56,81 @@ void uiRepSheetMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
 
     switch (msg) {
         case 0x911c0a4b:
-            ScrollRival(static_cast<eScrollDir>(1));
-            return;
+            ScrollRival(eSD_NEXT);
+            break;
         case 0x72619778:
-            ScrollRival(static_cast<eScrollDir>(-1));
-            return;
-        case 0xe1fde1d1: {
-            if (PrevButtonMessage == 0xc407210) {
-                goto handle_selection;
+            ScrollRival(eSD_PREV);
+            break;
+        case 0xe1fde1d1:
+            switch (PrevButtonMessage) {
+                case 0xc407210:
+                    if (selection == 0) {
+                        if (!bIsInGame) {
+                            cFEng::Get()->QueuePackageSwitch("SafeHouseRaceSheet.fng", 0, 0, false);
+                        } else {
+                            cFEng::Get()->QueuePackageSwitch("InGameRaceSheet.fng", 1, 0, false);
+                        }
+                    } else if (selection == 1) {
+                        if (!bIsInGame) {
+                            cFEng::Get()->QueuePackageSwitch("SafeHouseMilestones.fng", 0, 0, false);
+                        } else {
+                            cFEng::Get()->QueuePackageSwitch("InGameMilestones.fng", 1, 0, false);
+                        }
+                    } else if (selection == 2) {
+                        if (!bIsInGame) {
+                            cFEng::Get()->QueuePackageSwitch("SafeHouseBounty.fng", 0, 0, false);
+                        } else {
+                            cFEng::Get()->QueuePackageSwitch("InGameBounty.fng", 1, 0, false);
+                        }
+                    } else if (selection == 4) {
+                        if (!bIsInGame) {
+                            cFEng::Get()->QueuePackageSwitch("SafeHouseRivalBio.fng", 0, 0, false);
+                        } else {
+                            cFEng::Get()->QueuePackageSwitch("InGameRivalBio.fng", 1, 0, false);
+                        }
+                    }
+                    break;
+
+                case 0x911ab364:
+                    if (bIsInGame) {
+                        new ERaceSheetOff();
+                        break;
+                    }
+                    cFEng::Get()->QueuePackageSwitch("MainMenu_Sub.fng", 0, 0, false);
+                    break;
             }
-            if (PrevButtonMessage == 0x911ab364) {
-                goto handle_eracesheet;
-            }
-            return;
-        handle_selection:
-            if (selection == 0) {
-                if (!bIsInGame) {
-                    cFEng::Get()->QueuePackageSwitch("SafeHouseRaceSheet.fng", 0, 0, false);
-                } else {
-                    cFEng::Get()->QueuePackageSwitch("InGameRaceSheet.fng", 1, 0, false);
-                }
-            } else if (selection == 1) {
-                if (!bIsInGame) {
-                    cFEng::Get()->QueuePackageSwitch("SafeHouseMilestones.fng", 0, 0, false);
-                } else {
-                    cFEng::Get()->QueuePackageSwitch("InGameMilestones.fng", 1, 0, false);
-                }
-            } else if (selection == 2) {
-                if (!bIsInGame) {
-                    cFEng::Get()->QueuePackageSwitch("SafeHouseBounty.fng", 0, 0, false);
-                } else {
-                    cFEng::Get()->QueuePackageSwitch("InGameBounty.fng", 1, 0, false);
-                }
-            } else if (selection == 4) {
-                if (!bIsInGame) {
-                    cFEng::Get()->QueuePackageSwitch("SafeHouseRivalBio.fng", 0, 0, false);
-                } else {
-                    cFEng::Get()->QueuePackageSwitch("InGameRivalBio.fng", 1, 0, false);
-                }
-            }
-            return;
-        handle_eracesheet:
-            if (bIsInGame) {
-                new ERaceSheetOff();
-                return;
-            }
-            cFEng::Get()->QueuePackageSwitch("MainMenu_Sub.fng", 0, 0, false);
-            return;
-        }
+            break;
         case 0xc519bfc3:
             if (bBossBeaten) {
-                return;
+                break;
             }
             if (!bBossAvailable) {
-                return;
+                break;
             }
             if (!bIsInGame) {
                 cFEng::Get()->QueuePackageSwitch("SafeHouseRivalChallenge.fng", 0, 0, false);
             } else {
                 cFEng::Get()->QueuePackageSwitch("InGameRivalChallenge.fng", 1, 0, false);
             }
-            return;
-        default:
-            return;
+            break;
     }
 }
 
 void uiRepSheetMain::Setup() {
+
     if (FEDatabase->GetCareerSettings()->GetCurrentBin() == 0xf) {
         FEngSetInvisible(GetPackageName(), 0x47b22fca);
         FEngSetInvisible(GetPackageName(), 0x72ad598c);
     }
 
-    AddOption(new RepSheetIcon(0xefc9662e, 0x84e4a54c, 0));
-    AddOption(new RepSheetIcon(0xd807e9b3, 0x216f1b81, 1));
-    AddOption(new RepSheetIcon(0x021a4b0c, 0xe451941e, 2));
-    AddOption(new RepSheetIcon(0xe97e4e83, 0x2d159737, 4));
+    AddOption(new ("RepSheetIcon", 0) RepSheetIcon(0xefc9662e, 0x84e4a54c, 0));
+    AddOption(new ("RepSheetIcon", 0) RepSheetIcon(0xd807e9b3, 0x216f1b81, 1));
+    AddOption(new ("RepSheetIcon", 0) RepSheetIcon(0x021a4b0c, 0xe451941e, 2));
+    AddOption(new ("RepSheetIcon", 0) RepSheetIcon(0xe97e4e83, 0x2d159737, 4));
 
     selection = 0;
+    SetInitialOption(FEngGetLastButton(GetPackageName()));
 
-    int lastButton = FEngGetLastButton(GetPackageName());
-
-    if (bFadeInIconsImmediately) {
-        Options.StartFadeIn();
-    }
-
-    Options.SetInitialPos(lastButton);
     IconScrollerMenu::RefreshHeader();
 
     if (bIsInGame) {
@@ -153,54 +144,58 @@ void uiRepSheetMain::Setup() {
 
     RivalStreamer.Init(iCurrentViewBin, pRivalImg, pTagImg, nullptr);
 
-    FEngSetInvisible(GetPackageName(), 0x7fe4020f);
-
+    const u32 FEObj_STAMPMASTER = 0x7FE4020F;
+    FEngSetInvisible(GetPackageName(), FEObj_STAMPMASTER);
     DefeatedTextureHash = GetDefeatedTexture();
-    FEngSetTextureHash(GetPackageName(), 0x7fe4020f, DefeatedTextureHash);
+    FEngSetTextureHash(GetPackageName(), FEObj_STAMPMASTER, DefeatedTextureHash);
 
-    eLoadStreamingTexture(DefeatedTextureHash, TextureLoadedCallback, reinterpret_cast<unsigned int>(this), 0);
+    eLoadStreamingTexture(DefeatedTextureHash, TextureLoadedCallback, reinterpret_cast<uint32>(this), BMEMORY_DEFAULT_POOL);
 
+#ifndef EA_BUILD_A124
     UpdateInfo();
+#endif
 }
 
 void uiRepSheetMain::NotifyTextureLoaded() {
-    FEngSetVisible(FEngFindObject(GetPackageName(), 0x7FE4020F));
+    const u32 FEObj_STAMPMASTER = 0x7FE4020F;
+
+    FEngSetVisible(GetPackageName(), FEObj_STAMPMASTER);
 }
 
 uint32 uiRepSheetMain::GetDefeatedTexture() {
-    int lang = GetCurrentLanguage();
-    switch (lang) {
-        case 1:
+    switch (GetCurrentLanguage()) {
+        case eLANGUAGE_FRENCH:
             return 0x87b81cd;
-        case 2:
+        case eLANGUAGE_GERMAN:
             return 0x87b846e;
-        case 3:
+        case eLANGUAGE_ITALIAN:
             return 0x87b8ece;
-        case 4:
+        case eLANGUAGE_SPANISH:
             return 0x87bb8d4;
-        case 5:
+        case eLANGUAGE_DUTCH:
             return 0x87b79bd;
-        case 6:
+        case eLANGUAGE_SWEDISH:
             return 0x87bb9bf;
-        case 7:
+        case eLANGUAGE_DANISH:
             return 0x87b7723;
-        case 12:
+        case eLANGUAGE_POLISH:
             return 0x87babfb;
-        case 13:
+        case eLANGUAGE_FINNISH:
             return 0x87b80ad;
-        case 8:
+        case eLANGUAGE_KOREAN:
             return 0x87b96bc;
-        case 9:
+        case eLANGUAGE_CHINESE:
             return 0x87b73c4;
-        case 10:
+        case eLANGUAGE_JAPANESE:
             return 0x87b90ab;
-        case 11:
+        case eLANGUAGE_THAI:
             return 0x87bbc0d;
         default:
             return 0x87b7d0a;
     }
 }
 
+#ifndef EA_BUILD_A124
 void uiRepSheetMain::UpdateInfo() {
     GRaceBin *bin = GRaceDatabase::Get().GetBinNumber(iCurrentViewBin);
     int completed_races = bin->GetAwardedRaceWins();
@@ -212,10 +207,10 @@ void uiRepSheetMain::UpdateInfo() {
 
     FEPrintf(GetPackageName(), 0x15d80973, "%d", completed_races);
     FEPrintf(GetPackageName(), 0xd802fba8, "%d", completed_challenges);
-    FEPrintf(GetPackageName(), 0x322b18f9, "%u", completed_bounty);
+    FEPrintf(GetPackageName(), 0x322b18f9, "%$d", completed_bounty);
     FEPrintf(GetPackageName(), 0xde7ad199, "%d", required_races);
     FEPrintf(GetPackageName(), 0x7242962e, "%d", required_challenges);
-    FEPrintf(GetPackageName(), 0x055c6e5f, "%u", required_bounty);
+    FEPrintf(GetPackageName(), 0x055c6e5f, "%$d", required_bounty);
 
     if (completed_races >= required_races) {
         FEngSetScript(GetPackageName(), 0x4c3b1536, 0xe6361f46, true);
@@ -239,10 +234,13 @@ void uiRepSheetMain::UpdateInfo() {
     } else {
         FEngSNPrintf(buf, 32, GetLocalizedString(0x3a64de21), iCurrentViewBin);
     }
-    FEPrintf(GetPackageName(), 0x242657ce, "%s", buf);
 
-    const char *rival_name = GetLocalizedString(FEngHashString("BL_NAME_%d", iCurrentViewBin));
-    const char *challenge_blurb = GetLocalizedString(FEngHashString("BL_BLURB_%d", iCurrentViewBin));
+    const u32 FEObj_TITLE_GROUP = 0x242657ce;
+
+    FEPrintf(GetPackageName(), FEObj_TITLE_GROUP, "%s", buf);
+
+    char *rival_name = GetLocalizedString(FEngHashString("BLACKLIST_RIVAL_%02d_AKA", iCurrentViewBin));
+    char *challenge_blurb = GetLocalizedString(FEngHashString("BLACKLIST_RIVAL_%02d_CHALLENGE", iCurrentViewBin));
     FEPrintf(GetPackageName(), 0x7ac3d0c9, "%s", rival_name);
     FEPrintf(GetPackageName(), 0x79cf0442, "%s", challenge_blurb);
 
@@ -251,17 +249,13 @@ void uiRepSheetMain::UpdateInfo() {
     for (unsigned int i = 0; i < bossRaceCount; i++) {
         unsigned int hash = bin->GetBossRaceHash(i);
         GRaceParameters *race = GRaceDatabase::Get().GetRaceFromHash(hash);
-        int available = race->GetIsAvailable(GRace::kRaceContext_Career);
-        bBossAvailable = (bBossAvailable != 0) | (available != 0);
+        bBossAvailable |= race->GetIsAvailable(GRace::kRaceContext_Career);
     }
 
     bBossBeaten = false;
-#ifndef EA_BUILD_A124
-    if (FEDatabase->GetCareerSettings()->HasBeatenCareer() ||
-        static_cast<int>(iCurrentViewBin) > static_cast<int>(FEDatabase->GetCareerSettings()->GetCurrentBin())) {
+    if (FEDatabase->GetCareerSettings()->HasBeatenCareer() || iCurrentViewBin > FEDatabase->GetCareerSettings()->GetCurrentBin()) {
         bBossBeaten = true;
     }
-#endif
 
     FEngSetInvisible(GetPackageName(), 0x34d4433b);
 
@@ -271,49 +265,51 @@ void uiRepSheetMain::UpdateInfo() {
         cFEng::Get()->QueuePackageMessage(0xb4c144b1, GetPackageName(), nullptr);
     } else {
         if (bBossAvailable) {
-            unsigned int msgHash = FEngHashString("BOSS_AVAILABLE");
-            cFEng::Get()->QueuePackageMessage(msgHash, GetPackageName(), nullptr);
+            unsigned int messageHash = FEngHashString("RIVAL_CHALLENGE_DEACTIVATED");
+            cFEng::Get()->QueuePackageMessage(messageHash, GetPackageName(), nullptr);
             FEngSetVisible(GetPackageName(), 0x55f6aa1a);
         } else {
-            unsigned int msgHash = FEngHashString("BOSS_UNAVAILABLE");
-            cFEng::Get()->QueuePackageMessage(msgHash, GetPackageName(), nullptr);
+            unsigned int messageHash = FEngHashString("RIVAL_CHALLENGE_ACTIVATED");
+            cFEng::Get()->QueuePackageMessage(messageHash, GetPackageName(), nullptr);
             FEngSetInvisible(GetPackageName(), 0x55f6aa1a);
         }
     }
 
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
-    FEPrintf(GetPackageName(), 0xb514e2d8, "%s %d", GetLocalizedString(0xce6b99b1), stable->GetTotalBounty());
-    FEPrintf(GetPackageName(), 0xf91a59f6, "%s %d", GetLocalizedString(0x73b79e0), FEDatabase->GetCareerSettings()->GetCash());
+    FEPrintf(GetPackageName(), 0xb514e2d8, "%s %$d", GetLocalizedString(0xce6b99b1), stable->GetTotalBounty());
+    FEPrintf(GetPackageName(), 0xf91a59f6, "%s %$d", GetLocalizedString(0x73b79e0), FEDatabase->GetCareerSettings()->GetCash());
 }
+#endif
 
 void uiRepSheetMain::ScrollRival(eScrollDir dir) {
-    unsigned char currentBin = FEDatabase->GetCareerSettings()->GetCurrentBin();
-    unsigned int oldViewBin = iCurrentViewBin;
-    if (currentBin == 15) {
+    if (FEDatabase->GetCareerSettings()->GetCurrentBin() == 15) {
         return;
     }
-    if (dir == static_cast<eScrollDir>(1)) {
+
+    int old_bin = iCurrentViewBin;
+    if (dir == eSD_NEXT) {
         iCurrentViewBin--;
-        if (static_cast<int>(iCurrentViewBin) < 0 || iCurrentViewBin < currentBin) {
+        if (iCurrentViewBin < 0 || iCurrentViewBin < FEDatabase->GetCareerSettings()->GetCurrentBin()) {
             iCurrentViewBin = 15;
         }
-    } else if (dir == static_cast<eScrollDir>(-1)) {
+    } else if (dir == eSD_PREV) {
         iCurrentViewBin++;
-        if (static_cast<int>(iCurrentViewBin) > 15) {
-            iCurrentViewBin = currentBin;
+        if (iCurrentViewBin > 15) {
+            iCurrentViewBin = FEDatabase->GetCareerSettings()->GetCurrentBin();
         }
     }
-    if (oldViewBin != iCurrentViewBin) {
-        if (dir == static_cast<eScrollDir>(1)) {
+
+    if (old_bin != iCurrentViewBin) {
+        if (dir == eSD_NEXT) {
             FEngSetScript(GetPackageName(), 0xc1f62308, 0xaf9d73f2, true);
-        } else if (dir == static_cast<eScrollDir>(-1)) {
+        } else if (dir == eSD_PREV) {
             FEngSetScript(GetPackageName(), 0xc1f62308, 0x9e5e6b5f, true);
         }
         RivalStreamer.Init(iCurrentViewBin, pRivalImg, pTagImg, nullptr);
+#ifdef EA_BUILD_A124
+        RefreshHeader();
+#else
         UpdateInfo();
+#endif
     }
-}
-
-void uiRepSheetMain::TextureLoadedCallback(uint32 tex) {
-    reinterpret_cast<uiRepSheetMain *>(tex)->NotifyTextureLoaded();
 }

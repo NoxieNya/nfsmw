@@ -1,7 +1,6 @@
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEButtons.hpp"
 #include "Speed/Indep/Src/FEng/FEButtonMap.h"
 #include "Speed/Indep/Src/FEng/FEPackage.h"
-#include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEPackageManager.hpp"
 
 void FEngSetCurrentButton(const char *pkg_name, uint32 hash) {
@@ -10,9 +9,8 @@ void FEngSetCurrentButton(const char *pkg_name, uint32 hash) {
         FEButtonMap *map = pkg->GetButtonMap();
         FEObject *button = nullptr;
         for (unsigned long i = 0; i < map->GetCount(); i++) {
-            FEObject *btn = map->GetButton(i);
-            if (btn->NameHash == hash) {
-                button = btn;
+            if (map->GetButton(i)->NameHash == hash) {
+                button = map->GetButton(i);
             }
         }
         if (button != nullptr) {
@@ -36,9 +34,8 @@ void FEngSetButtonState(const char *pkg_name, uint32 button_hash, bool enabled) 
         FEButtonMap *map = pkg->GetButtonMap();
         FEObject *button = nullptr;
         for (unsigned long i = 0; i < map->GetCount(); i++) {
-            FEObject *btn = map->GetButton(i);
-            if (btn->NameHash == button_hash) {
-                button = btn;
+            if (map->GetButton(i)->NameHash == button_hash) {
+                button = map->GetButton(i);
             }
         }
         if (button != nullptr) {

@@ -1,9 +1,5 @@
-#ifndef FRONTEND_MENUSCREENS_INGAME_UISMS_H
-#define FRONTEND_MENUSCREENS_INGAME_UISMS_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef UISMS_HPP
+#define UISMS_HPP
 
 #include <types.h>
 
@@ -14,7 +10,7 @@
 // total size : 0xC
 class SMSSortNode : public bTNode<SMSSortNode> {
   public:
-    SMSSortNode(struct SMSMessage *msg) {}
+    SMSSortNode(SMSMessage *msg) : the_msg(msg) {}
     ~SMSSortNode() {}
 
     SMSMessage *the_msg; // offset 0x8, size 0x4
@@ -25,7 +21,7 @@ class SMSDatum : public ArrayDatum {
   public:
     SMSDatum(SMSMessage *msg) : ArrayDatum(0, 0), my_msg(msg) {}
     ~SMSDatum() override {}
-    void NotificationMessage(u32 msg, struct FEObject *pObj, u32 param1, u32 param2) override;
+    void NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) override;
 
     SMSMessage *my_msg; // offset 0x24, size 0x4
 };
@@ -52,7 +48,7 @@ enum SMS_TYPE {
 class uiSMS : public ArrayScrollerMenu {
   public:
     uiSMS(ScreenConstructorData *sd);
-    inline ~uiSMS() override {}
+    ~uiSMS() override {}
     void NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) override;
     eMenuSoundTriggers NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) override;
 

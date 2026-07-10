@@ -308,11 +308,11 @@ class FEPackage : public FENode {
     bool ForAllObjects(FEObjectCallback &Callback);
 
     FEPackage *GetNext() { // Decl: speed/indep/src/feng/FEPackage.h:265
-        return static_cast<FEPackage *>(FENode::GetNext());
+        return static_cast<FEPackage *>(FEMinNode::GetNext());
     }
 
     FEPackage *GetPrev() { // Decl: speed/indep/src/feng/FEPackage.h:266
-        return static_cast<FEPackage *>(FENode::GetPrev());
+        return static_cast<FEPackage *>(FEMinNode::GetPrev());
     }
 
     FEMsgTargetList *const GetMessageTargetList(u32 Index) const { // Decl: speed/indep/src/feng/FEPackage.h:268

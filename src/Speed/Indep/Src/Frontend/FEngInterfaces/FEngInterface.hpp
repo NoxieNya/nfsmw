@@ -33,7 +33,9 @@ class cFEng {
 
     void PushErrorPackage(const char *pPackageName, int pArg, u32 ControlMask); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:41
     void PopErrorPackage();                                                     // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:42
-    bool IsErrorState() {}                                                      // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:43
+    bool IsErrorState() {                                                       // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:43
+        return mFEng->IsErrorScreenMode();
+    }
 
     void PopErrorPackage(int port); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:42
 
@@ -99,6 +101,22 @@ class cFEng {
 
     friend class cFEngGameInterface;
 };
+
+// From carbon, might be inaccurate
+#define FENG_OBJECT_INVISIBLE (1 << 0)                    // :113
+#define FENG_OBJECT_IGNORE_LABELHASH (1 << 1)             // :114
+#define FENG_OBJECT_DONT_SHOW_IN_DEMO (1 << 2)            // :115
+#define FENG_OBJECT_XENON_INVISIBLE (1 << 2)              // :116
+#define FENG_OBJECT_PC_ONLY (1 << 3)                      // :117
+#define FENG_OBJECT_CONTEXT_HELP (1 << 4)                 // :118
+#define FENG_OBJECT_IGNORE_SPECIAL_CHARACTERS (1 << 5)    // :119
+#define FENG_OBJECT_CONSOLE_ONLY (1 << 6)                 // :120
+#define FENG_OBJECT_MEMCARD_MESSAGE (1 << 7)              // :121
+#define FENG_OBJECT_ZSORT (1 << 8)                        // :122
+#define FENG_FONTRENDERWRAPPING_CHARACTER (1 << 9)        // :139
+#define FENG_RANDOMIZE_STRING (1 << 10)                   // :140
+#define FENG_OBJECT_IGNORE_JOY_EVENT_CHARACTERS (1 << 11) // :141
+#define FENG_NEXT_GEN_ONLY (1 << 12)                      // :142
 
 // Range: 0x801325E8 -> 0x80132694
 int FEPrintf(struct FEString *text /* r3 */, const char *fmt /* r4 */, ...);

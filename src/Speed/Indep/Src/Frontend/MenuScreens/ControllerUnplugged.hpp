@@ -1,9 +1,5 @@
-#ifndef FRONTEND_MENUSCREENS_CONTROLLERUNPLUGGED_H
-#define FRONTEND_MENUSCREENS_CONTROLLERUNPLUGGED_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef __CONTROLLER_UNPLUGGED_HPP__
+#define __CONTROLLER_UNPLUGGED_HPP__
 
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 #include "Speed/Indep/Src/Frontend/FEJoyInput.hpp"

@@ -1,15 +1,10 @@
-#ifndef FRONTEND_MENUSCREENS_INGAME_UISMSMESSAGE_H
-#define FRONTEND_MENUSCREENS_INGAME_UISMSMESSAGE_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef UISMSMESSAGE_HPP
+#define UISMSMESSAGE_HPP
 
 #include <types.h>
 
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feWidget.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
-#include "Speed/Indep/Src/Frontend/MenuScreens/Common/feScrollerina.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 
 // total size: 0xE8

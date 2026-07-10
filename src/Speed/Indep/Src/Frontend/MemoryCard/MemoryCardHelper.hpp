@@ -3,6 +3,8 @@
 
 #include <types.h>
 #include <string.h>
+#include "Speed/Indep/bWare/Inc/Strings.hpp"
+#include "Speed/Indep/bWare/Inc/bWare.hpp"
 
 #include "Speed/Indep/Libs/realcore/6.24.00/include/common/realcore/system.h"
 #include "Packages/realmemcard/3.04.01-layer2/include/common/realmemcard/memcard_interface.h"
@@ -25,21 +27,18 @@ class IThread {
         CRIT_PRIORITY = 3,
     };
 
-    virtual ~IThread() {}
+    virtual IThread *CreateInstance() = 0;
     virtual int AddRef() = 0;
     virtual int Release() = 0;
-    virtual IThread *CreateInstance() = 0;
     virtual void SetStackSize(unsigned int stacksize) = 0;
     virtual void Begin(ThreadEntryFunc func) = 0;
     virtual void WaitForEnd(int) = 0;
     virtual void Sleep(int ticks) = 0;
-    virtual ThreadEntryFunc GetEntryFunc() = 0;
-    virtual bool IsActive() = 0;
+    virtual void SetPriority(int priority) = 0;
 };
 
 class IMutex {
   public:
-    virtual ~IMutex() {}
     virtual int AddRef() = 0;
     virtual int Release() = 0;
     virtual IMutex *CreateInstance() = 0;
@@ -64,30 +63,31 @@ class MyMutex : public IMutex {
     int mRefcount; // offset 0x20, size 0x4
 
   public:
-    MyMutex() {
-        memset(&mMutex, 0, sizeof(MUTEX));
-        mRefcount = 1;
+    MyMutex() : mMutex(), mRefcount(1) {
+#ifndef FIX_BUGS // unnecessary AND broken
+        bMemSet(&mMutex, sizeof(MUTEX), 0);
+#endif
         MUTEX_create(&mMutex);
     }
-    ~MyMutex() { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:49
+    virtual ~MyMutex() { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:49
         MUTEX_destroy(&mMutex);
     }
     IMutex *CreateInstance() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:50
-        return new MyMutex();
+        return new ("Realmc::IMutex", 0) MyMutex();
     };
     int AddRef() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:51
         return ++mRefcount;
     };
 
     int Release() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:54
-        int ref = --mRefcount;
-        if (ref > 0) {
-            return ref;
+        mRefcount--;
+        if (mRefcount < 1) {
+            if (this != nullptr) {
+                delete this;
+            }
+            return 0;
         }
-        if (this != nullptr) {
-            delete this;
-        }
-        return 0;
+        return mRefcount;
     };
     void Lock() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:63
         MUTEX_lock(&mMutex);
@@ -108,16 +108,9 @@ class MyThread : public IThread {
     bool mActive;               // offset 0x330, size 0x1
 
   public:
-    MyThread() {
-        mRefcount = 1;
-        mStackSize = 0x1000;
-        mStackBuffer = nullptr;
-        memset(&mThreadData, 0, sizeof(THREAD));
-        mPriority = 0;
-        mActive = false;
-    }
+    MyThread() : mRefcount(1), mStackSize(0x1000), mStackBuffer(nullptr), mThreadData(), mPriority(0), mActive(false) {}
 
-    ~MyThread() { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:80
+    virtual ~MyThread() { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:80
         if (mActive) {
             WaitForEnd(0);
             THREAD_destroy(&mThreadData);
@@ -125,20 +118,20 @@ class MyThread : public IThread {
     }
 
     IThread *CreateInstance() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:89
-        return new MyThread();
+        return new ("Realmc::IThread", 0) MyThread();
     };
     int AddRef() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:94
         return ++mRefcount;
     };
     int Release() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:99
-        int ref = --mRefcount;
-        if (ref > 0) {
-            return ref;
+        mRefcount--;
+        if (mRefcount < 1) {
+            if (this != nullptr) {
+                delete this;
+            }
+            return 0;
         }
-        if (this != nullptr) {
-            delete this;
-        }
-        return 0;
+        return mRefcount;
     };
     void SetStackSize(unsigned int stacksize) override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:109
         mStackSize = stacksize;
@@ -165,16 +158,16 @@ class MyThread : public IThread {
         mActive = false;
     };
     void Sleep(int ticks) override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:143
-        THREAD_sleep(ticks);
+        THREAD_yield(ticks);
     };
     void SetPriority(int priority) override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:148
         mPriority = 0;
         THREAD_setpriority(&mThreadData, 0);
     };
-    ThreadEntryFunc GetEntryFunc() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:153
+    virtual ThreadEntryFunc GetEntryFunc() { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:153
         return mEntryFunc;
     };
-    bool IsActive() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:154
+    virtual bool IsActive() { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:154
         return mActive;
     };
 };
@@ -190,12 +183,15 @@ struct SystemInterface {
     const char *(*mGetStrCallback)(int); // offset 0xC, size 0x4
 
     void Clear();
+
+    SystemInterface() {
+        Clear();
+    }
 };
 
 } // namespace Realmc
 
 struct MemoryCard;
-struct UIMemcardBase;
 
 // TODO belongs to C:/packages/realmemcard/3.04.01-layer2
 struct IGameInterface {
@@ -251,38 +247,69 @@ enum MemoryCardJoyLoggableEvents {
 // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:47
 class IJoyHelper {
   public:
-    void JLog(const char *msg) {} // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:64
+    void JLog(const char *msg) { // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:64
+        Joylog::AddOrGetData(const_cast<char *>(msg), JOYLOG_CHANNEL_MEMORY_CARD);
+    }
 
-    void JLog(bool &value) {} // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:86
+    void JLog(bool &value) { // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:86
+        value = Joylog::AddOrGetData(static_cast<unsigned int>(value), 1, JOYLOG_CHANNEL_MEMORY_CARD) != 0;
+    }
 
     void JLog(MemoryCardJoyLoggableEvents op) { // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:108
         if (Joylog::IsCapturing())
             Joylog::AddData(static_cast<int>(op), 8, JOYLOG_CHANNEL_MEMORY_CARD);
     }
 
-    void JLog(void *data, int data_size_bytes) {} // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:139
+    void JLog(void *data, int data_size_bytes) { // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:139
+        Joylog::AddData(data, data_size_bytes, JOYLOG_CHANNEL_MEMORY_CARD);
+    }
 
     static void EmulateMemoryCardLibrary(int aJoyOp); // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:169
 
-    void JLog(const wchar_t *msg) {}
+    void JLog(const wchar_t *msg) {
+        Joylog::AddOrGetData(reinterpret_cast<uint16 *>(const_cast<wchar_t *>(msg)), JOYLOG_CHANNEL_MEMORY_CARD);
+    }
 
-    void JLog(unsigned int &value) {}
+    void JLog(unsigned int &value) {
+        value = Joylog::AddOrGetData(value, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
+    }
 
     void JLog(RealmcIface::CardId &id) {}
 
     void JLog(RealmcIface::CardStatus &status) {
-        status = static_cast<RealmcIface::CardStatus>(Joylog::AddOrGetData(static_cast<unsigned int>(status), 0x10, JOYLOG_CHANNEL_MEMORY_CARD));
+        unsigned int value = static_cast<unsigned int>(status);
+        status = static_cast<RealmcIface::CardStatus>(Joylog::AddOrGetData(value, 0x10, JOYLOG_CHANNEL_MEMORY_CARD));
     }
 
     void JLog(RealmcIface::MonitorState &state) {}
 
-    void JLog(const RealmcIface::CardInfo *pInfo) {}
+    void JLog(const RealmcIface::CardInfo *pInfo) {
+        RealmcIface::CardInfo *pVal = const_cast<RealmcIface::CardInfo *>(pInfo);
+        JLog(pVal->mCardId);
+        JLog(const_cast<RealmcIface::CardStatus &>(pVal->mStatus));
+        JLog(const_cast<unsigned int &>(pVal->mFreeSpace));
+        JLog(const_cast<unsigned int &>(pVal->mFreeFiles));
+        JLog(const_cast<unsigned int &>(pVal->mTotalSpace));
+        JLog(const_cast<bool &>(pInfo->mFreeSpaceOverLimit));
+        JLog(const_cast<bool &>(pInfo->mTotalSpaceOverLimit));
+    }
 
     void JLog(RealmcIface::TaskResult &res) {
         res = static_cast<RealmcIface::TaskResult>(Joylog::AddOrGetData(static_cast<unsigned int>(res), 8, JOYLOG_CHANNEL_MEMORY_CARD));
     }
 
-    void JLog(const RealmcIface::EntryInfo *info) {}
+    void JLog(const RealmcIface::EntryInfo *info) {
+        RealmcIface::EntryInfo *e = const_cast<RealmcIface::EntryInfo *>(info);
+        JLog(e->mName);
+        JLog(const_cast<RealmcIface::CardStatus &>(e->mStatus));
+        JLog(const_cast<unsigned int &>(e->mEntryBlocks));
+        JLog(const_cast<unsigned int &>(e->mUserDataSize));
+        JLog(const_cast<unsigned int &>(e->mTime.mCreated));
+        JLog(const_cast<unsigned int &>(e->mTime.mLastAccessed));
+        JLog(const_cast<unsigned int &>(e->mTime.mLastModified));
+        JLog(e->mCompanyCode);
+        JLog(e->mGameCode);
+    }
 };
 
 #endif

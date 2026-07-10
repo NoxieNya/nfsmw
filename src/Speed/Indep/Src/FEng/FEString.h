@@ -59,7 +59,7 @@ class FEString : public FEObject {
     u32 MaxWidth;        // offset 0x74, size 0x4, Decl: speed/indep/src/feng/FEString.h:75
 
     i16 *GetString() { // Decl: speed/indep/src/feng/FEString.h:78
-        return string.mpsString;
+        return string;
     }
 
     void SetString(short *pNewText) {
@@ -83,7 +83,7 @@ class FEString : public FEObject {
     void SetLabelHash(u32 Hash) { // Decl: speed/indep/src/feng/FEString.h:97
         Flags |= FF_DirtyCode;
         LabelHash = Hash;
-        if (pLabelCallback) {
+        if (pLabelCallback != nullptr) {
             pLabelCallback->OnLabelChanged(this);
         }
     }

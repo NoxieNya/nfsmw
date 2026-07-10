@@ -3,6 +3,8 @@
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FECarViewer.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/career/uiRepSheetRivalFlow.hpp"
 #include "Speed/Indep/Src/Frontend/RaceStarter.hpp"
@@ -16,6 +18,7 @@
 #include "Speed/Indep/Src/Generated/Messages/MFlowReadyForOutro.h"
 #include "Speed/Indep/Src/Misc/Timer.hpp"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
+#include "Speed/Indep/bWare/Inc/bWare.hpp"
 
 extern int iCurrentViewBin;
 
@@ -33,13 +36,12 @@ uiRepSheetRival::uiRepSheetRival(ScreenConstructorData *sd)
 
 uiRepSheetRival::~uiRepSheetRival() {
     eWaitForStreamingTexturePackLoading(nullptr);
-    unsigned int tex = GetDefeatedTexture();
-    eUnloadStreamingTexture(&tex, 1);
+    eUnloadStreamingTexture(GetDefeatedTexture());
 }
 
 eMenuSoundTriggers uiRepSheetRival::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
     if (bMidRivalFlow && msg == 0x911ab364) {
-        return static_cast<eMenuSoundTriggers>(-1);
+        return UISND_NONE;
     }
     return maybe;
 }
@@ -49,11 +51,8 @@ void uiRepSheetRival::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u3
         case 0x406415e3:
             if (bMidRivalFlow) {
                 new ERaceSheetOff();
-                UCrc32 kind;
-                kind.SetValue(0x20d60dbf);
-                MFlowReadyForOutro msg;
-                msg.Post(kind);
-            } else if ((FEDatabase->GetGameMode() & 0x20000) != 0) {
+                MFlowReadyForOutro().Post(0x20d60dbf);
+            } else if (FEDatabase->IsPostRivalMode()) {
                 new EEnterBin(FEDatabase->GetCareerSettings()->GetCurrentBin() - 1);
                 uiRepSheetRivalFlow::Get()->StartFlow(1);
             } else if (launch_race != nullptr) {
@@ -62,7 +61,7 @@ void uiRepSheetRival::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u3
                     GManager::Get().StartRaceFromInGame(launch_race->GetEventHash());
                 } else {
                     GRaceCustom *race = GRaceDatabase::Get().AllocCustomRace(launch_race);
-                    GRaceDatabase::Get().SetStartupRace(race, kRaceContext_Career);
+                    GRaceDatabase::Get().SetStartupRace(race, GRace::kRaceContext_Career);
                     GRaceDatabase::Get().FreeCustomRace(race);
                     RaceStarter::StartRace();
                 }
@@ -72,7 +71,7 @@ void uiRepSheetRival::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u3
             if (!bMidRivalFlow) {
                 if (bOneOff) {
                     new EUnPause();
-                } else if ((FEDatabase->GetGameMode() & 0x20000) == 0) {
+                } else if (!FEDatabase->IsPostRivalMode()) {
                     if (bIsInGame) {
                         cFEng::Get()->QueuePackageSwitch("InGameReputationOverview.fng", 1, 0, false);
                     } else {
@@ -91,12 +90,12 @@ void uiRepSheetRival::Setup() {
     pTagImg = FEngFindImage(GetPackageName(), 0xf5a2a087);
     pBGImg = FEngFindImage(GetPackageName(), 0x2cbe1dd0);
     RivalStreamer.Init(iCurrentViewBin, pRivalImg, pTagImg, pBGImg);
-    FEngSetInvisible(reinterpret_cast<FEObject *>(pDefeatedImg));
-    FEngSetInvisible(reinterpret_cast<FEObject *>(pDefeatedImgBG));
-    unsigned int defeatedTexture = GetDefeatedTexture();
+    FEngSetInvisible(pDefeatedImg);
+    FEngSetInvisible(pDefeatedImgBG);
+    uint32 defeatedTexture = GetDefeatedTexture();
     FEngSetTextureHash(pDefeatedImg, defeatedTexture);
     FEngSetTextureHash(pDefeatedImgBG, defeatedTexture);
-    eLoadStreamingTexture(defeatedTexture, TextureLoadedCallback, reinterpret_cast<unsigned int>(this), 0);
+    eLoadStreamingTexture(defeatedTexture, TextureLoadedCallback, reinterpret_cast<uint32>(this), BMEMORY_DEFAULT_POOL);
     if (bIsInGame && bMidRivalFlow) {
         cFEng::Get()->QueuePackageMessage(0x34297cb0, GetPackageName(), nullptr);
     } else {
@@ -104,44 +103,45 @@ void uiRepSheetRival::Setup() {
             CarViewer::HideAllCars();
             iCurrentViewBin = FEDatabase->GetCareerSettings()->GetCurrentBin();
             cFEng::Get()->QueuePackageMessage(0x0b21a45f, GetPackageName(), nullptr);
-            cFEng::Get()->QueuePackageMessage(0xb4c144b1, GetPackageName(), nullptr);
+            const u32 FEObj_DEFEATED = 0xb4c144b1;
+            cFEng::Get()->QueuePackageMessage(FEObj_DEFEATED, GetPackageName(), nullptr);
         } else {
-            cFEng::Get()->QueuePackageMessage(0xaf922178, GetPackageName(), nullptr);
+            const u32 FEObj_CALLFRAMES = 0xaf922178;
+            cFEng::Get()->QueuePackageMessage(FEObj_CALLFRAMES, GetPackageName(), nullptr);
         }
     }
     RefreshHeader();
 }
 
 void uiRepSheetRival::NotifyTextureLoaded() {
-    FEngSetVisible(reinterpret_cast<FEObject *>(pDefeatedImg));
-    FEngSetVisible(reinterpret_cast<FEObject *>(pDefeatedImgBG));
+    FEngSetVisible(pDefeatedImg);
+    FEngSetVisible(pDefeatedImgBG);
 }
 
 uint32 uiRepSheetRival::GetDefeatedTexture() {
-    int lang = GetCurrentLanguage();
-    switch (lang) {
-        case 1:
+    switch (GetCurrentLanguage()) {
+        case eLANGUAGE_FRENCH:
             return 0x87b81cd;
-        case 2:
+        case eLANGUAGE_GERMAN:
             return 0x87b846e;
-        case 3:
+        case eLANGUAGE_ITALIAN:
             return 0x87b8ece;
-        case 4:
+        case eLANGUAGE_SPANISH:
             return 0x87bb8d4;
-        case 5:
+        case eLANGUAGE_DUTCH:
             return 0x87b79bd;
-        case 6:
+        case eLANGUAGE_SWEDISH:
             return 0x87bb9bf;
-        case 7:
+        case eLANGUAGE_DANISH:
             return 0x87b7723;
-        case 12:
+        case eLANGUAGE_POLISH:
             return 0x87babfb;
-        case 13:
+        case eLANGUAGE_FINNISH:
             return 0x87b80ad;
-        case 8:
-        case 9:
-        case 10:
-        case 11:
+        case eLANGUAGE_KOREAN:
+        case eLANGUAGE_CHINESE:
+        case eLANGUAGE_JAPANESE:
+        case eLANGUAGE_THAI:
         default:
             return 0x87b7d0a;
     }
@@ -149,7 +149,7 @@ uint32 uiRepSheetRival::GetDefeatedTexture() {
 
 void uiRepSheetRival::RefreshHeader() {
     GRaceBin *bin = GRaceDatabase::Get().GetBinNumber(iCurrentViewBin);
-    unsigned int num_boss_races = bin->GetBossRaceCount();
+    uint32 num_boss_races = bin->GetBossRaceCount();
     if (num_boss_races >= 5) {
         cFEng::Get()->QueuePackageMessage(0xe7177701, GetPackageName(), nullptr);
     } else if (num_boss_races == 4) {
@@ -178,10 +178,10 @@ void uiRepSheetRival::RefreshHeader() {
 }
 
 void uiRepSheetRival::SetupRace(uint32 num, GRaceParameters *race) {
-    unsigned int icon_hash = FEngHashString("EVENT_ICON_%d", num);
-    unsigned int type_hash = FEngHashString("EVENT NAME_%d", num);
-    unsigned int name_hash = FEngHashString("DATA_%d", num);
-    unsigned int best_hash = FEngHashString("RIVAL_BEST_DATA_%d", num);
+    uint32 icon_hash = FEngHashString("EVENT_ICON_%d", num);
+    uint32 type_hash = FEngHashString("EVENT NAME_%d", num);
+    uint32 name_hash = FEngHashString("DATA_%d", num);
+    uint32 best_hash = FEngHashString("RIVAL_BEST_DATA_%d", num);
     FEngSetTextureHash(GetPackageName(), icon_hash, FEDatabase->GetRaceIconHash(race->GetRaceType()));
     FEngSetLanguageHash(GetPackageName(), type_hash, FEDatabase->GetRaceNameHash(race->GetRaceType()));
     FEngSetLanguageHash(GetPackageName(), name_hash, CalcLanguageHash("TRACKNAME_", race));

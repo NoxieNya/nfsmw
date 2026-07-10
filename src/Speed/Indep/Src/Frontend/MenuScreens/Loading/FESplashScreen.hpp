@@ -16,7 +16,7 @@ class SplashScreen : public MenuScreen {
         if (bAllowContinue) {
             return maybe;
         }
-        return static_cast<eMenuSoundTriggers>(-1);
+        return UISND_NONE;
     }
     Timer CalculateLastJoyEventTime();
 

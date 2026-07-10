@@ -6,6 +6,7 @@
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feDialogBox.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/FEPkg_GarageMain.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/quickrace/uiTrackMapStreamer.hpp"
 #include "Speed/Indep/Src/Frontend/RaceStarter.hpp"
 #include "Speed/Indep/Src/Gameplay/GRace.h"
@@ -16,8 +17,8 @@
 #include "Speed/Indep/Src/Misc/Timer.hpp"
 #include "Speed/Indep/Tools/Inc/ConversionUtil.hpp"
 
-extern int iCurrentViewBin;
-extern GRaceParameters *theRace;
+extern int iCurrentViewBin; // TODO remove
+GRaceParameters *theRace = nullptr;
 
 void RaceDatum::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
     if (msg == 0xc407210) {
@@ -33,11 +34,15 @@ UISafehouseRaceSheet::UISafehouseRaceSheet(ScreenConstructorData *sd) : ArrayScr
 #ifndef EA_BUILD_A124
     currentIndex = 0;
 #endif
+    if (!bIsInGame) {
+        GarageMainScreen::GetInstance()->CancelCameraPush();
+    }
     theRace = nullptr;
+
     for (int i = 0; i < GetWidth() * GetHeight(); i++) {
-        FEImage *image = FEngFindImage(GetPackageName(), FEngHashString("EVENT_ICON_%d", i + 1));
-        if (image) {
-            AddSlot(new ImageArraySlot(image));
+        FEImage *img = FEngFindImage(GetPackageName(), FEngHashString("EVENT_ICON_%d", i + 1));
+        if (img != nullptr) {
+            AddSlot(new ("ImageArraySlot", 0) ImageArraySlot(img));
         }
     }
     TrackMap = reinterpret_cast<FEMultiImage *>(FEngFindObject(GetPackageName(), FEngHashString("TRACK_MAP")));
@@ -53,14 +58,15 @@ UISafehouseRaceSheet::~UISafehouseRaceSheet() {}
 
 eMenuSoundTriggers UISafehouseRaceSheet::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
     eMenuSoundTriggers result = ArrayScrollerMenu::NotifySoundMessage(msg, maybe);
-    if (msg == 0x7b6b89d7 && !theRace) {
-        return static_cast<eMenuSoundTriggers>(7);
+    if (msg == 0x7b6b89d7 && (theRace == nullptr)) {
+        return UISND_COMMON_WRONG;
     }
     return result;
 }
 
 void UISafehouseRaceSheet::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     ArrayScrollerMenu::NotificationMessage(msg, obj, param1, param2);
+    // UNSOLVED
     switch (msg) {
         case 0xc98356ba:
             TrackMapStreamer.UpdateAnimation();
@@ -79,11 +85,11 @@ void UISafehouseRaceSheet::NotificationMessage(u32 msg, FEObject *obj, u32 param
             if (theRace == nullptr) {
                 break;
             }
+            const char *dialog = "";
             if (!bIsInGame) {
-                signed char joyPort = static_cast<signed char>(FEngMapJoyParamToJoyport(param1));
+                int joyPort = FEngMapJoyParamToJoyport(param1);
                 FEDatabase->SetPlayersJoystickPort(0, joyPort);
             }
-            const char *dialog = "";
             if (bIsInGame) {
                 dialog = "InGameDialog.fng";
             }
@@ -97,7 +103,7 @@ void UISafehouseRaceSheet::NotificationMessage(u32 msg, FEObject *obj, u32 param
                 GManager::Get().StartRaceFromInGame(theRace->GetEventHash());
             } else {
                 GRaceCustom *race = GRaceDatabase::Get().AllocCustomRace(theRace);
-                GRaceDatabase::Get().SetStartupRace(race, kRaceContext_Career);
+                GRaceDatabase::Get().SetStartupRace(race, GRace::kRaceContext_Career);
                 GRaceDatabase::Get().FreeCustomRace(race);
                 RaceStarter::StartRace();
             }
@@ -114,6 +120,7 @@ void UISafehouseRaceSheet::NotificationMessage(u32 msg, FEObject *obj, u32 param
     }
 }
 
+// UNSOLVED
 void UISafehouseRaceSheet::RefreshHeader() {
     ArrayScrollerMenu::RefreshHeader();
 
@@ -125,8 +132,8 @@ void UISafehouseRaceSheet::RefreshHeader() {
     }
     FEngSetLanguageHash(GetPackageName(), 0x78008599, hash);
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
-    FEPrintf(GetPackageName(), 0xb514e2d8, "%s %", GetLocalizedString(0xce6b99b1), stable->GetTotalBounty());
-    FEPrintf(GetPackageName(), 0xf91a59f6, "%s %", GetLocalizedString(0x73b79e0), FEDatabase->GetCareerSettings()->GetCash());
+    FEPrintf(GetPackageName(), 0xb514e2d8, "%s %$d", GetLocalizedString(0xce6b99b1), stable->GetTotalBounty());
+    FEPrintf(GetPackageName(), 0xf91a59f6, "%s %$d", GetLocalizedString(0x73b79e0), FEDatabase->GetCareerSettings()->GetCash());
     if (GetCurrentDatum() == nullptr) {
         return;
     }
@@ -145,6 +152,7 @@ void UISafehouseRaceSheet::RefreshHeader() {
     FEngSetInvisible(FEngFindObject(GetPackageName(), 0x1c8fc866));
     FEngSetInvisible(FEngFindObject(GetPackageName(), 0x7af67920));
     FEngSetInvisible(FEngFindObject(GetPackageName(), 0xbbf970cd));
+
     GRaceSaveInfo *info = GRaceDatabase::Get().GetScoreInfo(race->GetEventHash());
     if (race->GetRaceType() == GRace::kRaceType_P2P || race->GetRaceType() == GRace::kRaceType_Circuit ||
         race->GetRaceType() == GRace::kRaceType_Drag || race->GetRaceType() == GRace::kRaceType_Knockout ||
@@ -152,31 +160,29 @@ void UISafehouseRaceSheet::RefreshHeader() {
         if (info->mHighScores.mBestTime == 0.0f) {
             FEPrintf(GetPackageName(), 0x8fd41bb4, GetLocalizedString(0x472aa00a));
         } else {
-            Timer t(info->mHighScores.mBestTime);
             char buf[64];
-            t.PrintToString(buf, 0);
+            Timer(info->mHighScores.mBestTime).PrintToString(buf, 0);
             FEPrintf(GetPackageName(), 0x8fd41bb4, "%s", buf);
         }
     } else {
         FEPrintf(GetPackageName(), 0x8fd41bb4, "%s", GetLocalizedString(0x472aa00a));
     }
-    float top_speed;
     float avg_speed;
+    float top_speed;
     if (FEDatabase->GetGameplaySettings()->SpeedoUnits == 1) {
         distUnits = GetLocalizedString(0x8569a25f);
-        avg_speed = MPS2KPH(static_cast<float>(info->mAverageSpeed));
-        top_speed = MPS2KPH(static_cast<float>(info->mTopSpeed));
+        avg_speed = MPS2KPH(info->mAverageSpeed);
+        top_speed = MPS2KPH(info->mTopSpeed);
     } else {
         distUnits = GetLocalizedString(0x8569ab44);
-        avg_speed = MPS2MPH(static_cast<float>(info->mAverageSpeed));
-        top_speed = MPS2MPH(static_cast<float>(info->mTopSpeed));
+        avg_speed = MPS2MPH(info->mAverageSpeed);
+        top_speed = MPS2MPH(info->mTopSpeed);
     }
-    FEPrintf(GetPackageName(), 0xebd7f926, "%$0.1f %s", top_speed, distUnits);
-    FEPrintf(GetPackageName(), 0xde9145fb, "%$0.1f %s", avg_speed, distUnits);
+    FEPrintf(GetPackageName(), 0xebd7f926, "%$0.2f %s", top_speed, distUnits);
+    FEPrintf(GetPackageName(), 0xde9145fb, "%$0.2f %s", avg_speed, distUnits);
     FEPrintf(GetPackageName(), 0x763f4b5b, "%$0.0f", race->GetCashValue());
-    uint32 iconHash = FEDatabase->GetRaceIconHash(race->GetRaceType());
-    FEImage *img = FEngFindImage(GetPackageName(), 0xf97ec5d5);
-    FEngSetTextureHash(img, iconHash);
+    FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xf97ec5d5), FEDatabase->GetRaceIconHash(race->GetRaceType()));
+
     for (int i = 0; i < GetNumSlots(); i++) {
         RaceDatum *datum = static_cast<RaceDatum *>(GetDatumAt(i + GetStartDatumNum()));
         uint32 check_hash = FEngHashString("MEDAL_THUMB_%d", i + 1);
@@ -207,12 +213,10 @@ bool UISafehouseRaceSheet::AddRace(GRaceParameters *race) {
         case GRace::kRaceType_JumpToMilestone:
             return false;
         default:
-            break;
+            AddDatum(new ("RaceDatum", 0)
+                         RaceDatum(FEDatabase->GetRaceIconHash(race->GetRaceType()), FEDatabase->GetRaceNameHash(race->GetRaceType()), race));
+            return true;
     }
-    RaceDatum *datum =
-        new ("", 0) RaceDatum(FEDatabase->GetRaceIconHash(race->GetRaceType()), FEDatabase->GetRaceNameHash(race->GetRaceType()), race);
-    AddDatum(datum);
-    return true;
 }
 
 void UISafehouseRaceSheet::Setup() {
@@ -233,20 +237,20 @@ void UISafehouseRaceSheet::Setup() {
         unsigned int bindex = FEDatabase->GetCareerSettings()->GetCurrentBin();
         while (bindex <= GRaceDatabase::Get().GetBinCount()) {
             GRaceBin *bin = GRaceDatabase::Get().GetBinNumber(bindex);
-            bindex++;
             if (bin != nullptr) {
                 for (unsigned int i = 0; i < bin->GetWorldRaceCount(); i++) {
-                    if (AddRace(GRaceDatabase::Get().GetRaceFromHash(bin->GetWorldRaceHash(i)))) {
+                    GRaceParameters *race = GRaceDatabase::Get().GetRaceFromHash(bin->GetWorldRaceHash(i));
+                    if (AddRace(race)) {
                         GetDatumAt(GetNumDatum() - 1)->SetLocked(false);
                     }
                 }
             }
+            bindex++;
         }
     }
     SetDescLabel(0x9ba78ba2);
     if (GetCurrentDatum() != nullptr) {
-        RaceDatum *datum = static_cast<RaceDatum *>(GetCurrentDatum());
-        TrackMapStreamer.Init(datum->race, TrackMap, 0, 0);
+        TrackMapStreamer.Init(static_cast<RaceDatum *>(GetCurrentDatum())->race, TrackMap, 0, 0);
     }
     SetInitialPosition(0);
     RefreshHeader();

@@ -70,7 +70,10 @@ class ActionQueue : public UTL::Collections::Listable<ActionQueue, MAX_ACTIONQ> 
     void Enable(bool b);
 
     const ActionRef operator[](int i);
-    // int Size() {}
+
+    int Size() {
+        return fQueue.size();
+    }
 
     Timer LastActionTime() const {
         return mActionTime;

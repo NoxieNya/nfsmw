@@ -47,7 +47,7 @@ void FEKeyboard::NotificationMessage(u32 msg, FEObject *pObject, u32 param1, u32
     int nButton = -1;
     switch (msg) {
         case 0x9120409E:
-            g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(2));
+            g_pEAXSound->PlayUISoundFX(UISND_COMMON_LEFT);
             return;
         case 0xB5971BF1:
             g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(3));
@@ -68,7 +68,7 @@ void FEKeyboard::NotificationMessage(u32 msg, FEObject *pObject, u32 param1, u32
                 AppendLetter(nButton);
                 return;
             }
-            g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(7));
+            g_pEAXSound->PlayUISoundFX(UISND_COMMON_WRONG);
             return;
         case 0xE1FDE1D1:
             if (bStrCmp(mString, "") == 0 && mnMode == MODE_FILENAME) {
@@ -77,7 +77,7 @@ void FEKeyboard::NotificationMessage(u32 msg, FEObject *pObject, u32 param1, u32
             goto dispose_keyboard;
         case 0xC1A6F000:
             if (mnMode == MODE_PROFILE_ENTRY) {
-                g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(7));
+                g_pEAXSound->PlayUISoundFX(UISND_COMMON_WRONG);
                 return;
             }
             AppendSpace();
@@ -90,7 +90,7 @@ void FEKeyboard::NotificationMessage(u32 msg, FEObject *pObject, u32 param1, u32
             return;
         case 0xD7AD0DD9:
             if (mnMode == MODE_PROFILE_ENTRY && !(FEDatabase->GetGameMode() & 8) && !(FEDatabase->GetGameMode() & 0x40)) {
-                g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(7));
+                g_pEAXSound->PlayUISoundFX(UISND_COMMON_WRONG);
                 return;
             }
             ToggleCapsLock();

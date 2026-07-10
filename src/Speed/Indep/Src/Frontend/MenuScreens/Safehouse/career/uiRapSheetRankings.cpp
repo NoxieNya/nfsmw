@@ -1,4 +1,5 @@
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "uiRapSheetRankingsDetail.hpp"
 #include "uiRapSheetRankings.hpp"
@@ -24,44 +25,44 @@ void uiRapSheetRankings::NotificationMessage(u32 msg, FEObject *pobj, u32 param1
         case 0x35F8620B:
             FEngSetCurrentButton(GetPackageName(), init_button);
             break;
-        case 0xE1FDE1D1: {
-            int index = 10;
+        case FEHASH_EXITCOMPLETE: {
+            ePursuitDetailTypes type = PD_NUM_PD_TYPES;
             switch (button_pressed) {
                 case 0xCDA0A66B:
-                    index = 0;
+                    type = PD_PURUSIT_LENGTH;
                     break;
                 case 0xCDA0A66C:
-                    index = 1;
+                    type = PD_COPS_INVOLVED;
                     break;
                 case 0xCDA0A66D:
-                    index = 2;
+                    type = PD_COPS_DAMAGED;
                     break;
                 case 0xCDA0A66E:
-                    index = 3;
+                    type = PD_COPS_DESTROYED;
                     break;
                 case 0xCDA0A66F:
-                    index = 5;
+                    type = PD_ROADBLOCKS_DODGED;
                     break;
                 case 0xCDA0A670:
-                    index = 4;
+                    type = PD_SPIKESTRIPS_DODGED;
                     break;
                 case 0xCDA0A671:
-                    index = 7;
+                    type = PD_COST_TO_STATE;
                     break;
                 case 0xCDA0A672:
-                    index = 8;
+                    type = PD_NUM_INFRACTIONS;
                     break;
                 case 0xCDA0A673:
-                    index = 6;
+                    type = PD_HELICOPTERS_INVOLVED;
                     break;
                 case 0x81B573FB:
-                    index = 9;
+                    type = PD_BOUNTY;
                     break;
             }
-            if (index != 10) {
+            if (type != PD_NUM_PD_TYPES) {
                 uiRapSheetRankingsDetail::career_view = career_view;
-                cFEng::Get()->QueuePackageSwitch("RapSheetRankingsDetail.fng", index, 0, false);
-                FEngSetLastButton(GetPackageName(), static_cast<unsigned char>(index));
+                cFEng::Get()->QueuePackageSwitch("RapSheetRankingsDetail.fng", type, 0, false);
+                FEngSetLastButton(GetPackageName(), type); // TODO: bug? shouldnt this be `button_pressed`
             } else {
                 cFEng::Get()->QueuePackageSwitch("RapSheetMain.fng", 0, 0, false);
                 FEngSetLastButton(GetPackageName(), 0);
@@ -72,9 +73,9 @@ void uiRapSheetRankings::NotificationMessage(u32 msg, FEObject *pobj, u32 param1
 }
 
 void uiRapSheetRankings::RefreshHeader() {
-    UserProfile *prof = FEDatabase->GetUserProfile(0);
-    FEPrintf(GetPackageName(), 0x1232703A, GetLocalizedString(0xE21D083C), prof->GetCareer()->GetCaseFileName());
-    FEPrintf(GetPackageName(), static_cast<int>(0xEB406FEC), GetLocalizedString(0x6031106E), prof->GetProfileName());
+    UserProfile &prof = *FEDatabase->GetUserProfile(0);
+    FEPrintf(GetPackageName(), 0x1232703A, GetLocalizedString(0xE21D083C), prof.GetCareer()->GetCaseFileName());
+    FEPrintf(GetPackageName(), 0xEB406FEC, GetLocalizedString(0x6031106E), prof.GetProfileName());
     FEngSetLanguageHash(GetPackageName(), 0x1E4FDA, career_view ? 0x96DDF504 : 0x56E940F4);
     FEngSetLanguageHash(GetPackageName(), 0xDD2F4FB, career_view ? 0x554BBDB5 : 0xA88B3FC5);
     FEngSetLanguageHash(GetPackageName(), 0x9AE9B5CD, career_view ? 0x554BBDB5 : 0xA88B3FC5);
@@ -95,15 +96,14 @@ void uiRapSheetRankings::Setup() {
 }
 
 void uiRapSheetRankings::PrintRanking(uint32 fe_rank, uint32 button_hash, ePursuitDetailTypes type) {
-    UserProfile *prof = FEDatabase->GetUserProfile(0);
-    int rank = prof->GetHighScores()->CalcPursuitRank(type, career_view);
+    UserProfile &prof = *FEDatabase->GetUserProfile(0);
+    int rank = prof.GetHighScores()->CalcPursuitRank(type, career_view);
     if (rank != 0x10) {
-        FEPrintf(GetPackageName(), fe_rank, "%d", rank);
+        FEPrintf(GetPackageName(), fe_rank, "%$d", rank);
     } else {
         FEPrintf(GetPackageName(), fe_rank, "%s", GetLocalizedString(0xF3799455));
     }
-    unsigned char lastButton = FEngGetLastButton(GetPackageName());
-    if (static_cast<unsigned char>(type) == lastButton) {
+    if (static_cast<uint8>(type) == FEngGetLastButton(GetPackageName())) {
         init_button = button_hash;
     }
 }

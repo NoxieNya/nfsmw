@@ -23,89 +23,82 @@ UIMemcardBase *MemcardCallbacks::GetScreen() {
     return MemoryCard::GetInstance()->GetScreen();
 }
 
-void MemcardCallbacks::ShowMessage(const wchar_t *msg, unsigned int nOptions, const wchar_t **options) {
+void MemcardCallbacks::ShowMessage(const wchar_t *msg, uint32_t nOptions, const wchar_t **options) {
     if (GetMemcard()->IsMemcardScreenExiting()) {
         return;
     }
     JLog(MJ_ShowMesssage);
-    Joylog::AddOrGetData(reinterpret_cast<unsigned short *>(const_cast<wchar_t *>(msg)), JOYLOG_CHANNEL_MEMORY_CARD);
-    unsigned int loggedOptions = Joylog::AddOrGetData(nOptions, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
-    for (unsigned int i = 0; i < loggedOptions; i++) {
-        Joylog::AddOrGetData(reinterpret_cast<unsigned short *>(const_cast<wchar_t *>(options[i])), JOYLOG_CHANNEL_MEMORY_CARD);
+    JLog(msg);
+    JLog(nOptions);
+    for (uint32 i = 0; i < nOptions; i++) {
+        JLog(options[i]);
     }
-    DisplayMessage(msg, loggedOptions, options);
-    GetMemcard()->SetWaitingForResponse(true);
-    if (GetMemcard()->IsAutoSaving() && gMemcardSetup.GetMethod() != 0xb0) {
-        if (loggedOptions == 0) {
-            GetMemcard()->SetWaitingForResponse(false);
+    DisplayMessage(msg, nOptions, options);
+    GetMemcard()->m_bWaitingForResponse = true;
+    if (GetMemcard()->IsAutoSaving() && gMemcardSetup.GetCommand() != 0xb0) {
+        if (nOptions == 0) {
+            GetMemcard()->m_bWaitingForResponse = false;
         } else {
-            GetMemcard()->m_PendingMessage = new (__FILE__, __LINE__) MemoryCardMessage(msg, loggedOptions, options);
+            GetMemcard()->m_PendingMessage = new ("Memcard Msg", 0) MemoryCardMessage(msg, nOptions, options);
             GetMemcard()->HandleAutoSaveError();
         }
-    } else {
-        int op = GetMemcard()->GetOp();
-        switch (op) {
-            case MemoryCard::MO_FakeLoad:
-            case MemoryCard::MO_LoadYNCF:
-                if (loggedOptions == 0) {
-                    break;
-                }
-                // fallthrough
-            default: {
-                UIMemcardBase *pScreen = GetScreen();
-                if (pScreen != nullptr) {
-                    if (pScreen->IsInButtonAnimation()) {
-                        if (GetMemcard()->GetPendingMessage() != nullptr) {
-                            GetMemcard()->ReleasePendingMessage();
-                        }
-                        GetMemcard()->m_PendingMessage = new (__FILE__, __LINE__) MemoryCardMessage(msg, loggedOptions, options);
-                    } else {
-                        GetScreen()->ShowMessage(msg, loggedOptions, options[0], options[1], options[2]);
-                    }
-                }
-                break;
+        return;
+    }
+
+    switch (GetMemcard()->GetOp()) {
+        case MemoryCard::MO_FakeLoad:
+        case MemoryCard::MO_LoadYNCF:
+            if (nOptions == 0) {
+                return;
             }
+    }
+
+    UIMemcardBase *pScreen = GetScreen();
+    if (pScreen != nullptr) {
+        if (pScreen->IsInButtonAnimation()) {
+            if (GetMemcard()->GetPendingMessage() != nullptr) {
+                GetMemcard()->ReleasePendingMessage();
+            }
+            GetMemcard()->m_PendingMessage = new ("Memcard Msg", 0) MemoryCardMessage(msg, nOptions, options);
+        } else {
+            GetScreen()->ShowMessage(msg, nOptions, options[0], options[1], options[2]);
         }
     }
 }
 
+// UNSOLVED (dwarf unmatched)
 void MemcardCallbacks::ClearMessage() {
-    if (!GetMemcard()->IsAutoSaving()) {
-        JLog(MJ_ClearMessage);
-        int op = GetMemcard()->GetOp();
-        switch (op) {
-            case MemoryCard::MO_FakeLoad:
-            case MemoryCard::MO_LoadYNCF:
-                break;
-            default: {
-                UIMemcardBase *pScreen = GetScreen();
-                if (pScreen != nullptr) {
-                    GetMemcard();
-                }
-                break;
-            }
+    if (GetMemcard()->IsAutoSaving()) {
+        return;
+    }
+
+    JLog(MJ_ClearMessage);
+    switch (GetMemcard()->GetOp()) {
+        case MemoryCard::MO_FakeLoad:
+        case MemoryCard::MO_LoadYNCF:
+            return;
+    }
+
+    UIMemcardBase *pScreen = GetScreen();
+    if (pScreen != nullptr) {
+        if (false && pScreen->IsInButtonAnimation()) {
+            pScreen->SetMessage(nullptr);
         }
+        GetMemcard();
     }
 }
 
 void MemcardCallbacks::BootupCheckDone(RealmcIface::CardStatus status, RealmcIface::BootupCheckResults res) {
     JLog(MJ_BootupCheckDone);
-    status = static_cast<RealmcIface::CardStatus>(Joylog::AddOrGetData(static_cast<unsigned int>(status), 0x10, JOYLOG_CHANNEL_MEMORY_CARD));
-    res.mEntryFound = Joylog::AddOrGetData(static_cast<unsigned int>(res.mEntryFound), 1, JOYLOG_CHANNEL_MEMORY_CARD) != 0;
+    JLog(status);
+    JLog(res.mEntryFound);
     GetMemcard()->m_MemOp = MemoryCard::MO_NONE;
     GetMemcard()->m_pImp->DestructSaveInfo();
     GetMemcard()->m_LastError = static_cast<unsigned short>(status);
     GetMemcard()->m_SpecialError = static_cast<unsigned short>(status);
     if ((status != RealmcIface::STATUS_OK && GetMemcard()->GetPendingMessage() != nullptr) || status == RealmcIface::STATUS_UNKNOWN) {
         GetMemcard()->ReleasePendingMessage();
-        MemoryCard *mc = GetMemcard();
-        const char *entry;
-        if (GetMemcard()->IsAutoLoading() && !FEDatabase->bProfileLoaded) {
-            entry = GetScreen()->m_FileName;
-        } else {
-            entry = nullptr;
-        }
-        mc->BootupCheck(entry);
+        GetMemcard()->BootupCheck(GetMemcard()->m_bAutoLoading && !FEDatabase->bProfileLoaded ? GetScreen()->m_FileName : nullptr);
         return;
     }
     GetMemcard()->m_pImp->BootupCheckDone(status, &res);
@@ -113,9 +106,7 @@ void MemcardCallbacks::BootupCheckDone(RealmcIface::CardStatus status, RealmcIfa
     if (GetMemcard()->m_bRetryBootCheck) {
         GetScreen()->SetStringCheckingCard();
     } else {
-        cFEng *feng = cFEng::Get();
-        UIMemcardBase *scr = GetScreen();
-        feng->QueueGameMessage(0x461a18ee, scr->GetPackageName(), 0xff);
+        cFEng::Get()->QueueGameMessage(0x461a18ee, GetScreen()->GetPackageName(), 0xff);
     }
 }
 
@@ -125,7 +116,7 @@ void MemcardCallbacks::SaveCheckDone(RealmcIface::TaskResult result, RealmcIface
 
 void MemcardCallbacks::SaveDone(const char *filename) {
     JLog(MJ_SaveDone);
-    Joylog::AddOrGetData(const_cast<char *>(filename), JOYLOG_CHANNEL_MEMORY_CARD);
+    JLog(filename);
     if (GetMemcard()->IsTypeProfile()) {
         bFree(GetMemcard()->m_pBuffer);
     }
@@ -133,27 +124,29 @@ void MemcardCallbacks::SaveDone(const char *filename) {
     GetMemcard()->m_pBuffer = nullptr;
     GetMemcard()->m_MemOp = MemoryCard::MO_NONE;
     FEDatabase->bProfileLoaded = true;
-    FEDatabase->bIsOptionsDirty = false;
+    FEDatabase->SetOptionsDirty(false);
     GetMemcard()->m_bCardRemoved = false;
-    if (GetMemcard()->IsManualSave() && gMemcardSetup.GetMethod() != 0xb0) {
+    if (GetMemcard()->m_bManualSave && gMemcardSetup.GetCommand() != 0xb0) {
         if (FEDatabase->GetGameplaySettings()->AutoSaveOn) {
-            GetMemcard()->m_bRetryAutoSave = false;
+            GetMemcard()->SetRetryAutoSave(false);
             GetMemcard()->SetAutoSaveEnabled(true);
         } else {
             cFEng::Get()->QueueGameMessage(0x461a18ee, nullptr, 0xff);
         }
-    } else if (GetMemcard()->IsAutoSaving() || gMemcardSetup.GetMethod() == 0xb0) {
+    } else if (GetMemcard()->IsAutoSaving() || gMemcardSetup.GetCommand() == 0xb0) {
         GetMemcard()->m_bAutoSaveCardPulled = false;
+#ifndef EA_BUILD_A124
         if (GetMemcard()->m_bFoundAutoSaveFile) {
             FEDatabase->bAutoSaveOverwriteConfirmed = true;
         }
-        if (GetMemcard()->m_bRetryAutoSave) {
+#endif
+        if (GetMemcard()->IsRetryingAutoSave()) {
             GetMemcard()->ShowMessages(false);
-            GetMemcard()->m_bRetryAutoSave = false;
+            GetMemcard()->SetRetryAutoSave(false);
             GetMemcard()->SetAutoSaveEnabled(true);
         }
         GetMemcard()->EndAutoSave();
-        if (gMemcardSetup.GetMethod() == 0xb0) {
+        if (gMemcardSetup.GetCommand() == 0xb0) {
             cFEng::Get()->QueueGameMessage(0x461a18ee, nullptr, 0xff);
         }
     }
@@ -164,15 +157,16 @@ RealmcIface::DataStatus MemcardCallbacks::CheckLoadedData(const char *data) {
     return RealmcIface::DATA_OK;
 }
 
+// UNSOLVED (dwarf unmatched)
 void MemcardCallbacks::LoadDone(const char *filename) {
     JLog(MJ_LoadDone);
-    Joylog::AddOrGetData(const_cast<char *>(filename), JOYLOG_CHANNEL_MEMORY_CARD);
+    JLog(filename);
     char *header = GetMemcard()->GetHeader();
     if (Joylog::IsReplaying()) {
         Joylog::GetData(header, 8, JOYLOG_CHANNEL_MEMORY_CARD);
     }
     if (Joylog::IsCapturing()) {
-        Joylog::AddData(header, 8, JOYLOG_CHANNEL_MEMORY_CARD);
+        JLog(header, 8);
     }
     char *data = GetMemcard()->GetData();
     unsigned int size = GetMemcard()->GetSize();
@@ -180,15 +174,14 @@ void MemcardCallbacks::LoadDone(const char *filename) {
         Joylog::GetData(data, size, JOYLOG_CHANNEL_MEMORY_CARD);
     }
     if (Joylog::IsCapturing()) {
-        Joylog::AddData(data, size, JOYLOG_CHANNEL_MEMORY_CARD);
+        JLog(data, size);
     }
     unsigned int *pHeader = reinterpret_cast<unsigned int *>(GetMemcard()->GetHeader());
-    unsigned int iStoredVersion = pHeader[0];
-    unsigned int iStoredSize = pHeader[1];
+    uint32 iStoredVersion = pHeader[0];
+    uint32 iStoredSize = pHeader[1];
     MemoryCard::GetInstance()->m_MemOp = MemoryCard::MO_NONE;
     if (iStoredVersion == 0x10d && iStoredSize == GetMemcard()->GetSize() && GetMemcard()->IsTypeProfile()) {
-        bool isProfileValid = FEDatabase->LoadUserProfileFromBuffer(GetMemcard()->GetData(), GetMemcard()->GetSize(), GetMemcard()->GetPlayerNum());
-        if (isProfileValid) {
+        if (FEDatabase->LoadUserProfileFromBuffer(GetMemcard()->GetData(), GetMemcard()->GetSize(), GetMemcard()->GetPlayerNum())) {
             FEDatabase->DeallocBackupDB();
             if (GetMemcard()->GetPlayerNum() != 0) {
                 if (GetMemcard()->m_pBuffer != nullptr) {
@@ -207,12 +200,7 @@ void MemcardCallbacks::LoadDone(const char *filename) {
                 }
                 GetMemcard()->SetAutoSaveEnabled(true);
             } else {
-                cFEng *feng = cFEng::Get();
-                unsigned int msg = 0x461a18ee;
-                if (gMemcardSetup.GetMethod() == 0x20) {
-                    msg = 0xa4bb7ae1;
-                }
-                feng->QueueGameMessage(msg, nullptr, 0xff);
+                cFEng::Get()->QueueGameMessage(gMemcardSetup.GetCommand() == 0x20 ? 0xa4bb7ae1 : 0x461a18ee, nullptr, 0xff);
             }
         } else {
             GetMemcard()->ShowMessages(false);
@@ -232,7 +220,7 @@ void MemcardCallbacks::LoadDone(const char *filename) {
 
 void MemcardCallbacks::DeleteDone(const char *filename) {
     JLog(MJ_DeleteDone);
-    Joylog::AddOrGetData(const_cast<char *>(filename), JOYLOG_CHANNEL_MEMORY_CARD);
+    JLog(filename);
     int idx = GetMemcard()->GetPrefixLength();
     if (bStrCmp(filename + idx, FEDatabase->GetUserProfile(0)->GetProfileName()) == 0) {
         FEDatabase->DefaultProfile();
@@ -246,53 +234,46 @@ void MemcardCallbacks::ClearEntries() {
     JLog(MJ_ClearEntries);
 }
 
+// UNSOLVED
 void MemcardCallbacks::FoundEntry(const RealmcIface::EntryInfo *info) {
     JLog(MJ_FoundEntry);
-    Joylog::AddOrGetData(const_cast<char *>(info->mName), JOYLOG_CHANNEL_MEMORY_CARD);
-    const_cast<RealmcIface::EntryInfo *>(info)->mStatus =
-        static_cast<RealmcIface::CardStatus>(Joylog::AddOrGetData(static_cast<unsigned int>(info->mStatus), 0x10, JOYLOG_CHANNEL_MEMORY_CARD));
-    const_cast<RealmcIface::EntryInfo *>(info)->mEntryBlocks = Joylog::AddOrGetData(info->mEntryBlocks, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
-    const_cast<RealmcIface::EntryInfo *>(info)->mUserDataSize = Joylog::AddOrGetData(info->mUserDataSize, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
-    const_cast<RealmcIface::EntryInfo *>(info)->mTime.mCreated = Joylog::AddOrGetData(info->mTime.mCreated, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
-    const_cast<RealmcIface::EntryInfo *>(info)->mTime.mLastAccessed =
-        Joylog::AddOrGetData(info->mTime.mLastAccessed, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
-    const_cast<RealmcIface::EntryInfo *>(info)->mTime.mLastModified =
-        Joylog::AddOrGetData(info->mTime.mLastModified, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
-    Joylog::AddOrGetData(const_cast<char *>(info->mCompanyCode), JOYLOG_CHANNEL_MEMORY_CARD);
-    Joylog::AddOrGetData(const_cast<char *>(info->mGameCode), JOYLOG_CHANNEL_MEMORY_CARD);
-    if (GetMemcard()->IsListingOldSaveFiles()) {
+    JLog(info);
+    if (GetMemcard()->m_bListingOldSaveFiles) {
         GetMemcard()->m_bOldSaveFileExists = true;
+        return;
     } else if (GetMemcard()->IsCheckingCardForOverwrite()) {
         GetMemcard()->m_bFoundAutoSaveFile = true;
-    } else {
-        if (bStrNCmp(g_GC_Disk_GameName, info->mGameCode, 4) == 0) {
-            unsigned int fDefault = 0;
-            unsigned int iSize = GetMemcard()->GetSize();
-            int iGuessSize = info->mUserDataSize;
-            if (info->mStatus != RealmcIface::STATUS_OK) {
-                fDefault = 2;
-            }
-            if (GetMemcard()->IsTypeProfile()) {
-                unsigned int sec = GetMemcard()->GetSize();
-                GetScreen()->AddItem(info->mName, "", iGuessSize, fDefault);
-            } else {
-                if (info->mStatus != RealmcIface::STATUS_OK) {
-                    return;
-                }
-                int idx = GetMemcard()->m_EntryCount;
-                bStrNCpy(GetMemcard()->m_pBuffer + idx * 0x10, info->mName, 0x10);
-            }
-            GetMemcard()->m_EntryCount++;
-        }
+        return;
     }
+    if (bStrNCmp(g_GC_Disk_GameName, info->mGameCode, 4) != 0) {
+        return;
+    }
+    unsigned int iSize = GetMemcard()->GetSize();
+    int iGuessSize = info->mUserDataSize;
+    unsigned int fDefault = 0;
+    if (info->mStatus != RealmcIface::STATUS_OK) {
+        fDefault = 2;
+    }
+    if (GetMemcard()->IsTypeProfile()) {
+        unsigned int sec = GetMemcard()->m_DataSize;
+        GetScreen()->AddItem(info->mName, "", iGuessSize, fDefault);
+    } else {
+        if (info->mStatus != RealmcIface::STATUS_OK) {
+            return;
+        }
+        unsigned int iOffset = GetMemcard()->m_EntryCount * 0x10;
+        char *pNameBuf = GetMemcard()->m_pBuffer + iOffset;
+        bStrNCpy(pNameBuf, info->mName, 0x10);
+    }
+    GetMemcard()->m_EntryCount++;
 }
 
 void MemcardCallbacks::FindEntriesDone(RealmcIface::CardStatus status) {
     JLog(MJ_FindEntriesDone);
-    Joylog::AddOrGetData(static_cast<unsigned int>(status), 0x10, JOYLOG_CHANNEL_MEMORY_CARD);
+    JLog(status);
     GetMemcard()->m_MemOp = MemoryCard::MO_NONE;
-    GetMemcard()->m_bListingForCreate = false;
-    if (GetMemcard()->IsListingOldSaveFiles()) {
+    GetMemcard()->SetListingForCreate(false);
+    if (GetMemcard()->m_bListingOldSaveFiles) {
         GetMemcard()->EndListingOldSaveFiles();
     } else if (GetMemcard()->IsCheckingCardForOverwrite()) {
         GetMemcard()->m_bCheckingCardForOverwrite = false;
@@ -309,7 +290,7 @@ void MemcardCallbacks::FindEntriesDone(RealmcIface::CardStatus status) {
 
 void MemcardCallbacks::Retry(RealmcIface::CardStatus status) {
     JLog(MJ_Retry);
-    Joylog::AddOrGetData(static_cast<unsigned int>(status), 0x10, JOYLOG_CHANNEL_MEMORY_CARD);
+    JLog(status);
     if (GetScreen() != nullptr) {
         GetScreen()->SetStringCheckingCard();
         if (GetMemcard()->GetOp() == MemoryCard::MO_List) {
@@ -318,6 +299,7 @@ void MemcardCallbacks::Retry(RealmcIface::CardStatus status) {
     }
 }
 
+// UNSOLVED
 void MemcardCallbacks::Failed(RealmcIface::TaskResult result, RealmcIface::CardStatus status) {
     JLog(MJ_Failed);
     JLog(status);
@@ -426,19 +408,10 @@ void MemcardCallbacks::CardChanged(RealmcIface::TaskResult result, RealmcIface::
     }
 }
 
+// UNSOLVED
 void MemcardCallbacks::CardChecked(const RealmcIface::CardInfo *info) {
     JLog(MJ_CardChecked);
-    const_cast<RealmcIface::CardInfo *>(info)->mCardId =
-        static_cast<RealmcIface::CardId>(Joylog::AddOrGetData(static_cast<unsigned int>(info->mCardId), 0x20, JOYLOG_CHANNEL_MEMORY_CARD));
-    const_cast<RealmcIface::CardInfo *>(info)->mStatus =
-        static_cast<RealmcIface::CardStatus>(Joylog::AddOrGetData(static_cast<unsigned int>(info->mStatus), 0x10, JOYLOG_CHANNEL_MEMORY_CARD));
-    const_cast<RealmcIface::CardInfo *>(info)->mFreeSpace = Joylog::AddOrGetData(info->mFreeSpace, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
-    const_cast<RealmcIface::CardInfo *>(info)->mFreeFiles = Joylog::AddOrGetData(info->mFreeFiles, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
-    const_cast<RealmcIface::CardInfo *>(info)->mTotalSpace = Joylog::AddOrGetData(info->mTotalSpace, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
-    const_cast<RealmcIface::CardInfo *>(info)->mFreeSpaceOverLimit =
-        Joylog::AddOrGetData(static_cast<unsigned int>(info->mFreeSpaceOverLimit), 1, JOYLOG_CHANNEL_MEMORY_CARD) != 0;
-    const_cast<RealmcIface::CardInfo *>(info)->mTotalSpaceOverLimit =
-        Joylog::AddOrGetData(static_cast<unsigned int>(info->mTotalSpaceOverLimit), 1, JOYLOG_CHANNEL_MEMORY_CARD) != 0;
+    JLog(info);
     unsigned int msg = 0x8867412d;
     if (GetMemcard()->IsCheckingCardForAutoSave()) {
         GetMemcard()->m_MemOp = MemoryCard::MO_NONE;
@@ -453,7 +426,8 @@ void MemcardCallbacks::CardChecked(const RealmcIface::CardInfo *info) {
                 GetMemcard()->m_bFoundAutoSaveFile = true;
                 GetMemcard()->DoAutoSave();
                 return;
-            case RealmcIface::STATUS_OK: {
+            case RealmcIface::STATUS_OK:
+#ifndef EA_BUILD_A124
                 if (!FEDatabase->bAutoSaveOverwriteConfirmed) {
                     GetMemcard()->m_bCheckingCardForAutoSave = false;
                     GetMemcard()->m_bCheckingCardForOverwrite = true;
@@ -465,9 +439,10 @@ void MemcardCallbacks::CardChecked(const RealmcIface::CardInfo *info) {
                     GetMemcard()->List(filter, nullptr);
                     return;
                 }
+#endif
                 GetMemcard()->DoAutoSave();
                 return;
-            }
+
             case RealmcIface::STATUS_NO_CARD:
                 GetMemcard()->HandleAutoSaveError();
                 return;
@@ -510,15 +485,18 @@ void MemcardCallbacks::CardRemoved() {
         if (FEDatabase->IsOptionsMode()) {
             cFEng::Get()->QueueGameMessage(0x7e998e5e, nullptr, 0xff);
         }
+#ifndef EA_BUILD_A124
         FEDatabase->bAutoSaveOverwriteConfirmed = false;
+#endif
     }
 }
 
+// UNSOLVED
 void MemcardCallbacks::SetAutosaveDone(RealmcIface::TaskResult res, RealmcIface::CardStatus status, RealmcIface::AutosaveState flag) {
     JLog(MJ_SetAutosaveDone);
-    Joylog::AddOrGetData(static_cast<unsigned int>(res), 8, JOYLOG_CHANNEL_MEMORY_CARD);
-    status = static_cast<RealmcIface::CardStatus>(Joylog::AddOrGetData(static_cast<unsigned int>(status), 0x10, JOYLOG_CHANNEL_MEMORY_CARD));
-    flag = static_cast<RealmcIface::AutosaveState>(Joylog::AddOrGetData(static_cast<unsigned int>(flag), 0x20, JOYLOG_CHANNEL_MEMORY_CARD));
+    JLog(res);
+    JLog(status);
+    JLog(reinterpret_cast<unsigned int &>(flag));
     GetMemcard()->m_MemOp = MemoryCard::MO_NONE;
     GetMemcard()->m_bAutoSave = (flag == RealmcIface::AUTOSAVE_ENABLE);
     GetMemcard()->m_bAutoSaveCardPulled = false;
@@ -527,42 +505,45 @@ void MemcardCallbacks::SetAutosaveDone(RealmcIface::TaskResult res, RealmcIface:
         GetMemcard()->m_bDisablingAutoSaveForSave = false;
         GetMemcard()->ShowMessages(true);
         cFEng::Get()->QueueGameMessage(0xc6c6b68f, GetMemcard()->IsMemcardScreenShowing() ? gMemcardSetup.mMemScreen : nullptr, 0xff);
-    } else {
-        unsigned int msg = 0x461a18ee;
-        if (status != RealmcIface::STATUS_OK && flag != RealmcIface::AUTOSAVE_ENABLE) {
-            if (status == RealmcIface::STATUS_NO_CARD) {
-                msg = 0xb57fdb17;
-                FEDatabase->GetGameplaySettings()->AutoSaveOn = false;
-            } else {
-                FEDatabase->GetGameplaySettings()->AutoSaveOn = false;
-            }
-        }
-        if (gMemcardSetup.mPreviousCommand == 0x20) {
-            msg = 0xa4bb7ae1;
-        }
-        if (GetMemcard()->IsAutoSaving()) {
-            if (flag != RealmcIface::AUTOSAVE_ENABLE && FEDatabase->GetGameplaySettings()->AutoSaveOn) {
-                FEDatabase->GetGameplaySettings()->AutoSaveOn = false;
-                GetMemcard()->m_bCardRemoved = true;
-            }
-            GetMemcard()->EndAutoSave();
+        return;
+    }
+    unsigned int msg = 0x461a18ee;
+    if (status != RealmcIface::STATUS_OK && flag != RealmcIface::AUTOSAVE_ENABLE) {
+        if (status == RealmcIface::STATUS_NO_CARD) {
+            msg = 0xb57fdb17;
+            FEDatabase->GetGameplaySettings()->AutoSaveOn = false;
         } else {
-            cFEng::Get()->QueueGameMessage(msg, nullptr, 0xff);
+            FEDatabase->GetGameplaySettings()->AutoSaveOn = false;
         }
-        if (flag == RealmcIface::AUTOSAVE_ENABLE) {
-            if (gMemcardSetup.GetMethod() == 0xa0 && FEDatabase->IsOptionsMode()) {
-                FEDatabase->bAutoSaveOverwriteConfirmed = false;
-            }
-            FEDatabase->GetGameplaySettings()->AutoSaveOn = true;
-            GetMemcard()->m_bCardRemoved = false;
+    }
+    if (gMemcardSetup.mPreviousCommand == 0x20) {
+        msg = 0xa4bb7ae1;
+    }
+    if (GetMemcard()->IsAutoSaving()) {
+        if (flag != RealmcIface::AUTOSAVE_ENABLE && FEDatabase->GetGameplaySettings()->AutoSaveOn) {
+            FEDatabase->GetGameplaySettings()->AutoSaveOn = false;
+            GetMemcard()->m_bCardRemoved = true;
         }
+        GetMemcard()->EndAutoSave();
+    } else {
+        cFEng::Get()->QueueGameMessage(msg, nullptr, 0xff);
+    }
+    if (flag == RealmcIface::AUTOSAVE_ENABLE) {
+#ifndef EA_BUILD_A124
+        if (gMemcardSetup.GetCommand() == 0xa0 && FEDatabase->IsOptionsMode()) {
+            FEDatabase->bAutoSaveOverwriteConfirmed = false;
+        }
+#endif
+        FEDatabase->GetGameplaySettings()->AutoSaveOn = true;
+        GetMemcard()->m_bCardRemoved = false;
     }
 }
 
+// UNSOLVED
 void MemcardCallbacks::SetMonitorDone(RealmcIface::CardStatus status, RealmcIface::MonitorState state) {
     JLog(MJ_Retry);
-    status = static_cast<RealmcIface::CardStatus>(Joylog::AddOrGetData(static_cast<unsigned int>(status), 0x10, JOYLOG_CHANNEL_MEMORY_CARD));
-    state = static_cast<RealmcIface::MonitorState>(Joylog::AddOrGetData(static_cast<unsigned int>(state), 0x10, JOYLOG_CHANNEL_MEMORY_CARD));
+    JLog(status);
+    JLog(state);
     GetMemcard()->m_MemOp = MemoryCard::MO_NONE;
     GetMemcard()->m_bMonitorOn = (static_cast<unsigned int>(state) - 1u < 2u);
     unsigned int msg;
@@ -588,20 +569,21 @@ void MemcardCallbacks::SetMonitorDone(RealmcIface::CardStatus status, RealmcIfac
 RealmcIface::TaskStatus MemcardCallbacks::LoadReady(const char *entryName, unsigned int headerSize, unsigned int bodySize, char *&headerData,
                                                     char *&bodyData) {
     JLog(MJ_LoadReady);
-    Joylog::AddOrGetData(const_cast<char *>(entryName), JOYLOG_CHANNEL_MEMORY_CARD);
+    JLog(entryName);
     RealmcIface::TaskStatus res = RealmcIface::TASK_CANCEL;
-    headerSize = Joylog::AddOrGetData(headerSize, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
-    bodySize = Joylog::AddOrGetData(bodySize, 0x20, JOYLOG_CHANNEL_MEMORY_CARD);
+    JLog(headerSize);
+    JLog(bodySize);
     if (headerSize == 8 && bodySize == GetMemcard()->GetSize()) {
         res = RealmcIface::TASK_CONTINUE;
-        bodyData = GetMemcard()->GetData();
+        bodyData = GetMemcard()->m_pBuffer;
         headerData = GetMemcard()->GetHeader();
     }
     return res;
 }
 
+// UNSOLVED
 void IJoyHelper::EmulateMemoryCardLibrary(int aJoyOp) {
-    char *pBuf = new char[0x400];
+    char *pBuf = new ("MemcardJoyLogBuffer", 0) char[0x400];
     char *pBuf1 = pBuf + 1;
     const wchar_t *pOptions[4];
     pOptions[0] = reinterpret_cast<const wchar_t *>(pBuf + 0x338);

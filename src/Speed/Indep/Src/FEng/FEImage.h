@@ -26,7 +26,9 @@ class FEImage : public FEObject {
     }
     ~FEImage() override {} // Decl: speed/indep/src/feng/feimage.h:50
 
-    FEImageData *GetImageData() {} // Decl: speed/indep/src/feng/feimage.h:52
+    FEImageData *GetImageData() { // Decl: speed/indep/src/feng/feimage.h:52
+        return static_cast<FEImageData *>(GetObjData());
+    }
 
     FEObject *Clone(bool bReference) override { // Decl: speed/indep/src/feng/feimage.h:54
         return FNEW FEImage(*this, bReference);

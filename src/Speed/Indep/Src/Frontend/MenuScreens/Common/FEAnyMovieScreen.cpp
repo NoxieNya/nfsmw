@@ -1,6 +1,8 @@
 #include "FEAnyMovieScreen.hpp"
 
 #include "Speed/Indep/Src/FEng/FEMovie.h"
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
@@ -12,26 +14,25 @@
 #include "Speed/Indep/Src/Generated/Events/EFadeScreenOff.hpp"
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
 
-char FEAnyMovieScreen::MovieFilename[64];
+char FEAnyMovieScreen::MovieFilename[64] = "unknown";
 char FEAnyMovieScreen::ReturnToPackageName[64];
 
-FEAnyMovieScreen::FEAnyMovieScreen(ScreenConstructorData *sd) : MenuScreen(sd), mSubtitler(), bHidGarage(false), bAllowingControllerErrors(false) {
-    const unsigned int FEObj_movie = 0x348FF9F;
+FEAnyMovieScreen::FEAnyMovieScreen(ScreenConstructorData *sd) : MenuScreen(sd), mSubtitler(), bHidGarage(false) {
+    const u32 FEObj_movie = 0x348FF9F;
 
     bAllowingControllerErrors = FEManager::Get()->IsAllowingControllerError();
     FEManager::Get()->AllowControllerError(false);
 
-    FEMovie *movie = static_cast<FEMovie *>(FEngFindObject(GetPackageName(), FEObj_movie));
-    FEngSetMovieName(movie, MovieFilename);
+    FEngSetMovieName(GetPackageName(), FEObj_movie, MovieFilename);
 
     mSubtitler.BeginningMovie(MovieFilename, GetPackageName());
     DismissChyron();
 
-    EFadeScreenOff *fadeEvent = new EFadeScreenOff(0x14035FB);
+    new EFadeScreenOff(0x14035FB);
 
     GarageMainScreen *garageMainScreen = GarageMainScreen::GetInstance();
-    if (garageMainScreen != nullptr && !garageMainScreen->IsVisable()) {
-        garageMainScreen->NotificationMessage(0xAD4BBDCUL, nullptr, 0, 0);
+    if (garageMainScreen != nullptr && garageMainScreen->IsVisable()) {
+        garageMainScreen->NotificationMessage(0xAD4BBDC, nullptr, 0, 0);
         bHidGarage = true;
     }
 }
@@ -40,7 +41,7 @@ FEAnyMovieScreen::~FEAnyMovieScreen() {
     if (bHidGarage) {
         GarageMainScreen *garageMainScreen = GarageMainScreen::GetInstance();
         if (garageMainScreen != nullptr) {
-            garageMainScreen->NotificationMessage(0x18883F75UL, nullptr, 0, 0);
+            garageMainScreen->NotificationMessage(0x18883F75, nullptr, 0, 0);
         }
     }
     FEManager::Get()->SetEATraxSecondButton();
@@ -48,18 +49,18 @@ FEAnyMovieScreen::~FEAnyMovieScreen() {
 }
 
 MenuScreen *FEAnyMovieScreen::Create(ScreenConstructorData *sd) {
-    return new ("", 0) FEAnyMovieScreen(sd);
+    return new ("FEAnyMovieScreen", 0) FEAnyMovieScreen(sd);
 }
 
 void FEAnyMovieScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     mSubtitler.Update(msg);
 
     switch (msg) {
-        case 0xC3960EB9:
+        case FEMSG_MOVIE_FINISHED:
             DismissMovie();
             break;
-        case 0x406415E3:
-        case 0xB5AF2461:
+        case __PAD_ACCEPT__:
+        case __PAD_START__:
             if (FEDatabase->IsDDay()) {
                 if (!MoviePlayer_Bypass())
                     break;
@@ -77,8 +78,8 @@ void FEAnyMovieScreen::LaunchMovie(const char *return_to_pkg, const char *filena
 }
 
 void FEAnyMovieScreen::PlaySafehouseIntroMovie() {
-    SetMovieName("SafehouseIntroMovie");
-    bStrNCpy(ReturnToPackageName, "IG_SafehouseMain.fng", 64);
+    SetMovieName("storyfmv_saf25");
+    bStrNCpy(ReturnToPackageName, "SafeHouseRivalBio.fng", 64);
 }
 
 void FEAnyMovieScreen::DismissMovie() {
@@ -87,8 +88,7 @@ void FEAnyMovieScreen::DismissMovie() {
         ReturnToPackageName[0] = '\0';
     } else {
         if (FEDatabase->IsPostRivalMode()) {
-            uiRepSheetRivalFlow *flow = uiRepSheetRivalFlow::Get();
-            flow->Next();
+            uiRepSheetRivalFlow::Get()->Next();
         } else {
             cFEng::Get()->QueuePackagePop(1);
         }
@@ -101,7 +101,7 @@ void FEAnyMovieScreen::SetMovieName(const char *filename) {
 
 const char *FEAnyMovieScreen::GetFEngPackageName() {
     if (eIsWidescreen()) {
-        return "FEAnyMovieScreenW.fng";
+        return "WS_FEAnyMovie.fng";
     }
-    return "FEAnyMovieScreen.fng";
+    return "FEAnyMovie.fng";
 }

@@ -132,13 +132,13 @@ struct CardInfo {
     CardInfo();
     void Clear();
 
-    CardId mCardId;            // offset 0x0, size 0x4
-    CardStatus mStatus;        // offset 0x4, size 0x4
-    unsigned int mFreeSpace;   // offset 0x8, size 0x4
-    unsigned int mFreeFiles;   // offset 0xC, size 0x4
-    unsigned int mTotalSpace;  // offset 0x10, size 0x4
-    bool mFreeSpaceOverLimit;  // offset 0x14, size 0x1
-    bool mTotalSpaceOverLimit; // offset 0x18, size 0x1
+    CardId mCardId;                  // offset 0x0, size 0x4
+    RealmcIface::CardStatus mStatus; // offset 0x4, size 0x4
+    unsigned int mFreeSpace;         // offset 0x8, size 0x4
+    unsigned int mFreeFiles;         // offset 0xC, size 0x4
+    unsigned int mTotalSpace;        // offset 0x10, size 0x4
+    bool mFreeSpaceOverLimit;        // offset 0x14, size 0x1
+    bool mTotalSpaceOverLimit;       // offset 0x18, size 0x1
 };
 
 // total size: 0x24
@@ -153,6 +153,26 @@ struct EntryInfo {
     TimeInfo mTime;             // offset 0x10, size 0xC
     char mCompanyCode[2];       // offset 0x1C, size 0x2
     char mGameCode[4];          // offset 0x1E, size 0x4
+};
+
+enum MessageIds {
+    ID_CHECKINGFORCARD = 1,
+    ID_NOCARD = 2,
+    ID_BADCARD = 4,
+    ID_FILENOTFOUND = 8,
+    ID_SAVE_READY = 256,
+    ID_SAVE_WARNING = 512,
+    ID_SAVE_COMPLETE = 1024,
+    ID_SAVE_FAILED = 2048,
+    ID_LOAD_READY = 4096,
+    ID_LOAD_WARNING = 8192,
+    ID_LOAD_COMPLETE = 16384,
+    ID_LOAD_FAILED = 32768,
+    ID_DELETE_READY = 65536,
+    ID_DELETE_WARNING = 131072,
+    ID_DELETE_COMPLETE = 262144,
+    ID_DELETE_FAILED = 524288,
+    ID_ALLMESSAGES = -1,
 };
 
 enum MessageState {

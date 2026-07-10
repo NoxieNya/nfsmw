@@ -9,4 +9,12 @@ FEObject *FEngGetCurrentButton(const char *pkg_name);
 
 void FEngSetButtonState(const char *pkg_name, uint32 button_hash, bool enabled);
 
+inline void FEngEnableButton(const char *pkg_name, uint32 button_hash) {
+    FEngSetButtonState(pkg_name, button_hash, true);
+}
+
+inline void FEngDisableButton(const char *pkg_name, uint32 button_hash) {
+    FEngSetButtonState(pkg_name, button_hash, false);
+}
+
 #endif

@@ -1,14 +1,13 @@
-#ifndef FRONTEND_MENUSCREENS_COMMON_FESCROLLERINA_H
-#define FRONTEND_MENUSCREENS_COMMON_FESCROLLERINA_H
+#ifndef FESCROLLERINA_HPP
+#define FESCROLLERINA_HPP
 
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
-
-#include "Speed/Indep/Src/FEng/FEObject.h"
-#include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEIconScrollerMenu.hpp"
+#include "Speed/Indep/Src/FEng/FEImage.h"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Common/feWidget.hpp"
 #include "Speed/Indep/bWare/Inc/bList.hpp"
 #include "Speed/Indep/bWare/Inc/bMath.hpp"
+#include "Speed/Indep/bWare/Inc/bWare.hpp"
+#include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
 
 class ScrollerDatumNode : public bTNode<ScrollerDatumNode> {
@@ -26,12 +25,12 @@ class ScrollerDatumNode : public bTNode<ScrollerDatumNode> {
 
 class ScrollerDatum : public bTNode<ScrollerDatum> {
   public:
-    ScrollerDatum() {}
+    ScrollerDatum() : bEnabled(true) {}
     ScrollerDatum(const char *string, uint32 hash) {};
     virtual ~ScrollerDatum() {}
 
     void AddData(const char *string, uint32 hash) {
-        Strings.AddTail(FNEW ScrollerDatumNode(string, hash));
+        Strings.AddTail(new ("ScrollerDatumNode", 0) ScrollerDatumNode(string, hash));
     }
     char *GetTopDatumModeString() {};
     ScrollerDatumNode *Find(const char *to_find);
@@ -65,20 +64,30 @@ class ScrollerSlotNode : public bTNode<ScrollerSlotNode> {
 
 class ScrollerSlot : public bTNode<ScrollerSlot> {
   public:
-    ScrollerSlot() {}
+    ScrollerSlot() : FEStrings(), pBacking(nullptr), vSize(), vTopLeft() {
+        vSize.y = 0;
+        vSize.x = 0;
+        vTopLeft.y = 0;
+        vTopLeft.x = 0;
+        bEnabled = true;
+    }
     ScrollerSlot(FEObject *string) {};
     virtual ~ScrollerSlot() {}
 
     void AddData(FEObject *string) {
-        FEStrings.AddTail(FNEW ScrollerSlotNode(string));
+        FEStrings.AddTail(new ("ScrollerSlotNode", 0) ScrollerSlotNode(string));
     }
     void SetBacking(FEObject *obj) {
         pBacking = obj;
     }
     void Hide();
     void Show();
-    void Highlight() {};
-    void UnHighlight() {};
+    void Highlight() {
+        SetScript(FEHASH_HIGHLIGHT);
+    };
+    void UnHighlight() {
+        SetScript(FEHASH_UNHIGHLIGHT);
+    };
     void Enable() {
         bEnabled = true;
     }
@@ -135,12 +144,20 @@ class Scrollerina {
     }
     void PageUp();
     void PageDown();
-    void MoveNext();
-    void MovePrev();
+    void MoveNext() {
+        MoveSelected(eSD_NEXT, true);
+    };
+    void MovePrev() {
+        MoveSelected(eSD_PREV, true);
+    };
     bool Reset(bool update);
     void Update(bool print);
     void UnHighlightSelected();
-    void HighlightSelected();
+    void HighlightSelected() {
+        if (SelectedSlot != nullptr) {
+            SelectedSlot->Highlight();
+        }
+    };
     void Enable(ScrollerDatum *datum);
     void Disable(ScrollerDatum *datum);
     void DeleteScrollerData();
@@ -162,8 +179,10 @@ class Scrollerina {
     uint32 GetSelectedNodeIndex() {
         return GetNodeIndex(GetSelectedDatum());
     }
-    uint32 GetSelectedSlotIndex();
-    void SetSelectedDatum(uint32 index);
+    uint32 GetSelectedSlotIndex() {
+        return GetNodeIndex(GetSelectedSlot());
+    };
+    void SetSelectedDatum(uint32 index) {};
     void SetSelectedDatum(ScrollerDatum *datum) {
         SelectedDatum = datum;
     }
@@ -183,7 +202,9 @@ class Scrollerina {
     ScrollerDatum *GetTopDatum() {
         return TopDatum;
     }
-    ScrollerSlot *GetFirstSlot();
+    ScrollerSlot *GetFirstSlot() {
+        return Slots.GetHead();
+    };
     ScrollerSlot *GetLastSlot();
     ScrollerSlot *GetSlot(int ordinal_number);
     ScrollerDatum *FindDatumInSlot(ScrollerSlot *to_find);

@@ -379,10 +379,10 @@ class FEToggleImageWidget : public FEToggleWidget {
 // total size: 0xA4
 // Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:358
 class FESliderWidget : public FEToggleWidget {
-
   public:
     FESliderWidget(bool enabled);
     ~FESliderWidget() override {} // Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:361
+    virtual void SetInitialValues() = 0;
     void Position() override;
     void Show() override;
     void Hide() override;

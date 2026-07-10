@@ -15,7 +15,7 @@ class FEngSetGroupLanguageHash : public FEObjectCallback {
   public:
     u32 Hash; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEStrings.cpp:26
 
-    bool Callback(struct FEObject *pObj) override { // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEStrings.cpp:28
+    bool Callback(FEObject *pObj) override { // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEStrings.cpp:28
         if (pObj->Type == FE_String) {
             FEngSetLanguageHash(static_cast<FEString *>(pObj), Hash);
         }
@@ -29,7 +29,7 @@ class FEngGroupFEPrintf : public FEObjectCallback {
   public:
     char *string; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEStrings.cpp:207
 
-    bool Callback(struct FEObject *pObj) override { // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEStrings.cpp:209
+    bool Callback(FEObject *pObj) override { // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEStrings.cpp:209
         if (pObj->Type == FE_String) {
             DoFEngPrintf(static_cast<FEString *>(pObj), string, 0);
         }
@@ -45,9 +45,10 @@ FEString *FEngFindString(const char *pkg_name, int name_hash) {
     return static_cast<FEString *>(obj);
 }
 
-void FEngSetLanguageHash(FEString *pkg_name, uint32 hash) {
-    if (pkg_name != nullptr) {
-        pkg_name->SetLabelHash(hash);
+void FEngSetLanguageHash(FEString *text, uint32 hash) {
+    if (text != nullptr) {
+        text->SetLabelHash(hash);
+        text->Flags = text->Flags & ~2 | FF_DirtyCode;
     }
 }
 
@@ -65,9 +66,11 @@ void FEngSetLanguageHash(const char *pkg_name, uint32 obj_hash, uint32 language)
     }
 }
 
-void FESetString(FEString *text, const short *string) {
+void FESetString(FEString *text, const i16 *string) {
     if (string != nullptr && text != nullptr) {
-        text->SetString(const_cast<short *>(string));
+        int prev_length = text->string.mulBufferLength;
+        text->SetString(const_cast<i16 *>(string));
+        int new_length = text->string.mulBufferLength;
         text->Flags |= FF_DirtyCode | 0x2;
     }
 }
@@ -79,6 +82,7 @@ static int DoFEngPrintf(FEString *text, char *string, int len) {
             string[length - 1] = 0;
         }
         text->SetString(string);
+        int new_length = text->string.mulBufferLength;
         text->Flags |= FF_DirtyCode | 0x2;
         return len;
     }

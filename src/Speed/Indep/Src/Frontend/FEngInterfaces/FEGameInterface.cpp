@@ -2,6 +2,7 @@
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/FEng/FEGameInterface.h"
 #include "Speed/Indep/Src/FEng/FEList.h"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/FEngRender.hpp"
 #include "Speed/Indep/Src/Frontend/FEJoyInput.hpp"
 #include "Speed/Indep/Src/Frontend/FEPackageManager.hpp"
@@ -13,13 +14,13 @@
 #include "Speed/Indep/Src/FEng/FEPackage.h"
 
 extern int g_discErrorOccured;
-extern char *FEngPleaseRenderSinglePackage;
 
 static FEColor gNormal(0xFFE6E6C8u);
 static FEColor gTint(0xFFFFAF41u);
 static FEColor gRapsheet(0xFFAAE646u);
 
-cFEngGameInterface *cFEngGameInterface::pInstance;
+cFEngGameInterface *cFEngGameInterface::pInstance = nullptr;
+char *FEngPleaseRenderSinglePackage = nullptr;
 
 static char *GetBaseName(char *dest, const char *filename) {
     long x = 0;
@@ -62,22 +63,23 @@ cFEngGameInterface::cFEngGameInterface() {
 
 cFEngGameInterface::~cFEngGameInterface() {}
 
+// UNSOLVED
 bool cFEngGameInterface::LoadResources(FEPackage *pPackage, i32 Count, FEResourceRequest *pList) {
-    for (int i = 0; i < Count; i++) {
+    uint32 length;
+    for (int32 i = 0; i < Count; i++) {
         char filename[256];
         GetBaseName(filename, pList[i].pFilename);
         bToUpper(filename);
-        unsigned int length = pList[i].Type;
-        switch (length) {
+        switch (pList[i].Type) {
             case 1:
             case 2:
                 pList[i].Handle = bStringHash(filename);
                 pList[i].UserParam = 0;
                 break;
             case 4: {
-                void *mem = bMalloc(256, "TODO", __LINE__, 0);
+                void *mem = bMalloc(256, "Movie filename", 0, 0);
                 bStrNCpy(static_cast<char *>(mem), filename, 256);
-                pList[i].Handle = reinterpret_cast<unsigned long>(mem);
+                pList[i].Handle = reinterpret_cast<u32>(mem);
                 pList[i].UserParam = 0;
                 break;
             }
@@ -119,7 +121,25 @@ bool cFEngGameInterface::GetContextTransform(u16 uContext, FEMatrix4 &Matrix) {
     if (uContext != 0) {
         RenderContext *ctxt = cFEngRender::mInstance->GetRenderContext(uContext);
         if (ctxt != nullptr) {
-            Matrix = *reinterpret_cast<FEMatrix4 *>(ctxt);
+            Matrix.m11 = ctxt->matrix.v0.x;
+            Matrix.m12 = ctxt->matrix.v0.y;
+            Matrix.m13 = ctxt->matrix.v0.z;
+            Matrix.m14 = ctxt->matrix.v0.w;
+
+            Matrix.m21 = ctxt->matrix.v1.x;
+            Matrix.m22 = ctxt->matrix.v1.y;
+            Matrix.m23 = ctxt->matrix.v1.z;
+            Matrix.m24 = ctxt->matrix.v1.w;
+
+            Matrix.m31 = ctxt->matrix.v2.x;
+            Matrix.m32 = ctxt->matrix.v2.y;
+            Matrix.m33 = ctxt->matrix.v2.z;
+            Matrix.m34 = ctxt->matrix.v2.w;
+
+            Matrix.m41 = ctxt->matrix.v3.x;
+            Matrix.m42 = ctxt->matrix.v3.y;
+            Matrix.m43 = ctxt->matrix.v3.z;
+            Matrix.m44 = ctxt->matrix.v3.w;
         }
     }
     return true;
@@ -200,8 +220,10 @@ bool cFEngGameInterface::PackageWillUnload(FEPackage *pPackage) {
     RenderObjectDisconnect disconnect;
     disconnect.pFEngRenderer = cFEngRender::mInstance;
     disconnect.PkgRenderInfo = HACK_FEPkgMgr_GetPackageRenderInfo(pPackage);
+    pPackage->GetName();
     pPackage->ForAllObjects(disconnect);
     FEPackageManager::Get()->PackageWillBeUnloaded(pPackage);
+    pPackage->GetName();
     return true;
 }
 
@@ -210,11 +232,13 @@ void HackClearCache(FEPackage *pkg) {
     disconnect.pFEngRenderer = cFEngRender::mInstance;
     disconnect.PkgRenderInfo = HACK_FEPkgMgr_GetPackageRenderInfo(pkg);
     pkg->ForAllObjects(disconnect);
+    pkg->GetName();
 }
 
 u8 *cFEngGameInterface::GetPackageData(const char *pPackageName, u8 **pBlockStart, bool &bDeleteBlock) {
     bDeleteBlock = false;
-    return static_cast<u8 *>(FEPackageManager::Get()->GetPackageData(pPackageName));
+    u8 *data = static_cast<u8 *>(FEPackageManager::Get()->GetPackageData(pPackageName));
+    return data;
 }
 
 u32 cFEngGameInterface::GetJoyPadMask(u8 feng_pad_index) {

@@ -1,6 +1,7 @@
 #include "uiOptionsTrailers.hpp"
 
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/FEPkg_GarageMain.hpp"
@@ -26,7 +27,7 @@ void UIOptionsTrailers::NotificationMessage(u32 msg, FEObject *pobj, u32 param1,
         case 0xd05fc3a3:
             Options.GetCurrentOption()->React(GetPackageName(), 0xd05fc3a3, pobj, param1, param2);
             break;
-        case 0xe1fde1d1:
+        case FEHASH_EXITCOMPLETE:
             if (PrevButtonMessage == 0x911ab364) {
                 FEDatabase->ClearGameMode(eFE_GAME_TRAILERS);
                 FEDatabase->GetOptionsSettings()->CurrentCategory = static_cast<eOptionsCategory>(-1);
@@ -37,14 +38,10 @@ void UIOptionsTrailers::NotificationMessage(u32 msg, FEObject *pobj, u32 param1,
 }
 
 void UIOptionsTrailers::Setup() {
-    unsigned char lastButton = FEngGetLastButton(GetPackageName());
+    const u32 FEObj_TITLEGROUP = 0xb71b576d;
 
-    if (bFadeInIconsImmediately) {
-        Options.StartFadeIn();
-    }
-
-    Options.SetInitialPos(lastButton);
+    SetInitialOption(FEngGetLastButton(GetPackageName()));
     GarageMainScreen::GetInstance()->CancelCameraPush();
-    FEngSetLanguageHash(GetPackageName(), 0xb71b576d, 0xb65a46d8);
+    FEngSetLanguageHash(GetPackageName(), FEObj_TITLEGROUP, 0xb65a46d8);
     RefreshHeader();
 }

@@ -131,7 +131,7 @@ void UIWidgetMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
 
 eMenuSoundTriggers UIWidgetMenu::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
     if ((msg == 0x48122792 || msg == 0x4AC5E165) && pCurrentOption && !pCurrentOption->IsEnabled()) {
-        return static_cast<eMenuSoundTriggers>(-1);
+        return UISND_NONE;
     }
     return maybe;
 }

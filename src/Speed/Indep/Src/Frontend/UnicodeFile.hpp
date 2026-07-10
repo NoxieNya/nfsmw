@@ -1,6 +1,7 @@
 #ifndef _UNICODEFILE_HPP_
 #define _UNICODEFILE_HPP_
 
+#include "Speed/Indep/Src/FEng/FETypes.h"
 #include <types.h>
 
 // File: speed/indep/src/frontend/UnicodeFile.hpp

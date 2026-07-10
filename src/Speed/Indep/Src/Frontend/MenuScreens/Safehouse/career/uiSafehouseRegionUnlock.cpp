@@ -4,8 +4,6 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 
-extern int iCurrentViewBin;
-
 uiSafehouseRegionUnlock::uiSafehouseRegionUnlock(ScreenConstructorData *sd) : MenuScreen(sd), RivalStreamer(sd->PackageFilename, false) {
     Setup();
 }
@@ -22,12 +20,11 @@ void uiSafehouseRegionUnlock::Setup() {
     pRivalImg = FEngFindImage(GetPackageName(), 0xc1f62308);
     pTagImg = FEngFindImage(GetPackageName(), 0xf5a2a087);
     pBGImg = FEngFindImage(GetPackageName(), 0x2cbe1dd0);
-    unsigned char bin = FEDatabase->GetCareerSettings()->GetCurrentBin();
-    int next_bin = bin + 1;
-    if (bin == 12) {
+    int cur_stage = FEDatabase->GetCareerSettings()->GetCurrentBin() + 1;
+    if (cur_stage == 13) {
         FEngSetLanguageHash(GetPackageName(), 0xd6c0e097, 0x29e4b193);
-    } else if (next_bin == 9) {
+    } else if (cur_stage == 9) {
         FEngSetLanguageHash(GetPackageName(), 0xd6c0e097, 0x2b0bca2d);
     }
-    RivalStreamer.Init(static_cast<unsigned int>(FEDatabase->GetCareerSettings()->GetCurrentBin()) + 1, pRivalImg, pTagImg, pBGImg);
+    RivalStreamer.Init(static_cast<uint32>(FEDatabase->GetCareerSettings()->GetCurrentBin()) + 1, pRivalImg, pTagImg, pBGImg);
 }

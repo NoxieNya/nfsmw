@@ -21,7 +21,9 @@ class RepSheetIcon : public IconOption {
 // total size: 0x1C0
 class uiRepSheetMain : public IconScrollerMenu {
   public:
-    static void TextureLoadedCallback(uint32 arg);
+    static void TextureLoadedCallback(uint32 arg) {
+        reinterpret_cast<uiRepSheetMain *>(arg)->NotifyTextureLoaded();
+    };
 
     uiRepSheetMain(ScreenConstructorData *sd);
     ~uiRepSheetMain() override;
@@ -30,7 +32,9 @@ class uiRepSheetMain : public IconScrollerMenu {
 
     void NotifyTextureLoaded();
     uint32 GetDefeatedTexture();
+#ifndef EA_BUILD_A124
     void UpdateInfo();
+#endif
 
   private:
     void Setup() override;

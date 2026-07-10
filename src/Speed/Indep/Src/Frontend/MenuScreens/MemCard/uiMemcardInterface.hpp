@@ -1,6 +1,7 @@
 #ifndef __UIMEMCARDINTERFACE_HPP__
 #define __UIMEMCARDINTERFACE_HPP__
 
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include <types.h>
 
 typedef void MemCardOpType(void *);
@@ -102,55 +103,49 @@ struct MemoryCardSetup {
         return mOp & 0xf0;
     }
 
-    uint32 GetCommand() const {
+    uint32 GetMethod() {
         return mOp & 0xf;
     }
 
-    uint32 GetMethod() const {
-        return mOp & 0xf0;
+    uint32 GetExtraOptions() {
+        return (mOp & 0xffff00);
     }
 
-    uint32 GetExtraOptions() const {
-        return (mOp >> 8) & 0xf;
-    }
-
-    uint32 GetPrompt() const {
-        return (mOp >> 12) & 0xf;
+    uint32 GetPrompt() {
+        return mOp & 0xf000000;
     }
 
     void SetCommand(int command) {
-        mOp = (mOp & ~0xf0) | (command & 0xf0);
+        mOp |= (command & 0xf0);
     }
 
     void SetMethod(int method) {
-        mOp = (mOp & ~0xf0) | (method & 0xf0);
+        mOp |= (method & 0xf);
     }
 
     void SetExtraOption(int eo) {
-        mOp = (mOp & ~0xf00) | ((eo & 0xf) << 8);
+        mOp |= (eo & 0xf000);
     }
 
     void SetPrompt(int prompt) {
-        mOp = (mOp & ~0xf000) | ((prompt & 0xf) << 12);
+        mOp |= (prompt & 0xf000000);
     }
 
     void ClearCommand() {
+        mPreviousCommand = GetCommand();
         mOp = mOp & ~0xf0;
     }
 
     void ClearMethod() {
-        mOp = mOp & ~0xf0;
+        mOp = mOp & ~0xf;
     }
 
     void ClearPrompt() {
-        uint32 p = GetPrompt();
-        if (p != 0) {
-            mPreviousPrompt = p;
-            mOp = mOp & ~0xf000;
-        }
+        mPreviousPrompt = GetPrompt();
+        mOp = mOp & ~0xf000000;
     }
 
-    bool IsSaving() const {
+    bool IsSaving() {
         uint32 cmd = GetCommand();
         return cmd == 3 || cmd == 4;
     }
@@ -171,15 +166,21 @@ struct MemoryCardSetup {
     };
 
     void SendTermMessage(uint32 msg) {
-        if (mTermFunc != nullptr) {
-            mTermFunc(mTermFuncParam);
+        if (mOp & 0x100) {
+            cFEng::Get()->QueuePackageMessage(msg, mToScreen, nullptr);
+        }
+        if (mOp & 0x400) {
+            uint32 m = msg == 0x461a18ee ? mSuccessMsg : mFailedMsg;
+            cFEng::Get()->QueueGameMessage(m, mToScreen, 0xff);
         }
     }
 
     void Complete(uint32 msg) {
-        mLastMessage = msg;
-        SendTermMessage(msg);
+        if (mTermFunc != nullptr) {
+            mTermFunc(mTermFuncParam);
+        }
         Clear();
+        mLastMessage = msg;
     }
 };
 
@@ -187,7 +188,7 @@ typedef MemoryCardSetup MemcardSetup;
 
 extern MemoryCardSetup gMemcardSetup;
 
-void MemcardEnter(const char *from, const char *to, uint32 op, MemCardOpType *pTermFunc, void *termParam, uint32 successMsg, uint32 failedMsg);
+void MemcardEnter(const char *from, const char *to, uint32 op, MemCardOpType *pTermFunc, void *pTermFuncParam, uint32 successMsg, uint32 failedMsg);
 void MemcardExit(uint32 msg);
 uint32 MemcardGetCurrentUIOperation();
 

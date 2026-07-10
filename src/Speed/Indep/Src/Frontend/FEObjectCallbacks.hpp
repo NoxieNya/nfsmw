@@ -13,9 +13,9 @@ class FEngMovieStarter : public FEObjectCallback {
     FEPackage *pPackage; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/FEObjectCallbacks.hpp:10
 
   public:
-    FEngMovieStarter(struct FEPackage *pkg) {} // Decl: speed/indep/src/frontend/FEObjectCallbacks.hpp:12
+    FEngMovieStarter(FEPackage *pkg) : pPackage(pkg) {} // Decl: speed/indep/src/frontend/FEObjectCallbacks.hpp:12
 
-    bool Callback(struct FEObject *obj) override;
+    bool Callback(FEObject *obj) override;
 };
 
 // total size: 0x4
@@ -24,7 +24,7 @@ class FEngMovieStopper : public FEObjectCallback {
   public:
     FEngMovieStopper() {}
 
-    bool Callback(struct FEObject *obj) override;
+    bool Callback(FEObject *obj) override;
 };
 
 // total size: 0x4
@@ -33,7 +33,7 @@ class FEngHidePCObjects : public FEObjectCallback {
   public:
     FEngHidePCObjects() {}
 
-    bool Callback(struct FEObject *obj) override;
+    bool Callback(FEObject *obj) override;
 };
 
 // total size: 0x8
@@ -42,9 +42,9 @@ class FEngTransferFlagsToChildren : public FEObjectCallback {
   public:
     int32 FlagToTransfer; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/FEObjectCallbacks.hpp:35
 
-    FEngTransferFlagsToChildren(int32 flag) {} // Decl: speed/indep/src/frontend/FEObjectCallbacks.hpp:37
+    FEngTransferFlagsToChildren(int32 flag) : FlagToTransfer(flag) {} // Decl: speed/indep/src/frontend/FEObjectCallbacks.hpp:37
 
-    bool Callback(struct FEObject *obj) override;
+    bool Callback(FEObject *obj) override;
 };
 
 // total size: 0xC
@@ -56,7 +56,7 @@ class RenderObjectDisconnect : public FEObjectCallback {
 
     RenderObjectDisconnect() {}
 
-    bool Callback(struct FEObject *pObj) override;
+    bool Callback(FEObject *pObj) override;
 };
 
 // total size: 0x8
@@ -67,16 +67,16 @@ class ObjectDirtySetter : public FEObjectCallback {
 
     ObjectDirtySetter() {}
 
-    bool Callback(struct FEObject *obj) override;
+    bool Callback(FEObject *obj) override;
 };
 
 // total size: 0x8
 // Decl: speed/indep/src/frontend/FEObjectCallbacks.hpp:60
 class ObjectVisibilitySetter : public FEObjectCallback {
   public:
-    ObjectVisibilitySetter(bool visible) {} // Decl: speed/indep/src/frontend/FEObjectCallbacks.hpp:63
+    ObjectVisibilitySetter(bool visible) : Visible(visible) {} // Decl: speed/indep/src/frontend/FEObjectCallbacks.hpp:63
 
-    bool Callback(struct FEObject *obj) override;
+    bool Callback(FEObject *obj) override;
 
   private:
     bool Visible; // offset 0x4, size 0x1, Decl: speed/indep/src/frontend/FEObjectCallbacks.hpp:66

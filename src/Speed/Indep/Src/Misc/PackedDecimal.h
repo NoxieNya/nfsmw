@@ -58,7 +58,7 @@ template <typename N, int a, int b> class FixedPoint {
 
   private:
     static int GetScale() {
-        const unsigned int scale = RaiseToPower<a>(b);
+        static const unsigned int scale = RaiseToPower<a>(b);
 
         return scale;
     }

@@ -6,6 +6,7 @@
 #include "RaceDB.hpp"
 #include "Speed/Indep/Src/Gameplay/GInfractionManager.h"
 #include "Speed/Indep/Src/Gameplay/GRace.h"
+#include "Speed/Indep/bWare/Inc/bTypes.hpp"
 #include "VehicleDB.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
 #include "Speed/Indep/bWare/Inc/bMath.hpp"
@@ -44,8 +45,8 @@ enum eControllerConfig {
     CC_CONFIG_4,
     CC_CONFIG_5,
     NUM_CONTROLLER_CONFIGS,
-    MIN_CONFIG = 0,
-    MAX_CONFIG = 4,
+    MIN_CONFIG = CC_CONFIG_1,
+    MAX_CONFIG = CC_CONFIG_5,
 };
 
 enum eControllerAttribs {
@@ -149,6 +150,7 @@ class PlayerSettings {
 };
 
 // total size: 0x20
+
 class GameplaySettings {
   public:
     GameplaySettings() {
@@ -292,16 +294,16 @@ class SMSMessage {
         return SortOrder;
     }
     uint32 GetMsgHash() {
-        return FEngHashString("SMS_MESSAGE_%d", GetHandle());
+        return FEngHashString("SMS_MESSAGE_%d", Handle);
     }
     uint32 GetFromHash() {
-        return FEngHashString("SMS_MESSAGE_%d_FROM", GetHandle());
+        return FEngHashString("SMS_MESSAGE_%d_FROM", Handle);
     }
     uint32 GetVoiceHash() {
-        return FEngHashString("SMS_MESSAGE_%d_VOICE", GetHandle());
+        return FEngHashString("SMS_MESSAGE_%d_VOICE", Handle);
     }
     uint32 GetSubjectHash() {
-        return FEngHashString("SMS_MESSAGE_%d_SUBJECT", GetHandle());
+        return FEngHashString("SMS_MESSAGE_%d_SUBJECT", Handle);
     }
     bool IsUnRead() {
         return (Flags & SMS_FLAG_UNREAD) != 0;
@@ -415,7 +417,7 @@ class CareerSettings {
         // TODO
         return bClamp(static_cast<float>(AdaptiveDifficulty), 0.0f, 1.0f);
     }
-    uint8 GetCurrentBin() const {
+    uint8 GetCurrentBin() {
         return CurrentBin;
     }
     void SetCurrentBin(uint8 bin) {
@@ -569,7 +571,8 @@ class UserProfile {
     JukeboxEntry Playlist[30];                  // offset 0x360, size 0xF0
     FEPlayerCarDB PlayersCarStable;             // offset 0x450, size 0x8CC8
     bool CareerModeHasBeenCompletedAtLeastOnce; // offset 0x9118, size 0x1
-    HighScoresDatabase HighScores;              // offset 0x911C, size 0xBD8
+    // int a[210];
+    HighScoresDatabase HighScores; // offset 0x911C, size 0xBD8
 };
 
 // total size: 0x14C
@@ -749,7 +752,9 @@ class cFrontendDatabase {
     uint32 GetGameMode() {
         return FEGameMode;
     }
-    bool IsAutoSave() {}
+    bool IsAutoSave() {
+        return GetGameplaySettings()->AutoSaveOn;
+    }
     void SetAutoSave(bool flag) {}
 #if ONLINE_SUPPORT
     cOnlineSettings *GetOnlineSettings() {
@@ -786,12 +791,14 @@ class cFrontendDatabase {
     bool LoadUserProfileFromBuffer(void *buffer, int32 bufsize, int player);
     bool CanCheatToUnlock();
 
-    uint8 iNumPlayers;                   // offset 0x0, size 0x1
-    bool bComingFromBoot;                // offset 0x4, size 0x1
-    bool bSavedProfileForMP;             // offset 0x8, size 0x1
-    bool bProfileLoaded;                 // offset 0xC, size 0x1
-    bool bIsOptionsDirty;                // offset 0x10, size 0x1
-    bool bAutoSaveOverwriteConfirmed;    // offset 0x14, size 0x1
+    uint8 iNumPlayers;       // offset 0x0, size 0x1
+    bool bComingFromBoot;    // offset 0x4, size 0x1
+    bool bSavedProfileForMP; // offset 0x8, size 0x1
+    bool bProfileLoaded;     // offset 0xC, size 0x1
+    bool bIsOptionsDirty;    // offset 0x10, size 0x1
+#ifndef EA_BUILD_A124
+    bool bAutoSaveOverwriteConfirmed; // offset 0x14, size 0x1
+#endif
     uint32 iDefaultStableHash;           // offset 0x18, size 0x4
     int8 PlayerJoyports[2];              // offset 0x1C, size 0x2
     UserProfile *CurrentUserProfiles[2]; // offset 0x20, size 0x8

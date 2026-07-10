@@ -3,13 +3,13 @@
 
 #include <types.h>
 #include "Speed/Indep/Src/Ecstasy/Texture.hpp"
+#include "Speed/Indep/Src/Misc/Config.h"
 
 #define VIDEO_STREAM_BUFFER_SIZE (640 * 1024) // :59
 #define MOVIEPLAYER_FILENAME_LEN 256          // :62
 
 // TODO move to D:/env/egami/rcmp/dev/source/av/cmn/avplayer.cpp
-namespace RCMP {
-
+namespace RealShape {
 // total size: 0x1
 struct Shape {
     // Functions
@@ -111,6 +111,9 @@ struct Shape {
 
     inline void SetCommentString(const char *string) {}
 };
+} // namespace RealShape
+
+namespace RCMP {
 
 // total size: 0x10
 class RCMP_SYSTEM {
@@ -120,11 +123,17 @@ class RCMP_SYSTEM {
 
     inline bool IsInited() {}
 
-    inline void *AllocMem(const char *name, unsigned int size, int alignment, int headersize, int type) {}
+    inline void *AllocMem(const char *name, unsigned int size, int alignment, int headersize, int type) {
+        return AllocMemFunc(name, size, alignment, headersize, type);
+    }
 
-    inline void *AllocMem(const char *name, int size, int alignment, int headersize, int type) {}
+    inline void *AllocMem(const char *name, int size, int alignment, int headersize, int type) {
+        return AllocMemFunc(name, size, alignment, headersize, type);
+    }
 
-    inline void FreeMem(void *memadr) {}
+    inline void FreeMem(void *memadr) {
+        FreeMemFunc(memadr);
+    }
 
     RCMP_SYSTEM();
 
@@ -166,13 +175,13 @@ struct FRAME {
 
     inline FRAME_TYPE_ENUM GetFrameType() {}
 
-    inline Shape *GetShape() {
+    inline RealShape::Shape *GetShape() {
         return m_Shp;
     }
 
     // Members
     FRAME_TYPE_ENUM m_FrameType; // offset 0x0, size 0x4
-    Shape *m_Shp;                // offset 0x4, size 0x4
+    RealShape::Shape *m_Shp;     // offset 0x4, size 0x4
 };
 
 // total size: 0xC
@@ -516,7 +525,7 @@ struct AV_PLAYER {
 
     // Functions
     static inline void *operator new(size_t size) {
-        RCMP::rcmp_sys.AllocMem("avplayer", 0x94, 0, 0, RCMP::rcmp_sys.m_DefaultMemDir);
+        return RCMP::rcmp_sys.AllocMem("", static_cast<unsigned int>(sizeof(AV_PLAYER)), 0, 0, RCMP::rcmp_sys.m_DefaultMemDir);
     }
 
     static inline void *operator new[](size_t size) {}
@@ -531,9 +540,13 @@ struct AV_PLAYER {
 
     static inline void *operator new(size_t, void *ptr) {}
 
-    inline unsigned int GetCurFrame() {}
+    inline unsigned int GetCurFrame() {
+        return m_CurFrame;
+    }
 
-    inline struct DECODER *GetDecoder() {}
+    inline struct DECODER *GetDecoder() {
+        return m_pdecoder;
+    }
 
     inline float GetGoalFrame() {
         return m_GoalFrame;
@@ -634,19 +647,41 @@ class MoviePlayer {
   public:
     class Settings { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
       public:
-        Settings() {}                                         // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        ~Settings() {}                                        // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        void operator=(const struct Settings &newSettings) {} // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        unsigned int volume;                                  // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        unsigned int bufferSize;                              // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        unsigned int activeController;                        // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        int type;                                             // offset 0xC, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        int movieId;                                          // offset 0x10, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        bool preload;                                         // offset 0x14, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        bool sound;                                           // offset 0x18, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        bool loop;                                            // offset 0x1C, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        bool pal;                                             // offset 0x20, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        char filename[256]; // offset 0x24, size 0x100, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        Settings() { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+            bufferSize = 0x40000;
+            activeController = 0;
+            preload = false;
+            volume = 0;
+            filename[0] = '\0';
+            sound = IsSoundEnabled != 0;
+            loop = false;
+            pal = false;
+            type = 0;
+            movieId = 0;
+        }
+        ~Settings() {}                                       // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        void operator=(const struct Settings &newSettings) { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+            activeController = newSettings.activeController;
+            bufferSize = newSettings.bufferSize;
+            loop = newSettings.loop;
+            preload = newSettings.preload;
+            volume = newSettings.volume;
+            sound = newSettings.sound;
+            pal = newSettings.pal;
+            type = newSettings.type;
+            movieId = newSettings.movieId;
+            bStrNCpy(filename, newSettings.filename, 256);
+        }
+        unsigned int volume;           // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        unsigned int bufferSize;       // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        unsigned int activeController; // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        int type;                      // offset 0xC, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        int movieId;                   // offset 0x10, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        bool preload;                  // offset 0x14, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        bool sound;                    // offset 0x18, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        bool loop;                     // offset 0x1C, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        bool pal;                      // offset 0x20, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        char filename[256];            // offset 0x24, size 0x100, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
     }; // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
 
     MoviePlayer(int memClass);
@@ -673,7 +708,7 @@ class MoviePlayer {
         return mMoviePaused;
     }
 
-    void FillInTextureInfo(uint32 *frame_address, TextureInfo *texture_info, RCMP::Shape *shape);
+    void FillInTextureInfo(uint32 *frame_address, TextureInfo *texture_info, RealShape::Shape *shape);
 
     Settings GetSettings() { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:211
         return mSettings;
@@ -687,7 +722,9 @@ class MoviePlayer {
         return fLiveStatus;
     }
 
-    bool IsMoviePlaying() {} // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:217
+    bool IsMoviePlaying() { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:217
+        return fStatus >= 3 && fStatus < 6;
+    }
 
     const char *GetMovieFilename();
 

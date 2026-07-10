@@ -414,9 +414,13 @@ class FEPlayerCarDB {
     uint32 ForAllCareerRecordsSum(const MyCallback &Callback); // Decl: speed/indep/src/database/VehicleDB.hpp:663
     void BackupSoldCarHistory(uint8 sold_car);                 // Decl: speed/indep/src/database/VehicleDB.hpp:664
 
-    FECarRecord CarTable[200];                        // offset 0x0, size 0xFA0, Decl: speed/indep/src/database/VehicleDB.hpp:666
-    FECustomizationRecord Customizations[75];         // offset 0xFA0, size 0x7788, Decl: speed/indep/src/database/VehicleDB.hpp:667
-    FECareerRecord CareerRecords[10];                 // offset 0x8728, size 0x578, Decl: speed/indep/src/database/VehicleDB.hpp:668
+    FECarRecord CarTable[200];                // offset 0x0, size 0xFA0, Decl: speed/indep/src/database/VehicleDB.hpp:666
+    FECustomizationRecord Customizations[75]; // offset 0xFA0, size 0x7788, Decl: speed/indep/src/database/VehicleDB.hpp:667
+#ifdef EA_BUILD_A124
+    FECareerRecord CareerRecords[10];
+#else
+    FECareerRecord CareerRecords[25]; // offset 0x8728, size 0x578, Decl: speed/indep/src/database/VehicleDB.hpp:668
+#endif
     uint32 SoldHistoryBounty;                         // offset 0x8CA0, size 0x4, Decl: speed/indep/src/database/VehicleDB.hpp:689
     uint16 SoldHistoryNumEvadedPursuits;              // offset 0x8CA4, size 0x2, Decl: speed/indep/src/database/VehicleDB.hpp:690
     uint16 SoldHistoryNumBustedPursuits;              // offset 0x8CA6, size 0x2, Decl: speed/indep/src/database/VehicleDB.hpp:691

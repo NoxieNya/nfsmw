@@ -1,3 +1,11 @@
+#include "Speed/Indep/Src/Frontend/MenuScreens/MemCard/uiMemcardBase.hpp"
+#include "Speed/Indep/Src/FEng/FEPackage.h"
+#include "Speed/Indep/Src/FEng/FEString.h"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/MemoryCard/MemoryCard.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Common/feKeyboardInput.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Common/feScrollerina.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/MemCard/uiMemcardInterface.hpp"
 #include "types.h"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
@@ -18,44 +26,50 @@
 #include "Speed/Indep/Src/EAXSound/CARSFX/SFXObj_Pathfinder.hpp"
 #include "Speed/Indep/Src/EAXSound/EAXAudioParams.hpp"
 
-extern unsigned int gMemcardSetupPreviousOp;
-
-static unsigned int gButtonIDs[3] = {0xb8a7c6cc, 0xb8a7c6cd, 0xb8a7c6ce};
-static unsigned int gButtonTextIDs[3] = {0xf9363f30, 0xfb8b67d1, 0xfde09072};
-
-static const unsigned int sOpName[] = {0x841c21af, 0xe85326e2};
+static uint32 gButtonIDs[3] = {0xb8a7c6cc, 0xb8a7c6cd, 0xb8a7c6ce};
+static uint32 gButtonTextIDs[3] = {0xf9363f30, 0xfb8b67d1, 0xfde09072};
 
 // ===== UIMemcardKeyboard =====
 
+// UNSOLVED
 UIMemcardKeyboard::UIMemcardKeyboard(ScreenConstructorData *sd) : MenuScreen(sd) {
-    m_pDisplayMsg = static_cast<FEString *>(FEngFindObject(GetPackageName(), 0x1e2640fa));
-    const char *pkg = GetPackageName();
-    unsigned int shadowHash = FEHashUpper("message_blurb_shadow");
-    m_pDisplayMsgShadow = static_cast<FEString *>(FEngFindObject(pkg, shadowHash));
-    m_pTitleMaster = static_cast<FEString *>(FEngFindObject(GetPackageName(), 0x426c7b4d));
+    const u32 FEObj_MESSAGE_BLURB = 0x1e2640fa;
+    const u32 FEObj_HEADER_TEXT_02 = 0x426c7b4d;
+    m_pDisplayMsg = static_cast<FEString *>(FEngFindObject(GetPackageName(), FEObj_MESSAGE_BLURB));
+    m_pDisplayMsgShadow = static_cast<FEString *>(FEngFindObject(GetPackageName(), FEHashUpper("message_blurb_shadow")));
+    m_pTitleMaster = static_cast<FEString *>(FEngFindObject(GetPackageName(), FEObj_HEADER_TEXT_02));
     m_pOK = static_cast<FEString *>(FEngFindObject(GetPackageName(), gButtonIDs[0]));
     m_pCancel = static_cast<FEString *>(FEngFindObject(GetPackageName(), gButtonIDs[1]));
 }
 
+// UNSOLVED
 void UIMemcardKeyboard::Setup() {
-    FEngSetScript(GetPackageName(), gButtonIDs[0], 0x5b0d9106, true);
-    FEngSetScript(GetPackageName(), gButtonIDs[1], 0x5b0d9106, true);
-    FEngSetVisible(FEngFindObject(GetPackageName(), gButtonIDs[0]));
-    FEngSetVisible(FEngFindObject(GetPackageName(), gButtonIDs[1]));
+    const uint32 Hahs_FADEIN = 0x5b0d9106;
+
+    FEngSetScript(GetPackageName(), gButtonIDs[0], Hahs_FADEIN, true);
+    FEngSetScript(GetPackageName(), gButtonIDs[1], Hahs_FADEIN, true);
+    FEngSetVisible(GetPackageName(), gButtonIDs[0]);
+    FEngSetVisible(GetPackageName(), gButtonIDs[1]);
     FEngSetCurrentButton(GetPackageName(), gButtonIDs[1]);
 }
 
 void UIMemcardKeyboard::ShowKeyboard() {
-    FEngSetScript(GetPackageName(), 0x47ff4e7c, 0x9e99, true);
-    const char *title = GetLocalizedString(0x70513bd4);
-    const char *prompt = GetLocalizedString(0xd48d95f);
-    FEngBeginTextInput(0, 6, title, prompt, 7);
-    FEDatabase->LoadSaveGame = static_cast<eLoadSaveGame>(5);
+    const u32 FEObj_DIM = 0x9e99;
+    const u32 FEObj_SHOW = 0;
+    const u32 FEObj_PC_NAME_ENTRY = 0x47FF4E7C;
+    const u32 FEObjWidget = 0;
+
+    FEngSetScript(GetPackageName(), FEObj_PC_NAME_ENTRY, FEObj_DIM, true);
+    FEngBeginTextInput(0, 6, GetLocalizedString(0x70513bd4), GetLocalizedString(0xd48d95f), 7);
+    FEDatabase->mFEKeyboardSettings.Mode = 5;
 }
 
 void UIMemcardKeyboard::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
-    if (msg == 0xC9D30688) {
-        FEngSetScript(GetPackageName(), 0x47FF4E7C, 0x03D8EABC, true);
+    const u32 FEObj_UNDIM = 0x03D8EABC;
+    const u32 FEObj_HIDE = 0x16a259;
+    const u32 FEObj_PC_NAME_ENTRY = 0x47FF4E7C;
+    if (msg == FEMSG_DECLINE_EDITED_TEXT) {
+        FEngSetScript(GetPackageName(), FEObj_PC_NAME_ENTRY, FEObj_UNDIM, true);
     }
 }
 
@@ -76,23 +90,8 @@ UIMemcardBase::UIMemcardBase(ScreenConstructorData *sd)
 UIMemcardBase::~UIMemcardBase() {
     m_pDisplayMsg = nullptr;
     MemoryCard::GetInstance()->FEngLinkObjects(nullptr);
-    if ((gMemcardSetup.mOp & 0x1000) != 0) {
-        int savedLastMsg = gMemcardSetup.mLastMessage;
-        if (gMemcardSetup.mTermFunc != nullptr) {
-            gMemcardSetup.mTermFunc(gMemcardSetup.mTermFuncParam);
-        }
-        gMemcardSetup.mOp = 0;
-        gMemcardSetup.mMemScreen = nullptr;
-        gMemcardSetup.mToScreen = nullptr;
-        gMemcardSetup.mFromScreen = nullptr;
-        gMemcardSetup.mTermFunc = nullptr;
-        gMemcardSetup.mTermFuncParam = nullptr;
-        gMemcardSetup.mSuccessMsg = 0;
-        gMemcardSetup.mFailedMsg = 0;
-        gMemcardSetup.mInBootFlow = false;
-        gMemcardSetup.mPreviousCommand = 0;
-        gMemcardSetup.mPreviousPrompt = 0;
-        gMemcardSetup.mLastMessage = savedLastMsg;
+    if ((gMemcardSetup.GetExtraOptions() & 0x1000) != 0) {
+        gMemcardSetup.Complete(gMemcardSetup.mLastMessage);
     }
 }
 
@@ -101,19 +100,18 @@ void UIMemcardBase::Abort() {
 }
 
 bool UIMemcardBase::AddItem(const char *pName, const char *pDate, int size, int flag) {
-    Item *pItem = new Item();
-    bStrNCpy(pItem->m_Name, pName, 0x1f);
-    pItem->m_Name[31] = '\0';
-    bStrCpy(pItem->m_Data, pDate);
-    pItem->m_Size = size;
-    pItem->m_Flag = static_cast<MemCardFileFlag>(flag);
-    m_Items.AddTail(pItem);
+    Item *pNode = new ("FEPkgMemcardFileItem", 0) Item();
+    bStrNCpy(pNode->m_Name, pName, 0x1f);
+    pNode->m_Name[31] = '\0';
+    bStrCpy(pNode->m_Data, pDate);
+    pNode->m_Size = size;
+    pNode->m_Flag = static_cast<MemCardFileFlag>(flag);
+    m_Items.AddTail(pNode);
     return true;
 }
 
 bool UIMemcardBase::IsProfile(const char *pName) {
-    int len = bStrLen(pName);
-    return len < 8;
+    return bStrLen(pName) < 8;
 }
 
 void UIMemcardBase::EmptyFileList() {
@@ -124,9 +122,7 @@ void UIMemcardBase::InitCompleteDoList() {
     m_Items.DeleteAllElements();
     SetStringCheckingCard();
     MemoryCard::GetInstance()->RequestTask(7, nullptr);
-    cFEng *pFeng = cFEng::Get();
-    u32 hash = FEHashUpper("SHOW LOADER");
-    pFeng->QueuePackageMessage(hash, GetPackageName(), nullptr);
+    cFEng::Get()->QueuePackageMessage(FEHashUpper("SHOW LOADER"), GetPackageName(), nullptr);
 }
 
 void UIMemcardBase::InitComplete() {
@@ -135,27 +131,19 @@ void UIMemcardBase::InitComplete() {
         return;
     }
     SetMessageBlurbText(const_cast<char *>(" "));
-    const char *pkg = GetPackageName();
-    unsigned int hash = FEHashUpper("Button");
-    FEngSetInvisible(FEngFindObject(pkg, hash));
+    FEngSetInvisible(GetPackageName(), FEHashUpper("Button"));
     m_pDisplayMsg->Flags |= 0x80;
-    if ((gMemcardSetup.mOp & 0x4000) != 0) {
+    if ((gMemcardSetup.GetExtraOptions() & 0x4000) != 0) {
         cFEng::Get()->QueueGameMessage(0x5afe12f4, gMemcardSetup.mFromScreen, 0xff);
     }
-    if ((gMemcardSetup.mOp & 0x400000) != 0)
-        goto doQueuePackageMessage;
-    if ((gMemcardSetup.mOp & 0x10000) != 0) {
-        if ((gMemcardSetup.mOp & 0xf0) == 0xb0) {
-        doQueuePackageMessage:
-            cFEng *pFeng = cFEng::Get();
-            unsigned int memcardOnHash = FEHashUpper("MEMCARD_ON");
-            pFeng->QueuePackageMessage(memcardOnHash, GetPackageName(), nullptr);
-        }
+    if ((gMemcardSetup.GetExtraOptions() & 0x400000) != 0 ||
+        ((gMemcardSetup.GetExtraOptions() & 0x10000) != 0 && gMemcardSetup.GetCommand() == 0xb0)) {
+        cFEng::Get()->QueuePackageMessage(FEHashUpper("MEMCARD_ON"), GetPackageName(), nullptr);
     }
     switch (MemcardGetCurrentUIOperation()) {
         case 0x10:
         case 0x70:
-            if (FEDatabase->bProfileLoaded && (gMemcardSetup.mOp & 0x20000) == 0) {
+            if (FEDatabase->bProfileLoaded && (gMemcardSetup.GetExtraOptions() & 0x20000) == 0) {
                 ShowYesNo(0x87c7577e, 0x6000000);
                 return;
             }
@@ -173,9 +161,7 @@ void UIMemcardBase::InitComplete() {
             cFEng::Get()->QueueGameMessage(0x5a051729, nullptr, 0xff);
             break;
         case 0x50: {
-            char *dst = m_FileName;
-            const char *profileName = FEDatabase->CurrentUserProfiles[0]->GetProfileName();
-            bStrCpy(dst, profileName);
+            bStrCpy(m_FileName, FEDatabase->GetUserProfile(0)->GetProfileName());
             DoSaveFlow(6);
             break;
         }
@@ -201,23 +187,23 @@ void UIMemcardBase::InitComplete() {
         case 0xb0:
             if (FEDatabase->bProfileLoaded) {
                 if (MemoryCard::GetInstance()->ShouldDoAutoSave(false)) {
-                    char *dst = m_FileName;
                     SetScreenVisible(true, 0);
                     SetStringCheckingCard();
-                    const char *profileName = FEDatabase->CurrentUserProfiles[0]->GetProfileName();
-                    bStrCpy(dst, profileName);
+                    bStrCpy(m_FileName, FEDatabase->GetUserProfile(0)->GetProfileName());
                     MemoryCard::GetInstance()->StartAutoSave(true);
                     return;
                 }
-                gMemcardSetup.mPreviousCommand = gMemcardSetup.mOp & 0xf0;
-                gMemcardSetup.mOp = (gMemcardSetup.mOp & ~0xf0) | 0x50;
+                gMemcardSetup.ClearCommand();
+                gMemcardSetup.SetCommand(0x50);
+                InitComplete();
             } else {
-                gMemcardSetup.mPreviousCommand = gMemcardSetup.mOp & 0xf0;
-                gMemcardSetup.mOp = (gMemcardSetup.mOp & ~0xf0) | 0x60;
+                gMemcardSetup.ClearCommand();
+                gMemcardSetup.SetCommand(0x60);
+                InitComplete();
             }
-            InitComplete();
             break;
         case 0xf0:
+            extern int IsMemcardEnabled;
             if (MemoryCard::IsCardAvailable() && IsMemcardEnabled) {
                 InitCompleteDoList();
             } else {
@@ -228,68 +214,48 @@ void UIMemcardBase::InitComplete() {
 }
 
 void UIMemcardBase::ExitComplete() {
-    int lastMsg = gMemcardSetup.mLastMessage;
-    if ((gMemcardSetup.mOp & 0x100) != 0) {
-        cFEng::Get()->QueuePackageMessage(lastMsg, gMemcardSetup.mToScreen, nullptr);
-    }
-    if ((gMemcardSetup.mOp & 0x400) != 0) {
-        unsigned int gameMsg;
-        if (lastMsg == 0x461a18ee) {
-            gameMsg = gMemcardSetup.mSuccessMsg;
-        } else {
-            gameMsg = gMemcardSetup.mFailedMsg;
-        }
-        cFEng::Get()->QueueGameMessage(gameMsg, gMemcardSetup.mToScreen, 0xff);
-    }
-    if ((FEDatabase->GetGameMode() & 0x100) && TheGameFlowManager.GetState() == GAMEFLOW_STATE_IN_FRONTEND) {
+    gMemcardSetup.SendTermMessage(gMemcardSetup.mLastMessage);
+    if ((FEDatabase->IsCareerManagerMode()) && TheGameFlowManager.IsInFrontend()) {
         FEDatabase->ResetGameMode();
-        if (FEDatabase->bProfileLoaded && !(((gMemcardSetup.mOp & 0xf0) == 0x10 && static_cast<unsigned int>(lastMsg) == 0x8867412d) ||
-                                            gMemcardSetup.mPreviousPrompt == 0x1000000 || gMemcardSetup.mPreviousPrompt == 0x3000000 ||
-                                            gMemcardSetup.mPreviousPrompt == 0x5000000)) {
-            CareerSettings *career = FEDatabase->CurrentUserProfiles[0]->GetCareer();
-            if (career->SpecialFlags & 1) {
-                career->StartNewCareer(false);
+        if (FEDatabase->bProfileLoaded &&
+            !(((gMemcardSetup.GetCommand()) == 0x10 && gMemcardSetup.mLastMessage == 0x8867412d) || gMemcardSetup.mPreviousPrompt == 0x1000000 ||
+              gMemcardSetup.mPreviousPrompt == 0x3000000 || gMemcardSetup.mPreviousPrompt == 0x5000000)) {
+            if (FEDatabase->GetCareerSettings()->HasCareerStarted()) {
+                FEDatabase->GetCareerSettings()->ResumeCareer();
             } else {
-                career->StartNewCareer(true);
+                FEDatabase->GetCareerSettings()->StartNewCareer(true);
             }
         } else {
-            gMemcardSetup.mOp = (gMemcardSetup.mOp & ~0xf) | 1;
+            gMemcardSetup.ClearMethod();
+            gMemcardSetup.SetMethod(1);
             FEDatabase->RestoreFromBackupDB();
-            FEDatabase->SetGameMode(static_cast<eFEGameModes>(0x100));
+            FEDatabase->SetGameMode(eFE_GAME_MODE_CAREER_MANAGER);
         }
     }
 
-    if ((gMemcardSetup.mOp & 0x400000) != 0) {
-        uiRepSheetRivalFlow *rivalFlow = uiRepSheetRivalFlow::Get();
-        rivalFlow->Next();
-    } else if ((gMemcardSetup.mOp & 0x10000) != 0) {
-        if (TheGameFlowManager.GetState() == GAMEFLOW_STATE_IN_FRONTEND) {
+    if ((gMemcardSetup.GetExtraOptions() & 0x400000) != 0) {
+        uiRepSheetRivalFlow::Get()->Next();
+    } else if ((gMemcardSetup.GetExtraOptions() & 0x10000) != 0) {
+        if (TheGameFlowManager.IsInFrontend()) {
             cFEng::Get()->QueuePackagePop(1);
             if (FEDatabase->bProfileLoaded) {
                 FEDatabase->ResetGameMode();
-                FEDatabase->SetGameMode(static_cast<eFEGameModes>(2));
+                FEDatabase->SetGameMode(eFE_GAME_MODE_CHALLENGE);
                 cFEng::Get()->QueuePackageSwitch(gMemcardSetup.mToScreen, 0, 0, false);
             }
         } else {
-            new EQuitToFE(static_cast<eGarageType>(1), static_cast<const char *>(0));
+            new EQuitToFE(GARAGETYPE_MAIN_FE, nullptr);
         }
     } else {
-        unsigned int cmd = gMemcardSetup.mOp & 0xf;
-        switch (cmd) {
-            case 1: {
-                bool popExtra;
-                cFEng *feng;
+        switch (gMemcardSetup.GetMethod()) {
+            case 1:
                 if (m_SimPausedForMemcard) {
                     m_SimPausedForMemcard = false;
-                    feng = cFEng::Get();
-                    popExtra = feng->IsPackagePushed("SMS_Mailboxes.fng");
+                    cFEng::Get()->QueuePackagePop(cFEng::Get()->IsPackagePushed("SMS_Mailboxes.fng") ? 1 : 0);
                 } else {
-                    feng = cFEng::Get();
-                    popExtra = true;
+                    cFEng::Get()->QueuePackagePop(1);
                 }
-                feng->QueuePackagePop(popExtra ? 1 : 0);
                 break;
-            }
             case 2:
                 cFEng::Get()->QueuePackageSwitch(gMemcardSetup.mToScreen, MemoryCard::GetInstance()->GetPlayerNum(), 0, false);
                 break;
@@ -303,33 +269,21 @@ void UIMemcardBase::ExitComplete() {
         m_SimPausedForMemcard = false;
     }
 
-    int audioMode = FEDatabase->CurrentUserProfiles[0]->GetOptions()->TheAudioSettings.AudioMode;
-    int newMode = g_pEAXSound->SetAudioModeFromMemoryCard(static_cast<eSndAudioMode>(audioMode));
-    FEDatabase->CurrentUserProfiles[0]->GetOptions()->TheAudioSettings.AudioMode = newMode;
-    g_pEAXSound->UpdateVolumes(&FEDatabase->CurrentUserProfiles[0]->GetOptions()->TheAudioSettings, 1.0f);
+    eSndAudioMode eaudiomode =
+        g_pEAXSound->SetAudioModeFromMemoryCard(static_cast<eSndAudioMode>(FEDatabase->GetOptionsSettings()->TheAudioSettings.AudioMode));
+    FEDatabase->GetOptionsSettings()->TheAudioSettings.AudioMode = eaudiomode;
+    g_pEAXSound->UpdateVolumes(&FEDatabase->GetOptionsSettings()->TheAudioSettings, -1.0f);
     InitializeEATrax(true);
 
-    FEPackage *pkg = cFEng::Get()->FindPackage(gMemcardSetup.mMemScreen);
-    if (pkg != nullptr && pkg->GetParentPackage() != nullptr) {
-        pkg->GetParentPackage()->SetInputEnabled(true);
+    FEPackage *pPackageWithControl = cFEng::Get()->FindPackage(gMemcardSetup.mMemScreen);
+    if (pPackageWithControl != nullptr) {
+        FEPackage *pParentPackage = pPackageWithControl->GetParentPackage();
+        if (pParentPackage != nullptr) {
+            pParentPackage->SetInputEnabled(true);
+        }
     }
 
-    int savedMsg = gMemcardSetup.mLastMessage;
-    if (gMemcardSetup.mTermFunc != nullptr) {
-        gMemcardSetup.mTermFunc(gMemcardSetup.mTermFuncParam);
-    }
-    gMemcardSetup.mOp = 0;
-    gMemcardSetup.mMemScreen = nullptr;
-    gMemcardSetup.mToScreen = nullptr;
-    gMemcardSetup.mFromScreen = nullptr;
-    gMemcardSetup.mTermFunc = nullptr;
-    gMemcardSetup.mTermFuncParam = nullptr;
-    gMemcardSetup.mSuccessMsg = 0;
-    gMemcardSetup.mFailedMsg = 0;
-    gMemcardSetup.mInBootFlow = false;
-    gMemcardSetup.mPreviousCommand = 0;
-    gMemcardSetup.mPreviousPrompt = 0;
-    gMemcardSetup.mLastMessage = savedMsg;
+    gMemcardSetup.Complete(gMemcardSetup.mLastMessage);
 
     if (MemoryCard::GetInstance()->InBootSequence()) {
         BootFlowManager::Get()->ChangeToNextBootFlowScreen(0xff);
@@ -350,13 +304,20 @@ eMenuSoundTriggers UIMemcardBase::NotifySoundMessage(u32 msg, eMenuSoundTriggers
     if (msg == 0x48122792 || msg == 0x4ac5e165) {
         return UISND_NONE;
     }
-    return maybe;
+    return MenuScreen::NotifySoundMessage(msg, maybe);
 }
 
+// UNSOLVED
 void UIMemcardBase::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     if (msg != 0xc407210 && MemoryCard::GetInstance()->GetOp() == 0) {
         UIMemcardKeyboard::NotificationMessage(msg, obj, param1, param2);
     }
+
+    const uint32 FEObj_Header_text_02 = 0;
+    const u32 FEObj_Init = 0;
+    const u32 FEObj_HIGHLIGHTCOMPLETE = 0;
+    const u32 FEObj_UNHIGHLIGHTCOMPLETE = 0;
+
     switch (msg) {
         case 0xe1fde1d1:
             ExitComplete();
@@ -365,19 +326,17 @@ void UIMemcardBase::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
         case 0x35f8620b:
             InitComplete();
             break;
-        case 0xda5b8712: {
-            const char *editStr = FEngGetEditedString();
-            bStrCpy(m_FileName, editStr);
-            FEDatabase->CurrentUserProfiles[0]->SetProfileName(m_FileName, true);
+        case 0xda5b8712:
+            bStrCpy(m_FileName, FEngGetEditedString());
+            FEDatabase->GetUserProfile(0)->SetProfileName(m_FileName, true);
             FEDatabase->DeallocBackupDB();
             FEDatabase->bProfileLoaded = true;
             DoSaveFlow(4);
             break;
-        }
         case 0xc9d30688:
-            if ((gMemcardSetup.mOp & 0xf0) == 0x60 && !FEDatabase->bProfileLoaded) {
+            if ((gMemcardSetup.GetCommand()) == 0x60 && !FEDatabase->bProfileLoaded) {
                 DoSaveFlow(2);
-            } else if ((gMemcardSetup.mOp & 0x60) != 0 && FEDatabase->bProfileLoaded) {
+            } else if ((gMemcardSetup.GetCommand() & 0x60) != 0 && FEDatabase->bProfileLoaded) {
                 DoSaveFlow(1);
             } else {
                 FEPrintf(m_pDisplayMsg, "");
@@ -410,50 +369,57 @@ void UIMemcardBase::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
 }
 
 void UIMemcardBase::HandleButtonPressed(u32 msg, FEObject *obj, u32 param1, u32 param2, bool bPadBack) {
-    bool isSecondBtn = (obj->NameHash == gButtonIDs[0]) && !bPadBack;
-    int promptFlags = gMemcardSetup.mOp & 0xf000000;
-    gMemcardSetup.mOp = gMemcardSetup.mOp & 0xf0ffffff;
-    gMemcardSetup.mPreviousPrompt = promptFlags;
+    bool bYes = (obj->NameHash == gButtonIDs[0]) && !bPadBack;
+    int nPrompt = gMemcardSetup.GetPrompt();
+    gMemcardSetup.ClearPrompt();
     HideAllButtons();
 
-    switch (promptFlags) {
+    switch (nPrompt) {
         case 0x1000000:
-            if (isSecondBtn) {
+            if (bYes) {
                 FEDatabase->AllocBackupDB(true);
-                if ((gMemcardSetup.mOp & 0x40000) == 0) {
-                    if ((gMemcardSetup.mOp & 0x200000) == 0) {
+                if ((gMemcardSetup.GetExtraOptions() & 0x40000) == 0) {
+                    if ((gMemcardSetup.GetExtraOptions() & 0x200000) == 0) {
                         FEDatabase->DefaultProfile();
                     }
                 }
-                if ((gMemcardSetup.mOp & 0x80000) != 0) {
-                    FEDatabase->CurrentUserProfiles[0]->GetCareer()->StartNewCareer(false);
+                if ((gMemcardSetup.GetExtraOptions() & 0x80000) != 0) {
+                    FEDatabase->GetCareerSettings()->StartNewCareer(false);
                 }
-                if ((gMemcardSetup.mOp & 0xf0) == 0x20) {
-                    gMemcardSetup.mOp = (gMemcardSetup.mOp & ~0xf0) | 0x60;
-                    gMemcardSetup.mPreviousCommand = 0x20;
+                if ((gMemcardSetup.GetCommand()) == 0x20) {
+                    gMemcardSetup.ClearCommand();
+                    gMemcardSetup.SetCommand(0x60);
                 }
+                DoSaveFlow(10);
+                return;
             } else {
-                if ((gMemcardSetup.mOp & 0x80000) != 0) {
+                if ((gMemcardSetup.GetExtraOptions() & 0x80000) != 0) {
                     FEDatabase->RestoreFromBackupDB();
                 }
-                cFEng::Get()->QueueGameMessage(0x8867412d, GetPackageName(), 0xff);
+                if (true) {
+                    cFEng::Get()->QueueGameMessage(0x8867412d, GetPackageName(), 0xff);
+                } else {
+                    // Unknown, stripped
+                    cFEng::Get();
+                    GetPackageName();
+                }
             }
             break;
         case 0x4000000:
-            if (isSecondBtn) {
+            if (bYes) {
                 DoSaveFlow(12);
             } else {
-                if ((gMemcardSetup.mOp & 0xf0) == 0x60) {
-                    FEDatabase->CurrentUserProfiles[0]->GetOptions()->TheGameplaySettings.AutoSaveOn = 0;
+                if ((gMemcardSetup.GetCommand()) == 0x60) {
+                    FEDatabase->GetGameplaySettings()->AutoSaveOn = false;
                 }
                 cFEng::Get()->QueueGameMessage(0xdc12af2e, GetPackageName(), 0xff);
             }
             break;
         case 0x5000000:
-            if (isSecondBtn) {
+            if (bYes) {
                 FEDatabase->AllocBackupDB(true);
-                if ((gMemcardSetup.mOp & 0x40000) == 0) {
-                    if ((gMemcardSetup.mOp & 0x200000) == 0) {
+                if ((gMemcardSetup.GetExtraOptions() & 0x40000) == 0) {
+                    if ((gMemcardSetup.GetExtraOptions() & 0x200000) == 0) {
                         FEDatabase->DefaultProfile();
                     }
                 }
@@ -463,7 +429,7 @@ void UIMemcardBase::HandleButtonPressed(u32 msg, FEObject *obj, u32 param1, u32 
             }
             break;
         case 0x6000000:
-            if (isSecondBtn) {
+            if (bYes) {
                 InitCompleteDoList();
             } else {
                 cFEng::Get()->QueueGameMessage(0x8867412d, GetPackageName(), 0xff);
@@ -480,33 +446,33 @@ void UIMemcardBase::HandleButtonPressed(u32 msg, FEObject *obj, u32 param1, u32 
             DoSaveFlow(3);
             break;
         case 0xa000000:
-            if (isSecondBtn) {
-                FEDatabase->CurrentUserProfiles[0]->GetOptions()->TheGameplaySettings.AutoSaveOn = 0;
+            if (bYes) {
+                FEDatabase->GetGameplaySettings()->AutoSaveOn = false;
                 cFEng::Get()->QueueGameMessage(0x8867412d, GetPackageName(), 0xff);
             } else {
                 MemoryCard::GetInstance()->SetRetryAutoSave(true);
-                FEDatabase->CurrentUserProfiles[0]->GetOptions()->TheGameplaySettings.AutoSaveOn = 1;
-                gMemcardSetup.mPreviousCommand = gMemcardSetup.mOp & 0xf0;
-                gMemcardSetup.mOp = gMemcardSetup.mOp & ~0xf0;
+                FEDatabase->GetGameplaySettings()->AutoSaveOn = true;
+                gMemcardSetup.ClearCommand();
                 MemoryCard::GetInstance()->ShowMessages(true);
-                gMemcardSetup.mOp = gMemcardSetup.mOp | 0x50;
+                gMemcardSetup.SetCommand(0x50);
                 DoSaveFlow(12);
             }
             break;
         case 0xb000000:
-            if ((gMemcardSetup.mOp & 0xf0) == 0xa0) {
-                if ((gMemcardSetup.mOp & 0x8000) == 0) {
-                    gMemcardSetup.mOp = (gMemcardSetup.mOp & ~0xf) | 1;
+            if ((gMemcardSetup.GetCommand()) == 0xa0) {
+                if ((gMemcardSetup.GetExtraOptions() & 0x8000) == 0) {
+                    gMemcardSetup.ClearMethod();
+                    gMemcardSetup.SetMethod(1);
                 }
             }
             cFEng::Get()->QueueGameMessage(0x7e998e5e, nullptr, 0xff);
             cFEng::Get()->QueueGameMessage(0x461a18ee, nullptr, 0xff);
             break;
         case 0xc000000:
-            if (isSecondBtn) {
+            if (bYes) {
                 MemoryCard::GetInstance()->SetAutoSaveEnabled(true);
             } else {
-                FEDatabase->CurrentUserProfiles[0]->GetOptions()->TheGameplaySettings.AutoSaveOn = 0;
+                FEDatabase->GetGameplaySettings()->AutoSaveOn = false;
                 cFEng::Get()->QueueGameMessage(0x7e998e5e, nullptr, 0xff);
                 cFEng::Get()->QueueGameMessage(0x461a18ee, nullptr, 0xff);
             }
@@ -517,13 +483,12 @@ void UIMemcardBase::HandleButtonPressed(u32 msg, FEObject *obj, u32 param1, u32 
             break;
         default:
             SetStringCheckingCard();
-            if (MemoryCard::GetInstance()->GetPendingMessage() != nullptr) {
-                ShowMessage(MemoryCard::GetInstance()->GetPendingMessage());
+            MemoryCardMessage *pMsg = MemoryCard::GetInstance()->GetPendingMessage();
+            if (pMsg != nullptr) {
+                ShowMessage(pMsg);
             }
             if (MemoryCard::GetInstance()->GetOp() == 7) {
-                cFEng *feng = cFEng::Get();
-                u32 hash = FEHashUpper("SHOW LOADER");
-                feng->QueuePackageMessage(hash, GetPackageName(), nullptr);
+                cFEng::Get()->QueuePackageMessage(FEHashUpper("SHOW LOADER"), GetPackageName(), nullptr);
             }
             break;
     }
@@ -534,23 +499,27 @@ void UIMemcardBase::HideAllButtons() {
     for (int i = 0; i <= 2; i++) {
         ShowButton(i, false, nullptr);
     }
-    FEngSetScript(GetPackageName(), 0x07f9dca9, 0x0016a259, true);
+
+    const u32 FEObj_CursorPosition = 0x07f9dca9;
+
+    FEngSetScript(GetPackageName(), FEObj_CursorPosition, FEHASH_HIDE, true);
 }
 
 void UIMemcardBase::ShowButton(int idx, bool bShow, short *pText) {
     if (bShow) {
         m_bAnyButtonVisible = true;
         if (pText != nullptr) {
-            FESetString(static_cast<FEString *>(FEngFindObject(GetPackageName(), gButtonTextIDs[idx])), pText);
+            FEString *pObj = static_cast<FEString *>(FEngFindObject(GetPackageName(), gButtonTextIDs[idx]));
+            FESetString(pObj, pText);
         }
-        FEngSetButtonState(GetPackageName(), gButtonIDs[idx], true);
-        FEngSetVisible(FEngFindObject(GetPackageName(), gButtonIDs[idx]));
-        FEngSetVisible(FEngFindObject(GetPackageName(), gButtonTextIDs[idx]));
-        FEngSetScript(GetPackageName(), 0x57689fdd, 0xde6eff34, true);
+        FEngEnableButton(GetPackageName(), gButtonTextIDs[idx]);
+        FEngSetVisible(GetPackageName(), gButtonTextIDs[idx]);
+        FEngSetVisible(GetPackageName(), gButtonIDs[idx]);
+        FEngSetScript(GetPackageName(), 0x57689fdd, FEHASH_FORWARD, true);
     } else {
-        FEngSetButtonState(GetPackageName(), gButtonIDs[idx], false);
-        FEngSetInvisible(FEngFindObject(GetPackageName(), gButtonIDs[idx]));
-        FEngSetInvisible(FEngFindObject(GetPackageName(), gButtonTextIDs[idx]));
+        FEngDisableButton(GetPackageName(), gButtonIDs[idx]);
+        FEngSetInvisible(GetPackageName(), gButtonIDs[idx]);
+        FEngSetInvisible(GetPackageName(), gButtonTextIDs[idx]);
     }
 }
 
@@ -574,27 +543,26 @@ void UIMemcardBase::SetButtonText(short *b1, short *b2, short *b3) {
     }
     FEngSetCurrentButton(GetPackageName(), gButtonIDs[active]);
     m_ExpectingInput = true;
-    gMemcardSetup.mPreviousPrompt = gMemcardSetup.mOp & 0xf000000;
-    gMemcardSetup.mOp = gMemcardSetup.mOp & 0xf0ffffff;
+    gMemcardSetup.ClearPrompt();
 }
 
-void UIMemcardBase::SetMessage(short *pMsg) {
+void UIMemcardBase::SetMessage(i16 *pMsg) {
     if (pMsg == nullptr) {
         SetMessageBlurbText(const_cast<char *>(""));
         HideAllButtons();
     } else {
         SetMessageBlurbText(pMsg);
         m_pDisplayMsg->Flags |= 2;
-        FEngSetScript(GetPackageName(), 0x47ff4e7c, 0xe18da018, true);
+
+        const u32 FEObj_MEMCARD = 0x47ff4e7c;
+        FEngSetScript(GetPackageName(), FEObj_MEMCARD, 0xe18da018, true);
     }
 }
 
-void UIMemcardBase::ShowOK(unsigned int textHash, unsigned int flag) {
-    cFEng *pFeng = cFEng::Get();
-    u32 msg = FEHashUpper("HIDE LOADER");
-    pFeng->QueuePackageMessage(msg, GetPackageName(), nullptr);
-    SetMessageBlurbText(textHash);
-    gMemcardSetup.mOp = gMemcardSetup.mOp | static_cast<int>(flag & 0xf000000);
+void UIMemcardBase::ShowOK(uint32 language_main, uint32 flag) {
+    cFEng::Get()->QueuePackageMessage(FEHashUpper("HIDE LOADER"), GetPackageName(), nullptr);
+    SetMessageBlurbText(language_main);
+    gMemcardSetup.SetPrompt(flag);
     ShowButton(0, true, nullptr);
     FEngSetLanguageHash(GetPackageName(), gButtonTextIDs[0], 0x417b2601);
     FEngSetCurrentButton(GetPackageName(), gButtonIDs[0]);
@@ -604,12 +572,10 @@ void UIMemcardBase::ShowOK(unsigned int textHash, unsigned int flag) {
     SetScreenVisible(true, 1);
 }
 
-void UIMemcardBase::ShowYesNo(unsigned int textHash, unsigned int flag) {
-    cFEng *pFeng = cFEng::Get();
-    u32 msg = FEHashUpper("HIDE LOADER");
-    pFeng->QueuePackageMessage(msg, GetPackageName(), nullptr);
-    SetMessageBlurbText(textHash);
-    gMemcardSetup.mOp = gMemcardSetup.mOp | static_cast<int>(flag & 0xf000000);
+void UIMemcardBase::ShowYesNo(uint32 language_main, uint32 flag) {
+    cFEng::Get()->QueuePackageMessage(FEHashUpper("HIDE LOADER"), GetPackageName(), nullptr);
+    SetMessageBlurbText(language_main);
+    gMemcardSetup.SetPrompt(flag);
     ShowButton(0, true, nullptr);
     FEngSetLanguageHash(GetPackageName(), gButtonTextIDs[0], 0x417b25e4);
     ShowButton(1, true, nullptr);
@@ -620,44 +586,37 @@ void UIMemcardBase::ShowYesNo(unsigned int textHash, unsigned int flag) {
     SetScreenVisible(true, 2);
 }
 
-void UIMemcardBase::SetScreenVisible(bool bVisible, int nButtons) {
-    if (m_bVisible != bVisible) {
-        cFEng *pFeng = cFEng::Get();
-        m_bVisible = bVisible;
-        u32 msg = bVisible ? 0xc0f2ae7cUL : 0x4f3559b5UL;
-        pFeng->QueuePackageMessage(msg, GetPackageName(), nullptr);
-        if (bVisible) {
-            pFeng = cFEng::Get();
-            u32 resetMsg = FEHashUpper("INITIALIZE_SCREEN");
-            pFeng->QueuePackageMessage(resetMsg, GetPackageName(), nullptr);
+void UIMemcardBase::SetScreenVisible(bool visible, int nButtons) {
+    if (m_bVisible != visible) {
+        m_bVisible = visible;
+        cFEng::Get()->QueuePackageMessage(visible ? 0xc0f2ae7c : 0x4f3559b5, GetPackageName(), nullptr);
+        if (visible) {
+            cFEng::Get()->QueuePackageMessage(FEHashUpper("INITIALIZE_SCREEN"), GetPackageName(), nullptr);
         }
         MemoryCard::GetInstance()->SetMemcardScreenInitialized(m_bVisible);
     }
-    if (bVisible) {
-        char buf[36];
-        bSPrintf(buf, "%d_BUTTONS", nButtons);
-        cFEng *pFeng = cFEng::Get();
-        u32 hash = FEHashUpper(buf);
-        pFeng->QueuePackageMessage(hash, GetPackageName(), nullptr);
+    if (visible) {
+        char script[32];
+        bSPrintf(script, "%d_BUTTONS", nButtons);
+        cFEng::Get()->QueuePackageMessage(FEHashUpper(script), GetPackageName(), nullptr);
     }
 }
 
-void UIMemcardBase::SetIcon(unsigned int iconHash) {
-    FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xd4f4069), iconHash);
-    FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xfac88427), iconHash);
+void UIMemcardBase::SetIcon(uint32 icon) {
+    FEngSetTextureHash(GetPackageName(), 0xd4f4069, icon);
+    FEngSetTextureHash(GetPackageName(), 0xfac88427, icon);
 }
 
 void UIMemcardBase::TranslateButton(FEObject *obj) {
     if (obj->Flags & 1) {
         return;
     }
-    u32 nameHash = obj->NameHash;
-    if (nameHash == gButtonIDs[0]) {
-        MemoryCard::GetInstance()->MessageDone(static_cast<RealmcIface::MessageChoices>(1));
-    } else if (nameHash == gButtonIDs[1]) {
-        MemoryCard::GetInstance()->MessageDone(static_cast<RealmcIface::MessageChoices>(2));
-    } else if (nameHash == gButtonIDs[2]) {
-        MemoryCard::GetInstance()->MessageDone(static_cast<RealmcIface::MessageChoices>(3));
+    if (obj->NameHash == gButtonIDs[0]) {
+        MemoryCard::GetInstance()->MessageDone(RealmcIface::CHOICE_OPTION1);
+    } else if (obj->NameHash == gButtonIDs[1]) {
+        MemoryCard::GetInstance()->MessageDone(RealmcIface::CHOICE_OPTION2);
+    } else if (obj->NameHash == gButtonIDs[2]) {
+        MemoryCard::GetInstance()->MessageDone(RealmcIface::CHOICE_OPTION3);
     }
     m_ExpectingInput = false;
 }
@@ -667,84 +626,78 @@ void UIMemcardBase::SetupPromptNoProfileFound() {
 }
 
 void UIMemcardBase::SetupPromptSaveConfirm() {
-    char text[512];
-    unsigned int fmtHash;
-    if ((gMemcardSetup.mOp & 0x8000) != 0) {
-        fmtHash = 0x391a0aac;
-    } else if ((gMemcardSetup.mOp & 0x40000) != 0) {
-        fmtHash = 0xb0af33a5;
-    } else if ((gMemcardSetup.mOp & 0x200000) != 0) {
-        fmtHash = 0xd80818f8;
+    char *fmt;
+    if ((gMemcardSetup.GetExtraOptions() & 0x8000) != 0) {
+        fmt = GetLocalizedString(0x391a0aac);
     } else {
-        fmtHash = 0x39b3ccba;
+        uint32 fmtHash;
+        if ((gMemcardSetup.GetExtraOptions() & 0x40000) != 0) {
+            fmtHash = 0xb0af33a5;
+        } else if ((gMemcardSetup.GetExtraOptions() & 0x200000) != 0) {
+            fmtHash = 0xd80818f8;
+        } else {
+            fmtHash = 0x39b3ccba;
+        }
+        fmt = GetLocalizedString(fmtHash);
     }
-    char *fmt = const_cast<char *>(GetLocalizedString(fmtHash));
     ShowYesNo(0x39b3ccba, 0x4000000);
+    char text[512];
     bSPrintf(text, fmt, m_FileName, m_FileName);
     SetMessageBlurbText(text);
 }
 
 void UIMemcardBase::SetupAutoSaveConfirmPrompt() {
-    gMemcardSetup.mOp = gMemcardSetup.mOp | 0xa000000;
-    const char *mainText = GetLocalizedString(0xa0b434a2);
-    SetMessageBlurbText(const_cast<char *>(mainText));
-    FEngSetButtonState(GetPackageName(), gButtonIDs[0], true);
-    FEngSetVisible(FEngFindObject(GetPackageName(), gButtonIDs[0]));
-    FEngSetVisible(FEngFindObject(GetPackageName(), gButtonTextIDs[0]));
-    const char *yesStr = GetLocalizedString(0x417b25e4);
-    FEPrintf(GetPackageName(), static_cast<int>(gButtonTextIDs[0]), yesStr);
-    FEngSetButtonState(GetPackageName(), gButtonIDs[1], true);
-    FEngSetVisible(FEngFindObject(GetPackageName(), gButtonIDs[1]));
-    FEngSetVisible(FEngFindObject(GetPackageName(), gButtonTextIDs[1]));
-    const char *noStr = GetLocalizedString(0x2b07a03d);
-    FEPrintf(GetPackageName(), static_cast<int>(gButtonTextIDs[1]), noStr);
-    FEngSetButtonState(GetPackageName(), gButtonIDs[2], false);
-    FEngSetInvisible(FEngFindObject(GetPackageName(), gButtonIDs[2]));
-    FEngSetInvisible(FEngFindObject(GetPackageName(), gButtonTextIDs[2]));
+    gMemcardSetup.SetPrompt(0xa000000);
+    SetMessageBlurbText(GetLocalizedString(0xa0b434a2));
+    FEngEnableButton(GetPackageName(), gButtonIDs[0]);
+    FEngSetVisible(GetPackageName(), gButtonIDs[0]);
+    FEngSetVisible(GetPackageName(), gButtonTextIDs[0]);
+    FEPrintf(GetPackageName(), static_cast<int>(gButtonTextIDs[0]), GetLocalizedString(0x417b25e4));
+    FEngEnableButton(GetPackageName(), gButtonIDs[1]);
+    FEngSetVisible(GetPackageName(), gButtonIDs[1]);
+    FEngSetVisible(GetPackageName(), gButtonTextIDs[1]);
+    FEPrintf(GetPackageName(), static_cast<int>(gButtonTextIDs[1]), GetLocalizedString(0x2b07a03d));
+    FEngDisableButton(GetPackageName(), gButtonIDs[2]);
+    FEngSetInvisible(GetPackageName(), gButtonIDs[2]);
+    FEngSetInvisible(GetPackageName(), gButtonTextIDs[2]);
     FEngSetCurrentButton(GetPackageName(), gButtonIDs[0]);
-    u32 handlerHash = FEHashUpper("HANDLER");
-    u32 forwardHash = FEHashUpper("FORWARD");
-    FEngSetScript(GetPackageName(), handlerHash, forwardHash, true);
+    FEngSetScript(GetPackageName(), FEHashUpper("HANDLER"), FEHashUpper("FORWARD"), true);
     SetScreenVisible(true, 2);
 }
 
 void UIMemcardBase::SetupPromptForSave() {
     ShowYesNo(0x83f4bb3e, 0x4000000);
-    unsigned int textHash = 0x83f4bb3e;
-    if ((gMemcardSetup.mOp & 0x200000) != 0) {
-        textHash = 0xd80818f8;
-    }
-    const char *localStr = GetLocalizedString(textHash);
-    char buf[512];
-    bSPrintf(buf, localStr, m_FileName, m_FileName);
-    SetMessageBlurbText(buf);
+    char *fmt = GetLocalizedString(gMemcardSetup.GetExtraOptions() & 0x200000 ? 0xd80818f8 : 0x83f4bb3e);
+    char text[512];
+    bSPrintf(text, fmt, m_FileName, m_FileName);
+    SetMessageBlurbText(text);
 }
 
 void UIMemcardBase::SetupPromptCorruptProfile() {
     ShowOK(0x821e4444, 0xd000000);
-    const char *localStr = GetLocalizedString(0x821e4444);
-    char buf[512];
-    bSPrintf(buf, localStr, m_FileName);
-    SetMessageBlurbText(buf);
+    char text[512];
+    char *fmt = GetLocalizedString(0x821e4444);
+    bSPrintf(text, fmt, m_FileName);
+    SetMessageBlurbText(text);
 }
 
 void UIMemcardBase::SetupPromptAutoSaveEnableFailedNoCard() {
-    ShowOK(0x9e85bba8, 0xb000000);
+    uint32 msg = 0xb000000;
+    ShowOK(0x9e85bba8, msg);
 }
 
 void UIMemcardBase::Setup() {
+    const uint32 FEObj_Header_text_02 = 0x99054304;
     FEngSetLanguageHash(GetPackageName(), 0x42adb44c, 0x774e4dd9);
-    FEngSetLanguageHash(m_pDisplayMsg, 0x99054304);
+    FEngSetLanguageHash(m_pDisplayMsg, FEObj_Header_text_02);
     MemoryCard::GetInstance()->FEngLinkObjects(this);
     SetIcon(0x6948e2b3);
 }
 
 void UIMemcardBase::SetStringCheckingCard() {
     SetScreenVisible(true, 0);
-    SetMessageBlurbText(static_cast<unsigned int>(0x99054304));
-    cFEng *pFeng = cFEng::Get();
-    u32 hash = FEHashUpper("0_BUTTONS");
-    pFeng->QueuePackageMessage(hash, GetPackageName(), nullptr);
+    SetMessageBlurbText(0x99054304);
+    cFEng::Get()->QueuePackageMessage(FEHashUpper("0_BUTTONS"), GetPackageName(), nullptr);
     HideAllButtons();
     m_ExpectingInput = false;
 }
@@ -763,6 +716,7 @@ void UIMemcardBase::DoSaveFlow(int flow) {
             m_Flow = 2;
         }
     }
+    uint32 msg;
     switch (m_Flow) {
         case 9:
             ShowOK(0xd9783c57, 0x3000000);
@@ -770,20 +724,19 @@ void UIMemcardBase::DoSaveFlow(int flow) {
         case 1:
             ShowYesNo(0x7209349f, 0x5000000);
             break;
-        case 2: {
-            unsigned int msg;
-            if ((gMemcardSetup.mOp & 0x80000) != 0) {
+        case 2:
+            if ((gMemcardSetup.GetExtraOptions() & 0x80000) != 0) {
                 msg = 0xbadd522c;
-            } else if ((gMemcardSetup.mOp & 0x10000) != 0) {
+            } else if ((gMemcardSetup.GetExtraOptions() & 0x10000) != 0) {
                 msg = 0x93c25b3d;
-            } else if ((gMemcardSetup.mOp & 0x8000) != 0) {
+            } else if ((gMemcardSetup.GetExtraOptions() & 0x8000) != 0) {
                 msg = 0xf8448956;
             } else {
                 msg = 0xbe97590f;
             }
             ShowYesNo(msg, 0x1000000);
             break;
-        }
+
         case 3:
             ShowKeyboard();
             break;
@@ -801,17 +754,15 @@ void UIMemcardBase::DoSaveFlow(int flow) {
             MemoryCard::GetInstance()->Save(m_FileName);
             SetStringCheckingCard();
             break;
-        case 10: {
+        case 10:
             cFEng::Get()->QueuePackageMessage(0x1c8ace, GetPackageName(), nullptr);
-            unsigned int warning = GetAutoSaveWarning();
-            ShowOK(warning, 0x9000000);
+            msg = GetAutoSaveWarning();
+            ShowOK(msg, 0x9000000);
             break;
-        }
-        case 11: {
-            unsigned int warning = GetAutoSaveWarning2();
-            ShowOK(warning, 0x9000000);
+        case 11:
+            msg = GetAutoSaveWarning2();
+            ShowOK(msg, 0x9000000);
             break;
-        }
     }
 }
 
@@ -838,34 +789,36 @@ void UIMemcardBase::SetMessageBlurbText(unsigned int textHash) {
     if (m_pDisplayMsgShadow != nullptr) {
         FEngSetLanguageHash(m_pDisplayMsgShadow, textHash);
     }
-    const char *locString = GetLocalizedString(textHash);
-    wchar_t wLocString[2048];
+    char *locString = GetLocalizedString(textHash);
+    wchar_t wLocString[1024];
     bStrCpy(reinterpret_cast<u16 *>(wLocString), locString);
     FindScreenSize(wLocString);
 }
 
 void UIMemcardBase::FindScreenSize(const wchar_t *msg) {
     FEngFont *font = FindFont(0x545570c6);
-    int len = bStrLen(reinterpret_cast<const unsigned short *>(msg));
-    float height = font->GetHeight();
-    float numLines = static_cast<float>(len) * height;
-    unsigned int hash;
-    if (numLines < 2200.0f) {
-        hash = 0x79b0c1c7;
-    } else if (numLines < 4400.0f) {
-        hash = 0xa13adcaf;
+    float numLines = static_cast<float>(bStrLen(reinterpret_cast<const uint16 *>(msg))) * font->GetHeight();
+
+    const int MAX_SIZE_SMALL = 2200.0f;
+    const int MAX_SIZE_MED = 4400.0f;
+    const u32 FEObj_dialogsmall = 0x79b0c1c7;
+    const u32 FEObj_dialogmedium = 0xa13adcaf;
+    const u32 FEObj_dialoglarge = 0x792bc959;
+
+    if (numLines < MAX_SIZE_SMALL) {
+        cFEng::Get()->QueuePackageMessage(FEObj_dialogsmall, GetPackageName(), nullptr);
+    } else if (numLines < MAX_SIZE_MED) {
+        cFEng::Get()->QueuePackageMessage(FEObj_dialogmedium, GetPackageName(), nullptr);
     } else {
-        cFEng::Get()->QueuePackageMessage(0x792bc959, GetPackageName(), nullptr);
-        return;
+        cFEng::Get()->QueuePackageMessage(FEObj_dialoglarge, GetPackageName(), nullptr);
     }
-    cFEng::Get()->QueuePackageMessage(hash, GetPackageName(), nullptr);
 }
 
-unsigned int UIMemcardBase::GetAutoSaveWarning() {
+uint32 UIMemcardBase::GetAutoSaveWarning() {
     return 0xb39899c2;
 }
 
-unsigned int UIMemcardBase::GetAutoSaveWarning2() {
+uint32 UIMemcardBase::GetAutoSaveWarning2() {
     return 0x2386f454;
 }
 
@@ -875,10 +828,11 @@ void UIMemcardBase::ShowMessage(MemoryCardMessage *msg) {
     MemoryCard::GetInstance()->ReleasePendingMessage();
 }
 
-void UIMemcardBase::ShowMessage(const wchar_t *msg, unsigned int nOptions, const wchar_t *option1, const wchar_t *option2, const wchar_t *option3) {
+// UNSOLVED
+void UIMemcardBase::ShowMessage(const wchar_t *msg, uint32_t nOptions, const wchar_t *option1, const wchar_t *option2, const wchar_t *option3) {
     PopChild();
     HideAllButtons();
-    SetMessage(reinterpret_cast<short *>(const_cast<wchar_t *>(msg)));
+    SetMessage(reinterpret_cast<i16 *>(const_cast<wchar_t *>(msg)));
     switch (nOptions) {
         case 1:
             SetButtonText(reinterpret_cast<short *>(const_cast<wchar_t *>(option1)), nullptr, nullptr);
@@ -896,14 +850,7 @@ void UIMemcardBase::ShowMessage(const wchar_t *msg, unsigned int nOptions, const
             break;
     }
     SetScreenVisible(true, nOptions);
-    cFEng *pFEng = cFEng::Get();
-    const char *hashStr;
-    if (nOptions == 0) {
-        hashStr = "SHOW LOADER";
-    } else {
-        hashStr = "HIDE LOADER";
-    }
-    pFEng->QueuePackageMessage(FEHashUpper(hashStr), GetPackageName(), nullptr);
+    cFEng::Get()->QueuePackageMessage(FEHashUpper(nOptions == 0 ? "SHOW LOADER" : "HIDE LOADER"), GetPackageName(), nullptr);
 }
 
 void UIMemcardBase::ActivateChild() {
@@ -919,15 +866,14 @@ void UIMemcardBase::PopChild() {
 
 void UIMemcardBase::HandleAutoSaveError() {
     if (!MemoryCard::GetInstance()->IsCheckingCardForAutoSave() && !MemoryCard::GetInstance()->IsCheckingCardForOverwrite()) {
-        if ((gMemcardSetup.mOp & 0xf0) != 0xb0) {
-            gMemcardSetup.mOp = (gMemcardSetup.mOp & ~0xf) | 1;
+        if ((gMemcardSetup.GetCommand()) != 0xb0) {
+            gMemcardSetup.ClearMethod();
+            gMemcardSetup.SetMethod(1);
         }
-        gMemcardSetup.mPreviousCommand = gMemcardSetup.mOp & 0xf0;
-        gMemcardSetup.mOp = (gMemcardSetup.mOp & ~0xf0) | 0x50;
+        gMemcardSetup.ClearCommand();
+        gMemcardSetup.SetCommand(0x50);
     }
-    char *dst = m_FileName;
-    const char *profileName = FEDatabase->CurrentUserProfiles[0]->GetProfileName();
-    bStrCpy(dst, profileName);
+    bStrCpy(m_FileName, FEDatabase->GetUserProfile(0)->GetProfileName());
     if (MemoryCard::GetInstance()->IsCheckingCardForAutoSave() || MemoryCard::GetInstance()->IsCheckingCardForOverwrite() ||
         MemoryCard::GetInstance()->WasCardRemovedWithAutoSaveEnabled()) {
         MemoryCard::GetInstance()->ReleasePendingMessage();
@@ -941,13 +887,13 @@ void UIMemcardBase::HandleAutoSaveError() {
 }
 
 void UIMemcardBase::HandleAutoSaveOverwriteMessage() {
-    char *dst = m_FileName;
-    const char *profileName = FEDatabase->CurrentUserProfiles[0]->GetProfileName();
-    bStrCpy(dst, profileName);
+    bStrCpy(m_FileName, FEDatabase->GetUserProfile(0)->GetProfileName());
     MemoryCard::GetInstance()->EndAutoSave();
+#ifndef EA_BUILD_A124
     FEDatabase->bAutoSaveOverwriteConfirmed = true;
-    gMemcardSetup.mPreviousCommand = gMemcardSetup.mOp & 0xf0;
-    gMemcardSetup.mOp = (gMemcardSetup.mOp & ~0xf0) | 0x50;
+#endif
+    gMemcardSetup.ClearCommand();
+    gMemcardSetup.SetCommand(0x50);
     MemoryCard::GetInstance()->ShowMessages(true);
     DoSaveFlow(12);
 }
@@ -958,33 +904,33 @@ UIMemcardList::UIMemcardList(ScreenConstructorData *sd)
     : MenuScreen(sd),                                                             //
       m_SaveGameList(GetPackageName(), "", "Scrollbar", true, true, false, false) //
 {
+    const uint32 FEObj_Header_text_02 = 0;
+    const uint32 FEObj_BACK = 0;
+    const uint32 FEObj_Player_Name = 0xeb406fec;
+    const u32 FEObj_CREATE_BUTTON = 0;
+
     m_Initialized = 0;
-    const char *profileName = FEDatabase->CurrentUserProfiles[0]->GetProfileName();
-    FEPrintf(GetPackageName(), 0xeb406fec, profileName);
+    FEPrintf(GetPackageName(), FEObj_Player_Name, FEDatabase->GetUserProfile(0)->GetProfileName());
 
     for (int i = 1; i < 9; i++) {
-        char buffer[32];
-        ScrollerSlot *slot = new (__FILE__, __LINE__) ScrollerSlot();
-        slot->pBacking = nullptr;
-        slot->vSize.y = 0.0f;
-        slot->vSize.x = 0.0f;
-        slot->vTopLeft.y = 0.0f;
-        slot->vTopLeft.x = 0.0f;
-        slot->bEnabled = true;
+        char tempStr[32];
+        ScrollerSlot *pSlot = new ("ScrollerSlot", 0) ScrollerSlot();
 
-        FEngSNPrintf(buffer, 0x20, "option_name_%d", i);
-        slot->AddData(FEngFindString(GetPackageName(), FEHashUpper(buffer)));
+        FEngSNPrintf(tempStr, 0x20, "option_name_%d", i);
+        pSlot->AddData(FEngFindString(GetPackageName(), FEHashUpper(tempStr)));
 
-        FEngSNPrintf(buffer, 0x20, "option_data_%d", i);
-        slot->AddData(FEngFindString(GetPackageName(), FEHashUpper(buffer)));
+        FEngSNPrintf(tempStr, 0x20, "option_data_%d", i);
+        pSlot->AddData(FEngFindString(GetPackageName(), FEHashUpper(tempStr)));
 
-        FEngSNPrintf(buffer, 0x20, "option_mouse_%d", i);
-        slot->SetBacking(FEngFindObject(GetPackageName(), FEHashUpper(buffer)));
-        slot->Hide();
-        m_SaveGameList.AddSlot(slot);
+        FEngSNPrintf(tempStr, 0x20, "option_mouse_%d", i);
+        pSlot->SetBacking(FEngFindObject(GetPackageName(), FEHashUpper(tempStr)));
+        pSlot->Hide();
+        m_SaveGameList.AddSlot(pSlot);
     }
 
-    m_ListOp = static_cast<int>((gMemcardSetup.mOp & 0xf0) == 0x30);
+    m_ListOp = static_cast<int>((gMemcardSetup.GetCommand()) == 0x30);
+
+    static uint32 sOpName[2] = {0x841c21af, 0xe85326e2};
     FEngSetLanguageHash(GetPackageName(), 0x48d4fcae, sOpName[m_ListOp]);
     FEngSetLanguageHash(GetPackageName(), 0x426c7b4d, sOpName[m_ListOp]);
 }
@@ -992,19 +938,36 @@ UIMemcardList::UIMemcardList(ScreenConstructorData *sd)
 UIMemcardList::~UIMemcardList() {}
 
 MenuScreen *CreateMemcardListFiles(ScreenConstructorData *sd) {
-    UIMemcardList *pRes = new UIMemcardList(sd);
+    UIMemcardList *pRes = new ("UIMemcardList", 0) UIMemcardList(sd);
     static_cast<UIMemcardMain *>(MemoryCard::GetInstance()->GetScreen())->SetPopupWindow(pRes);
     return pRes;
 }
 
+// total size: 0x24
+class FEMemWidget : public ScrollerDatum {
+  public:
+    static const int MAX_SIZE; // size: 0x4, address: 0xFFFFFFFF
+    MemCardFileFlag m_Flag;    // offset 0x18, size 0x4
+    int m_Size;                // offset 0x1C, size 0x4
+    UIMemcardList *m_pParent;  // offset 0x20, size 0x4
+
+    FEMemWidget() {}
+    ~FEMemWidget() override {}
+
+    void Act(const char *parent_pkg, uint32 data) {
+        MemoryCard::GetInstance()->GetScreen()->DoSelect(reinterpret_cast<ScrollerDatum *>(data)->Strings.GetNode(0)->String);
+    }
+    bool IsCorrupt() {}
+    int GetSize() const {}
+    const char *GetFileName() {}
+};
+
 void UIMemcardList::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x35f8620b: {
-            Scrollerina &saveGameList = m_SaveGameList;
-            saveGameList.SetSelected(saveGameList.GetFirstSlot());
-            if (saveGameList.GetSelectedSlot() != nullptr) {
-                saveGameList.GetSelectedSlot()->SetScript(0x249db7b7);
-            }
+        case FEHASH_INITCOMPLETE: {
+            UIMemcardBase *pParent;
+            m_SaveGameList.SetSelected(m_SaveGameList.GetFirstSlot());
+            m_SaveGameList.HighlightSelected();
             MemoryCard::GetInstance()->GetScreen()->m_ExpectingInput = true;
             m_Initialized++;
             if (MemoryCard::GetInstance()->InBootSequence()) {
@@ -1012,23 +975,20 @@ void UIMemcardList::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
             }
             break;
         }
-        case 0xc98356ba:
-            if (m_Initialized == 0) {
+        case FEMSG_SCREEN_TICK:
+            if (m_Initialized != 0) {
                 m_Initialized = 1;
-                UIMemcardBase *parent = MemoryCard::GetInstance()->GetScreen();
-                UIMemcardBase::Item *pItem = parent->m_Items.GetHead();
-                while (pItem != parent->m_Items.EndOfList()) {
-                    int prefixLen = MemoryCard::GetInstance()->GetPrefixLength();
-                    const char *name = pItem->m_Name + prefixLen;
-                    if (parent->IsProfile(name)) {
-                        AddItem(name, pItem->m_Data, pItem->m_Size, pItem->m_Flag);
+                UIMemcardBase *pParent = MemoryCard::GetInstance()->GetScreen();
+                for (UIMemcardBase::Item *pNode = pParent->m_Items.GetHead(); pNode != pParent->m_Items.EndOfList(); pNode = pNode->GetNext()) {
+                    const char *pName = pNode->m_Name + MemoryCard::GetInstance()->GetPrefixLength();
+                    if (pParent->IsProfile(pName)) {
+                        AddItem(pName, pNode->m_Data, pNode->m_Size, pNode->m_Flag);
                     }
-                    pItem = pItem->GetNext();
                 }
                 FEngSetScript("MC_List.fng", 0x47ff4e7c, 0x13c37b, true);
             }
             break;
-        case 0x911ab364:
+        case __PAD_BACK__:
             if (MemoryCard::GetInstance()->InBootSequence()) {
                 cFEng::Get()->QueueGameMessage(0x8d0cc9f9, "MC_Main_GC.fng", 0xff);
             } else {
@@ -1036,34 +996,25 @@ void UIMemcardList::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
             }
             gMemcardSetup.mLastController = param1;
             break;
-        case 0x72619778:
+        case __PAD_UP__:
             gMemcardSetup.mLastController = param1;
             m_SaveGameList.ScrollPrev();
             break;
-        case 0x911c0a4b:
+        case __PAD_DOWN__:
             gMemcardSetup.mLastController = param1;
             m_SaveGameList.ScrollNext();
             break;
-        case 0x406415e3: {
+        case __PAD_ACCEPT__:
             gMemcardSetup.mLastController = param1;
-            cFrontendDatabase *database = FEDatabase;
-            bool isMultitap = false;
-            if (database->IsSplitScreenMode()) {
-                isMultitap = database->iNumPlayers == 2;
-            }
-            if (!isMultitap) {
-                MemoryCard *memoryCard = MemoryCard::GetInstance();
-                int playerNum = memoryCard->GetPlayerNum();
-                signed char port = static_cast<signed char>(FEngMapJoyParamToJoyport(static_cast<int>(param1)));
-                database->SetPlayersJoystickPort(playerNum, port);
+            if (!FEDatabase->IsSplitScreenMode()) {
+                FEDatabase->SetPlayersJoystickPort(MemoryCard::GetInstance()->GetPlayerNum(), FEngMapJoyParamToJoyport(param1));
             }
             MemoryCard::GetInstance()->SetMonitor(false);
             break;
-        }
         case 0xeb29392a:
-            if (m_LastMsg == 0x406415e3) {
-                UIMemcardBase *parent = MemoryCard::GetInstance()->GetScreen();
-                parent->DoSelect(m_SaveGameList.GetSelectedDatum()->Strings.GetNode(0)->String);
+            if (m_LastMsg == __PAD_ACCEPT__) {
+                // UNSOLVED (dwarf)
+                m_pCreateNew->Act(GetPackageName(), reinterpret_cast<uint32>(m_SaveGameList.GetSelectedDatum()));
             }
             break;
     }
@@ -1071,13 +1022,13 @@ void UIMemcardList::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
 }
 
 FEMemWidget *UIMemcardList::AddItem(const char *pName, const char *pDate, int size, int flag) {
-    FEMemWidget *widget = new FEMemWidget();
-    widget->m_Flag = static_cast<MemCardFileFlag>(flag);
-    widget->m_Size = size;
-    widget->AddData(pName, 0);
-    widget->AddData(pDate, 0);
-    m_SaveGameList.AddData(widget);
-    m_SaveGameList.Enable(widget);
+    FEMemWidget *pDatum = new ("FEMemWidget", 0) FEMemWidget();
+    pDatum->m_Flag = static_cast<MemCardFileFlag>(flag);
+    pDatum->m_Size = size;
+    pDatum->AddData(pName, 0);
+    pDatum->AddData(pDate, 0);
+    m_SaveGameList.AddData(pDatum);
+    m_SaveGameList.Enable(pDatum);
     m_SaveGameList.Update(true);
-    return widget;
+    return pDatum;
 }

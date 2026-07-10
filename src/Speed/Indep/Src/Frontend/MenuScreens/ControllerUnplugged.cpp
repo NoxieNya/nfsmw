@@ -1,6 +1,7 @@
 #include "ControllerUnplugged.hpp"
 
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
@@ -14,7 +15,7 @@ ControllerUnplugged::ControllerUnplugged(ScreenConstructorData *sd) : MenuScreen
 ControllerUnplugged::~ControllerUnplugged() {}
 
 void ControllerUnplugged::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
-    if (msg == 0xEBFCDA65) {
+    if (msg == __PAD_START_RELEASED__) {
         if (port == JOYSTICK_PORT_NONE) {
             BootFlowManager::Get()->JumpToHead();
         } else {
@@ -28,7 +29,5 @@ void ControllerUnplugged::NotificationMessage(u32 msg, FEObject *obj, u32 param1
 }
 
 void ControllerUnplugged::Setup() {
-    const char *pkg_name = GetPackageName();
-    const char *text = GetLocalizedString(0x54EEF4C5);
-    FEPrintf(pkg_name, 0xB244CF71, text, port + 1);
+    FEPrintf(GetPackageName(), 0xB244CF71, GetLocalizedString(0x54EEF4C5), port + 1);
 }

@@ -419,8 +419,9 @@ inline int eLoadStreamingTexturePack(const char *filename) {
     return eLoadStreamingTexturePack(filename, nullptr, nullptr, 0);
 }
 
-inline void eLoadStreamingTexturePack(const char *filename, void (*callback_func)(uintptr_t), uintptr_t callback_param, int memory_pool_num) {
-    eLoadStreamingTexturePack(filename, reinterpret_cast<void (*)(void *)>(callback_func), reinterpret_cast<void *>(callback_param), memory_pool_num);
+inline int eLoadStreamingTexturePack(const char *filename, void (*callback_func)(uintptr_t), uintptr_t callback_param, int memory_pool_num) {
+    return eLoadStreamingTexturePack(filename, reinterpret_cast<void (*)(void *)>(callback_func), reinterpret_cast<void *>(callback_param),
+                                     memory_pool_num);
 }
 
 inline void eLoadStreamingTexture(uint32 *name_hash_table, int num_hashes) {

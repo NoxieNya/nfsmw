@@ -6,8 +6,6 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feWidget.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEIconScrollerMenu.hpp"
 
-// ===== OM* classes (extend IconOption) =====
-
 // 0x5C
 class OMAudio : public IconOption {
   public:
@@ -302,7 +300,9 @@ class COVibration : public FEToggleWidget {
 // 0x64
 class COConfig : public FEToggleWidget {
   public:
-    COConfig(bool enabled) : FEToggleWidget(enabled) {}
+    COConfig(bool enabled) : FEToggleWidget(enabled) {
+        SetBackingOffsetX(-295.0f);
+    }
     ~COConfig() override {}
     void Act(const char *parent_pkg, uint32 data) override;
     void Draw() override;

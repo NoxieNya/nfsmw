@@ -5,6 +5,7 @@
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
 #include "Speed/Indep/Src/Frontend/FEObjectCallbacks.hpp"
 #include "Speed/Indep/Src/Frontend/FEPackageManager.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEGameInterface.hpp"
 #include "Speed/Indep/Src/Frontend/HUD/FEPkg_Hud.hpp"
 #include "Speed/Indep/Src/Interfaces/SimActivities/INIS.h"
 #include "Speed/Indep/Src/Misc/GameFlow.hpp"
@@ -13,27 +14,28 @@
 
 Timer MessengerCreationTimer(0);
 
-cFEng *cFEng::mInstance;
+cFEng *cFEng::mInstance = nullptr;
 
 void cFEng::Init() {
     if (mInstance == nullptr) {
-        mInstance = new cFEng();
+        mInstance = new ("cFEng", 0) cFEng();
         MessengerCreationTimer.ResetLow();
     }
 }
 
 cFEng::cFEng() {
     bWasPaused = false;
-    mFEng = new FEngine();
+    mFEng = new ("FEngine", 0) FEngine();
     mFEng->SetInterface(cFEngGameInterface::pInstance);
     mFEng->SetNumJoyPads(2);
     mFEng->SetInitialState();
     mFEng->SetExecution(true);
 }
 
+// UNSOLVED
 void cFEng::PushErrorPackage(const char *pPackageName, int pArg, u32 ControlMask) {
     if (FEDatabase == nullptr) {
-        if (cFEng::Get()->IsPackagePushed(pPackageName)) {
+        if (!cFEng::Get()->IsPackagePushed(pPackageName)) {
             return;
         }
         FEPackageManager::Get()->SetPackageDataArg(pPackageName, pArg);
@@ -126,8 +128,8 @@ void cFEng::QueuePackagePush(const char *pPackageName, int pArg, u32 ControlMask
     }
     FEPackageManager::Get()->SetPackageDataArg(pPackageName, pArg);
     mFEng->QueuePackagePush(pPackageName, ControlMask);
-    if (!cFEngJoyInput::Get()->IsJoyEnabled(JOYSTICK_PORT_ALL)) {
-        cFEngJoyInput::Get()->JoyEnable(JOYSTICK_PORT_ALL, true);
+    if (!cFEngJoyInput::mInstance->IsJoyEnabled(JOYSTICK_PORT_ALL)) {
+        cFEngJoyInput::mInstance->JoyEnable(JOYSTICK_PORT_ALL, true);
     }
 }
 
@@ -144,8 +146,8 @@ void cFEng::QueuePackagePop(int numPackagesToPop) {
         if (TheGameFlowManager.IsInGame() && FEManager::IsPaused()) {
             FEManager::RequestUnPauseSimulation(nullptr);
         }
-        if (cFEngJoyInput::Get()->IsJoyEnabled(JOYSTICK_PORT_ALL)) {
-            cFEngJoyInput::Get()->JoyDisable(JOYSTICK_PORT_ALL, true);
+        if (cFEngJoyInput::mInstance->IsJoyEnabled(JOYSTICK_PORT_ALL)) {
+            cFEngJoyInput::mInstance->JoyDisable(JOYSTICK_PORT_ALL, true);
         }
     }
 }
@@ -162,8 +164,8 @@ void cFEng::QueuePackageSwitch(const char *pPackageName, int pArg, u32 ControlMa
     }
     FEPackageManager::Get()->SetPackageDataArg(pPackageName, pArg);
     mFEng->QueuePackageSwitch(pPackageName, ControlMask);
-    if (cFEngJoyInput::Get() && !cFEngJoyInput::Get()->IsJoyEnabled(JOYSTICK_PORT_ALL)) {
-        cFEngJoyInput::Get()->JoyEnable(JOYSTICK_PORT_ALL, true);
+    if ((cFEngJoyInput::mInstance != nullptr) && !cFEngJoyInput::mInstance->IsJoyEnabled(JOYSTICK_PORT_ALL)) {
+        cFEngJoyInput::mInstance->JoyEnable(JOYSTICK_PORT_ALL, true);
     }
 }
 
@@ -209,8 +211,7 @@ FEPackage *cFEng::FindPackageAtBase() {
 }
 
 FEPackage *cFEng::FindPackageActive(const char *pPackageName) {
-    FEPackageList *packageList = mFEng->GetPackageList();
-    return packageList->FindPackage(pPackageName);
+    return mFEng->GetPackageList()->FindPackage(pPackageName);
 }
 
 FEPackage *cFEng::FindPackageIdle(const char *pPackageName) {
@@ -220,13 +221,13 @@ FEPackage *cFEng::FindPackageIdle(const char *pPackageName) {
 FEPackage *cFEng::FindPackage(const char *pPackageName) {
     if (pPackageName != nullptr && strlen(pPackageName) != 0) {
         if (!FEPackageData::IsInScreenConstructor()) {
-            FEPackage *package = FindPackageActive(pPackageName);
-            if (package != nullptr) {
-                return package;
+            FEPackage *packagePtr = FindPackageActive(pPackageName);
+            if (packagePtr != nullptr) {
+                return packagePtr;
             }
-            package = FindPackageIdle(pPackageName);
-            if (package != nullptr) {
-                return package;
+            packagePtr = FindPackageIdle(pPackageName);
+            if (packagePtr != nullptr) {
+                return packagePtr;
             }
         } else {
             return FEPackageManager::Get()->FindPackage(pPackageName);
@@ -236,13 +237,11 @@ FEPackage *cFEng::FindPackage(const char *pPackageName) {
 }
 
 bool cFEng::IsPackagePushed(const char *pPackageName) {
-    FEPackage *package;
     if (FEPackageData::IsInScreenConstructor()) {
-        package = FEPackageManager::Get()->FindPackage(pPackageName);
+        return FEPackageManager::Get()->FindPackage(pPackageName) != nullptr;
     } else {
-        package = FindPackageActive(pPackageName);
+        return FindPackageActive(pPackageName) != nullptr;
     }
-    return package != nullptr;
 }
 
 bool cFEng::IsPackageInControl(const char *pPackageName) {
@@ -298,9 +297,13 @@ void cFEng::MakeLoadedPackagesDirty() {
     FEPackageList *pkg_list = mFEng->GetPackageList();
     if (pkg_list != nullptr) {
         ObjectDirtySetter dirt;
-        for (FEPackage *pkg = pkg_list->GetFirstPackage(); pkg != nullptr; pkg = pkg->GetNext()) {
+        FEPackage *pkg = pkg_list->GetFirstPackage();
+        while (pkg != nullptr) {
+            extern int unknown; // don't know what extern would go here
+
             dirt.pRenderInfo = HACK_FEPkgMgr_GetPackageRenderInfo(pkg);
             pkg->ForAllObjects(dirt);
+            pkg = pkg->GetNext();
         }
     }
 }

@@ -9,7 +9,7 @@ extern bool FEngIsScriptSet(FEObject *, unsigned int);
 extern void FEngSetScript(FEObject *, unsigned int, bool);
 extern void FEngSetMultiImageBottomRightUVs(FEMultiImage *, FEVector2 &, int);
 extern void FEngSetRotationZ(FEObject *, float);
-extern float TWK_RadarDetectorMinThreshold;
+float TWK_RadarDetectorMinThreshold;
 
 float RadarDetector::mStaticRange;
 

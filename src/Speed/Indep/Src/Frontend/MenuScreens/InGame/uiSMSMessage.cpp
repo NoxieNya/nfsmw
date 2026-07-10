@@ -12,27 +12,27 @@
 uiSMSMessage::uiSMSMessage(ScreenConstructorData *sd) : MenuScreen(sd), ScrollBar(sd->PackageFilename, "scrollbar", true, true, false) {
     the_msg = reinterpret_cast<SMSMessage *>(sd->Arg);
     new ESndGameState(0xd, true);
-    SoundPause(true, static_cast<eSNDPAUSE_REASON>(0xb));
-    SetSoundControlState(false, static_cast<eSNDCTLSTATE>(4), "SMSMesUnPause");
-    SetSoundControlState(true, static_cast<eSNDCTLSTATE>(5), "SMSMes");
+    SoundPause(true, eSNDPAUSE_SMS_MESSAGE);
+    SetSoundControlState(false, SNDSTATE_FE_UPSCREEN, "SMSMesUnPause");
+    SetSoundControlState(true, SNDSTATE_FE_SMS_MESSAGE, "SMSMes");
     Setup();
 }
 
 uiSMSMessage::~uiSMSMessage() {
     new ESndGameState(0xd, false);
-    SoundPause(false, static_cast<eSNDPAUSE_REASON>(0xb));
-    SetSoundControlState(true, static_cast<eSNDCTLSTATE>(4), "SMSMesPause");
-    SetSoundControlState(false, static_cast<eSNDCTLSTATE>(5), "SMSMes");
+    SoundPause(false, eSNDPAUSE_SMS_MESSAGE);
+    SetSoundControlState(true, SNDSTATE_FE_UPSCREEN, "SMSMesPause");
+    SetSoundControlState(false, SNDSTATE_FE_SMS_MESSAGE, "SMSMes");
 }
 
 void uiSMSMessage::Setup() {
     FEString *pString = FEngFindString(GetPackageName(), FEHashUpper("MESSAGE_TEXT_1"));
     m_TextScroller.Initialise(this, static_cast<int>(pString->MaxWidth), 10, "MESSAGE_TEXT_%d", FindFont(pString->Handle));
     m_TextScroller.UseScrollBar(&ScrollBar);
-    m_TextScroller.SetTextHash(FEngHashString("SMS_MESSAGE_%d", the_msg->GetHandle()));
+    m_TextScroller.SetTextHash(the_msg->GetMsgHash());
     if (!the_msg->IsVoice()) {
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x2a631207));
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x914614e5));
+        FEngSetInvisible(GetPackageName(), 0x2a631207);
+        FEngSetInvisible(GetPackageName(), 0x914614e5);
     }
     Speech::Module *cop_speech = Speech::Manager::GetSpeechModule(1);
     if (cop_speech != nullptr) {
@@ -43,17 +43,18 @@ void uiSMSMessage::Setup() {
 }
 
 void uiSMSMessage::RefreshHeader() {
-    FEngSetLanguageHash(GetPackageName(), 0xfeced617, FEngHashString("SMS_MESSAGE_%d_FROM", the_msg->GetHandle()));
-    FEngSetLanguageHash(GetPackageName(), 0x2c167533, FEngHashString("SMS_MESSAGE_%d_SUBJECT", the_msg->GetHandle()));
+    FEngSetLanguageHash(GetPackageName(), 0xfeced617, the_msg->GetFromHash());
+    FEngSetLanguageHash(GetPackageName(), 0x2c167533, the_msg->GetSubjectHash());
 }
 
 eMenuSoundTriggers uiSMSMessage::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
     if (msg == 0x610fb237 && !the_msg->IsVoice()) {
-        return static_cast<eMenuSoundTriggers>(-1);
+        return UISND_NONE;
     }
     return maybe;
 }
 
+// UNSOLVED
 void uiSMSMessage::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     m_TextScroller.HandleNotificationMessage(msg);
     switch (msg) {

@@ -17,6 +17,14 @@ inline void FEngSetVisible(const char *pkg_name, uint32 obj_hash) {
     FEngSetVisible(FEngFindObject(pkg_name, obj_hash));
 }
 
+inline void FEngSetVisibility(FEObject *obj, bool visible) {
+    if (visible) {
+        FEngSetVisible(obj);
+    } else {
+        FEngSetInvisible(obj);
+    }
+}
+
 void FEngGetSize(FEObject *object, float &x, float &y);
 
 inline float FEngGetSizeX(struct FEObject *obj) {
@@ -49,8 +57,6 @@ inline uint32 FEngGetColor(FEObject *obj) {
     return FEngGetObjectColor(obj);
 };
 
-inline void FEngDisableButton(const char *pkg_name, uint32 button_hash) {}
-
 void FEngSetScript(FEObject *object, uint32 script_hash, bool start_at_beginning);
 
 void FEngSetScript(const char *pkg_name, uint32 obj_hash, uint32 script_hash, bool start_at_beginning);
@@ -65,6 +71,20 @@ void FEngSetVisible(FEObject *obj);
 void FEngSetInvisible(FEObject *obj);
 void FEngSetScript(FEObject *object, unsigned int script_hash, bool start_at_beginning);
 void FEngGetCenter(FEObject *object, float &x, float &y);
+inline float FEngGetCenterX(FEObject *obj) {
+    float x;
+    float y;
+    FEngGetCenter(obj, x, y);
+    return x;
+}
+
+inline float FEngGetCenterY(FEObject *obj) {
+    float x;
+    float y;
+    FEngGetCenter(obj, x, y);
+    return y;
+}
+
 void FEngGetSize(FEObject *object, float &x, float &y);
 void FEngSetCenter(FEObject *object, float x, float y);
 void FEngGetTopLeft(FEObject *object, float &x, float &y);

@@ -11,8 +11,8 @@ class MemoryCardImp {
   public:
     inline MemoryCardImp() {
         m_pSaveReq = &m_SaveReq;
-        m_SaveReq.mSaveInfo = nullptr;
         m_SaveReq.mNumSaves = 1;
+        m_SaveReq.mSaveInfo = nullptr;
     }
     inline RealmcIface::SaveInfo *GetSaveInfo() {
         return m_SaveReq.mSaveInfo;
@@ -33,5 +33,12 @@ class MemoryCardImp {
     RealmcIface::SaveReq *m_pSaveReq; // offset 0x0, size 0x4
     RealmcIface::SaveReq m_SaveReq;   // offset 0x4, size 0x8
 };
+
+// TODO not sure where these go
+uint16 gSaveType0[32];
+uint16 gSaveType1[32];
+uint16 gSaveType2[16];
+
+uint16 *MemoryCardImp::gEntryType[3] = {gSaveType0, gSaveType1, gSaveType2};
 
 #endif

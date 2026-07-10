@@ -1,5 +1,8 @@
 #include "uiEATraxJukebox.hpp"
 
+#include "Speed/Indep/Src/FEng/FETypes.h"
+#include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
+#include "Speed/Indep/Src/FEng/FEngStandard.h"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Generated/Messages/MControlPathfinder.h"
@@ -7,32 +10,9 @@
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feDialogBox.hpp"
 
-struct stSongInfo {
-    char *SongName; // offset 0x0, size 0x4
-    char *Artist;   // offset 0x4, size 0x4
-    char *Album;    // offset 0x8, size 0x4
-    char *DefPlay;  // offset 0xC, size 0x4
-    int PathEvent;  // offset 0x10, size 0x4
-};
-
-struct SongInfoList {
-    stSongInfo **_M_start;
-    stSongInfo **_M_finish;
-
-    unsigned int size() const {
-        return static_cast<unsigned int>((_M_finish - _M_start));
-    }
-
-    stSongInfo *&operator[](unsigned int n) {
-        return _M_start[n];
-    }
-};
-
-extern SongInfoList Songs;
-extern cFrontendDatabase *FEDatabase;
-
 void UIEATraxScreen::AddTrackSlot(ScrollerSlot *slot, uint32 baseHash, int num) {
     FEObject *string = FEngFindObject(GetPackageName(), baseHash + num);
+    uint32 hash;
     slot->AddData(string);
 }
 
@@ -42,13 +22,13 @@ UIEATraxScreen::UIEATraxScreen(ScreenConstructorData *sd)
 {
     const u32 FEObj_TrackModeType = 0xCA74A2FA;
     NumSlots = 4;
-    bTrackGrabbed = false;
-    Tracks.SetMouseDownMsg(1);
-    Tracks.SetClickToSelectMode(true);
     NumSongs = Songs.size();
+    bTrackGrabbed = false;
+    Tracks.SetClickToSelectMode(true);
+    Tracks.SetMouseDownMsg(1);
     trackOrder = FEngFindString(GetPackageName(), FEObj_TrackModeType);
     JukeboxEntry *playlist = FEDatabase->GetUserProfile(0)->Playlist;
-    OriginalPlaylist = new (__FILE__, __LINE__) JukeboxEntry[NumSongs];
+    OriginalPlaylist = new ("JukeboxEntry[] - backup copy", 0) JukeboxEntry[NumSongs];
     bMemCpy(OriginalPlaylist, playlist, NumSongs * sizeof(JukeboxEntry));
 #ifndef EA_BUILD_A124
     OriginalPlayState = FEDatabase->GetAudioSettings()->PlayState;
@@ -63,11 +43,11 @@ UIEATraxScreen::~UIEATraxScreen() {
 }
 
 void UIEATraxScreen::RefreshHeader() {
-    unsigned int hash = GetStateString(static_cast<unsigned char>(FEDatabase->GetAudioSettings()->PlayState));
+    uint32 hash = GetStateString(FEDatabase->GetAudioSettings()->PlayState);
     FEngSetLanguageHash(trackOrder, hash);
 }
 
-uint32 UIEATraxScreen::GetPlaybilityString(unsigned char playability) {
+uint32 UIEATraxScreen::GetPlaybilityString(uint8 playability) {
     switch (playability) {
         case 0:
             return 0x9CCE9F86;
@@ -82,7 +62,7 @@ uint32 UIEATraxScreen::GetPlaybilityString(unsigned char playability) {
     }
 }
 
-uint32 UIEATraxScreen::GetStateString(unsigned char state) {
+uint32 UIEATraxScreen::GetStateString(uint8 state) {
     switch (state) {
         case 0:
             return 0x4CA36B89;
@@ -98,7 +78,7 @@ void UIEATraxScreen::SetupSongList() {
     char num_string[8];
 
     for (int i = 0; i < NumSlots; i++) {
-        JukeBoxScrollerSlot *slot = new (__FILE__, __LINE__) JukeBoxScrollerSlot();
+        JukeBoxScrollerSlot *slot = new ("JukeBoxScrollerSlot", 0) JukeBoxScrollerSlot();
         slot->SetBacking(FEngFindObject(GetPackageName(), FEngHashString("MOUSE_REGION_%d", i + 1)));
         AddTrackSlot(slot, 0xE454E9A5, i);
         AddTrackSlot(slot, 0x66646FC4, i);
@@ -109,7 +89,8 @@ void UIEATraxScreen::SetupSongList() {
     }
 
     for (int i = 0; i < NumSongs; i++) {
-        JukeBoxScrollerDatum *datum = new (__FILE__, __LINE__) JukeBoxScrollerDatum();
+        Sound::stSongInfo *const *itr;
+        JukeBoxScrollerDatum *datum = new ("JukeBoxScrollerDatum", 0) JukeBoxScrollerDatum();
         Tracks.AddData(datum);
 
         FEngSNPrintf(num_string, 8, "%.2d", i + 1);
@@ -131,8 +112,13 @@ void UIEATraxScreen::SetupSongList() {
 }
 
 void UIEATraxScreen::ScrollOrderState(u32 msg) {
-    unsigned char state = FEDatabase->GetAudioSettings()->PlayState;
-    FEDatabase->GetAudioSettings()->PlayState = (state == 0);
+    uint8 state = FEDatabase->GetAudioSettings()->PlayState;
+    if (state == 0) {
+        FEDatabase->GetAudioSettings()->PlayState = 1;
+    } else {
+        FEDatabase->GetAudioSettings()->PlayState = 0;
+    }
+
     RefreshHeader();
     MControlPathfinder(true, 0, 0, 0).Send("EATraxInit");
 }
@@ -151,20 +137,21 @@ void UIEATraxScreen::ScrollTracks(u32 msg) {
 
 void UIEATraxScreen::ScrollTrackPlayability(u32 msg) {
     JukeBoxScrollerDatum *datum = static_cast<JukeBoxScrollerDatum *>(Tracks.GetSelectedDatum());
-    JukeboxEntry *entry;
+    uint32 index = datum->SongIndex;
+    JukeboxEntry *entry = nullptr;
     JukeboxEntry *playlist = FEDatabase->GetUserProfile(0)->Playlist;
-    int play_flag;
-    ScrollerDatumNode *node;
 
-    entry = playlist;
     for (int i = 0; i < NumSongs; i++) {
-        if (playlist[i].SongIndex == datum->SongIndex) {
-            entry = &playlist[i];
+        entry = &playlist[i];
+        if (entry->SongIndex == index) {
             break;
         }
     }
 
-    play_flag = entry->PlayabilityField;
+    int play_flag = entry->PlayabilityField;
+
+    JukeBoxScrollerSlot *slot = static_cast<JukeBoxScrollerSlot *>(Tracks.GetSelectedSlot());
+
     if (msg == 0x9120409E) {
         play_flag--;
         if (play_flag < 0) {
@@ -179,7 +166,7 @@ void UIEATraxScreen::ScrollTrackPlayability(u32 msg) {
     entry->PlayabilityField = play_flag;
     datum->PlayabilityField = play_flag;
 
-    node = datum->Strings.GetTail();
+    ScrollerDatumNode *node = datum->Strings.GetTail();
     FEngSNPrintf(node->String, 128, GetLocalizedString(GetPlaybilityString(entry->PlayabilityField)));
     Tracks.Update(true);
     MControlPathfinder(true, 0, 0, 0).Send("EATraxInit");
@@ -195,16 +182,18 @@ void UIEATraxScreen::MoveTrack(u32 msg) {
         Tracks.MoveNext();
     }
 
+    ScrollerDatumNode *node;
     int num = 1;
     ScrollerDatum *datum = Tracks.GetFirstDatum();
     while (datum != Tracks.GetLastDatum()) {
-        ScrollerDatumNode *node = datum->Strings.GetHead();
+        node = datum->Strings.GetHead();
         if (node != nullptr) {
             FEngSNPrintf(node->String, 8, "%.2d", num);
             num++;
         }
         datum = datum->GetNext();
     }
+
     Tracks.Update(true);
     ReInsertSong();
 }
@@ -231,10 +220,7 @@ void UIEATraxScreen::ReInsertSong() {
 void UIEATraxScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 Param1, u32 Param2) {
     switch (msg) {
         case 0x35F8620B: {
-            ScrollerSlot *slot = Tracks.GetSelectedSlot();
-            if (slot != nullptr) {
-                slot->SetScript(0x249DB7B7);
-            }
+            Tracks.HighlightSelected();
             break;
         }
         case 0x5073EF13:
@@ -257,9 +243,8 @@ void UIEATraxScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 Param1,
             if (OptionsDidNotChange()) {
                 cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             } else {
-                const char *blurb = GetLocalizedString(0xE9CB802F);
                 DialogInterface::ShowTwoButtons(GetPackageName(), "Dialog.fng", dialog_alert, 0x70E01038, 0x417B25E4, 0x775DBA97, 0x34DC1BCF,
-                                                0x34DC1BCF, first_dialog_button2, blurb);
+                                                0x34DC1BCF, first_dialog_button2, GetLocalizedString(0xE9CB802F));
             }
             MControlPathfinder(true, 0, 0, 0).Send("EATraxInit");
             break;
@@ -268,41 +253,37 @@ void UIEATraxScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 Param1,
             cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             break;
         case 0xC519BFC4:
-            bTrackGrabbed = bTrackGrabbed ^ 1;
+            bTrackGrabbed = !bTrackGrabbed;
             break;
         case 0xC519BFC3:
             PreviewSong();
             break;
         case 0xE1FDE1D1:
             MControlPathfinder(true, 0xFFFFFFFF, 0, 0).Send("EATraxInit");
-            {
-                bool dirty = false;
-                if (FEDatabase->IsOptionsDirty() || !OptionsDidNotChange()) {
-                    dirty = true;
-                }
-                FEDatabase->SetOptionsDirty(dirty);
-            }
+
+            FEDatabase->SetOptionsDirty(FEDatabase->IsOptionsDirty() || !OptionsDidNotChange());
+
             cFEng::Get()->QueuePackageSwitch("MainMenu_Sub.fng", 0, 0, false);
             break;
     }
 }
 
 bool UIEATraxScreen::OptionsDidNotChange() {
-    bool ret;
-    JukeboxEntry *playlist = FEDatabase->GetUserProfile(0)->Playlist;
-    int cmp = bMemCmp(playlist, OriginalPlaylist, NumSongs * sizeof(JukeboxEntry));
-    ret = (cmp == 0);
-#ifndef EA_BUILD_A124
+#ifdef EA_BUILD_A124
+    return bMemCmp(FEDatabase->GetUserProfile(0)->Playlist, OriginalPlaylist, NumSongs * sizeof(JukeboxEntry)) == 0; // UNSOLVED
+#else
+    bool ret = bMemCmp(FEDatabase->GetUserProfile(0)->Playlist, OriginalPlaylist, NumSongs * sizeof(JukeboxEntry)) == 0;
+
     if (FEDatabase->GetAudioSettings()->PlayState != OriginalPlayState) {
         ret = false;
     }
-#endif
+
     return ret;
+#endif
 }
 
 void UIEATraxScreen::RestoreOriginals() {
-    JukeboxEntry *playlist = FEDatabase->GetUserProfile(0)->Playlist;
-    bMemCpy(playlist, OriginalPlaylist, NumSongs * sizeof(JukeboxEntry));
+    bMemCpy(FEDatabase->GetUserProfile(0)->Playlist, OriginalPlaylist, NumSongs * sizeof(JukeboxEntry));
 #ifndef EA_BUILD_A124
     FEDatabase->GetAudioSettings()->PlayState = OriginalPlayState;
 #endif

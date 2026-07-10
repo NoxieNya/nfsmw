@@ -63,7 +63,7 @@ void UIQRChallengeSeries::NotificationMessage(u32 msg, FEObject *obj, u32 param1
             break;
         case 0xc407210:
             if (!theChallengeRace) {
-                g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(7));
+                g_pEAXSound->PlayUISoundFX(UISND_COMMON_WRONG);
                 return;
             }
             DialogInterface::ShowTwoButtons(GetPackageName(), "", dialog_alert, 0x70e01038, 0x417b25e4, 0xd05fc3a3, 0x34dc1bcf, 0x34dc1bcf,
@@ -92,7 +92,7 @@ void UIQRChallengeSeries::NotificationMessage(u32 msg, FEObject *obj, u32 param1
         }
         start_race: {
             GRaceCustom *race = GRaceDatabase::Get().AllocCustomRace(theChallengeRace);
-            GRaceDatabase::Get().SetStartupRace(race, kRaceContext_QuickRace);
+            GRaceDatabase::Get().SetStartupRace(race, GRace::kRaceContext_QuickRace);
             GRaceDatabase::Get().FreeCustomRace(race);
             RaceStarter::StartRace();
         } break;

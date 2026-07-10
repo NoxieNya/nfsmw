@@ -8,6 +8,7 @@
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "MemoryCardHelper.hpp"
 
+class UIMemcardBase;
 class MemoryCardImp;
 
 enum GCImageFormat {
@@ -29,18 +30,7 @@ struct GCBannerDataInfo {
     GCImageFormat imageFormat;
 };
 
-struct UIMemcardBase;
-
 using RealmcIface::BootupCheckParams;
-
-// total size: 0x1804
-enum MessageChoices {
-    CHOICE_NONE = 0,
-    CHOICE_OPTION1 = 1,
-    CHOICE_OPTION2 = 2,
-    CHOICE_OPTION3 = 3,
-    CHOICE_OPTION4 = 4,
-};
 
 class MemoryCardMessage {
   public:

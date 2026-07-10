@@ -1,6 +1,7 @@
 #include "uiRapSheetTEP.hpp"
 #include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEButtons.hpp"
@@ -28,13 +29,13 @@ void uiRapSheetTEP::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
             if (pobj->NameHash != 0xCDA0A66B) {
                 return;
             }
-            FEngSetCurrentButton(GetPackageName(), FEngHashString("BL_%d", num_pursuits));
+            FEngSetCurrentButton(GetPackageName(), FEngHashString("BUTTON_%d", num_pursuits));
             break;
         case 0x911C0A4B:
             if (pobj == nullptr) {
                 return;
             }
-            if (pobj->NameHash != static_cast<unsigned long>(FEngHashString("BL_%d", num_pursuits))) {
+            if (pobj->NameHash != FEngHashString("BUTTON_%d", num_pursuits)) {
                 return;
             }
             FEngSetCurrentButton(GetPackageName(), 0xCDA0A66B);
@@ -44,14 +45,14 @@ void uiRapSheetTEP::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
                 return;
             }
             {
-                unsigned char button = FEngGetLastButton(GetPackageName());
+                uint8 button = FEngGetLastButton(GetPackageName());
                 if (button == 0) {
                     button = 1;
                 }
-                FEngSetCurrentButton(GetPackageName(), FEngHashString("BL_%d", button));
+                FEngSetCurrentButton(GetPackageName(), FEngHashString("BUTTON_%d", button));
             }
             break;
-        case 0xE1FDE1D1: {
+        case FEHASH_EXITCOMPLETE: {
             int index;
             switch (button_pressed) {
                 case 0xCDA0A66B:
@@ -75,7 +76,7 @@ void uiRapSheetTEP::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
             }
             if (index != -1) {
                 cFEng::Get()->QueuePackageSwitch("RapSheetPD.fng", index, 0, false);
-                FEngSetLastButton(GetPackageName(), static_cast<unsigned char>(index + 1));
+                FEngSetLastButton(GetPackageName(), index + 1);
             } else {
                 cFEng::Get()->QueuePackageSwitch("RapSheetMain.fng", 0, 0, false);
                 FEngSetLastButton(GetPackageName(), 1);
@@ -86,36 +87,35 @@ void uiRapSheetTEP::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
 }
 
 void uiRapSheetTEP::Setup() {
-    UserProfile &prof = *FEDatabase->GetUserProfile(0);
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
+    UserProfile &prof = *FEDatabase->GetUserProfile(0);
     HighScoresDatabase *scores = prof.GetHighScores();
+
     FEPrintf(GetPackageName(), 0x1232703A, GetLocalizedString(0xE21D083C), prof.GetCareer()->GetCaseFileName());
     FEPrintf(GetPackageName(), 0xE3DA78E7, GetLocalizedString(0x6031106E), prof.GetProfileName());
     FEPrintf(GetPackageName(), 0xE3DA78E8, GetLocalizedString(0x364E4525), stable->GetTotalBounty());
+
     for (int i = 0; i < 5; i++) {
-        const TopEvadedPursuitDetail &pursuit = scores->GetTopEvadedPursuitScores(static_cast<unsigned short>(i));
-        if (pursuit.Length != 0) {
+        const TopEvadedPursuitDetail &pursuit = prof.GetHighScores()->GetTopEvadedPursuitScores(i);
+        if (Timer(pursuit.Length) != Timer()) {
             char time_str[16];
-            Timer t(pursuit.Length);
-            t.PrintToString(time_str, 0);
-            int index = i + 1;
-            FEPrintf(GetPackageName(), FEngHashString("RAPSHEET_CAR_%d", index), GetLocalizedString(0x69EAB50F),
+            Timer(pursuit.Length).PrintToString(time_str, 0);
+            FEPrintf(GetPackageName(), FEngHashString("CAR_USED_%d", i + 1), GetLocalizedString(0x69EAB50F),
                      GetLocalizedString(GetFECarNameHashFromFEKey(pursuit.CarFEKey)));
-            FEPrintf(GetPackageName(), FEngHashString("RAPSHEET_VALUE_%d", index), GetLocalizedString(0x060C058A), pursuit.Bounty);
-            FEPrintf(GetPackageName(), FEngHashString("RAPSHEET_VALUE2_%d", index), GetLocalizedString(0x41474FB1), pursuit.PursuitName);
-            FEPrintf(GetPackageName(), FEngHashString("RAPSHEET_VALUE3_%d", index), GetLocalizedString(0x36175146), time_str);
+            FEPrintf(GetPackageName(), FEngHashString("BOUNTY_%d", i + 1), GetLocalizedString(0x060C058A), pursuit.Bounty);
+            FEPrintf(GetPackageName(), FEngHashString("PURSUIT_ID_%d", i + 1), GetLocalizedString(0x41474FB1), pursuit.PursuitName);
+            FEPrintf(GetPackageName(), FEngHashString("PURSUIT_LENGTH_%d", i + 1), GetLocalizedString(0x36175146), time_str);
             num_pursuits++;
         } else {
-            int index = i + 1;
-            FEngSetButtonState(GetPackageName(), FEngHashString("BL_%d", index), false);
-            FEPrintf(GetPackageName(), FEngHashString("RAPSHEET_CAR_%d", index), GetLocalizedString(0xE3274304));
-            FEPrintf(GetPackageName(), FEngHashString("RAPSHEET_VALUE_%d", index), "");
-            FEPrintf(GetPackageName(), FEngHashString("RAPSHEET_VALUE2_%d", index), "");
-            FEPrintf(GetPackageName(), FEngHashString("RAPSHEET_VALUE3_%d", index), "");
+            FEngSetButtonState(GetPackageName(), FEngHashString("BUTTON_%d", i + 1), false);
+            FEPrintf(GetPackageName(), FEngHashString("CAR_USED_%d", i + 1), GetLocalizedString(0xE3274304));
+            FEPrintf(GetPackageName(), FEngHashString("BOUNTY_%d", i + 1), "");
+            FEPrintf(GetPackageName(), FEngHashString("PURSUIT_ID_%d", i + 1), "");
+            FEPrintf(GetPackageName(), FEngHashString("PURSUIT_LENGTH_%d", i + 1), "");
         }
     }
     if (num_pursuits == 0) {
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0xEB5E7757));
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x73DCB662));
+        FEngSetInvisible(GetPackageName(), 0xEB5E7757);
+        FEngSetInvisible(GetPackageName(), 0x73DCB662);
     }
 }

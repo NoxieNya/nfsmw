@@ -64,8 +64,13 @@ class uiRepSheetMilestones : public ArrayScrollerMenu {
     void AddMilestone(GMilestone *pMilestone);
     void AddSpeedtrap(GSpeedTrap *pSpeedTrap);
 
-    bool bIsInGame;                       // offset 0xE8, size 0x1
+    bool bIsInGame; // offset 0xE8, size 0x1
+    // TODO
+    // #ifdef EA_BUILD_A124
+    //     UITrackMapStreamer TrackMapStreamer;
+    // #else
     UITrackMapStreamer *TrackMapStreamer; // offset 0xEC, size 0x4
+                                          // #endif
     FEMultiImage *TrackMap;               // offset 0xF0, size 0x4
 };
 

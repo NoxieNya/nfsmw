@@ -10,6 +10,8 @@
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
 #include "Speed/Indep/Src/World/TrackStreamer.hpp"
 #include "Speed/Indep/Src/Misc/Joylog.hpp"
+#include "Speed/Indep/bWare/Inc/bTypes.hpp"
+#include "Speed/Indep/bWare/Inc/bWare.hpp"
 
 // File: speed/indep/src/frontend/MoviePlayer/MoviePlayer.cpp
 // total size: 0x8
@@ -42,38 +44,76 @@ class GraphObject {
 };
 } // namespace RealShape
 
-extern TextureInfo MovieTextureInfo;
-extern void *RCMPDecodeBuffer;
+TextureInfo MovieTextureInfo;
 
 void *GamecubeMaybeAllocateFromCarLoader(int size, const char *name, int alloc_params) {
     bool track_stream_pool_exists = TheTrackStreamer.HasMemoryPool();
     if ((track_stream_pool_exists && size <= bLargestMalloc(7)) || size <= bLargestMalloc(0)) {
         return nullptr;
+    } else {
+        TheCarLoader.MakeSpaceInPool(size);
+        void *ptr = bMalloc(size, name, 0, (CarLoaderMemoryPoolNumber & 0xf) | alloc_params);
+        if (ptr != nullptr) {
+            return ptr;
+        }
+        return nullptr;
     }
-    TheCarLoader.MakeSpaceInPool(size);
-    void *ptr = bMalloc(size, name, __LINE__, (CarLoaderMemoryPoolNumber & 0xf) | alloc_params);
-    if (ptr != nullptr) {
-        return ptr;
-    }
-    return nullptr;
 }
 
-MoviePlayer *gMoviePlayer;
+MoviePlayer *gMoviePlayer = nullptr;
 unsigned int gMovieStartTime = 0xFFFFFFFF;
 ShapeMemoryAllocator gShapeMemoryAllocator;
 
 // total size: 0x8
 struct MoveVolumeInfo {
-    // Members
     const char *MovieBaseName; // offset 0x0, size 0x4
     int Volume;                // offset 0x4, size 0x4
 };
-MoveVolumeInfo MovieVolumeArray[40];
+
+MoveVolumeInfo MovieVolumeArray[38] = {{"MOVIES\\attract_movie", 0x41},
+                                       {"MOVIES\\drag_tutorial", 0x37},
+                                       {"MOVIES\\ealogo", 0x3c},
+                                       {"MOVIES\\intro_movie", 0x37},
+                                       {"MOVIES\\sprint_tutorial", 0x37},
+                                       {"MOVIES\\tollbooth_tutorial", 0x37},
+                                       {"MOVIES\\bounty_tutorial", 0x37},
+                                       {"MOVIES\\pursuit_tutorial", 0x37},
+                                       {"MOVIES\\speedtrap_tutorial", 0x37},
+                                       {"MOVIES\\psa", 0x32},
+                                       {"MOVIES\\blacklist_01", 0x2d},
+                                       {"MOVIES\\blacklist_02", 0x2d},
+                                       {"MOVIES\\blacklist_03", 0x2d},
+                                       {"MOVIES\\blacklist_04", 0x2d},
+                                       {"MOVIES\\blacklist_05", 0x2d},
+                                       {"MOVIES\\blacklist_06", 0x2d},
+                                       {"MOVIES\\blacklist_07", 0x2d},
+                                       {"MOVIES\\blacklist_08", 0x2d},
+                                       {"MOVIES\\blacklist_09", 0x2d},
+                                       {"MOVIES\\blacklist_10", 0x2d},
+                                       {"MOVIES\\blacklist_11", 0x2d},
+                                       {"MOVIES\\blacklist_12", 0x2d},
+                                       {"MOVIES\\blacklist_13", 0x2d},
+                                       {"MOVIES\\blacklist_14", 0x2d},
+                                       {"MOVIES\\blacklist_15", 0x2d},
+                                       {"MOVIES\\storyfmv_bla134", 0x50},
+                                       {"MOVIES\\storyfmv_bus12", 0x50},
+                                       {"MOVIES\\storyfmv_cro06_coh06a", 0x50},
+                                       {"MOVIES\\storyfmv_dda01", 0x50},
+                                       {"MOVIES\\storyfmv_epi138", 0x50},
+                                       {"MOVIES\\storyfmv_her136", 0x50},
+                                       {"MOVIES\\storyfmv_pin11", 0x50},
+                                       {"MOVIES\\storyfmv_pol17_mot21", 0x50},
+                                       {"MOVIES\\storyfmv_rap30", 0x50},
+                                       {"MOVIES\\storyfmv_raz08", 0x50},
+                                       {"MOVIES\\storyfmv_roc02", 0x50},
+                                       {"MOVIES\\storyfmv_saf25", 0x50},
+                                       {"MOVIES\\storyfmv_rac01", 0x50}};
 
 bool MoviePlayer_Bypass() {
-    return bGetTickerDifference(gMovieStartTime) > 30.0f;
+    return bGetTickerDifference(gMovieStartTime) > 5000.0f;
 }
 
+// UNSOLVED
 void MoviePlayer_Play() {
     if (gMoviePlayer != nullptr) {
         gMovieStartTime = bGetTicker();
@@ -82,49 +122,37 @@ void MoviePlayer_Play() {
 }
 
 void *ShapeMemoryAllocator::Alloc(size_t size, const EA::TagValuePair &flags) {
-    const char *name = "";
-    int allocation_params = 0x40;
-    int offset = 0;
+    char *name = "";
+    int allocation_params = BMEMORY_TOP_BIT;
     const EA::TagValuePair *p = &flags;
+    int offset = 0;
+
     while (p != nullptr) {
-        unsigned int tag = p->mTag;
-        if (tag == 2) {
-            goto tag_2;
+        switch (p->mTag) {
+            case 1: {
+                void *ptr = const_cast<void *>(p->mValue.mPointer);
+                name = static_cast<char *>(ptr);
+                break;
+            }
+            case 2:
+                allocation_params |= BMEMORY_ALIGNMENT(p->mValue.mInt);
+                break;
+            case 3:
+                allocation_params |= BMEMORY_ALIGNMENT_OFFSET(p->mValue.mInt);
+                offset = p->mValue.mInt;
+                break;
+            case 4:
+                allocation_params &= ~BMEMORY_TOP_BIT;
+                break;
         }
-        if (tag > 2) {
-            goto tag_gt_2;
-        }
-        if (tag == 1) {
-            name = static_cast<const char *>(p->mValue.mPointer);
-            goto next;
-        }
-    next:
         p = p->mNext;
-        continue;
-
-    tag_gt_2:
-        if (tag == 3) {
-            int value = p->mValue.mInt;
-
-            offset = value;
-            allocation_params |= (value & 0x1FFC) << 17;
-            goto next;
-        }
-        if (tag == 4) {
-            allocation_params &= ~0x40;
-        }
-        goto next;
-
-    tag_2:
-        allocation_params |= (p->mValue.mInt & 0x1FFC) << 6;
-        goto next;
     }
     void *maybe = GamecubeMaybeAllocateFromCarLoader(size, name, allocation_params);
     if (maybe == nullptr) {
         if (TheTrackStreamer.HasMemoryPool()) {
             maybe = TheTrackStreamer.AllocateUserMemory(size, "shape_mem", offset);
         } else {
-            maybe = bMalloc(size, allocation_params);
+            maybe = bMalloc(size, name, 0, allocation_params);
         }
     }
     return maybe;
@@ -143,13 +171,12 @@ int ShapeMemoryAllocator::AddRef() {
 }
 
 int ShapeMemoryAllocator::Release() {
-    int ref = mRefcount - 1;
-    mRefcount = ref;
-    if (ref < 1) {
+    mRefcount--;
+    if (mRefcount < 1) {
         delete this;
-        ref = 0;
+        return 0;
     }
-    return ref;
+    return mRefcount;
 }
 
 void *RCMP_PlayerAllocAlign(const char *name, int size, int alignment, int headersize, int type) {
@@ -157,22 +184,24 @@ void *RCMP_PlayerAllocAlign(const char *name, int size, int alignment, int heade
         name = "RCMP_Mem";
     }
     size = size + headersize;
-    int alloc_params = (headersize & 0x1FFC) << 17;
-    void *maybe = GamecubeMaybeAllocateFromCarLoader(size, name, alloc_params | (alignment & 0x1FFC) << 6);
-    if (maybe == nullptr) {
-        if (TheTrackStreamer.HasMemoryPool()) {
-            return TheTrackStreamer.AllocateUserMemory(size, name, headersize);
-        } else {
-            if (alignment == 0) {
-                alignment = 0x80;
-            }
-            void *ptr = bMalloc(size, name, __LINE__, alloc_params | (alignment & 0x1FFC) << 6 | 0x40);
-            return ptr;
-        }
+
+    void *maybe = GamecubeMaybeAllocateFromCarLoader(size, name, BMEMORY_ALIGNMENT_OFFSET(headersize) | BMEMORY_ALIGNMENT(alignment));
+    if (maybe != nullptr) {
+        return maybe;
     }
-    return maybe;
+
+    if (TheTrackStreamer.HasMemoryPool()) {
+        void *ptr = TheTrackStreamer.AllocateUserMemory(size, name, headersize);
+        return ptr;
+    }
+
+    if (alignment == 0) {
+        alignment = BMEMORY_BEST_FIT;
+    }
+    return bMalloc(size, name, 0, BMEMORY_ALIGNMENT_OFFSET(headersize) | BMEMORY_ALIGNMENT(alignment) | BMEMORY_TOP_BIT);
 }
 
+// UNSOLVED
 void RCMP_PlayerFree(void *ptr) {
     if (!TheTrackStreamer.HasMemoryPool()) {
         goto bfree_label;
@@ -192,7 +221,7 @@ freeuser_label:
 
 void MoviePlayer_StartUp() {
     if (gMoviePlayer == nullptr) {
-        gMoviePlayer = new MoviePlayer(0);
+        gMoviePlayer = new ("MoviePlayer", 0) MoviePlayer(0);
     }
 }
 
@@ -205,30 +234,26 @@ void MoviePlayer_ShutDown() {
     TheTrackStreamer.RefreshLoading();
 }
 
-MoviePlayer::MoviePlayer(int memClass) {
-    mSettings.preload = false;
-    mSettings.filename[0] = '\0';
-    mSettings.bufferSize = 0x40000;
-    mSettings.activeController = 0;
-    mSettings.sound = IsSoundEnabled != false;
-    mSettings.volume = 0;
+MoviePlayer::MoviePlayer(int memClass) : mSettings() {
     fStatus = 3;
     fLiveStatus = 3;
-    fPlayer = nullptr;
-    CurFrame = nullptr;
     mSettings.loop = false;
     mSettings.pal = false;
     mSettings.type = 0;
     mSettings.movieId = 0;
     fCurFrameNum = 0;
+    fPlayer = nullptr;
+    CurFrame = nullptr;
     RCMP::rcmp_sys.AllocMemFunc = RCMP_PlayerAllocAlign;
     RCMP::rcmp_sys.FreeMemFunc = RCMP_PlayerFree;
     RCMP::rcmp_sys.m_DefaultMemDir = memClass;
     RealShape::GraphObject::SetAllocator(&gShapeMemoryAllocator);
     if (TheTrackStreamer.HasMemoryPool()) {
-        TheTrackStreamer.MakeSpaceInPool(0x271000, true);
+        TheTrackStreamer.MakeSpaceInPool(2560000, true);
     }
 }
+
+void *RCMPDecodeBuffer = nullptr;
 
 MoviePlayer::~MoviePlayer() {
     if (fPlayer != nullptr) {
@@ -241,16 +266,7 @@ MoviePlayer::~MoviePlayer() {
 }
 
 void MoviePlayer::Init(Settings &newSettings) {
-    mSettings.activeController = newSettings.activeController;
-    mSettings.bufferSize = newSettings.bufferSize;
-    mSettings.loop = newSettings.loop;
-    mSettings.preload = newSettings.preload;
-    mSettings.volume = newSettings.volume;
-    mSettings.sound = newSettings.sound;
-    mSettings.pal = newSettings.pal;
-    mSettings.type = newSettings.type;
-    mSettings.movieId = newSettings.movieId;
-    bStrNCpy(mSettings.filename, newSettings.filename, 256);
+    mSettings = newSettings;
     mSettings.volume = GetMovieCategoryVolume();
     ResetTimer();
     HandleFatalError();
@@ -267,40 +283,40 @@ void MoviePlayer::ResetTimer() {
     prevMilliseconds = 0.0f;
 }
 
+// TODO: missing dwarf inlines
 void MoviePlayer::Play() {
-    if (SkipMovies == 0) {
-        RCMP::AV_PLAYER::LOAD_ENUM loadType = RCMP::AV_PLAYER::STREAM;
-        if (mSettings.preload) {
-            loadType = RCMP::AV_PLAYER::PRELOAD;
-        }
-        RCMP::AV_PLAYER::SOUND_ENUM soundType = mSettings.sound ? RCMP::AV_PLAYER::SOUND_ON : RCMP::AV_PLAYER::SOUND_OFF;
-        void *mem = fPlayer = new RCMP::AV_PLAYER(mSettings.filename, mSettings.bufferSize, loadType, soundType);
-        HandleFatalError();
-        if (fPlayer == nullptr) {
-            fStatus = 2;
-            fLiveStatus = 2;
-            return;
-        }
-        GetFirstFrame();
-        if (mSettings.sound != false) {
-            fPlayer->SetVol(mSettings.volume);
-        }
-        fCurFrameNum = fCurFrameNum + 1;
-        fPlayer->Pause();
-        if (CurFrame != nullptr) {
-            goto curframe_found;
-        }
+    if (SkipMovies != 0) {
+        cFEng::Get()->QueueGameMessage(0xc3960eb9, nullptr, 0xff);
+        return;
     }
-    cFEng::Get()->QueueGameMessage(0xc3960eb9, nullptr, 0xff);
-    return;
-curframe_found: {
-    Shape *shape = *reinterpret_cast<Shape **>(reinterpret_cast<char *>(CurFrame) + 4);
-    PlatSetFirstMovieFrame(&MovieTextureInfo, shape, mSettings.type == 0);
+
+    RCMP::AV_PLAYER::LOAD_ENUM loadType = RCMP::AV_PLAYER::STREAM;
+    if (mSettings.preload) {
+        loadType = RCMP::AV_PLAYER::PRELOAD;
+    }
+    RCMP::AV_PLAYER::SOUND_ENUM soundType = mSettings.sound ? RCMP::AV_PLAYER::SOUND_ON : RCMP::AV_PLAYER::SOUND_OFF;
+    fPlayer = new RCMP::AV_PLAYER(mSettings.filename, mSettings.bufferSize, loadType, soundType);
+    HandleFatalError();
+    if (fPlayer == nullptr) {
+        fStatus = 2;
+        fLiveStatus = 2;
+        return;
+    }
+    GetFirstFrame();
+    if (mSettings.sound != false) {
+        fPlayer->SetVol(mSettings.volume);
+    }
+    fCurFrameNum = fCurFrameNum + 1;
+    fPlayer->Pause();
+    if (CurFrame == nullptr) {
+        cFEng::Get()->QueueGameMessage(0xc3960eb9, nullptr, 0xff);
+        return;
+    }
+    PlatSetFirstMovieFrame(&MovieTextureInfo, CurFrame->GetShape(), mSettings.type == 0);
     SubTitler::NotifyFirstFrame();
     fStatus = 5;
     fLiveStatus = 5;
     fPlayer->UnPause();
-}
 }
 
 void MoviePlayer::Stop() {
@@ -310,95 +326,89 @@ void MoviePlayer::Stop() {
 }
 
 int MoviePlayer::GetMovieCategoryVolume() {
-    unsigned int vol = 0x7F;
-    for (int i = 0; i < 0x26; i++) {
-        const char *name = MovieVolumeArray[i].MovieBaseName;
-        int len = bStrLen(name);
-        if (bStrNICmp(name, mSettings.filename, len) == 0) {
-            vol = MovieVolumeArray[i].Volume;
+    int volume = 0x7F; // int8 max
+    for (int i = 0; i < NUM_ELEMENTS(MovieVolumeArray); i++) {
+        if (bStrNICmp(MovieVolumeArray[i].MovieBaseName, mSettings.filename, bStrLen(MovieVolumeArray[i].MovieBaseName)) == 0) {
+            volume = MovieVolumeArray[i].Volume;
+            extern bool ShutJosieUp;
             if (ShutJosieUp) {
-                const char *name2 = MovieVolumeArray[i].MovieBaseName;
-                int len2 = bStrLen(name2);
-                if (bStrNICmp(name2, "josie", len2) == 0) {
-                    vol = 0;
+                if (bStrNICmp(MovieVolumeArray[i].MovieBaseName, "MOVIES\\psa", bStrLen(MovieVolumeArray[i].MovieBaseName)) == 0) {
+                    volume = 0;
                 }
             }
         }
     }
-    return vol;
+    return volume;
 }
 
 void MoviePlayer::GetFirstFrame() {
-    RCMP::AV_PLAYER *player = fPlayer;
-    unsigned int maxFrames = RCMP_GetMaxFramesOutStanding();
-    int msPerFrame = GetMillisecondsPerFrame();
-    CurFrame = player->GetFirstFrame(maxFrames, msPerFrame << 1);
+    CurFrame = fPlayer->GetFirstFrame(RCMP_GetMaxFramesOutStanding(), GetMillisecondsPerFrame() * 2);
 }
 
 void MoviePlayer::Update() {
-    if (fStatus == 5) {
-        UpdateFunction();
-        int movie_done = (fLiveStatus != 5);
-        if (Joylog::IsReplaying()) {
-            int joylog_movie_done = Joylog::GetData(4, static_cast<JoylogChannel>(8));
-            if (joylog_movie_done != 0 && movie_done == 0) {
-                while (fLiveStatus != 0) {
-                    UpdateFunction();
-                }
-            }
-            movie_done = joylog_movie_done;
-        }
-        Joylog::AddData(movie_done, 4, static_cast<JoylogChannel>(8));
-        if (movie_done != 0) {
-            fStatus = fLiveStatus;
-            eWaitUntilRenderingDone();
-            cFEng::Get()->QueueGameMessage(0xc3960eb9, nullptr, 0xff);
-            SoundPause(false, static_cast<eSNDPAUSE_REASON>(6));
-            SetSoundControlState(false, static_cast<eSNDCTLSTATE>(1), "");
-            if (fPlayer != nullptr) {
-                delete fPlayer;
-            }
-            fPlayer = nullptr;
-            void *buf = RCMPDecodeBuffer;
-            RCMP_PlayerFree(buf);
-            RCMPDecodeBuffer = nullptr;
-            ResetTimer();
-        }
-        HandleFatalError();
+    if (fStatus != 5) {
+        return;
     }
+
+    UpdateFunction();
+    int movie_done = static_cast<int>(fLiveStatus != 5);
+    if (Joylog::IsReplaying()) {
+        int joylog_movie_done = Joylog::GetData(4, JOYLOG_CHANNEL_MOVIE_PLAYER_STATUS);
+        if (joylog_movie_done != 0 && movie_done == 0) {
+            while (fLiveStatus != 0) {
+                UpdateFunction();
+            }
+        }
+        movie_done = joylog_movie_done;
+    }
+    Joylog::AddData(movie_done, 4, JOYLOG_CHANNEL_MOVIE_PLAYER_STATUS);
+    if (movie_done != 0) {
+        fStatus = fLiveStatus;
+        eWaitUntilRenderingDone();
+        cFEng::Get()->QueueGameMessage(0xc3960eb9, nullptr, 0xff);
+        SoundPause(false, eSNDPAUSE_MOVIE);
+        SetSoundControlState(false, SNDSTATE_PAUSE, "movie_done");
+        if (fPlayer != nullptr) {
+            delete fPlayer;
+        }
+        fPlayer = nullptr;
+        RCMP_PlayerFree(RCMPDecodeBuffer);
+        RCMPDecodeBuffer = nullptr;
+        ResetTimer();
+    }
+    HandleFatalError();
 }
 
 void MoviePlayer::UpdateFunction() {
     static int recurse = 0;
-    if (recurse == 0) {
-        int finished = 0;
-        recurse = 1;
-        bool MovieFinished = false;
-        SYNCTASK_run();
-        THREAD_yield(0);
-        if (fPlayer->IsTimeForDecode() && CurFrame != nullptr) {
-            RCMP::DECODER *decoder = fPlayer->GetDecoder();
-            decoder->ReleaseFrame(CurFrame);
-            float goalFrame = fPlayer->GetGoalFrame();
-            CurFrame = fPlayer->GetFrame(goalFrame);
-        } else {
-            MovieFinished = true;
-        }
-        if (CurFrame == nullptr) {
-            finished = fPlayer->IsAudioFinished();
-        } else {
-            RCMP::Shape *shape = CurFrame->GetShape();
-            if (!MovieFinished) {
-                this->FillInTextureInfo(reinterpret_cast<unsigned int *>(RCMPDecodeBuffer), &MovieTextureInfo, shape);
-            }
-        }
-        HandleFatalError();
-        if (finished != 0) {
-            eWaitUntilRenderingDone();
-            fLiveStatus = 0;
-        }
-        recurse = 0;
+    if (recurse != 0) {
+        return;
     }
+    bool MovieFinished = false;
+    recurse = 1;
+    bool ReDraw = false;
+    SYNCTASK_run();
+    THREAD_yield(0);
+    if (fPlayer->IsTimeForDecode() && CurFrame != nullptr) {
+        fPlayer->GetDecoder()->ReleaseFrame(CurFrame);
+        CurFrame = fPlayer->GetFrame(fPlayer->GetGoalFrame());
+    } else {
+        ReDraw = true;
+    }
+    if (CurFrame == nullptr) {
+        MovieFinished = fPlayer->IsAudioFinished();
+    } else {
+        RealShape::Shape *shape = CurFrame->GetShape();
+        if (!ReDraw) {
+            this->FillInTextureInfo(reinterpret_cast<uint32 *>(RCMPDecodeBuffer), &MovieTextureInfo, CurFrame->GetShape());
+        }
+    }
+    HandleFatalError();
+    if (MovieFinished) {
+        eWaitUntilRenderingDone();
+        fLiveStatus = 0;
+    }
+    recurse = 0;
 }
 
 uint32 MoviePlayer::GetMillisecondsPerFrame() {
@@ -411,11 +421,5 @@ uint32 MoviePlayer::GetMillisecondsPerFrame() {
 void MoviePlayer::HandleFatalError() {}
 
 bool GiveTheMoviePlayerBandwidth() {
-    bool result = false;
-    if (gMoviePlayer != nullptr) {
-        int status = gMoviePlayer->GetStatus();
-        status -= 3;
-        result = static_cast<unsigned int>(status) < 3u;
-    }
-    return result;
+    return gMoviePlayer != nullptr && gMoviePlayer->IsMoviePlaying();
 }

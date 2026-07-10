@@ -1,4 +1,5 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/MemCard/uiMemcard.hpp"
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Misc/Config.h"
 #include "Speed/Indep/Src/Frontend/MenuScreens/MemCard/uiMemcardBase.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/MemCard/uiMemcardInterface.hpp"
@@ -10,9 +11,10 @@
 void UIMemcardBoot::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     UIMemcardBase::NotificationMessage(msg, obj, param1, param2);
     switch (msg) {
-        case 0x35f8620b:
+        case FEHASH_INITCOMPLETE:
             HideAllButtons();
             MemoryCard::GetInstance()->ShowMessages(true);
+            extern int IsMemcardEnabled;
             if (!IsMemcardEnabled) {
                 cFEng::Get()->QueueGameMessage(0x461a18ee, GetPackageName(), 0xff);
                 return;
@@ -37,28 +39,25 @@ eMenuSoundTriggers UIMemcardBoot::NotifySoundMessage(u32 msg, eMenuSoundTriggers
 }
 
 MenuScreen *CreateMemCardBootScreen(ScreenConstructorData *sd) {
-    UIMemcardBoot *boot = new UIMemcardBoot(sd);
-    FEString *blurb = FEngFindString(boot->GetPackageName(), 0x1e2640fa);
-    blurb->Flags &= ~0x200;
-    boot->Setup();
-    return boot;
+    UIMemcardBase *pRes = new ("MemCardBootScreen", 0) UIMemcardBoot(sd);
+    pRes->Setup();
+    return pRes;
 }
 
 MenuScreen *CreateMemcardMainMenu(ScreenConstructorData *sd) {
-    UIMemcardMain *screen = new UIMemcardMain(sd);
-    screen->Setup();
-    return screen;
+    UIMemcardMain *pRes = new ("UIMemcardMain", 0) UIMemcardMain(sd);
+    pRes->Setup();
+    return pRes;
 }
 
 UIMemcardMain::UIMemcardMain(ScreenConstructorData *sd) : UIMemcardBase(sd) {
-    FEString *blurb = FEngFindString(GetPackageName(), 0x1e2640fa);
-    blurb->Flags &= ~0x200;
+    FEString *mpBlurb = FEngFindString(GetPackageName(), 0x1e2640fa);
+    mpBlurb->Flags &= ~0x200;
 }
 
 void UIMemcardMain::DoSelect(const char *pName) {
     bStrCpy(m_FileName, pName);
-    int listOp = m_pChild->GetListOp();
-    switch (listOp) {
+    switch (m_pChild->GetListOp()) {
         case 0:
             MemoryCard::GetInstance()->RequestTask(5, m_FileName);
             SetStringCheckingCard();
@@ -77,9 +76,7 @@ void UIMemcardMain::ListDone() {
 
     int nSize = m_Items.CountElements();
 
-    unsigned int uiOp = MemcardGetCurrentUIOperation();
-
-    switch (uiOp) {
+    switch (MemcardGetCurrentUIOperation()) {
         case 0x30:
             if (nSize == 0) {
                 SetupPromptNoProfileFound();
@@ -122,9 +119,7 @@ void UIMemcardMain::ListDone() {
             break;
         case 0x40:
             if (FEDatabase->bProfileLoaded) {
-                const char *pName = m_FileName;
-                const char *profileName = FEDatabase->CurrentUserProfiles[0]->GetProfileName();
-                bStrCpy(const_cast<char *>(pName), profileName);
+                bStrCpy(const_cast<char *>(m_FileName), FEDatabase->GetUserProfile(0)->GetProfileName());
                 DoSaveFlow(4);
             } else {
                 DoSaveFlow(2);
@@ -144,16 +139,14 @@ void UIMemcardMain::ListDone() {
     }
 }
 
+// UNSOLVED
 void UIMemcardMain::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     UIMemcardBase::NotificationMessage(msg, obj, param1, param2);
     switch (msg) {
-        case 0x5a051729: {
-            cFEng *feng = cFEng::Get();
-            u32 hideHash = FEHashUpper("HIDE LOADER");
-            feng->QueuePackageMessage(hideHash, GetPackageName(), nullptr);
+        case 0x5a051729:
+            cFEng::Get()->QueuePackageMessage(FEHashUpper("HIDE LOADER"), GetPackageName(), nullptr);
             ListDone();
             break;
-        }
         case 0xa4bb7ae1:
             cFEng::Get()->QueueGameMessage(0x461a18ee, nullptr, 0xff);
             goto hide_loader;
@@ -186,12 +179,12 @@ void UIMemcardMain::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
                 cFEng::Get()->QueueGameMessage(0x461a18ee, GetPackageName(), 0xff);
                 goto hide_loader;
             }
-            if (FEDatabase->IsCareerManagerMode() && FEDatabase->bProfileLoaded && FEDatabase->GetGameplaySettings()->AutoSaveOn != 0 &&
-                (gMemcardSetup.mOp & 0xf0) != 0x10 && msg != 0xdc12af2e) {
+            if (FEDatabase->IsCareerManagerMode() && FEDatabase->bProfileLoaded && FEDatabase->GetGameplaySettings()->AutoSaveOn &&
+                (gMemcardSetup.GetCommand()) != 0x10 && msg != 0xdc12af2e) {
                 MemoryCard::GetInstance()->SetAutoSaveEnabled(true);
             } else {
-                if ((gMemcardSetup.mOp & 0xf0) == 0x60 && msg == 0xdc12af2e) {
-                    FEDatabase->GetGameplaySettings()->AutoSaveOn = 0;
+                if ((gMemcardSetup.GetCommand()) == 0x60 && msg == 0xdc12af2e) {
+                    FEDatabase->GetGameplaySettings()->AutoSaveOn = false;
                     ShowOK(0xb04da4ad, 0x7000000);
                 } else {
                     MemcardExit(msg);
@@ -210,27 +203,21 @@ void UIMemcardMain::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
             SetStringCheckingCard();
             MemoryCard::GetInstance()->BootupCheck(nullptr);
             break;
-        case 0xc98356ba:
+        case FEMSG_SCREEN_TICK:
             if (!m_ExpectingInput) {
                 return;
             }
-            {
-                const char *packageName = GetPackageName();
-                u32 handlerHash = FEHashUpper("LOADER");
-                u32 appearHash = FEHashUpper("APPEAR");
-                if (!FEngIsScriptSet(packageName, handlerHash, appearHash)) {
-                    return;
-                }
-                goto hide_loader;
+
+            if (!FEngIsScriptSet(GetPackageName(), FEHashUpper("LOADER"), FEHashUpper("APPEAR"))) {
+                return;
             }
+            goto hide_loader;
+
             break;
     }
     return;
 
-hide_loader: {
-    cFEng *feng = cFEng::Get();
-    u32 hideHash = FEHashUpper("HIDE LOADER");
-    feng->QueuePackageMessage(hideHash, GetPackageName(), nullptr);
+hide_loader:
+    cFEng::Get()->QueuePackageMessage(FEHashUpper("HIDE LOADER"), GetPackageName(), nullptr);
     return;
-}
 }

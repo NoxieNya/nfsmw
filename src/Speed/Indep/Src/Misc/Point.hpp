@@ -85,8 +85,10 @@ struct tCubic1D {
     void ClampDerivative(float fMag);       // Decl: speed/indep/src/misc/Point.hpp:88
     void ClampSecondDerivative(float fMag); // Decl: speed/indep/src/misc/Point.hpp:89
 
-    void MakeCoeffs();             // Decl: speed/indep/src/misc/Point.hpp:91
-    int HasArrived();              // Decl: speed/indep/src/misc/Point.hpp:92
+    void MakeCoeffs(); // Decl: speed/indep/src/misc/Point.hpp:91
+    int HasArrived() { // Decl: speed/indep/src/misc/Point.hpp:92
+        return state == 0;
+    };
     void PathdValDesired(float v); // Decl: speed/indep/src/misc/Point.hpp:93
 };
 
@@ -100,8 +102,10 @@ struct tCubic2D {
     tCubic2D(short type, bVector2 *pDuration);
 
     void Update(float fSeconds, float fDClamp, float fDDClamp); // Decl: speed/indep/src/misc/Point.hpp:112
-    int HasArrived();                                           // Decl: speed/indep/src/misc/Point.hpp:113
-    void Snap() {                                               // Decl: speed/indep/src/misc/Point.hpp:114
+    int HasArrived() {                                          // Decl: speed/indep/src/misc/Point.hpp:113
+        return x.HasArrived() && y.HasArrived();
+    };
+    void Snap() { // Decl: speed/indep/src/misc/Point.hpp:114
         x.Snap();
         y.Snap();
     }

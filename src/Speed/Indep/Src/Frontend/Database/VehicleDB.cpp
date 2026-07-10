@@ -266,12 +266,12 @@ uint16 FEPlayerCarDB::GetNumInfraction(GInfractionManager::InfractionType type, 
         bool get_unserved;
     };
 
-    uint16 total = static_cast<uint16>((get_unserved ? SoldHistoryUnservedInfractions : SoldHistoryServedInfractions).GetValue(type));
+    uint16 total = (get_unserved ? SoldHistoryUnservedInfractions : SoldHistoryServedInfractions).GetValue(type);
     NumInfraction callback;
 
     callback.type = type;
     callback.get_unserved = get_unserved;
-    total += static_cast<uint16>(ForAllCareerRecordsSum(callback));
+    total += ForAllCareerRecordsSum(callback);
     return total;
 }
 
@@ -297,7 +297,7 @@ uint16 FEPlayerCarDB::GetNumInfractionsOnCar(uint32 car_handle, bool get_unserve
     FECarRecord *fe_car = GetCarRecordByHandle(car_handle);
     FECareerRecord *record = GetCareerRecordByHandle(fe_car->CareerHandle);
     if (record != nullptr) {
-        return static_cast<uint16>(record->GetInfractions(get_unserved).NumInfractions());
+        return record->GetInfractions(get_unserved).NumInfractions();
     }
 
     return 0;

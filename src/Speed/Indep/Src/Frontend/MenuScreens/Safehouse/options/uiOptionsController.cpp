@@ -9,6 +9,7 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/options/uiOptionsMain.hpp"
 #include "Speed/Indep/Src/Generated/Events/EUnPause.hpp"
 #include "Speed/Indep/Src/Input/IOModule.h"
+#include "Speed/Indep/Src/Misc/Joystick.hpp"
 #include "Speed/Indep/Src/Sim/Simulation.h"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feDialogBox.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
@@ -23,24 +24,18 @@ UIOptionsController::UIOptionsController(ScreenConstructorData *sd) : UIWidgetMe
     NeedSetup = true;
 
     if (Sim::GetUserMode() == Sim::USER_SPLIT_SCREEN) {
-        cFEng::Get()->QueuePackageMessage(0x7DB7B6D7, GetPackageName(), 0);
-        const char *pkg = GetPackageName();
-        int player = GetPlayerToEditForOptions();
-        unsigned int lang = 0x7B070985;
-        if (player == 0) {
-            lang = 0x7B070984;
-        }
-        FEngSetLanguageHash(pkg, 0x53BF826D, lang);
+        cFEng::Get()->QueuePackageMessage(0x7DB7B6D7, GetPackageName(), nullptr);
+        FEngSetLanguageHash(GetPackageName(), 0x53BF826D, GetPlayerToEditForOptions() == 0 ? 0x7B070984 : 0x7B070985);
     }
 
     oldConfig = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Config;
-    reinterpret_cast<int &>(oldVibration) = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Rumble;
-    reinterpret_cast<int &>(oldDriveWithAnalog) = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->DriveWithAnalog;
+    oldVibration = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Rumble;
+    oldDriveWithAnalog = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->DriveWithAnalog;
 
     CalcControllerTextureToLoad();
 
     if (isWheelConfig) {
-        FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Config = static_cast<eControllerConfig>(0);
+        FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Config = CC_CONFIG_1;
         FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->DriveWithAnalog = true;
     }
 
@@ -53,12 +48,11 @@ UIOptionsController::~UIOptionsController() {
 
 bool UIOptionsController::OptionsDidNotChange() {
     bool result = (oldConfig == FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Config);
-    if (oldVibration != FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Rumble) {
-        result = false;
-    }
-    if (oldDriveWithAnalog != FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->DriveWithAnalog) {
-        result = false;
-    }
+
+    result &= oldVibration == FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Rumble;
+
+    result &= oldDriveWithAnalog == FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->DriveWithAnalog;
+
     return result;
 }
 
@@ -72,11 +66,7 @@ void UIOptionsController::NotificationMessage(u32 msg, FEObject *pobj, u32 param
 
     switch (msg) {
         case 0xE1FDE1D1: {
-            bool dirty = false;
-            if (FEDatabase->IsOptionsDirty() || !OptionsDidNotChange()) {
-                dirty = true;
-            }
-            FEDatabase->SetOptionsDirty(dirty);
+            FEDatabase->SetOptionsDirty(FEDatabase->IsOptionsDirty() || !OptionsDidNotChange());
 
             if (mCalledFromPauseMenu) {
                 cFEng::Get()->QueuePackageSwitch("Pause_Main.fng", 1, 0, false);
@@ -91,7 +81,7 @@ void UIOptionsController::NotificationMessage(u32 msg, FEObject *pobj, u32 param
         }
         case 0x911AB364:
             if (OptionsDidNotChange()) {
-                cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), 0);
+                cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             } else {
                 DialogInterface::ShowTwoButtons(GetPackageName(), "", dialog_alert, 0x70E01038, 0x417B25E4, 0x775DBA97, 0x34DC1BCF, 0x34DC1BCF,
                                                 first_dialog_button2, GetLocalizedString(0xE9CB802F));
@@ -99,24 +89,17 @@ void UIOptionsController::NotificationMessage(u32 msg, FEObject *pobj, u32 param
             break;
         case 0x775DBA97:
             RestoreOriginals();
-            cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), 0);
+            cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             break;
         case 0xD9FEEC59:
         case 0x5073EF13:
             if (!OptionsDidNotChange()) {
                 char buf[128];
                 FEngSNPrintf(buf, 128, GetLocalizedString(0xBA463431), GetPlayerToEditForOptions() + 1);
-                const char *pkgName = GetPackageName();
-                const char *dlg_pkg;
-                if (mCalledFromPauseMenu) {
-                    dlg_pkg = "InGameDialog.fng";
-                } else {
-                    dlg_pkg = "Dialog.fng";
-                }
-                DialogInterface::ShowTwoButtons(pkgName, dlg_pkg, dialog_alert, 0x70E01038, 0x417B25E4, 0x9A5AD46D, 0xA2A07AC4, 0x34DC1BCF,
-                                                first_dialog_button2, buf);
+                DialogInterface::ShowTwoButtons(GetPackageName(), mCalledFromPauseMenu ? "InGameDialog.fng" : "Dialog.fng", dialog_alert, 0x70E01038,
+                                                0x417B25E4, 0x9A5AD46D, 0xA2A07AC4, 0x34DC1BCF, first_dialog_button2, buf);
             } else {
-                cFEng::Get()->QueueGameMessage(0x9A5AD46D, 0, 0xFF);
+                cFEng::Get()->QueueGameMessage(0x9A5AD46D, nullptr, 0xFF);
             }
             break;
         case 0xA2A07AC4:
@@ -124,11 +107,7 @@ void UIOptionsController::NotificationMessage(u32 msg, FEObject *pobj, u32 param
             TogglePlayer();
             break;
         case 0x9A5AD46D: {
-            bool dirty = false;
-            if (FEDatabase->IsOptionsDirty() || !OptionsDidNotChange()) {
-                dirty = true;
-            }
-            FEDatabase->SetOptionsDirty(dirty);
+            FEDatabase->SetOptionsDirty(FEDatabase->IsOptionsDirty() || !OptionsDidNotChange());
             TogglePlayer();
             break;
         }
@@ -157,13 +136,10 @@ void UIOptionsController::Setup() {
         cFEng::Get()->QueuePackageMessage(0xDE511657, GetPackageName(), 0);
     }
 
-    COConfig *config = new COConfig(true);
-    config->SetBackingOffsetX(-295.0f);
-    AddToggleOption(config, true);
+    AddToggleOption(new ("COConfig", 0) COConfig(true), true);
 
-    COVibration *vibration = new COVibration(GetPlayerToEditForOptions(), true);
-    int idx = AddToggleOption(vibration, true);
-    Options.GetNode(idx - 1)->SetBackingOffsetX(-295.0f);
+    uint32 index = AddToggleOption(new ("COVibration", 0) COVibration(GetPlayerToEditForOptions(), true), true);
+    Options.GetNode(index - 1)->SetBackingOffsetX(-295.0f);
 
     FEngSetLanguageHash(GetPackageName(), 0x53BF826D, GetPlayerToEditForOptions() == 0 ? 0x7B070984 : 0x7B070985);
 
@@ -173,23 +149,22 @@ void UIOptionsController::Setup() {
 }
 
 void UIOptionsController::SetupControllerConfig() {
-    unsigned int newTex = CalcControllerTextureToLoad();
-    if (WhichControllerTexture != newTex) {
+    if (WhichControllerTexture != CalcControllerTextureToLoad()) {
         ClearLoadedControllerTexture();
         PrepToShowControllerConfig();
     }
 
     JoystickPort port = static_cast<JoystickPort>(GetPlayerToEditForOptions());
-    int config = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Config;
     char sztemp[32];
+    int config = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Config;
 
     for (int i = 0; i < 17; i++) {
         FEngSNPrintf(sztemp, 32, "CButton_%d", i + 1);
-        unsigned int obj_hash = FEHashUpper(sztemp);
+        uint32 obj_hash = FEHashUpper(sztemp);
         FEngSNPrintf(sztemp, 32, "BUTTON_%d", i + 1);
-        unsigned int img_hash = FEHashUpper(sztemp);
+        uint32 img_hash = FEHashUpper(sztemp);
 
-        unsigned int button_hash = FindButtonNameHashForFEString(config, i, port);
+        uint32 button_hash = FindButtonNameHashForFEString(config, i, port);
         if (button_hash != 0) {
             FEngSetVisible(GetPackageName(), obj_hash);
             FEngSetLanguageHash(GetPackageName(), obj_hash, button_hash);
@@ -200,24 +175,29 @@ void UIOptionsController::SetupControllerConfig() {
         }
     }
 
+    const u32 FEObj_DPadUp = 0x4592229C;
+
     if (FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->DriveWithAnalog) {
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0x4592229C), 0x148E38);
+        FEngSetTextureHash(GetPackageName(), FEObj_DPadUp, 0x148E38);
     } else {
-        FEngSetButtonTexture(FEngFindImage(GetPackageName(), 0x4592229C), 0x0B30961B);
+        FEngSetButtonTexture(FEngFindImage(GetPackageName(), FEObj_DPadUp), 0x0B30961B);
     }
+
+    const u32 FEObj_BUTTON15 = 0x81B57400;
+    const u32 FEObj_BUTTON16 = 0x81B57401;
+    const u32 FEObj_BUTTON17 = 0x81B57402;
 
     FEngSetInvisible(GetPackageName(), 0x0F274B86);
     FEngSetInvisible(GetPackageName(), 0x673D77BC);
     FEngSetInvisible(GetPackageName(), 0x351AE442);
 
-    FEngSetTextureHash(GetPackageName(), 0x81B57400, 0x02959349);
-    FEngSetTextureHash(GetPackageName(), 0x81B57401, 0x6851AAF5);
-    FEngSetTextureHash(GetPackageName(), 0x81B57402, 0x03B7F86D);
+    FEngSetTextureHash(GetPackageName(), FEObj_BUTTON15, 0x02959349);
+    FEngSetTextureHash(GetPackageName(), FEObj_BUTTON16, 0x6851AAF5);
+    FEngSetTextureHash(GetPackageName(), FEObj_BUTTON17, 0x03B7F86D);
 }
 
 void UIOptionsController::DetectControllers() {
-    unsigned int newTex = CalcControllerTextureToLoad();
-    if (WhichControllerTexture != newTex) {
+    if (WhichControllerTexture != CalcControllerTextureToLoad()) {
         ClearLoadedControllerTexture();
         PrepToShowControllerConfig();
     }
@@ -225,8 +205,7 @@ void UIOptionsController::DetectControllers() {
 
 void UIOptionsController::ClearLoadedControllerTexture() {
     if (WhichControllerTexture != 0) {
-        unsigned int tex = WhichControllerTexture;
-        eUnloadStreamingTexture(&tex, 1);
+        eUnloadStreamingTexture(WhichControllerTexture);
     }
 }
 
@@ -242,11 +221,14 @@ void MyFinishLoadingControllerTextureCallbackBridge(uint32 p) {
 }
 
 uint32 UIOptionsController::CalcControllerTextureToLoad() {
-    unsigned int texture_hash;
+    uint32 texture_hash;
     isWheelConfig = 0;
 
-    GetPlayerToEditForOptions();
-    if (IsJoystickTypeWheel(static_cast<JoystickPort>(GetPlayerToEditForOptions()))) {
+    int config = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Config;
+
+    JoystickPort port = static_cast<JoystickPort>(GetPlayerToEditForOptions());
+
+    if (IsJoystickTypeWheel(port)) {
         texture_hash = 0xB511476B;
         isWheelConfig = 1;
     } else {
@@ -261,18 +243,17 @@ uint32 UIOptionsController::CalcControllerTextureToLoad() {
 
 void UIOptionsController::PrepToShowControllerConfig() {
     if (isWheelConfig) {
-        FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Config = static_cast<eControllerConfig>(0);
+        FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Config = CC_CONFIG_1;
         FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->DriveWithAnalog = true;
-        cFEng::Get()->QueueGameMessage(0x92B703B5, 0, 0xFF);
+        cFEng::Get()->QueueGameMessage(0x92B703B5, nullptr, 0xFF);
     }
 
     HideControllerConfig();
-    unsigned int tex = CalcControllerTextureToLoad();
-    WhichControllerTexture = tex;
-    FEngSetTextureHash(FEngFindImage(GetPackageName(), 0x922A39C4), tex);
+    WhichControllerTexture = CalcControllerTextureToLoad();
+    FEngSetTextureHash(GetPackageName(), 0x922A39C4, WhichControllerTexture);
 
-    unsigned int texArr = WhichControllerTexture;
-    eLoadStreamingTexture(&texArr, 1, reinterpret_cast<void (*)(void *)>(MyFinishLoadingControllerTextureCallbackBridge), this, 0);
+    eLoadStreamingTexture(WhichControllerTexture, MyFinishLoadingControllerTextureCallbackBridge, reinterpret_cast<uint32>(this),
+                          BMEMORY_DEFAULT_POOL);
 }
 
 void UIOptionsController::ShowControllerConfig() {
@@ -294,16 +275,10 @@ void UIOptionsController::TogglePlayer() {
     SetPlayerToEditForOptions(GetPlayerToEditForOptions() == 0);
 
     oldConfig = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Config;
-    reinterpret_cast<int &>(oldVibration) = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Rumble;
-    reinterpret_cast<int &>(oldDriveWithAnalog) = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->DriveWithAnalog;
+    oldVibration = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->Rumble;
+    oldDriveWithAnalog = FEDatabase->GetPlayerSettings(GetPlayerToEditForOptions())->DriveWithAnalog;
 
-    const char *pkg = GetPackageName();
-    int player = GetPlayerToEditForOptions();
-    unsigned int lang = 0x7B070985;
-    if (player == 0) {
-        lang = 0x7B070984;
-    }
-    FEngSetLanguageHash(pkg, 0x53BF826D, lang);
+    FEngSetLanguageHash(GetPackageName(), 0x53BF826D, GetPlayerToEditForOptions() == 0 ? 0x7B070984 : 0x7B070985);
 
     for (int i = 0; i < Options.CountElements(); i++) {
         Options.GetNode(i)->Draw();

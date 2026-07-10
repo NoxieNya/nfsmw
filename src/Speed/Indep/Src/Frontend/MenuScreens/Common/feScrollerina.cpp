@@ -148,7 +148,7 @@ void Scrollerina::ScrollNext() {
     } else {
         eMenuSoundTriggers snd = static_cast<eMenuSoundTriggers>(0);
         if (SelectedDatum == GetLastDatum()) {
-            snd = static_cast<eMenuSoundTriggers>(7);
+            snd = UISND_COMMON_WRONG;
         }
         g_pEAXSound->PlayUISoundFX(snd);
         Scroll(eSD_NEXT);
@@ -162,7 +162,7 @@ void Scrollerina::ScrollPrev() {
     } else {
         eMenuSoundTriggers snd = static_cast<eMenuSoundTriggers>(0);
         if (SelectedDatum == GetFirstDatum()) {
-            snd = static_cast<eMenuSoundTriggers>(7);
+            snd = UISND_COMMON_WRONG;
         }
         g_pEAXSound->PlayUISoundFX(snd);
         Scroll(eSD_PREV);
@@ -287,7 +287,7 @@ bool Scrollerina::MoveSelected(eScrollDir dir, bool bprint) {
         if (dir == eSD_NEXT) {
             eMenuSoundTriggers snd = static_cast<eMenuSoundTriggers>(0);
             if (SelectedDatum == GetLastDatum()) {
-                snd = static_cast<eMenuSoundTriggers>(7);
+                snd = UISND_COMMON_WRONG;
             }
             g_pEAXSound->PlayUISoundFX(snd);
             ScrollerDatum *nextDatum = SelectedDatum;
@@ -309,7 +309,7 @@ bool Scrollerina::MoveSelected(eScrollDir dir, bool bprint) {
         } else if (dir == eSD_PREV) {
             eMenuSoundTriggers snd = static_cast<eMenuSoundTriggers>(0);
             if (SelectedDatum == GetFirstDatum()) {
-                snd = static_cast<eMenuSoundTriggers>(7);
+                snd = UISND_COMMON_WRONG;
             }
             g_pEAXSound->PlayUISoundFX(snd);
             ScrollerDatum *removedDatum = SelectedDatum;

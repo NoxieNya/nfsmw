@@ -83,6 +83,7 @@ class Challenge : public IconOption {
     ~Challenge() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
         if (data == 0x0C407210) {
+            extern int IsMemcardEnabled;
             if (FEDatabase->bProfileLoaded || !IsMemcardEnabled) {
                 FEDatabase->SetGameMode(eFE_GAME_MODE_CHALLENGE);
                 SetReactImmediately(false);
@@ -140,13 +141,13 @@ void UIMain::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2)
         case 0x7e998e5e:
             UpdateProfileData();
             break;
-        case 0x9120409e:
+        case 0x9120409e: // UNSOLVED
             break;
     }
 }
 
 void UIMain::Setup() {
-    const uint32 FEObj_TITLEGROUP = 0xb71b576d;
+    const u32 FEObj_TITLEGROUP = 0xb71b576d;
 
     FEDatabase->ResetGameMode();
     FEDatabase->SetPlayersJoystickPort(0, -1);
@@ -158,6 +159,8 @@ void UIMain::Setup() {
         AddOption(new ("MainOptions", 0) MainOptions(0x3058fe37, 0x19a8c0af, 0));
         UnlockAllThings = 1;
     } else {
+        extern int IsMemcardEnabled;
+
         AddOption(new ("MainCareer", 0) MainCareer(0x3704f3d, 0x5815a2b5, 0));
         AddOption(new ("Challenge", 0) Challenge(0x9a962438, 0xcc8cb746, 0));
         AddOption(new ("MainQuickRace", 0) MainQuickRace(0x4e6fbb02, 0x54020a7a, 0));
@@ -179,7 +182,7 @@ void UIMain::UpdateProfileData() {
         GameCompletionStats stats = FEDatabase->GetGameCompletionStats();
         const char *szPercentUnit = "%";
         eLanguages currLang = GetCurrentLanguage();
-        const uint32 FEObj_PLAYERNAMEGROUP = 0xb514e2d8;
+        const u32 FEObj_PLAYERNAMEGROUP = 0xb514e2d8;
 
         if (currLang == eLANGUAGE_DANISH || currLang == eLANGUAGE_FINNISH || currLang == eLANGUAGE_FRENCH || currLang == eLANGUAGE_GERMAN ||
             currLang == eLANGUAGE_SWEDISH) {

@@ -68,7 +68,7 @@ void UIQRTrackSelect::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
                     GRaceCustom *custom = GRaceDatabase::Get().AllocCustomRace(pCurrentTrack);
                     custom->SetNumOpponents(1);
                     custom->SetCopsEnabled(false);
-                    GRaceDatabase::Get().SetStartupRace(custom, kRaceContext_QuickRace);
+                    GRaceDatabase::Get().SetStartupRace(custom, GRace::kRaceContext_QuickRace);
                     GRaceDatabase::Get().FreeCustomRace(custom);
                     cFEng::Get()->QueuePackageSwitch("PressStart.fng", 0, 0, false);
                     return;

@@ -59,15 +59,24 @@ class Minimap : public HudElement {
     void AdjustForWidescreen(bool moveOutwards);
 
     struct GameplayIconInfo {        // Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:63
-        Attrib::Type mIconType;      // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:63
+        GIcon::Type mIconType;       // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:63
         eWorldMapItemType mItemType; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:63
         const char *mElementString;  // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:63
         uint32 mWorldMapTitle;       // offset 0xC, size 0x4, Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:63
         uint32 mworldIconTexHash;    // offset 0x10, size 0x4, Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:63
     }; // Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:63
 
-    static GameplayIconInfo &GetGameplayIconInfo(Attrib::Type iconType) {}      // Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:70
-    static GameplayIconInfo &GetGameplayIconInfo(eWorldMapItemType itemType) {} // Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:71
+    static GameplayIconInfo &GetGameplayIconInfo(GIcon::Type iconType) { // Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:70
+        return kGameplayIconInfo[iconType];
+    }
+    static GameplayIconInfo &GetGameplayIconInfo(eWorldMapItemType itemType) { // Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:71
+        for (int i = 0; i < GIcon::kType_Count; i++) {
+            if (kGameplayIconInfo[i].mItemType == itemType) {
+                return kGameplayIconInfo[i];
+            }
+        }
+        return kGameplayIconInfo[0];
+    }
 
   private:
     void UpdateMiniMapItems();

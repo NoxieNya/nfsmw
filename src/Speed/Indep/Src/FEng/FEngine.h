@@ -135,7 +135,9 @@ class FEngine {
         bErrorScreenMode = b;
     }
 
-    bool IsErrorScreenMode() {} // Decl: speed/indep/src/feng/FEngine.h:179
+    bool IsErrorScreenMode() { // Decl: speed/indep/src/feng/FEngine.h:179
+        return bErrorScreenMode;
+    }
 
     FEObjectSorter<1024> &GetSorter() { // Decl: speed/indep/src/feng/FEngine.h:182
         return Sorter;
@@ -230,8 +232,7 @@ class FEngine {
     FEObject *FindObject(const char *pObjectName, const char *pPackageName) const;
 
     FEPackageList *GetPackageList() { // Decl: speed/indep/src/feng/FEngine.h:272
-        FEPackageList *p = &PackList;
-        return p;
+        return &PackList;
     }
 
     bool ForAllObjects(FEObjectCallback &Callback); // Decl: speed/indep/src/feng/FEngine.h:275

@@ -5,24 +5,24 @@
 
 MemoryCardSetup gMemcardSetup;
 
-void MemcardEnter(const char *from, const char *to, uint32 op, MemCardOpType termFunc, void *termParam, uint32 successMsg, uint32 failedMsg) {
+// UNSOLVED
+void MemcardEnter(const char *from, const char *to, uint32 op, MemCardOpType pTermFunc, void *pTermFuncParam, uint32 successMsg, uint32 failedMsg) {
+    gMemcardSetup.mMemScreen = nullptr;
     gMemcardSetup.mOp = op;
     gMemcardSetup.mFromScreen = from;
     gMemcardSetup.mToScreen = to;
-    gMemcardSetup.mTermFunc = termFunc;
-    gMemcardSetup.mTermFuncParam = termParam;
+    gMemcardSetup.mTermFunc = pTermFunc;
+    gMemcardSetup.mTermFuncParam = pTermFuncParam;
     gMemcardSetup.mSuccessMsg = successMsg;
     gMemcardSetup.mFailedMsg = failedMsg;
-    gMemcardSetup.mMemScreen = nullptr;
     MemoryCard::GetInstance()->ShowMessages(true);
     MemoryCard::GetInstance()->SetPlayerNum((op >> 17) & 1);
-    if (TheGameFlowManager.GetState() == GAMEFLOW_STATE_IN_FRONTEND) {
+    if (TheGameFlowManager.IsInFrontend()) {
         gMemcardSetup.mMemScreen = "MC_Main_GC.fng";
     } else {
         gMemcardSetup.mMemScreen = "InGame_MC_Main_GC.fng";
     }
-    int cmd = gMemcardSetup.mOp & 0xf;
-    switch (cmd) {
+    switch (gMemcardSetup.GetMethod()) {
         case 2:
             cFEng::Get()->QueuePackageSwitch(gMemcardSetup.mMemScreen, 0, 0, false);
             break;
@@ -34,16 +34,12 @@ void MemcardEnter(const char *from, const char *to, uint32 op, MemCardOpType ter
     MemoryCard::GetInstance()->SetMemcardScreenShowing(true);
 }
 
-void MemcardExit(unsigned int msg) {
+void MemcardExit(uint32 msg) {
     gMemcardSetup.mLastMessage = msg;
     if (!MemoryCard::GetInstance()->IsMemcardScreenInitialized()) {
-        cFEng *feng = cFEng::Get();
-        unsigned long hash = FEHashUpper("EXIT_COMPLETE");
-        feng->QueueGameMessage(hash, gMemcardSetup.mMemScreen, 0xff);
+        cFEng::Get()->QueueGameMessage(FEHashUpper("EXIT_COMPLETE"), gMemcardSetup.mMemScreen, 0xff);
     } else {
-        cFEng *feng = cFEng::Get();
-        unsigned long hash = FEHashUpper("LEAVE_SCREEN");
-        feng->QueuePackageMessage(hash, gMemcardSetup.mMemScreen, nullptr);
+        cFEng::Get()->QueuePackageMessage(FEHashUpper("LEAVE_SCREEN"), gMemcardSetup.mMemScreen, nullptr);
     }
     MemoryCard::GetInstance()->SetMemcardScreenInitialized(false);
     MemoryCard::GetInstance()->SetMemcardScreenExiting(true);

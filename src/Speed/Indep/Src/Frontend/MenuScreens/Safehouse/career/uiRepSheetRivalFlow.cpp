@@ -11,14 +11,14 @@
 #include "Speed/Indep/Src/Generated/Messages/MFlowReadyForOutro.h"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 
+uiRepSheetRivalFlow *uiRepSheetRivalFlow::mInstance = nullptr;
+
 static const char *ScreenNames[] = {
     "SafeHouseRivalChallenge.fng", "SafeHouseMarkers.fng", "SafeHouseRegionUnlock.fng", "MC_Main_GC.fng", "SafeHouseRivalBio.fng",
 };
 
-uiRepSheetRivalFlow *uiRepSheetRivalFlow::mInstance;
-
 void uiRepSheetRivalFlow::Init() {
-    mInstance = new uiRepSheetRivalFlow();
+    mInstance = new ("uiRepSheetRivalFlow", 0) uiRepSheetRivalFlow();
 }
 
 uiRepSheetRivalFlow *uiRepSheetRivalFlow::Get() {
@@ -35,8 +35,7 @@ void uiRepSheetRivalFlow::StartFlow(int start_stage) {
 }
 
 void uiRepSheetRivalFlow::Next() {
-    int old_stage = mStage;
-    mStage = old_stage + 1;
+    mStage++;
 
     if (mStage == 5) {
         char buf[64];
@@ -44,46 +43,41 @@ void uiRepSheetRivalFlow::Next() {
         FEAnyMovieScreen::SetMovieName(buf);
         cFEng::Get()->QueuePackageSwitch(FEAnyMovieScreen::GetFEngPackageName(), 0, 0, false);
     } else if (mStage == 6) {
-        unsigned char bin = FEDatabase->GetCareerSettings()->GetCurrentBin();
-        if (bin == 15) {
-            FEDatabase->ClearGameMode(static_cast<eFEGameModes>(0x20000));
-            FEDatabase->SetGameMode(static_cast<eFEGameModes>(1));
+        if (FEDatabase->GetCareerSettings()->GetCurrentBin() == 15) {
+            FEDatabase->ClearGameMode(eFE_GAME_MODE_POST_RIVAL);
+            FEDatabase->SetGameMode(eFE_GAME_MODE_CAREER);
             CarViewer::ShowAllCars();
             FEDatabase->GetCareerSettings()->SetHasDoneCareerIntro();
             cFEng::Get()->QueuePackagePop(-1);
             cFEng::Get()->QueuePackagePush("SafeHouseReputationOverview.fng", 0, 0, false);
             mStage = -1;
-        } else if (!FEDatabase->GetCareerSettings()->HasRapSheet() && bin == 13) {
-            mStage = old_stage;
+        } else if (!FEDatabase->GetCareerSettings()->HasRapSheet() && FEDatabase->GetCareerSettings()->GetCurrentBin() == 13) {
+            mStage--;
             FEDatabase->GetCareerSettings()->SetHasRapSheet();
-            FEAnyMovieScreen::SetMovieName("blacklist_13");
+            FEAnyMovieScreen::SetMovieName("storyfmv_rap30");
             cFEng::Get()->QueuePackageSwitch(FEAnyMovieScreen::GetFEngPackageName(), 0, 0, false);
         } else {
             RaceStarter::StartCareerFreeRoam();
         }
     } else if (mStage == 7) {
-        UCrc32 kind(0x20d60dbf);
-        MFlowReadyForOutro msg;
-        msg.Post(kind);
+        MFlowReadyForOutro().Post(0x20d60dbf);
         new ERaceSheetOn(0);
-        FEDatabase->ClearGameMode(static_cast<eFEGameModes>(0x20000));
+        FEDatabase->ClearGameMode(eFE_GAME_MODE_POST_RIVAL);
         mStage = -1;
-    } else {
-        if (mStage == 2) {
-            unsigned char bin = FEDatabase->GetCareerSettings()->GetCurrentBin();
-            if (bin == 8 || bin == 12) {
-                cFEng::Get()->QueuePackageSwitch(ScreenNames[2], 0, 0, false);
-                return;
-            }
-        } else if (mStage == 3) {
-            if (MemoryCard::GetInstance()->ShouldDoAutoSave(false)) {
-                MemcardEnter(nullptr, ScreenNames[mStage + 1], 0x4000b2, nullptr, nullptr, 0, 0);
-                return;
-            }
-        } else {
-            cFEng::Get()->QueuePackageSwitch(ScreenNames[mStage], 0, 0, false);
+    } else if (mStage == 2) {
+        int cur_stage = FEDatabase->GetCareerSettings()->GetCurrentBin() + 1;
+        if (cur_stage == 9 || cur_stage == 13) {
+            cFEng::Get()->QueuePackageSwitch(ScreenNames[2], 0, 0, false);
             return;
         }
         Next();
+    } else if (mStage == 3) {
+        if (MemoryCard::GetInstance()->ShouldDoAutoSave(false)) {
+            MemcardEnter(nullptr, ScreenNames[mStage + 1], 0x4000b2, nullptr, nullptr, 0, 0);
+            return;
+        }
+        Next();
+    } else {
+        cFEng::Get()->QueuePackageSwitch(ScreenNames[mStage], 0, 0, false);
     }
 }

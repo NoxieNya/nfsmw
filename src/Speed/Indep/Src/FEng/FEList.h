@@ -49,7 +49,7 @@ class FENode : public FEMinNode {
 
     bool SetName(const char *theName);
 
-    char *const GetName() const {
+    const char *GetName() const {
         return name;
     }
 
