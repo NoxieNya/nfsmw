@@ -187,4 +187,6 @@ bool FEngTestForIntersection(const float xPos /* f31 */, const float yPos /* f30
 
 FEGroup *FEngFindGroup(const char *pkg_name /* r3 */, uint32 grp_hash /* r4 */);
 
+void FEngSetMultiImageBottomRightUVs(FEMultiImage *image, struct FEVector2 &bottomRightUVs, int textureNumber);
+
 #endif

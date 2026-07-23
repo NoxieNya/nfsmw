@@ -70,11 +70,11 @@ class FEngine {
     FEJoyPad *pJoyPad; // offset 0x10, size 0x4, Decl: speed/indep/src/feng/FEngine.h:111
     FEMouse Mouse;     // offset 0x14, size 0x24, Decl: speed/indep/src/feng/FEngine.h:112
 
-    u32 FastRep, FastRepCache;      // offset 0x38, size 0x4, Decl: speed/indep/src/feng/FEngine.h:114
-    u32 PadHoldRegistered;          // offset 0x40, size 0x4, Decl: speed/indep/src/feng/FEngine.h:115
-    unsigned int HoldDecrement[19]; // offset 0x44, size 0x4C, Decl: speed/indep/src/feng/FEngine.h:116
-    FEObject *HeldButtons[19];      // offset 0x90, size 0x4C, Decl: speed/indep/src/feng/FEngine.h:117
-    FEButtonWrapMode WrapMode;      // offset 0xDC, size 0x4, Decl: speed/indep/src/feng/FEngine.h:118
+    u32 FastRep, FastRepCache; // offset 0x38, size 0x4, Decl: speed/indep/src/feng/FEngine.h:114
+    u32 PadHoldRegistered;     // offset 0x40, size 0x4, Decl: speed/indep/src/feng/FEngine.h:115
+    u32 HoldDecrement[19];     // offset 0x44, size 0x4C, Decl: speed/indep/src/feng/FEngine.h:116
+    FEObject *HeldButtons[19]; // offset 0x90, size 0x4C, Decl: speed/indep/src/feng/FEngine.h:117
+    FEButtonWrapMode WrapMode; // offset 0xDC, size 0x4, Decl: speed/indep/src/feng/FEngine.h:118
 
     u32 NumJoyPads;    // offset 0xE0, size 0x4, Decl: speed/indep/src/feng/FEngine.h:120
     u16 uGroupContext; // offset 0xE4, size 0x2, Decl: speed/indep/src/feng/FEngine.h:121

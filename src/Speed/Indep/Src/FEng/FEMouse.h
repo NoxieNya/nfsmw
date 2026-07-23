@@ -1,7 +1,7 @@
 #ifndef FEMOUSE_H_
 #define FEMOUSE_H_
 
-#include "types.h"
+#include "Speed/Indep/Src/FEng/FETypes.h"
 
 static const u32 FEMouseIndex_Left = 0;   // size: 0x4, Decl: speed/indep/src/feng/FEMouse.h:16
 static const u32 FEMouseIndex_Right = 1;  // size: 0x4, Decl: speed/indep/src/feng/FEMouse.h:17

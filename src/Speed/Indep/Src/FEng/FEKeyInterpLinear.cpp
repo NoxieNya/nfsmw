@@ -7,11 +7,12 @@ void FEInterpLinear(FEScript *pScript, u8 TrackNum, i32 tTime, void *pOutData) {
     FEKeyTrack *pTrack = &pScript->pTracks[TrackNum];
     u8 *pOutDataPtr = reinterpret_cast<u8 *>(pOutData);
 
-    u32 OutOffset = pTrack->LongOffset;
+    u32 OutOffset = pTrack->LongOffset * 4;
 
-    FEInterpLinear(pTrack, tTime, pOutDataPtr + OutOffset * sizeof(void *));
+    FEInterpLinear(pTrack, tTime, pOutDataPtr + OutOffset);
 }
 
+// UNSOLVED
 void FEInterpLinear(FEKeyTrack *pTrack, i32 tTime, void *pOutDataPtr) {
     u32 KeySize;
     float t = 0.0f;
@@ -212,6 +213,7 @@ void FELerpVector3(FEVector3 &v1, FEVector3 &v2, float t, FEVector3 *pOffset, FE
     pDest->z = pOffset->z + v1.z + (v2.z - v1.z) * t;
 }
 
+// UNSOLVED
 void FELerpQuaternion(FEQuaternion &q1, FEQuaternion &q2, float t, FEQuaternion *pOffset, FEQuaternion *pDest) {
     FEQuaternion q = q2;
     float Dot = QuaternionDot(q1, q);
@@ -229,6 +231,7 @@ void FELerpQuaternion(FEQuaternion &q1, FEQuaternion &q2, float t, FEQuaternion 
         float SinA = FEngSin(Angle);
         float SinAT = FEngSin(Angle * t);
         float SinAInvT = FEngSin(Angle * (1.0f - t));
+        FEQuaternion r;
 
         q = ((q1 * SinAInvT) + (q * SinAT)) * (1.0f / SinA);
     } else {
@@ -237,8 +240,7 @@ void FELerpQuaternion(FEQuaternion &q1, FEQuaternion &q2, float t, FEQuaternion 
         q = r;
     }
 
-    FEQuaternion qRet = *pOffset * q;
-    *pDest = qRet;
+    *pDest = *pOffset * q;
 }
 
 void FELerpColor(FEColor &c1, FEColor &c2, float t, FEColor *pOffset, FEColor *pDest) {

@@ -6,7 +6,7 @@
 
 void FEMsgTargetList::Allocate(u32 NewAlloc) {
     if (NewAlloc == 0) {
-        if (pTargets) {
+        if (pTargets != nullptr) {
             delete[] reinterpret_cast<char *>(pTargets);
         }
         pTargets = nullptr;
@@ -19,7 +19,7 @@ void FEMsgTargetList::Allocate(u32 NewAlloc) {
         } else {
             FEngMemCpy(pNewTargets, pTargets, Alloc * sizeof(FEObject *));
         }
-        if (pTargets) {
+        if (pTargets != nullptr) {
             delete[] reinterpret_cast<char *>(pTargets);
         }
         pTargets = pNewTargets;

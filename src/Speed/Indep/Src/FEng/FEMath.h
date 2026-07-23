@@ -254,7 +254,9 @@ class FEVector3 {
 
     FEVector3 CrossProduct(const FEVector3 &v) const {}
 
-    operator f32 *() {}
+    operator f32 *() {
+        return &x;
+    }
 };
 
 // total size: 0x10

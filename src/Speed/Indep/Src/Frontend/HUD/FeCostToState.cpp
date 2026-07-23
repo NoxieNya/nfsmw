@@ -1,17 +1,6 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeCostToState.hpp"
-
-#include "Speed/Indep/Src/FEng/FEString.h"
-
-void FEngSetScript(const char *pkg_name, unsigned int obj_hash, unsigned int script_hash, bool start_at_beginning);
-void FEngSetLanguageHash(FEString *text, unsigned int hash);
-int FEPrintf(FEString *text, const char *fmt, ...);
-FEString *FEngFindString(const char *pkg_name, int name_hash);
-
-extern const char lbl_803E48B4[];
-extern const char lbl_803E48C0[];
-extern const char lbl_803E48C8[];
-extern const char lbl_803E48CC[];
-extern const char lbl_803E48D4[];
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 
 CostToState::CostToState(UTL::COM::Object *pOutter, const char *pkg_name, int player_number)
     : HudElement(pkg_name, 0x1000), //
@@ -21,8 +10,8 @@ CostToState::CostToState(UTL::COM::Object *pOutter, const char *pkg_name, int pl
       mInPursuit(false),            //
       mNumFramesLeftToShow(0)       //
 {
-    RegisterGroup(FEHashUpper(lbl_803E48B4));
-    FEngSetScript(GetPackageName(), FEHashUpper(lbl_803E48B4), FEHashUpper(lbl_803E48C0), true);
+    RegisterGroup(FEHashUpper("CTS_GROUP"));
+    FEngSetScript(GetPackageName(), FEHashUpper("CTS_GROUP"), FEHashUpper("HIDE"), true);
     mDataCostToState = FEngFindString(GetPackageName(), 0x3FF5F33C);
     mDataTitle = FEngFindString(GetPackageName(), 0x64247241);
 }
@@ -35,29 +24,29 @@ void CostToState::Update(IPlayer *player) {
     if (mNumFramesLeftToShow >= 1) {
         mNumFramesLeftToShow = mNumFramesLeftToShow - 1;
         FEngSetLanguageHash(mDataTitle, 0x3DD874C5);
-        FEPrintf(mDataCostToState, lbl_803E48C8, mCostToState);
+        FEPrintf(mDataCostToState, "%$d", mCostToState);
         if (!mCostToStateOn) {
             mCostToStateOn = true;
-            FEngSetScript(GetPackageName(), FEHashUpper(lbl_803E48B4), FEHashUpper(lbl_803E48CC), true);
+            FEngSetScript(GetPackageName(), FEHashUpper("CTS_GROUP"), FEHashUpper("APPEAR"), true);
         }
     } else {
         if (mCostToStateOn) {
             mCostToStateOn = false;
-            FEngSetScript(GetPackageName(), FEHashUpper(lbl_803E48B4), FEHashUpper(lbl_803E48D4), true);
+            FEngSetScript(GetPackageName(), FEHashUpper("CTS_GROUP"), FEHashUpper("LEAVE"), true);
         }
     }
 }
 
-void CostToState::SetCostToState(int cost) {
+void CostToState::SetCostToState(int cts) {
     if (!mInPursuit) {
         return;
     }
-    if (cost > mCostToState) {
-        mCostToState = cost;
+    if (cts > mCostToState) {
+        mCostToState = cts;
         mNumFramesLeftToShow = 0x78;
         return;
     }
-    if (cost != 0) {
+    if (cts != 0) {
         return;
     }
     mCostToState = 0;

@@ -8,7 +8,7 @@ FEColor::FEColor(u32 Col) {
 }
 
 FEColor::operator u32() const {
-    u8 cr, cg, cb, ca;
+    u32 cr, cg, cb, ca;
 
     cr = FECLAMP(r);
     cg = FECLAMP(g);

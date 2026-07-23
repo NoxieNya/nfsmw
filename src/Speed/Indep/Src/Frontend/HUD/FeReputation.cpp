@@ -4,12 +4,6 @@
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
 
-// void FEngSetScript(FEObject *object, unsigned int script_hash, bool start_at_beginning);
-// bool FEngIsScriptSet(FEObject *obj, unsigned int script_hash);
-// void FEngSetLanguageHash(FEString *text, unsigned int hash);
-// int FEPrintf(FEString *text, const char *fmt, ...);
-// FEString *FEngFindString(const char *pkg_name, int name_hash);
-
 Reputation::Reputation(UTL::COM::Object *pOutter, const char *pkg_name, int player_number) : HudElement(pkg_name, 0x1000), IReputation(pOutter) {
     mReputationCareer = 0;
     mNumFramesLeftToShow = 0;

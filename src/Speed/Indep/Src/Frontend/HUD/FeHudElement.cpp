@@ -1,92 +1,93 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeHudElement.hpp"
 
 #include "Speed/Indep/Src/FEng/FEGroup.h"
+#include "Speed/Indep/Src/FEng/FEList.h"
 #include "Speed/Indep/Src/FEng/FEMultiImage.h"
+#include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/FEng/FEString.h"
 #include "Speed/Indep/Src/FEng/FEImage.h"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
 
-HudElement::HudElement(const char *pkg_name, unsigned long long mask)
+HudElement::HudElement(const char *pkg_name, HudFeaturesType mask)
     : pPackageName(pkg_name), //
       Mask(mask),             //
       CurrentHudFeatures(0),  //
       mCurrentlySetVisible(false) {}
 
-FEString *HudElement::RegisterString(unsigned int hash) {
-    FEString *string = FEngFindString(pPackageName, hash);
+FEString *HudElement::RegisterString(uint32 hash) {
+    FEString *str = FEngFindString(pPackageName, hash);
 
-    if (string != nullptr) {
-        Objects.AddTail(string);
+    if (str != nullptr) {
+        Objects.AddTail(str);
     }
 
-    return string;
+    return str;
 }
 
-FEImage *HudElement::RegisterImage(unsigned int hash) {
-    FEImage *image = FEngFindImage(pPackageName, hash);
+FEImage *HudElement::RegisterImage(uint32 hash) {
+    FEImage *img = FEngFindImage(pPackageName, hash);
 
-    if (image != nullptr) {
-        Objects.AddTail(image);
+    if (img != nullptr) {
+        Objects.AddTail(img);
     }
 
-    return image;
+    return img;
 }
 
-FEMultiImage *HudElement::RegisterMultiImage(unsigned int hash) {
-    FEMultiImage *image = static_cast<FEMultiImage *>(FEngFindObject(pPackageName, hash));
+FEMultiImage *HudElement::RegisterMultiImage(uint32 hash) {
+    FEMultiImage *img = static_cast<FEMultiImage *>(FEngFindObject(pPackageName, hash));
 
-    if (image != nullptr) {
-        Objects.AddTail(image);
+    if (img != nullptr) {
+        Objects.AddTail(img);
     }
 
-    return image;
+    return img;
 }
 
-FEObject *HudElement::RegisterObject(unsigned int hash) {
-    FEObject *object = FEngFindObject(pPackageName, hash);
+FEObject *HudElement::RegisterObject(uint32 hash) {
+    FEObject *obj = FEngFindObject(pPackageName, hash);
 
-    if (object != nullptr) {
-        Objects.AddTail(object);
+    if (obj != nullptr) {
+        Objects.AddTail(obj);
     }
 
-    return object;
+    return obj;
 }
 
-FEGroup *HudElement::RegisterGroup(unsigned int hash) {
-    FEGroup *group = static_cast<FEGroup *>(FEngFindGroup(pPackageName, hash));
+FEGroup *HudElement::RegisterGroup(uint32 hash) {
+    FEGroup *grp = static_cast<FEGroup *>(FEngFindGroup(pPackageName, hash));
 
-    if (group != nullptr) {
-        for (FEObject *object = group->GetFirstChild(); object != nullptr; object = static_cast<FEObject *>(object->FEMinNode::GetNext())) {
-            if (object->Type == FE_Group) {
-                RegisterGroup(object->NameHash);
+    if (grp != nullptr) {
+
+        FENode *pChild = reinterpret_cast<FENode *>(grp->GetFirstChild());
+        while (pChild != nullptr) {
+            FEObject *pChildObj = reinterpret_cast<FEObject *>(pChild);
+            if (pChildObj->Type == FE_Group) {
+                RegisterGroup(pChild->GetNameHash());
             } else {
-                Objects.AddTail(object);
+                Objects.AddTail(pChildObj);
             }
+            pChild = static_cast<FENode *>(pChild->GetNext());
         }
     }
 
-    return group;
+    return grp;
 }
 
-void HudElement::Toggle(unsigned long long hud_features) {
-    unsigned long long mask = Mask;
-    int is_visible = 0;
-
+void HudElement::Toggle(HudFeaturesType hud_features) {
     CurrentHudFeatures = hud_features;
 
-    if ((hud_features & mask) != 0) {
-        is_visible = 1;
-    }
+    bool onoff = (hud_features & Mask) != 0;
 
-    for (bPNode *node = static_cast<bPNode *>(Objects.GetHead()); node != Objects.EndOfList(); node = static_cast<bPNode *>(node->GetNext())) {
-        FEObject *object = static_cast<FEObject *>(node->GetpObject());
+    for (bPNode *n = static_cast<bPNode *>(Objects.GetHead()); n != Objects.EndOfList(); n = static_cast<bPNode *>(n->GetNext())) {
+        FEObject *obj = static_cast<FEObject *>(n->GetObject());
 
-        if (is_visible != 0) {
-            FEngSetVisible(object);
+        if (onoff) {
+            FEngSetVisible(obj);
         } else {
-            FEngSetInvisible(object);
+            FEngSetInvisible(obj);
         }
     }
 }

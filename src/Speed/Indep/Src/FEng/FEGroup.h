@@ -2,7 +2,6 @@
 #define FEGROUP_H_
 
 #include "FEObject.h"
-#include "types.h"
 
 // File: speed/indep/src/feng/FEGroup.h
 // total size: 0x6C

@@ -23,7 +23,6 @@
 #include "FEMsgTargetList.h"
 #include "FEWideString.h"
 #include "Speed/Indep/Src/FEng/FEngine.h"
-#include "types.h"
 
 // File: speed/indep/src/feng/FEPackageReader.cpp
 // total size: 0x8
@@ -72,7 +71,7 @@ FEPackage *FEPackageReader::Load(const void *pDataPtr, FEGameInterface *pInt, FE
         pPack = nullptr;
     }
 Error:
-    if (pPack) {
+    if (pPack != nullptr) {
         delete pPack;
     }
     pPack = nullptr;
@@ -102,7 +101,7 @@ u32 FEPackageReader::GetTypeSize(u32 TypeID) {
 
 bool FEPackageReader::ReadTypeSizes() {
     FEChunk *pSizesChunk = FindChild(pChunk, Chunk_FETypeSizes);
-    if (!pSizesChunk) {
+    if (pSizesChunk == nullptr) {
         return true;
     }
     TypeSizeCount = pSizesChunk->GetSize() / sizeof(FETypeSize);
@@ -134,10 +133,10 @@ bool FEPackageReader::ReadHeaderChunk() {
     return true;
 }
 
-// TODO: regswap
 bool FEPackageReader::ReadReferencedPackagesChunk() {
+    FENode *pNode;
     FEChunk *pRefChunk = FindChild(pChunk, Chunk_FELibraryList);
-    if (!pRefChunk) {
+    if (pRefChunk == nullptr) {
         return true;
     }
 
@@ -148,26 +147,26 @@ bool FEPackageReader::ReadReferencedPackagesChunk() {
     FEList &LibList = pPack->GetLibraryList();
     pData++;
     for (u32 i = 0; i < NumRefs; i++) {
-        FENode *pNode = new FENode();
+        pNode = new FENode();
         u32 Offset = FEngGetu32(pData[i]);
         pNode->SetName(pStrings + Offset);
         LibList.AddTail(pNode);
     }
-    FENode *pNode = static_cast<FENode *>(LibList.GetHead());
-    while (pNode) {
+    pNode = static_cast<FENode *>(LibList.GetHead());
+    while (pNode != nullptr) {
         FEPackage *pLibPack = pEngine->FindLibraryPackage(pNode->GetNameHash());
-        if (!pLibPack) {
+        if (pLibPack == nullptr) {
             bool bDeleteBlock;
             u8 *pBlockStart;
             u8 *pData = pInterface->GetPackageData(pNode->GetName(), &pBlockStart, bDeleteBlock);
-            if (!pData) {
+            if (pData == nullptr) {
                 return false;
             }
             pLibPack = pEngine->LoadPackage(pData, true);
-            if (bDeleteBlock && pBlockStart) {
+            if (bDeleteBlock && (pBlockStart != nullptr)) {
                 delete[] pBlockStart;
             }
-            if (!pLibPack) {
+            if (pLibPack == nullptr) {
                 return false;
             }
             pInterface->PackageWasLoaded(pLibPack);
@@ -183,7 +182,7 @@ bool FEPackageReader::ReadReferencedPackagesChunk() {
 
 bool FEPackageReader::ReadLibraryRefsChunk() {
     FEChunk *pRefChunk = FindChild(pChunk, Chunk_FELibRefList);
-    if (!pRefChunk) {
+    if (pRefChunk == nullptr) {
         return pPack->GetLibraryList().GetNumElements() == 0;
     }
     u32 Count = pRefChunk->GetSize() / sizeof(FELibraryRef);
@@ -205,7 +204,7 @@ bool FEPackageReader::ReadLibraryRefsChunk() {
 
 bool FEPackageReader::ReadResourceChunk() {
     FEChunk *pResChunk = FindChild(pChunk, Chunk_FEResList);
-    if (!pResChunk) {
+    if (pResChunk == nullptr) {
         return false;
     }
     FEChunk *pNameChunk = pResChunk->GetFirstChunk();
@@ -242,22 +241,23 @@ bool FEPackageReader::ReadResourceChunk() {
 
 bool FEPackageReader::ReadPackageResponseChunk() {
     FEChunk *pRespList = FindChild(pChunk, Chunk_FEPackageResponseList);
-    if (pRespList) {
+    if (pRespList != nullptr) {
         ReadMessageResponseTags(reinterpret_cast<FETag *>(pRespList->GetData()), pRespList->GetSize(), true);
     }
     return true;
 }
 
+// UNSOLVED
 bool FEPackageReader::ReadObjectChunk() {
     FEChunk *pObjList = FindChild(pChunk, Chunk_FEObjectList);
-    if (!pObjList) {
+    if (pObjList == nullptr) {
         return true;
     }
 
     FEChunk *pLast = pObjList->GetLastChunk();
     FEChunk *pObjChunk = pObjList->GetFirstChunk();
 
-    if (!pObjChunk || !pLast) {
+    if ((pObjChunk == nullptr) || (pLast == nullptr)) {
         return true;
     }
 
@@ -266,27 +266,24 @@ bool FEPackageReader::ReadObjectChunk() {
             if (pObjChunk >= pLast) {
                 return true;
             }
-            if (pObjChunk->GetID() == Chunk_FEButtonCount) {
-                u32 count = FEngGetu32(*reinterpret_cast<u32 *>(pObjChunk->GetData()));
-                ButtonCount = count;
-                pPack->ButtonMap.SetCount(count);
+            switch (pObjChunk->GetID()) {
+                case Chunk_FEButtonCount:
+                    ButtonCount = FEngGetu32(*reinterpret_cast<u32 *>(pObjChunk->GetData()));
+                    pPack->ButtonMap.SetCount(ButtonCount);
+                    break;
             }
             pObjChunk = pObjChunk->GetNext();
             continue;
         }
-        if (pObjChunk >= pLast) {
-            return true;
-        }
-        do {
 
+        while (pObjChunk < pLast) {
             FEChunk *pSubChunk = pObjChunk->GetFirstChunk();
             FEChunk *pLastSub = pObjChunk->GetLastChunk();
             pObj = nullptr;
             pParent = nullptr;
 
             while (pSubChunk < pLastSub) {
-                u32 subID = pSubChunk->GetID();
-                switch (subID) {
+                switch (pSubChunk->GetID()) {
                     case Chunk_FEObjectData:
                         if (!ReadObjectTags(reinterpret_cast<FETag *>(pSubChunk->GetData()), pSubChunk->GetSize())) {
                             return false;
@@ -302,32 +299,33 @@ bool FEPackageReader::ReadObjectChunk() {
                 pSubChunk = pSubChunk->GetNext();
             }
 
-            if (pObj) {
+            if (pObj != nullptr) {
                 if (pObj->Type == FE_List) {
                     static_cast<FEListBox *>(pObj)->RecalculateCummulative();
                 } else if (pObj->Type == FE_CodeList) {
-                    static_cast<FECodeListBox *>(pObj)->FillAllCells();
+                    FECodeListBox *pList = static_cast<FECodeListBox *>(pObj);
+                    pList->FillAllCells();
                 }
 
                 FEScript *pScript = pObj->GetFirstScript();
-                while (pScript) {
-                    if (pScript->pChainTo) {
+                while (pScript != nullptr) {
+                    if (pScript->pChainTo != nullptr) {
                         pScript->pChainTo = pObj->FindScript(reinterpret_cast<u32>(pScript->pChainTo)); // TODO: how is this not a bug?
                     }
                     pScript = pScript->GetNext();
                 }
 
-                FEScript *pDefaultScript = pObj->FindScript(FEHash_Init);
-                pObj->SetCurrentScript(pDefaultScript);
-                pDefaultScript->CurTime = 0;
+                pScript = pObj->FindScript(FEHash_Init);
+                pObj->SetCurrentScript(pScript);
+                pScript->CurTime = 0;
 
                 if (!bIsLibrary) {
-                    for (u8 i = 0; i < pDefaultScript->TrackCount; i++) {
-                        FEKeyInterp(pDefaultScript, i, 0, pObj);
+                    for (u8 i = 0; i < pScript->TrackCount; i++) {
+                        FEKeyInterp(pScript, i, 0, pObj);
                     }
                 }
 
-                if (pParent) {
+                if (pParent != nullptr) {
                     pParent->AddObject(pObj);
                 } else {
                     pPack->AddObject(pObj);
@@ -335,14 +333,14 @@ bool FEPackageReader::ReadObjectChunk() {
             }
 
             pObjChunk = pObjChunk->GetNext();
-        } while (pObjChunk < pLast);
+        }
         return true;
     }
 }
 
-FEObject *FEPackageReader::CreateObject(u32 ObjectType) {
+FEObject *FEPackageReader::CreateObject(u32 Type) {
     FEObject *pObject;
-    switch (ObjectType) {
+    switch (Type) {
         case FE_String:
             pObject = FNEW FEString();
             break;
@@ -380,14 +378,14 @@ FEObject *FEPackageReader::CreateObject(u32 ObjectType) {
             pObject = FNEW FEObject();
             break;
     }
-    pObject->Type = static_cast<FEObjType>(ObjectType);
-    u32 Size = GetTypeSize(ObjectType);
+    pObject->Type = static_cast<FEObjType>(Type);
+    u32 Size = GetTypeSize(Type);
     pObject->SetDataSize(Size);
     return pObject;
 }
 
 bool FEPackageReader::ReadObjectTags(FETag *pTag, u32 Length) {
-    FETag *pEnd = reinterpret_cast<FETag *>(reinterpret_cast<char *>(pTag) + Length);
+    FETag *pEnd = reinterpret_cast<FETag *>(reinterpret_cast<u8 *>(pTag) + Length);
     bIsReference = false;
 
     while (pTag < pEnd) {
@@ -405,13 +403,13 @@ bool FEPackageReader::ReadObjectTags(FETag *pTag, u32 Length) {
                 break;
             case Tag_FEObjProperties:
                 pObj->GUID = pTag->Getu32(0);
-                pObj->SetNameHash(pTag->Getu32(1));
+                pObj->NameHash = pTag->Getu32(1);
                 pObj->Flags = pTag->Getu32(2);
-                pObj->ResourceIndex = static_cast<u16>(pTag->Getu32(3));
+                pObj->ResourceIndex = pTag->Getu32(3);
 
                 if (pObj->Flags & FF_UsesLibraryObject) {
                     if (!FindReferencedObject(pObj->GUID, &pRefObj, &pRefPack)) {
-                        if (pObj) {
+                        if (pObj != nullptr) {
                             delete pObj;
                         }
                         pObj = nullptr;
@@ -439,14 +437,14 @@ bool FEPackageReader::ReadObjectTags(FETag *pTag, u32 Length) {
                     pCopy->Handle = pObj->Handle;
                     pCopy->UserParam = pObj->UserParam;
 
-                    if (pObj) {
+                    if (pObj != nullptr) {
                         delete pObj;
                     }
                     pObj = pCopy;
 
                     FEScript *pScript = pObj->GetFirstScript();
-                    while (pScript) {
-                        if (pScript->pChainTo) {
+                    while (pScript != nullptr) {
+                        if (pScript->pChainTo != nullptr) {
                             pScript->pChainTo = reinterpret_cast<FEScript *>(pScript->pChainTo->ID);
                         }
                         pScript = pScript->GetNext();
@@ -459,20 +457,20 @@ bool FEPackageReader::ReadObjectTags(FETag *pTag, u32 Length) {
                 }
                 break;
             case Tag_FEObjParentGUID:
-                if (!pLastParent || pLastParent->GUID != pTag->Getu32(0)) {
+                if ((pLastParent == nullptr) || pLastParent->GUID != pTag->Getu32(0)) {
                     pLastParent = static_cast<FEGroup *>(pPack->FindObjectByGUID(pTag->Getu32(0)));
                 }
                 pParent = pLastParent;
                 break;
             case Tag_FEObjStaticAnimData: {
-                u32 Size = pTag->GetSize();
-                for (u32 i = 0; i < Size / sizeof(u32); i++) {
+                u32 Size = pTag->GetSize() / sizeof(u32);
+                for (u32 i = 0; i < Size; i++) {
                     reinterpret_cast<u32 *>(pObj->pData)[i] = pTag->Getu32(i);
                 }
                 break;
             }
             default:
-                if (pObj) {
+                if (pObj != nullptr) {
                     switch (pObj->Type) {
                         case FE_String:
                             ProcessStringTag(pTag);
@@ -507,16 +505,16 @@ void FEPackageReader::ProcessStringTag(FETag *pTag) {
         case Tag_FEObjStringBufLength:
             pString->string.SetLength(pTag->Getu32(0));
             break;
-        case Tag_FEObjStringText:
+        case Tag_FEObjStringText: {
             pString->string = reinterpret_cast<i16 *>(pTag->Data());
-            {
-                i16 *ptr = pString->string.mpsString;
-                while (*ptr) {
-                    *ptr = FEngGeti16(*ptr);
-                    ptr++;
-                }
+            i16 *ptr = pString->string.mpsString;
+            while (*ptr) {
+                *ptr = FEngGeti16(*ptr);
+                ptr++;
             }
+
             break;
+        }
         case Tag_FEObjStringJustification:
             pString->Format = pTag->Getu32(0);
             break;
@@ -539,10 +537,12 @@ void FEPackageReader::ProcessStringTag(FETag *pTag) {
 
 void FEPackageReader::ProcessImageTag(FETag *pTag) {
     FEImage *pImage = static_cast<FEImage *>(pObj);
-    if (pTag->GetID() != Tag_FEObjImageFlags) {
-        return;
+
+    switch (pTag->GetID()) {
+        case Tag_FEObjImageFlags:
+            pImage->ImageFlags = pTag->Getu32(0);
+            break;
     }
-    pImage->ImageFlags = pTag->Getu32(0);
 }
 
 void FEPackageReader::ProcessMultiImageTag(FETag *pTag) {
@@ -575,6 +575,7 @@ void FEPackageReader::ProcessListBoxTag(FETag *pTag) {
     return;
 #else
     FEListBox *pList = static_cast<FEListBox *>(pObj);
+    FEListEntryData *pRowColData;
     switch (pTag->GetID()) {
         case Tag_FEObjListDimesions:
             pList->SetNumColumns(pTag->Getu32(0));
@@ -604,19 +605,15 @@ void FEPackageReader::ProcessListBoxTag(FETag *pTag) {
         }
         case Tag_FEObjListColumnData:
             CurListCol++;
-            {
-                FEListEntryData *pRowColData = pList->GetPColumnData(CurListCol);
-                pRowColData->fValue = pTag->Getf32(0);
-                pRowColData->ulJustification = pTag->Getu32(1);
-            }
+            pRowColData = &pList->mpstColumnData[CurListCol];
+            pRowColData->fValue = pTag->Getf32(0);
+            pRowColData->ulJustification = pTag->Getu32(1);
             break;
         case Tag_FEObjListRowData:
             CurListRow++;
-            {
-                FEListEntryData *pRowColData = pList->GetPRowData(CurListRow);
-                pRowColData->fValue = pTag->Getf32(0);
-                pRowColData->ulJustification = pTag->Getu32(1);
-            }
+            pRowColData = &pList->mpstRowData[CurListRow];
+            pRowColData->fValue = pTag->Getf32(0);
+            pRowColData->ulJustification = pTag->Getu32(1);
             break;
         case Tag_FEObjListCellColor: {
             CurListCell++;
@@ -657,6 +654,7 @@ void FEPackageReader::ProcessListBoxTag(FETag *pTag) {
 #endif
 }
 
+// UNSOLVED (switch)
 void FEPackageReader::ProcessCodeListBoxTag(FETag *pTag) {
 #ifdef EA_BUILD_A124
     (void)pTag;
@@ -700,6 +698,7 @@ void FEPackageReader::ProcessCodeListBoxTag(FETag *pTag) {
 #endif
 }
 
+// UNSOLVED
 bool FEPackageReader::ReadScriptTags(FETag *pTag, u32 Length) {
     FETag *pEnd = reinterpret_cast<FETag *>(reinterpret_cast<unsigned char *>(pTag) + Length);
     u32 CurTrack = static_cast<u32>(-1);
@@ -719,7 +718,7 @@ bool FEPackageReader::ReadScriptTags(FETag *pTag, u32 Length) {
                 RunningTrackOffset = 0;
                 break;
             case Tag_FEScriptHeader:
-                if (!pScript) {
+                if (pScript == nullptr) {
                     pScript = new FEScript();
                     pScript->CurTime = 0;
                     CurTrack = static_cast<u32>(-1);
@@ -741,7 +740,7 @@ bool FEPackageReader::ReadScriptTags(FETag *pTag, u32 Length) {
                 pScript->Length = pTag->Getu32(0);
                 break;
             case Tag_FEScriptFlags:
-                if (pScript) {
+                if (pScript != nullptr) {
                     pScript->Flags = pTag->Getu32(0);
                 }
                 break;
@@ -760,18 +759,18 @@ bool FEPackageReader::ReadScriptTags(FETag *pTag, u32 Length) {
                 pTrack->LongOffset = pTag->Getu16(0) >> 8;
                 break;
             case Tag_FEScriptTrackIndex: {
-                if (pScript) {
+                if (pScript != nullptr) {
                     u16 Index = pTag->Getu16(0);
                     pTrack = pScript->FindTrack(static_cast<FEKeyTrack_Indices>(Index));
-                    if (!pTrack) {
+                    if (pTrack == nullptr) {
                         FEKeyTrack *pNewArray = new FEKeyTrack[pScript->TrackCount + 1];
                         FETypeNode *pTypeNode = pEngine->GetTypeLib().FindType(pObj->Type);
                         FEFieldNode *pField = pTypeNode->GetField(static_cast<int>(Index));
                         u32 SrcIndex = 0;
                         FEKeyTrack *pSrcTrack = pScript->pTracks;
                         for (u32 DestIndex = 0; DestIndex <= pScript->TrackCount; DestIndex++) {
-                            if (pSrcTrack && SrcIndex < pScript->TrackCount) {
-                                if (pField) {
+                            if ((pSrcTrack != nullptr) && SrcIndex < pScript->TrackCount) {
+                                if (pField != nullptr) {
                                     int srcLongOffset = pSrcTrack[SrcIndex].LongOffset;
                                     int fieldOffset = static_cast<int>(pField->GetOffset());
                                     if (fieldOffset < 0) {
@@ -803,12 +802,12 @@ bool FEPackageReader::ReadScriptTags(FETag *pTag, u32 Length) {
                 break;
             }
             case Tag_FEScriptTrackInterpType:
-                if (pScript) {
+                if (pScript != nullptr) {
                     pTrack->InterpType = static_cast<u8>(pTag->Getu16(0) >> 8);
                 }
                 break;
             case Tag_FEScriptTrackInterpAction:
-                if (pScript) {
+                if (pScript != nullptr) {
                     pTrack->InterpAction = static_cast<u8>(pTag->Getu16(0) >> 8);
                 }
                 break;
@@ -890,23 +889,8 @@ bool FEPackageReader::ReadScriptTags(FETag *pTag, u32 Length) {
     return true;
 }
 
-bool FEPackageReader::FindReferencedObject(u32 ObjGUID, FEObject **ppRefObj, FEPackage **ppRefPack) {
-    *ppRefObj = nullptr;
-    *ppRefPack = nullptr;
-    FELibraryRef *pRef = pPack->FindLibraryReference(ObjGUID);
-    if (!pRef) {
-        return false;
-    }
-    *ppRefPack = pEngine->FindLibraryPackage(pRef->PackNameHash);
-    if (!*ppRefPack) {
-        return false;
-    }
-    *ppRefObj = (*ppRefPack)->FindObjectByGUID(pRef->LibGUID);
-    return *ppRefObj != nullptr;
-}
-
 bool FEPackageReader::ReadMessageResponseTags(FETag *pTag, u32 Length, bool bPackage) {
-    FETag *pEnd = reinterpret_cast<FETag *>(reinterpret_cast<char *>(pTag) + Length);
+    FETag *pEnd = reinterpret_cast<FETag *>(reinterpret_cast<u8 *>(pTag) + Length);
     FEMessageResponse *pMsgResp = nullptr;
     FEResponse *pResp = nullptr;
     int CurResponse = -1;
@@ -918,7 +902,7 @@ bool FEPackageReader::ReadMessageResponseTags(FETag *pTag, u32 Length, bool bPac
                 if (!bPackage && bIsReference) {
                     pMsgResp = pObj->FindResponse(MsgID);
                 }
-                if (!pMsgResp) {
+                if (pMsgResp == nullptr) {
                     pMsgResp = new FEMessageResponse();
                     pMsgResp->SetMsgID(MsgID);
                     if (bPackage) {
@@ -941,7 +925,7 @@ bool FEPackageReader::ReadMessageResponseTags(FETag *pTag, u32 Length, bool bPac
                 pResp->SetID(pTag->Getu32(0));
                 break;
             case Tag_FEResponseUINT:
-                pResp->ResponseParam = pTag->Getu32(0);
+                pResp->SetParam(pTag->Getu32(0));
                 break;
             case Tag_FEResponseString:
                 pResp->SetParam(reinterpret_cast<const char *>(pTag->Data()));
@@ -956,11 +940,14 @@ bool FEPackageReader::ReadMessageResponseTags(FETag *pTag, u32 Length, bool bPac
 }
 
 bool FEPackageReader::ReadMessageTargetListChunk() {
+    FETag *pTag;
+    FETag *pLast;
     FEChunk *pTargetsChunk = FindChild(pChunk, Chunk_FEMessageTargetList);
-    if (pTargetsChunk) {
-        FETag *pTag = reinterpret_cast<FETag *>(pTargetsChunk->GetData());
-        FETag *pLast = reinterpret_cast<FETag *>(reinterpret_cast<char *>(pTag) + pTargetsChunk->GetSize());
-        u32 CurMsgTarg = 0;
+    u32 CurMsgTarg;
+    if (pTargetsChunk != nullptr) {
+        pTag = reinterpret_cast<FETag *>(pTargetsChunk->GetData());
+        pLast = reinterpret_cast<FETag *>(reinterpret_cast<char *>(pTag) + pTargetsChunk->GetSize());
+        CurMsgTarg = 0;
         while (pTag < pLast) {
             switch (pTag->GetID()) {
                 case Tag_FEMsgTargetCount: {
@@ -971,9 +958,10 @@ bool FEPackageReader::ReadMessageTargetListChunk() {
                 }
                 case Tag_FEMsgTarget: {
                     u32 NumTargets = (pTag->GetSize() / 4) - 1;
-                    pPack->pMsgTargets[CurMsgTarg].SetMsgID(pTag->Getu32(0));
-                    pPack->pMsgTargets[CurMsgTarg].Allocate(NumTargets);
                     u32 *pData = reinterpret_cast<u32 *>(pTag->Data());
+                    pPack->pMsgTargets[CurMsgTarg].SetMsgID(FEngGetu32(*pData++));
+                    pPack->pMsgTargets[CurMsgTarg].Allocate(NumTargets);
+                    u32 MsgID;
                     for (u32 i = 0; i < NumTargets; i++) {
                         FEObject *pTarg = pPack->FindObjectByGUID(FEngGetu32(pData[i]));
                         pPack->pMsgTargets[CurMsgTarg].AppendTarget(pTarg);
@@ -986,4 +974,19 @@ bool FEPackageReader::ReadMessageTargetListChunk() {
         }
     }
     return true;
+}
+
+bool FEPackageReader::FindReferencedObject(u32 ObjGUID, FEObject **pRefObj, FEPackage **pRefPack) {
+    *pRefObj = nullptr;
+    *pRefPack = nullptr;
+    FELibraryRef *pRef = pPack->FindLibraryReference(ObjGUID);
+    if (pRef == nullptr) {
+        return false;
+    }
+    *pRefPack = pEngine->FindLibraryPackage(pRef->PackNameHash);
+    if (*pRefPack == nullptr) {
+        return false;
+    }
+    *pRefObj = (*pRefPack)->FindObjectByGUID(pRef->LibGUID);
+    return *pRefObj != nullptr;
 }

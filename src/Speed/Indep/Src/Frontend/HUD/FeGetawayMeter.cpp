@@ -5,11 +5,9 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeHudElement.hpp"
 
 GetAwayMeter::GetAwayMeter(UTL::COM::Object *pOutter, const char *pkg_name, int player_number)
-    : HudElement(pkg_name, 0x200), IGetAwayMeter(pOutter)
-
-{
+    : HudElement(pkg_name, 0x200), IGetAwayMeter(pOutter), mGetawayDistance(0) {
     mGetawayDistance = 0;
-    reinterpret_cast<HudElement *>(this)->RegisterGroup(FEHashUpper("GetawayDistanceMeter"));
+    this->RegisterGroup(FEHashUpper("GetawayDistanceMeter"));
     mpDataDistanceBar = FEngFindObject(pkg_name, FEHashUpper("Getaway_Distance_Bar"));
     mpDataDistanceString = static_cast<FEString *>(FEngFindObject(pkg_name, FEHashUpper("Distance_Number")));
 }

@@ -21,9 +21,7 @@ class FEImage : public FEObject {
     FEImage() : FEObject(), ImageFlags(0) { // Decl: speed/indep/src/feng/feimage.h:48
         Type = FE_Image;
     }
-    FEImage(const FEImage &Object, bool bReference) : FEObject(Object, bReference), ImageFlags(Object.ImageFlags) {
-        Type = FE_Image;
-    }
+    FEImage(const FEImage &Object, bool bReference) : FEObject(Object, bReference), ImageFlags(Object.ImageFlags) {}
     ~FEImage() override {} // Decl: speed/indep/src/feng/feimage.h:50
 
     FEImageData *GetImageData() { // Decl: speed/indep/src/feng/feimage.h:52

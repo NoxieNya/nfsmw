@@ -119,16 +119,16 @@ inline i32 FEngGeti32(i32 Val) {
 }
 
 inline u16 FEngGetu16(u16 Val) {
-    return static_cast<u16>((Val >> 8) | (Val << 8));
+    return ((Val & 0xFF00) >> 8) | (Val << 8);
 }
 
-inline u16 FEngGeti16(i16 Val) {
-    return static_cast<i16>((Val >> 8) | (Val << 8));
+inline i16 FEngGeti16(i16 Val) {
+    return ((Val & 0xFF00) >> 8) | (Val << 8);
 }
 
 inline float FEngGetf32(float &Val) {
-    u32 Temp = FEngGetu32(*reinterpret_cast<u32 *>(&Val));
-    return *reinterpret_cast<float *>(&Temp);
+    u32 Temp = FEngGetu32(reinterpret_cast<u32 &>(Val));
+    return reinterpret_cast<float &>(Temp);
 }
 
 #endif

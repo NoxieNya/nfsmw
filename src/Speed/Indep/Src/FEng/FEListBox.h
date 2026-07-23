@@ -68,7 +68,7 @@ struct FEListBoxCell {
     };
     _u u; // offset 0x20, size 0x10, Decl: speed/indep/src/feng/FEListBox.h:101
 
-    FEListBoxCell() : ulColor(0), stScale(1.0f, 1.0f) { // Decl: speed/indep/src/feng/FEListBox.h:103
+    FEListBoxCell() : ulColor(0), stScale(1.0f) { // Decl: speed/indep/src/feng/FEListBox.h:103
         stResource.Handle = 0;
         stResource.UserParam = 0;
         stResource.ResourceIndex = 0;

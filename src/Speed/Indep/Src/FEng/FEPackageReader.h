@@ -25,7 +25,7 @@ class FETag {
     }
 
     u8 *Data() { // Decl: speed/indep/src/feng/FEPackageReader.h:40
-        return reinterpret_cast<u8 *>(this) + 4;
+        return reinterpret_cast<u8 *>(this) + sizeof(this);
     }
     u32 Getu32(u32 Index) {
         return FEngGetu32(reinterpret_cast<u32 *>(Data())[Index]);
@@ -44,7 +44,7 @@ class FETag {
     }
 
     FETag *Next() { // Decl: speed/indep/src/feng/FEPackageReader.h:48
-        return reinterpret_cast<FETag *>(Data() + GetSize());
+        return reinterpret_cast<FETag *>(reinterpret_cast<u8 *>(this) + sizeof(this) + GetSize());
     }
 };
 

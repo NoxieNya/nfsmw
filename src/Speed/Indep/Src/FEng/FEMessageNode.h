@@ -11,7 +11,7 @@
 class FEMessageNode : public FEMinNode {
   public:
     FEMessageNode() {}
-    ~FEMessageNode() override {} // Decl: speed/indep/src/feng/FEMessageNode.h:21
+    // ~FEMessageNode() override {} // Decl: speed/indep/src/feng/FEMessageNode.h:21
 
     FEObject *pMsgFrom;      // offset 0xC, size 0x4, Decl: speed/indep/src/feng/FEMessageNode.h:23
     FEObject *pMsgTarget;    // offset 0x10, size 0x4, Decl: speed/indep/src/feng/FEMessageNode.h:24

@@ -13,7 +13,9 @@ class FEMovie : public FEObject {
     FEMovie() : FEObject(), CurTime(0) { // Decl: speed/indep/src/feng/FEMovie.h:30
         Type = FE_Movie;
     }
-    FEMovie(const FEMovie &Object, bool bReference) {}
+    FEMovie(const FEMovie &Object, bool bReference) : FEObject(Object, bReference) {
+        CurTime = Object.CurTime;
+    }
     ~FEMovie() override {}
 
     FEObject *Clone(bool bReference) override { // Decl: speed/indep/src/feng/FEMovie.h:34

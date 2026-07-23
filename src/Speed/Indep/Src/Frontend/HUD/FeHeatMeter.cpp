@@ -1,32 +1,13 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeHeatMeter.hpp"
-
-#include "Speed/Indep/Src/FEng/FEMultiImage.h"
-#include "Speed/Indep/Src/FEng/FEString.h"
-
-void FEngSetMultiImageRot(FEMultiImage *image, float angle_degrees);
-void FEngSetScript(FEObject *object, unsigned int script_hash, bool start_at_beginning);
-bool FEngIsScriptSet(FEObject *obj, unsigned int script_hash);
-void FEngSetVisible(FEObject *obj);
-void FEngSetInvisible(FEObject *obj);
-int FEPrintf(const char *pkg_name, int obj_hash, const char *fmt, ...);
-FEObject *FEngFindObject(const char *pkg_name, unsigned int obj_hash);
-
-extern const float lbl_803E4888;
-extern const char lbl_803E488C[];
-extern const float lbl_803E4890;
-extern const float lbl_803E4898;
-extern const float lbl_803E48A0;
-extern const float lbl_803E48A4;
-extern const float lbl_803E48A8;
-extern const float lbl_803E48AC;
-extern const float lbl_803E48B0;
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 
 HeatMeter::HeatMeter(UTL::COM::Object *pOutter, const char *pkg_name, int player_number)
-    : HudElement(pkg_name, 0x40004000ULL), //
-      IHeatMeter(pOutter),                 //
-      mHeatChanged(true),                  //
-      mPursuitHeat(lbl_803E4888),          //
-      mVehicleHeat(lbl_803E4888)           //
+    : HudElement(pkg_name, 0x40004000), //
+      IHeatMeter(pOutter),              //
+      mHeatChanged(true),               //
+      mPursuitHeat(0.0f),               //
+      mVehicleHeat(0.0f)                //
 {
     RegisterGroup(0xC46A80A9);
     mpDataHeatMultiplier = FEngFindObject(GetPackageName(), 0x7F91DA62);
@@ -35,58 +16,71 @@ HeatMeter::HeatMeter(UTL::COM::Object *pOutter, const char *pkg_name, int player
     mpHeatMeterBar2 = RegisterMultiImage(0x4B2CBE1B);
 }
 
+// UNSOLVED
 void HeatMeter::Update(IPlayer *player) {
-    mHeatChanged = false;
-    float heatToUse = mVehicleHeat;
-    if (mPursuitHeat > lbl_803E4890) {
-        heatToUse = mPursuitHeat;
-    }
+    {
+        mHeatChanged = false;
+        float heatToUse = mVehicleHeat;
+        if (mPursuitHeat > 0.0f) {
+            heatToUse = mPursuitHeat;
+        }
 
-    const int heatIntegerPart = static_cast<int>(heatToUse);
-    const float heatDecimalPart = heatToUse - static_cast<float>(heatIntegerPart);
+        const int heatIntegerPart = static_cast<int>(heatToUse);
+        const float heatDecimalPart = heatToUse - static_cast<float>(heatIntegerPart);
 
-    float heatDecimalPartToUse = heatDecimalPart;
-    if (heatDecimalPart > lbl_803E48A0) {
-        heatDecimalPartToUse = lbl_803E48A0;
-    }
-    FEngSetMultiImageRot(mpHeatMeterBar, (heatDecimalPartToUse + heatDecimalPartToUse) * lbl_803E48A8 + lbl_803E48A4);
+        {
+            float heatDecimalPartToUse = heatDecimalPart > 0.5f ? 0.5f : heatDecimalPart; // = heatDecimalPart;
+            const float min_angle = -175.0f;
+            const float max_angle = 175.0f;
+            const float min_heat = 0;
+            const float max_heat = 0;
+            const float frac = 0;
+            const float angle = 0;
 
-    if (heatDecimalPartToUse < heatDecimalPart) {
-        heatDecimalPartToUse = heatDecimalPart - heatDecimalPartToUse;
-    } else {
-        heatDecimalPartToUse = lbl_803E4890;
-    }
-    FEngSetMultiImageRot(mpHeatMeterBar2, (heatDecimalPartToUse + heatDecimalPartToUse) * lbl_803E48A8 + lbl_803E48A4);
+            FEngSetMultiImageRot(mpHeatMeterBar, (heatDecimalPartToUse * 2) * -175.0f + 175.0f);
+        }
+        {
+            float heatDecimalPartToUse = heatDecimalPart > 0.5f ? heatDecimalPart - 0.5f : heatDecimalPart;
+            const float min_angle = -175.0f;
+            const float max_angle = 175.0f;
+            const float min_heat = 0;
+            const float max_heat = 0;
+            const float frac = 0;
+            const float angle = 0;
 
-    if (heatToUse >= lbl_803E48AC) {
-        if (heatDecimalPart < lbl_803E48A0) {
-            if (!FEngIsScriptSet(mpDataHeatMultiplier, 0x41E1FEDC)) {
-                FEngSetScript(mpDataHeatMultiplier, 0x41E1FEDC, true);
+            FEngSetMultiImageRot(mpHeatMeterBar2, (heatDecimalPartToUse * 2) * -175.0f + 175.0f);
+        }
+
+        if (heatToUse >= 1.0f) {
+            if (heatDecimalPart < 0.5f) {
+                if (!FEngIsScriptSet(mpDataHeatMultiplier, 0x41E1FEDC)) {
+                    FEngSetScript(mpDataHeatMultiplier, 0x41E1FEDC, true);
+                }
+            } else {
+                if (!FEngIsScriptSet(mpDataHeatMultiplier, 0x1744B3)) {
+                    FEngSetScript(mpDataHeatMultiplier, 0x1744B3, true);
+                }
+            }
+            FEPrintf(GetPackageName(), 0x7F91DA62, "x%d", heatIntegerPart);
+            FEngSetVisible(mpDataHeatMultiplier);
+        } else {
+            FEngSetInvisible(mpDataHeatMultiplier);
+        }
+
+        if (heatToUse > 0.0f) {
+            if (heatDecimalPart > 0.75f) {
+                if (!FEngIsScriptSet(mpDataHeatMeterIcon, 0xDA600155)) {
+                    FEngSetScript(mpDataHeatMeterIcon, 0xDA600155, true);
+                }
+            } else {
+                if (!FEngIsScriptSet(mpDataHeatMeterIcon, 0x77031C70)) {
+                    FEngSetScript(mpDataHeatMeterIcon, 0x77031C70, true);
+                }
             }
         } else {
-            if (!FEngIsScriptSet(mpDataHeatMultiplier, 0x1744B3)) {
-                FEngSetScript(mpDataHeatMultiplier, 0x1744B3, true);
+            if (!FEngIsScriptSet(mpDataHeatMeterIcon, 0x1744B3)) {
+                FEngSetScript(mpDataHeatMeterIcon, 0x1744B3, true);
             }
-        }
-        FEPrintf(GetPackageName(), 0x7F91DA62, lbl_803E488C, heatIntegerPart);
-        FEngSetVisible(mpDataHeatMultiplier);
-    } else {
-        FEngSetInvisible(mpDataHeatMultiplier);
-    }
-
-    if (heatToUse > lbl_803E4890) {
-        if (heatDecimalPart > lbl_803E48B0) {
-            if (!FEngIsScriptSet(mpDataHeatMeterIcon, 0xDA600155)) {
-                FEngSetScript(mpDataHeatMeterIcon, 0xDA600155, true);
-            }
-        } else {
-            if (!FEngIsScriptSet(mpDataHeatMeterIcon, 0x77031C70)) {
-                FEngSetScript(mpDataHeatMeterIcon, 0x77031C70, true);
-            }
-        }
-    } else {
-        if (!FEngIsScriptSet(mpDataHeatMeterIcon, 0x1744B3)) {
-            FEngSetScript(mpDataHeatMeterIcon, 0x1744B3, true);
         }
     }
 }

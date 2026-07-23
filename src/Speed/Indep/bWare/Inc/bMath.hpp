@@ -222,15 +222,11 @@ inline float bCos(float angle) {
 
 inline float bRadToDeg(float radians) {}
 
-inline float bAngToRad(short angle) {}
-
-inline float bAngToDeg(short angle) {}
-
 inline int bEqual(float a, float b, float epsilon) {
     return static_cast<int>(bAbs(a - b) <= epsilon);
 }
 
-inline int bGetTablePos(short *table, int num_elements, short element) {
+inline int bGetTablePos(int16 *table, int num_elements, int16 element) {
     for (int n = 0; n < num_elements; n++) {
         if (table[n] == element) {
             return n;
@@ -240,7 +236,7 @@ inline int bGetTablePos(short *table, int num_elements, short element) {
     return -1;
 }
 
-inline bool bIsInTable(short *table, int num_elements, short element) {
+inline bool bIsInTable(int16 *table, int num_elements, int16 element) {
     return bGetTablePos(table, num_elements, element) >= 0;
 }
 

@@ -5,6 +5,7 @@
 #include "FEngStandard.h"
 #include "FEMessageResponse.h"
 #include "Speed/Indep/Src/FEng/FEColoredImage.h"
+#include "Speed/Indep/Src/FEng/FEKeyTrack.h"
 #include "Speed/Indep/Src/FEng/FEMath.h"
 #include "Speed/Indep/Src/FEng/FEngine.h"
 
@@ -15,15 +16,11 @@ static const float PositionEpsilon = 0.000001f; // size: 0x4, Decl: speed/indep/
 static const float SizeEpsilon = 0.000001f;     // size: 0x4, Decl: speed/indep/src/feng/FEObject.cpp:24
 static const i32 ColorEpsilon = 1;              // size: 0x4, Decl: speed/indep/src/feng/FEObject.cpp:25
 
-bool Close(float x, float y, float epsilon) {
-    bool result = false;
-    if (x + epsilon >= y) {
-        result = x - epsilon <= y;
-    }
-    return result;
+static bool Close(float x, float y, float epsilon) {
+    return x + epsilon >= y && x - epsilon <= y;
 }
 
-bool Close(i32 x, i32 y, i32 epsilon) {
+static bool Close(i32 x, i32 y, i32 epsilon) {
     return x + epsilon >= y && x - epsilon <= y;
 }
 
@@ -71,6 +68,7 @@ FEObject::FEObject()
     GUID = FEngine::GetNextGUID();
 }
 
+// UNSOLVED
 FEObject::FEObject(const FEObject &Object, bool bReference)
     : NameHash(0),    //
       pName(nullptr), //
@@ -88,45 +86,47 @@ FEObject::FEObject(const FEObject &Object, bool bReference)
     ResourceIndex = Object.ResourceIndex;
     Handle = Object.Handle;
     SetName(Object.pName);
-
+    FEScript *pSrcScript;
+    FEScript *pScript;
     FEMessageResponse *pSrcResp = static_cast<FEMessageResponse *>(Object.Responses.GetHead());
-    while (pSrcResp) {
-        FEMessageResponse *pNewResp = new FEMessageResponse();
-        unsigned long count = pSrcResp->GetCount();
-        pNewResp->SetCount(count);
-        pNewResp->MsgID = pSrcResp->MsgID;
-        for (unsigned long i = 0; i < count; i++) {
-            pNewResp->pResponseList[i] = pSrcResp->pResponseList[i];
+    FEMessageResponse *pResp = static_cast<FEMessageResponse *>(Object.Responses.GetHead());
+    while (pSrcResp != nullptr) {
+        pResp = new FEMessageResponse();
+        u32 i = 0;
+        u32 Count = pSrcResp->GetCount();
+        pResp->SetCount(Count);
+        pResp->SetMsgID(pSrcResp->GetMsgID());
+        for (i = 0; i < Count; i++) {
+            *pResp->GetResponse(i) = *pSrcResp->GetResponse(i);
         }
-        Responses.AddNode(Responses.GetTail(), pNewResp);
+        Responses.AddTail(pResp);
         pSrcResp = static_cast<FEMessageResponse *>(pSrcResp->GetNext());
     }
 
-    for (FEScript *pSrcScript = static_cast<FEScript *>(Object.Scripts.GetHead()); pSrcScript;
+    for (pSrcScript = static_cast<FEScript *>(Object.Scripts.GetHead()); pSrcScript != nullptr;
          pSrcScript = static_cast<FEScript *>(pSrcScript->GetNext())) {
-        FEScript *pNewScript = new FEScript(*pSrcScript, bReference);
-        Scripts.AddNode(Scripts.GetTail(), pNewScript);
+        Scripts.AddTail(new FEScript(*pSrcScript, bReference));
     }
 
-    FEScript *pFoundScript = FindScript(Object.pCurrentScript->ID);
-    SetCurrentScript(pFoundScript);
+    SetCurrentScript(FindScript(Object.pCurrentScript->ID));
 
-    FEScript *pMyScript = static_cast<FEScript *>(Scripts.GetHead());
-    for (FEScript *pSrcScript = static_cast<FEScript *>(Object.Scripts.GetHead()); pSrcScript;
-         pSrcScript = static_cast<FEScript *>(pSrcScript->GetNext())) {
-        if (pSrcScript->pChainTo) {
-            pMyScript->pChainTo = FindScript(pSrcScript->pChainTo->ID);
+    pSrcScript = static_cast<FEScript *>(Object.Scripts.GetHead());
+    pScript = GetFirstScript();
+    while (pSrcScript != nullptr) {
+        if (pSrcScript->pChainTo != nullptr) {
+            pScript->pChainTo = FindScript(pSrcScript->pChainTo->ID);
         }
-        pMyScript = static_cast<FEScript *>(pMyScript->GetNext());
+        pScript = pScript->GetNext();
+        pSrcScript = static_cast<FEScript *>(pSrcScript->GetNext());
     }
 }
 
 FEObject::~FEObject() {
-    if (pDestructorCallback) {
+    if (pDestructorCallback != nullptr) {
         pDestructorCallback->OnDestroy(this);
     }
     ObjDataPool.Free(pData);
-    if (pName) {
+    if (pName != nullptr) {
         delete[] pName;
     }
 }
@@ -139,12 +139,12 @@ void FEObject::SetDataSize(u32 Size) {
 }
 
 void FEObject::SetName(const char *pNewName) {
-    if (pName) {
+    if (pName != nullptr) {
         delete[] pName;
         pName = nullptr;
     }
     NameHash = -1;
-    if (pNewName) {
+    if (pNewName != nullptr) {
         int Len = FEngStrLen(pNewName);
 
         pName = FNEW char[Len + 1];
@@ -154,73 +154,62 @@ void FEObject::SetName(const char *pNewName) {
 }
 
 FEScript *FEObject::FindScript(u32 ID) const {
-    FEScript *pScript = static_cast<FEScript *>(Scripts.GetHead());
-    if (pScript) {
+    FEScript *pScript = GetFirstScript();
+    if (pScript != nullptr) {
         while (pScript->ID != ID) {
             pScript = pScript->GetNext();
-            if (!pScript)
+            if (pScript == nullptr)
                 break;
         }
     }
     return pScript;
 }
 
+// UNSOLVED
 void FEObject::SetupMoveToTracks() {
-    u32 NumTracks = pCurrentScript->TrackCount;
     FEKeyTrack *pTrack = pCurrentScript->pTracks;
+    u32 NumTracks = pCurrentScript->TrackCount;
+    u8 *pDataPtr;
+    FEKeyNode *pBase;
+    FEKeyNode *pKey;
 
     for (u32 i = 0; i < NumTracks; i++) {
         pTrack[i].InterpAction &= 0x7F;
 
-        if (static_cast<u32>(pTrack[i].InterpType - 3) < 2) {
-            float *pfData = reinterpret_cast<float *>(pData + pTrack[i].LongOffset * 4);
-            FEKeyNode *pBase = pTrack[i].GetBaseKey();
-            FEKeyNode *pKey = pTrack[i].GetFirstDeltaKey();
+        if (pTrack[i].InterpType >= 3 && pTrack[i].InterpType < 5) {
+            pDataPtr = reinterpret_cast<u8 *>(pData + pTrack[i].LongOffset * 4);
+            pBase = pTrack[i].GetBaseKey();
+            pKey = pTrack[i].GetFirstDeltaKey();
 
-            if (pKey) {
+            if (pKey != nullptr) {
                 switch (pTrack[i].ParamType) {
-                    case 1: {
-                        *static_cast<float *>(pKey->Val) =
-                            *reinterpret_cast<long *>(pfData) - *reinterpret_cast<float *>(static_cast<unsigned char *>(pBase->Val));
+                    case PT_Int: {
+                        reinterpret_cast<i32 &>(pKey->Val.Data) = reinterpret_cast<i32 &>(pDataPtr) - reinterpret_cast<i32 &>(pBase->Val);
                         break;
                     }
-                    case 2: {
-                        *reinterpret_cast<float *>(static_cast<unsigned char *>(pKey->Val)) =
-                            *reinterpret_cast<float *>(pfData) - *reinterpret_cast<float *>(static_cast<unsigned char *>(pBase->Val));
+                    case PT_Float: {
+                        reinterpret_cast<float &>(pKey->Val.Data) = reinterpret_cast<float &>(pDataPtr) - reinterpret_cast<float &>(pBase->Val.Data);
                         break;
                     }
-                    case 3: {
-                        FEVector2 diff =
-                            *reinterpret_cast<FEVector2 *>(pfData) - *reinterpret_cast<FEVector2 *>(static_cast<unsigned char *>(pBase->Val));
-                        pKey->Val = diff;
+                    case PT_Vector2:
+                        reinterpret_cast<FEVector2 &>(pKey->Val.Data) =
+                            reinterpret_cast<FEVector2 &>(pDataPtr) - reinterpret_cast<FEVector2 &>(pBase->Val.Data);
                         break;
-                    }
-                    case 4: {
-                        FEVector3 diff3 =
-                            *reinterpret_cast<FEVector3 *>(pfData) - *reinterpret_cast<FEVector3 *>(static_cast<unsigned char *>(pBase->Val));
-                        pKey->Val = diff3;
+
+                    case PT_Vector3:
+                        reinterpret_cast<FEVector3 &>(pKey->Val.Data) =
+                            reinterpret_cast<FEVector3 &>(pDataPtr) - reinterpret_cast<FEVector3 &>(pBase->Val.Data);
                         break;
-                    }
-                    case 5: {
-                        FEQuaternion BaseQuat = *static_cast<FEQuaternion *>(pBase->Val);
+
+                    case PT_Quaternion: {
+                        FEQuaternion BaseQuat = reinterpret_cast<FEQuaternion &>(pBase->Val);
                         BaseQuat.Conjugate();
-                        FEQuaternion qRet;
-                        qRet.x = pfData[1] * BaseQuat.z - pfData[2] * BaseQuat.y;
-                        qRet.y = pfData[2] * BaseQuat.x - pfData[0] * BaseQuat.z;
-                        qRet.z = pfData[0] * BaseQuat.y - pfData[1] * BaseQuat.x;
-                        qRet.x += pfData[0] * BaseQuat.w + BaseQuat.x * pfData[3];
-                        qRet.y += pfData[1] * BaseQuat.w + BaseQuat.y * pfData[3];
-                        qRet.z += pfData[2] * BaseQuat.w + BaseQuat.z * pfData[3];
-                        qRet.w = pfData[3] * BaseQuat.w - (pfData[0] * BaseQuat.x + pfData[1] * BaseQuat.y + pfData[2] * BaseQuat.z);
-                        pKey->Val = qRet;
+                        pKey->Val = reinterpret_cast<FEQuaternion &>(pDataPtr) * BaseQuat;
                         break;
                     }
-                    case 6: {
-                        FEColor colorDiff =
-                            *reinterpret_cast<FEColor *>(pfData) - *reinterpret_cast<FEColor *>(static_cast<unsigned char *>(pBase->Val));
-                        pKey->Val = colorDiff;
+                    case PT_Color:
+                        pKey->Val = reinterpret_cast<FEColor &>(pDataPtr) - reinterpret_cast<FEColor &>(pBase->Val.Data);
                         break;
-                    }
                 }
             }
         }
@@ -229,14 +218,14 @@ void FEObject::SetupMoveToTracks() {
 
 void FEObject::SetCurrentScript(FEScript *pScript) {
     pCurrentScript = pScript;
-    if (pScript) {
+    if (pScript != nullptr) {
         SetupMoveToTracks();
     }
 }
 
 FEMessageResponse *FEObject::FindResponse(u32 MsgID) const {
     FEMessageResponse *pNode = GetFirstResponse();
-    while (pNode) {
+    while (pNode != nullptr) {
         if (pNode->GetMsgID() == MsgID) {
             return pNode;
         }
@@ -247,73 +236,77 @@ FEMessageResponse *FEObject::FindResponse(u32 MsgID) const {
 
 void FEObject::SetTrackValue(FEKeyTrack_Indices track, const FEVector3 &value, bool bRelative) {
     FEScript *pScript = static_cast<FEScript *>(Scripts.GetHead());
-    while (pScript) {
-        FEKeyTrack *pTrack = pScript->FindTrack(track);
-        if (pTrack) {
-            FEKeyNode *pKey = pTrack->GetBaseKey();
+    FEKeyTrack *pTrack;
+    FEKeyNode *pKey;
+
+    while (pScript != nullptr) {
+        pTrack = pScript->FindTrack(track);
+        if (pTrack != nullptr) {
+            pKey = &pTrack->BaseKey;
             if (bRelative) {
-                *static_cast<FEVector3 *>(pKey->GetKeyData()->Val) += (value);
+                reinterpret_cast<FEVector3 &>(pKey->Val) += value;
             } else {
-                pKey->GetKeyData()->Val = value;
+                pKey->Val = value;
             }
             pTrack->InterpAction &= 0x7F;
         }
         pScript = pScript->GetNext();
     }
+
     if (bRelative) {
-        unsigned long offset = GetDataOffset(track);
-        *reinterpret_cast<FEVector3 *>(pData + offset) += (value);
+        *reinterpret_cast<FEVector3 *>(pData + GetDataOffset(track)) += value;
     } else {
-        unsigned long offset = GetDataOffset(track);
-        *reinterpret_cast<FEVector3 *>(pData + offset) = value;
+        *reinterpret_cast<FEVector3 *>(pData + GetDataOffset(track)) = value;
     }
 }
 
 void FEObject::SetTrackValue(FEKeyTrack_Indices track, const FEVector2 &value, bool bRelative) {
     FEScript *pScript = static_cast<FEScript *>(Scripts.GetHead());
-    while (pScript) {
-        FEKeyTrack *pTrack = pScript->FindTrack(track);
-        if (pTrack) {
-            FEKeyNode *pKey = pTrack->GetBaseKey();
+    FEKeyTrack *pTrack;
+    FEKeyNode *pKey;
+
+    while (pScript != nullptr) {
+        pTrack = pScript->FindTrack(track);
+        if (pTrack != nullptr) {
+            pKey = &pTrack->BaseKey;
             if (bRelative) {
-                *static_cast<FEVector2 *>(pKey->GetKeyData()->Val) += (value);
+                reinterpret_cast<FEVector2 &>(pKey->Val) += value;
             } else {
-                pKey->GetKeyData()->Val = value;
+                pKey->Val = value;
             }
             pTrack->InterpAction &= 0x7F;
         }
         pScript = pScript->GetNext();
     }
     if (bRelative) {
-        unsigned long offset = GetDataOffset(track);
-        reinterpret_cast<FEVector2 *>(pData + offset)->operator+=(value);
+        *reinterpret_cast<FEVector2 *>(pData + GetDataOffset(track)) += value;
     } else {
-        unsigned long offset = GetDataOffset(track);
-        *reinterpret_cast<FEVector2 *>(pData + offset) = value;
+        *reinterpret_cast<FEVector2 *>(pData + GetDataOffset(track)) = value;
     }
 }
 
 void FEObject::SetTrackValue(FEKeyTrack_Indices track, const FEColor &value, bool bRelative) {
     FEScript *pScript = static_cast<FEScript *>(Scripts.GetHead());
-    while (pScript) {
-        FEKeyTrack *pTrack = pScript->FindTrack(track);
-        if (pTrack) {
-            FEKeyNode *pKey = pTrack->GetBaseKey();
+    FEKeyTrack *pTrack;
+    FEKeyNode *pKey;
+
+    while (pScript != nullptr) {
+        pTrack = pScript->FindTrack(track);
+        if (pTrack != nullptr) {
+            pKey = &pTrack->BaseKey;
             if (bRelative) {
-                *static_cast<FEColor *>(pKey->GetKeyData()->Val) += value;
+                *reinterpret_cast<FEColor *>(&pKey->Val) += value;
             } else {
-                pKey->GetKeyData()->Val = value;
+                pKey->Val = value;
             }
             pTrack->InterpAction &= 0x7F;
         }
         pScript = pScript->GetNext();
     }
     if (bRelative) {
-        unsigned long offset = GetDataOffset(track);
-        *reinterpret_cast<FEColor *>(pData + offset) += value;
+        *reinterpret_cast<FEColor *>(pData + GetDataOffset(track)) += value;
     } else {
-        unsigned long offset = GetDataOffset(track);
-        *reinterpret_cast<FEColor *>(pData + offset) = value;
+        *reinterpret_cast<FEColor *>(pData + GetDataOffset(track)) = value;
     }
 }
 
@@ -325,13 +318,11 @@ void FEObject::SetPosition(const FEVector3 &position, bool bRelative) {
         return;
     }
     if (bRelative) {
-        FEVector3 zero(0.0f, 0.0f, 0.0f);
-        if (!CloseEnoughPosition(position, zero)) {
+        if (!CloseEnoughPosition(position, FEVector3(0.0f, 0.0f, 0.0f))) {
             Flags |= FF_DirtyCode;
         }
     } else {
-        FEObjData *pData = GetObjData();
-        if (!CloseEnoughPosition(position, pData->Pos)) {
+        if (!CloseEnoughPosition(position, GetObjData()->Pos)) {
             Flags |= FF_DirtyCode;
         }
     }
@@ -344,14 +335,16 @@ void FEObject::SetRotation(const FEQuaternion &rotation, bool bRelative) {
     }
     Flags |= FF_DirtyCode;
     FEScript *pScript = static_cast<FEScript *>(Scripts.GetHead());
-    while (pScript) {
-        FEKeyTrack *pTrack = pScript->FindTrack(FETrack_Rotation);
-        if (pTrack) {
-            FEKeyNode *pKey = pTrack->GetBaseKey();
+    FEKeyTrack *pTrack;
+    FEKeyNode *pKey;
+    while (pScript != nullptr) {
+        pTrack = pScript->FindTrack(FETrack_Rotation);
+        if (pTrack != nullptr) {
+            pKey = pTrack->GetBaseKey();
             if (bRelative) {
-                *static_cast<FEQuaternion *>(pKey->GetKeyData()->Val) *= (rotation);
+                *static_cast<FEQuaternion *>(pKey->Val) *= rotation;
             } else {
-                pKey->GetKeyData()->Val = rotation;
+                pKey->Val = rotation;
             }
             pTrack->InterpAction &= 0x7F;
         }
@@ -371,16 +364,14 @@ void FEObject::SetColor(const FEColor &color, bool bRelative) {
     if (Type > 0xFF) {
         return;
     }
-    bool bClose;
     if (bRelative) {
-        FEColor zero(0);
-        bClose = CloseEnoughColor(color, zero);
+        if (!CloseEnoughColor(color, FEColor(0))) {
+            Flags |= FF_DirtyCode;
+        }
     } else {
-        FEObjData *pData = GetObjData();
-        bClose = CloseEnoughColor(color, pData->Col);
-    }
-    if (!bClose) {
-        Flags |= FF_DirtyCode;
+        if (!CloseEnoughColor(color, GetObjData()->Col)) {
+            Flags |= FF_DirtyCode;
+        }
     }
     SetTrackValue(FETrack_Color, color, bRelative);
 }

@@ -5,18 +5,19 @@
 FELabelCallback *FEString::pLabelCallback; // size: 0x4, address: 0x8041D15C, Decl: speed/indep/src/feng/FEString.cpp:16
 
 FEString::FEString(const FEString &String, bool bReference)
-    : FEObject(String, bReference), pLabelName(0), string(String.string), Format(String.Format), Leading(String.Leading), MaxWidth(String.MaxWidth) {
-    SetLabel(String.pLabelName);
+    : FEObject(String, bReference), pLabelName(nullptr), string(String.string), Format(String.Format), Leading(String.Leading),
+      MaxWidth(String.MaxWidth) {
+    SetLabel(String.GetLabel());
     string.SetLength(String.string.mulBufferLength);
 }
 
 void FEString::SetLabel(const char *pString) {
-    if (pLabelName) {
+    if (pLabelName != nullptr) {
         delete[] pLabelName;
     }
     pLabelName = nullptr;
 
-    if (pString) {
+    if (pString != nullptr) {
         u32 Len = FEngStrLen(pString) + 1;
 
         pLabelName = FNEW char[Len];
@@ -25,7 +26,7 @@ void FEString::SetLabel(const char *pString) {
 
     LabelHash = FEHashUpper(pLabelName);
     Flags |= FF_DirtyCode;
-    if (pLabelCallback) {
+    if (pLabelCallback != nullptr) {
         pLabelCallback->OnLabelChanged(this);
     }
 }

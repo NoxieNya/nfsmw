@@ -48,7 +48,7 @@ class FEString : public FEObject {
     FEString(const FEString &String, bool bReference); // Decl: speed/indep/src/feng/FEString.h:67
 
     ~FEString() override { // Decl: speed/indep/src/feng/FEString.h:69
-        if (pLabelName) {
+        if (pLabelName != nullptr) {
             delete[] pLabelName;
         }
     }
@@ -74,7 +74,9 @@ class FEString : public FEObject {
 
     void SetLabel(const char *pString);
 
-    char *const GetLabel() const {}
+    const char *GetLabel() const {
+        return pLabelName;
+    }
 
     u32 GetLabelHash() { // Decl: speed/indep/src/feng/FEString.h:94
         return LabelHash;
@@ -88,7 +90,9 @@ class FEString : public FEObject {
         }
     }
 
-    FEWideString &GetWideString() {} // Decl: speed/indep/src/feng/FEString.h:106
+    FEWideString &GetWideString() { // Decl: speed/indep/src/feng/FEString.h:106
+        return string;
+    }
 
     FEObject *Clone(bool bReference) override { // Decl: speed/indep/src/feng/FEString.h:108
         return FNEW FEString(*this, bReference);

@@ -362,7 +362,7 @@ class FEPackage : public FENode {
         return NumLibRefs;
     }
     FELibraryRef *GetLibraryReference(u32 Index) const { // Decl: speed/indep/src/feng/FEPackage.h:291
-        return pLibRefs;
+        return &pLibRefs[Index];
     }
 
     void PurgeUnusedPackageLibraries();

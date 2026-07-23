@@ -29,10 +29,10 @@ void FESlotNode::FreeBlock(u8 *pSlot) {
 
 u8 *FESlotPool::Alloc() {
     FESlotNode *pNode = static_cast<FESlotNode *>(Slots.GetHead());
-    while (pNode && pNode->IsFull()) {
+    while ((pNode != nullptr) && pNode->IsFull()) {
         pNode = pNode->GetNext();
     }
-    if (!pNode) {
+    if (pNode == nullptr) {
         pNode = FNEW FESlotNode(SlotSize);
         Slots.AddHead(pNode);
     }
@@ -41,11 +41,11 @@ u8 *FESlotPool::Alloc() {
 
 bool FESlotPool::Free(u8 *pSlot) {
     FESlotNode *pNode = static_cast<FESlotNode *>(Slots.GetHead());
-    while (pNode && !pNode->Contains(pSlot)) {
+    while ((pNode != nullptr) && !pNode->Contains(pSlot)) {
         pNode = pNode->GetNext();
     }
 
-    if (!pNode) {
+    if (pNode == nullptr) {
         return false;
     }
 
@@ -63,10 +63,10 @@ u8 *FEMultiPool::Alloc(u32 Size) {
         return nullptr;
     }
     FESlotPool *pPool = static_cast<FESlotPool *>(Pools.GetHead());
-    while (pPool && pPool->SlotSize != Size) {
+    while ((pPool != nullptr) && pPool->SlotSize != Size) {
         pPool = pPool->GetNext();
     }
-    if (!pPool) {
+    if (pPool == nullptr) {
         pPool = FNEW FESlotPool(Size);
         Pools.AddHead(pPool);
     }
@@ -74,11 +74,11 @@ u8 *FEMultiPool::Alloc(u32 Size) {
 }
 
 void FEMultiPool::Free(u8 *pSlot) {
-    if (!pSlot) {
+    if (pSlot == nullptr) {
         return;
     }
     FESlotPool *pPool = static_cast<FESlotPool *>(Pools.GetHead());
-    while (pPool && !pPool->Free(pSlot)) {
+    while ((pPool != nullptr) && !pPool->Free(pSlot)) {
         pPool = pPool->GetNext();
     }
     if (pPool->IsEmpty()) {

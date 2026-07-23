@@ -18,7 +18,7 @@ u32 FEDirection_Message[8] = {
 
 // Decl: speed/indep/src/feng/FEButtonMap.cpp:35
 void FEButtonMap::SetCount(u32 NewCount) {
-    if (pList) {
+    if (pList != nullptr) {
         delete[] pList;
     }
     pList = nullptr;
@@ -38,7 +38,7 @@ static u32 PassWrapMode[5] = {3, 1, 1, 2, 2};
 
 // Decl: speed/indep/src/feng/FEButtonMap.cpp:75
 FEObject *FEButtonMap::GetButtonFrom(FEObject *pButton, i32 Direction, FEGameInterface *pInterface, FEButtonWrapMode WrapMode) {
-    float BestScore; // = 1e30f;
+    float BestScore;
     u32 BestIndex = 0;
     FEVector2 VectOrig;
     FEVector2 VectFrom;
@@ -48,23 +48,24 @@ FEObject *FEButtonMap::GetButtonFrom(FEObject *pButton, i32 Direction, FEGameInt
 
     ComputeButtonLocation(pButton, pInterface, VectOrig);
 
-    for (u32 Pass = 0; Pass <= 4; Pass++) {
+    u32 Pass = 0;
+    while (Pass <= 4) {
         if (Pass == 0 || (PassWrapMode[Pass] & WrapMode) != 0) {
             VectFrom = VectOrig + PassOffsets[Pass];
 
             for (u32 i = 0; i < Count; i++) {
                 if ((pList[i]->Flags & FF_IgnoreButton) == 0 && pButton != pList[i]) {
+                    float Angle, Distance, Score;
                     FEVector2 Delta;
                     ComputeButtonLocation(pList[i], pInterface, VectTo);
                     Delta = VectTo - VectFrom;
-                    float Distance = Delta.Length();
+                    Distance = Delta.Length();
                     if (Distance >= 0.0001f) {
                         Delta *= 1.0f / Distance;
-                        float Angle = Delta.Dot(DirectionVectors[Direction]);
+                        Angle = Delta.Dot(DirectionVectors[Direction]);
                         if (Angle >= 0.0f) {
                             Angle = Angle * Angle;
                         }
-                        float Score;
                         if (Angle >= 0.25f) {
                             Score = (1.0f - Angle) * 200.0f + Distance;
                         } else {
@@ -78,6 +79,7 @@ FEObject *FEButtonMap::GetButtonFrom(FEObject *pButton, i32 Direction, FEGameInt
                 }
             }
         }
+        Pass++;
     }
 
     if (BestScore < 1500.0f) {
@@ -88,16 +90,16 @@ FEObject *FEButtonMap::GetButtonFrom(FEObject *pButton, i32 Direction, FEGameInt
 
 // Decl: speed/indep/src/feng/FEButtonMap.cpp:141
 void FEButtonMap::ComputeButtonLocation(FEObject *pButton, FEGameInterface *pInterface, FEVector2 &Dest) {
-    if (!pInterface || pButton->RenderContext == 0) {
-        Dest = static_cast<FEVector2>(pButton->GetObjData()->Pos);
+    if ((pInterface == nullptr) || pButton->RenderContext == 0) {
+        Dest = reinterpret_cast<FEVector2 &>(pButton->GetObjData()->Pos);
     } else {
         FEMatrix4 Matrix;
         if (!pInterface->GetContextTransform(pButton->RenderContext, Matrix)) {
-            Dest = static_cast<FEVector2>(pButton->GetObjData()->Pos);
+            Dest = reinterpret_cast<FEVector2 &>(pButton->GetObjData()->Pos);
         } else {
             FEVector3 Temp;
             FEMultMatrix(&Temp, &Matrix, &pButton->GetObjData()->Pos);
-            Dest = static_cast<FEVector2>(Temp);
+            Dest = reinterpret_cast<FEVector2 &>(Temp);
         }
     }
 }
@@ -109,7 +111,12 @@ class FEButtonCounter : public FEObjectCallback {
   public:
     u32 Count; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEButtonMap.cpp:163
 
-    bool Callback(FEObject *pObj) override {} // Decl: speed/indep/src/feng/FEButtonMap.cpp:165
+    bool Callback(FEObject *pObj) override { // Decl: speed/indep/src/feng/FEButtonMap.cpp:165
+        if (pObj->Flags & FF_IsButton) {
+            this->Count++;
+        }
+        return true;
+    }
 };
 
 // total size: 0xC
@@ -119,5 +126,10 @@ class FEButtonEnumerator : public FEObjectCallback {
     FEButtonMap *pButtonMap; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEButtonMap.cpp:177
     u32 Count;               // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEButtonMap.cpp:178
 
-    bool Callback(FEObject *pObj) override {} // Decl: speed/indep/src/feng/FEButtonMap.cpp:180
+    bool Callback(FEObject *pObj) override { // Decl: speed/indep/src/feng/FEButtonMap.cpp:180
+        if (pObj->Flags & FF_IsButton) {
+            pButtonMap->SetButton(this->Count++, pObj);
+        }
+        return true;
+    }
 };

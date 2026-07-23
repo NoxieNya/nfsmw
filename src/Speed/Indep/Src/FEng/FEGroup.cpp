@@ -3,14 +3,18 @@
 
 FEGroup::FEGroup(const FEGroup &Object, bool bCloneChildren, bool bReference) : FEObject(Object, bReference) {
     if (bCloneChildren) {
-        for (FEObject *pObject = static_cast<FEObject *>(Object.Children.GetHead()); pObject; pObject = pObject->GetNext()) {
+        FEObject *pObject = static_cast<FEObject *>(Object.Children.GetHead());
+        while (pObject != nullptr) {
             AddObject(pObject->Clone(bReference));
+
+            pObject = pObject->GetNext();
         }
     }
 }
 
 FEObject *FEGroup::FindChildRecursive(u32 NameHash) const {
-    for (FEObject *pChild = static_cast<FEObject *>(Children.GetHead()); pChild; pChild = pChild->GetNext()) {
+    FEObject *pChild = GetFirstChild();
+    while (pChild != nullptr) {
         if (pChild->NameHash == NameHash) {
             return pChild;
         }
@@ -18,9 +22,10 @@ FEObject *FEGroup::FindChildRecursive(u32 NameHash) const {
         if (pChild->Type == FE_Group) {
             groupChild = static_cast<FEGroup *>(pChild)->FindChildRecursive(NameHash);
         }
-        if (groupChild) {
+        if (groupChild != nullptr) {
             return groupChild;
         }
+        pChild = pChild->GetNext();
     }
     return nullptr;
 }

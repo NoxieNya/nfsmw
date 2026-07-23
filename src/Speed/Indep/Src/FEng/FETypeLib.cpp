@@ -174,7 +174,7 @@ bool FETypeLib::Startup() {
 FETypeNode *FETypeLib::FindType(u32 TypeID) {
     FETypeNode *pNode = GetFirstType();
     for (;;) {
-        if (!pNode) {
+        if (pNode == nullptr) {
             break;
         }
         if (pNode->GetID() == TypeID) {

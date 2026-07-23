@@ -1,13 +1,14 @@
 #include "Speed/Indep/Src/FEng/FEList.h"
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
-#include "types.h"
 
 char FEUpperCase(char val) {
     return static_cast<unsigned int>(val - 'a') > 25 ? val : val - 0x20;
 }
 
 // STRIPPED
-char FELowerCase(char val) {}
+char FELowerCase(char val) {
+    return static_cast<unsigned int>(val - 'a') > 25 ? val + 0x20 : val;
+}
 
 int FEStricmp(const char *dst, const char *src) {
     char f, l;
@@ -27,7 +28,7 @@ bool FEStrInStr(const char *pString, const char *pSubString) {}
 FENode::FENode() : name(nullptr), nameHash(0) {}
 
 FENode::~FENode() {
-    if (name) {
+    if (name != nullptr) {
         delete[] name;
     }
 }
@@ -36,15 +37,15 @@ bool FENode::SetName(const char *theName) {
     bool retval = false;
     int Len;
 
-    if (name) {
+    if (name != nullptr) {
         delete[] name;
         name = nullptr;
     }
-    if (theName) {
+    if (theName != nullptr) {
         Len = FEngStrLen(theName);
 
         name = FNEW char[Len + 1];
-        if (name) {
+        if (name != nullptr) {
             retval = true;
             FEngStrCpy(name, theName);
         }
@@ -54,19 +55,19 @@ bool FENode::SetName(const char *theName) {
 }
 
 void FEMinList::AddNode(FEMinNode *insertpoint, FEMinNode *node) {
-    if (!node) {
+    if (node == nullptr) {
         return;
     }
-    if (insertpoint) {
+    if (insertpoint != nullptr) {
         node->next = insertpoint->next;
-        if (node->next) {
+        if (node->next != nullptr) {
             node->next->prev = node;
         }
         node->prev = insertpoint;
         insertpoint->next = node;
     } else {
         node->next = head;
-        if (node->next) {
+        if (node->next != nullptr) {
             node->next->prev = node;
         }
         node->prev = nullptr;
@@ -79,17 +80,17 @@ void FEMinList::AddNode(FEMinNode *insertpoint, FEMinNode *node) {
 }
 
 FEMinNode *FEMinList::RemNode(FEMinNode *node) {
-    if (node) {
+    if (node != nullptr) {
         if (node == head) {
             head = node->next;
         }
         if (node == tail) {
             tail = node->prev;
         }
-        if (node->prev) {
+        if (node->prev != nullptr) {
             node->prev->next = node->next;
         }
-        if (node->next) {
+        if (node->next != nullptr) {
             node->next->prev = node->prev;
         }
         node->next = reinterpret_cast<FEMinNode *>(LIST_MAGIC);
@@ -101,7 +102,7 @@ FEMinNode *FEMinList::RemNode(FEMinNode *node) {
 
 FEMinNode *FEMinList::RemHead() {
     FEMinNode *n = head;
-    if (n) {
+    if (n != nullptr) {
         RemNode(n);
     }
     return n;
@@ -110,23 +111,23 @@ FEMinNode *FEMinList::RemHead() {
 FEMinNode *FEMinList::FindNode(u32 ordinalnumber) const {
     u32 i = 0;
     FEMinNode *n = GetHead();
-    while (n && i != ordinalnumber) {
+    while ((n != nullptr) && i != ordinalnumber) {
         n = n->GetNext();
         i++;
     }
     return n;
 }
 
-FENode *FEList::FindNode(const char *pName, FENode *node) const {
+FENode *FEList::FindNode(const char *name, FENode *node) const {
     FENode *retn = nullptr;
-    u32 Hash = FEHashUpper(pName);
-    while (node) {
-        if (node->GetName()) {
-            if (Hash == node->GetNameHash() && FEStricmp(node->GetName(), pName) == 0) {
+    u32 Hash = FEHashUpper(name);
+    while (node != nullptr) {
+        if (node->name != nullptr) {
+            if (Hash == node->nameHash && FEStricmp(node->name, name) == 0) {
                 retn = node;
                 break;
             }
-        } else if (!pName) {
+        } else if (name == nullptr) {
             retn = node;
             break;
         }
@@ -135,14 +136,15 @@ FENode *FEList::FindNode(const char *pName, FENode *node) const {
     return retn;
 }
 
-FENode *FEList::FindNode(const char *pName) const {
-    return FindNode(pName, static_cast<FENode *>(head));
+FENode *FEList::FindNode(const char *name) const {
+    FENode *n = GetHead();
+    return FindNode(name, n);
 }
 
 u32 FEHash(const char *String) {
     u32 Hash = 0xFFFFFFFF;
 
-    if (String) {
+    if (String != nullptr) {
         while (*String) {
             Hash += Hash << 5;
             Hash += *reinterpret_cast<const u8 *>(String);
@@ -156,7 +158,7 @@ u32 FEHash(const char *String) {
 u32 FEHashUpper(const char *String) {
     u32 Hash = 0xFFFFFFFF;
 
-    if (String) {
+    if (String != nullptr) {
         while (*String) {
             Hash += Hash << 5;
             Hash += FEUpperCase(*String) & 0xFF;

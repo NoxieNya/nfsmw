@@ -1,4 +1,3 @@
-#include "types.h"
 #include "Speed/Indep/Src/FEng/FEScript.h"
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
 #include "Speed/Indep/Src/FEng/ObjectPool.h"
@@ -62,19 +61,18 @@ void *FEScript::operator new(size_t) {
 }
 
 void FEScript::operator delete(void *pNode) {
-    FEScript *pDeleteNode = static_cast<FEScript *>(pNode);
-    pDeleteNode->~FEScript();
-    NodePool.FreeSingle(pDeleteNode);
+    static_cast<FEScript *>(pNode)->~FEScript();
+    NodePool.FreeSingle(static_cast<FEScript *>(pNode));
 }
 
 void FEScript::SetName(const char *pNewName) {
-    if (pName) {
+    if (pName != nullptr) {
         delete[] pName;
         pName = nullptr;
     }
 
     ID = 0xFFFFFFFF;
-    if (pNewName) {
+    if (pNewName != nullptr) {
         int Len = FEngStrLen(pNewName) + 1;
         pName = FNEW char[Len];
         FEngStrCpy(pName, pNewName);
@@ -92,7 +90,6 @@ void FEScript::SetTrackCount(i32 Count) {
 }
 
 FEKeyTrack *FEScript::FindTrack(FEKeyTrack_Indices TrackIndex) const {
-
     u32 Offset = FETrackOffsets[TrackIndex];
 
     for (u32 Index = 0; Index < TrackCount; Index++) {

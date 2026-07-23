@@ -57,7 +57,9 @@ class FERefList {
     FEMinNode *GetTail() const { // Decl: speed/indep/src/feng/FERefList.h:42
         return bIsReference ? pRef->GetTail() : tail;
     }
-    void AddHead(FEMinNode *n) {} // Decl: speed/indep/src/feng/FERefList.h:43
+    void AddHead(FEMinNode *n) { // Decl: speed/indep/src/feng/FERefList.h:43
+        AddNode(head, n);
+    }
 
     void AddTail(FEMinNode *n) { // Decl: speed/indep/src/feng/FERefList.h:45
         AddNode(tail, n);
@@ -67,7 +69,7 @@ class FERefList {
 
     void Purge() { // Decl: speed/indep/src/feng/FERefList.h:49
         FEMinNode *cmn = RemHead();
-        while (cmn) {
+        while (cmn != nullptr) {
             delete cmn;
             cmn = RemHead();
         }

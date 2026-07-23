@@ -1,6 +1,7 @@
 #ifndef FEWIDESTRING_H_
 #define FEWIDESTRING_H_
 
+#include "Speed/Indep/Src/FEng/FETypes.h"
 #include <types.h>
 
 // File: speed/indep/src/feng/FEWideString.cpp
@@ -74,8 +75,12 @@ class FEWideString {
 
     u32 Length() const; // Decl: speed/indep/src/feng/FEWideString.h:122
 
-    const i16 operator[](int i) {} // Decl: speed/indep/src/feng/FEWideString.h:123
-    const i16 operator[](int i) const {}
+    const i16 operator[](int i) { // Decl: speed/indep/src/feng/FEWideString.h:123
+        return mpsString[i];
+    }
+    const i16 operator[](int i) const {
+        return mpsString[i];
+    }
 
     void SetLength(u32 newLength); // Decl: speed/indep/src/feng/FEWideString.h:126
 

@@ -36,17 +36,13 @@ bool FEJoyPad::WasHeld(u32 Mask) {
 }
 
 u32 FEJoyPad::HeldFor(u32 Mask) {
-    u32 result = 0xFFFFFFFF;
+    u32 uResult = 0xFFFFFFFF;
     for (int i = 0; i < 32; i++) {
         if (Mask & (1 << i)) {
-            u32 v = HeldCount[i];
-            if (v > result) {
-                v = result;
-            }
-            result = v;
+            uResult = HeldCount[i] > uResult ? uResult : HeldCount[i];
         }
     }
-    return result;
+    return uResult;
 }
 
 bool FEJoyPad::WasReleased(u32 Mask) {

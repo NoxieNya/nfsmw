@@ -23,7 +23,9 @@ class FEGenericVal {
     operator u8 *() const {
         return reinterpret_cast<u8 *>(const_cast<u32 *>(Data));
     }
-    operator float *() const {}
+    operator float *() const {
+        return reinterpret_cast<float *>(const_cast<u32 *>(Data));
+    }
     operator i32 *() const {
         return reinterpret_cast<i32 *>(const_cast<u32 *>(Data));
     }

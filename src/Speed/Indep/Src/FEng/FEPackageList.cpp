@@ -3,23 +3,17 @@
 
 void FEPackageList::AddPackage(FEPackage *pPack) {
     FEPackage *pNode = GetLastPackage();
-    for (;;) {
-        if (!pNode) {
-            break;
-        }
-        if (pNode->GetPriority() <= pPack->GetPriority()) {
-            break;
-        }
+    while (pNode != nullptr && pNode->GetPriority() > pPack->GetPriority()) {
         pNode = pNode->GetPrev();
     }
-    Packages.AddNode(static_cast<FEMinNode *>(static_cast<FENode *>(pNode)), static_cast<FEMinNode *>(static_cast<FENode *>(pPack)));
+    Packages.AddNode(pNode, pPack);
 }
 
 bool FEPackageList::RemovePackage(FEPackage *pPack) {
     FEPackage *pNode = GetFirstPackage();
-    while (pNode) {
+    while (pNode != nullptr) {
         if (pNode == pPack) {
-            Packages.RemNode(static_cast<FEMinNode *>(static_cast<FENode *>(pPack)));
+            Packages.RemNode(pPack);
             return true;
         }
         pNode = pNode->GetNext();
@@ -29,7 +23,7 @@ bool FEPackageList::RemovePackage(FEPackage *pPack) {
 
 void FEPackageList::ReplaceParentLinks(const FEPackage *pParent, const FEPackage *pReplacement) {
     FEPackage *pNode = GetFirstPackage();
-    while (pNode) {
+    while (pNode != nullptr) {
         if (pNode->GetParentPackage() == pParent) {
             pNode->SetParentPackage(const_cast<FEPackage *>(pReplacement));
         }

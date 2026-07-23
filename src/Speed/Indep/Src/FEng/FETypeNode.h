@@ -48,7 +48,7 @@ class FEFieldNode : public FENode {
   public:
     FEFieldNode() : Size(0), Offset(0), pDefault(nullptr) {} // Decl: speed/indep/src/feng/FETypeNode.h:33
     ~FEFieldNode() override {                                // Decl: speed/indep/src/feng/FETypeNode.h:34
-        if (pDefault) {
+        if (pDefault != nullptr) {
             delete[] pDefault;
         }
     }
@@ -83,10 +83,10 @@ class FEFieldNode : public FENode {
     }
 
     struct FEFieldNode *GetNext() const { // Decl: speed/indep/src/feng/FETypeNode.h:52
-        return static_cast<FEFieldNode *>(FENode::GetNext());
+        return static_cast<FEFieldNode *>(FEMinNode::GetNext());
     }
     struct FEFieldNode *GetPrev() const {
-        return static_cast<FEFieldNode *>(FENode::GetPrev());
+        return static_cast<FEFieldNode *>(FEMinNode::GetPrev());
     }
 };
 
@@ -137,10 +137,10 @@ class FETypeNode : public FENode {
     u32 GetTypeSize();
 
     FETypeNode *GetNext() { // Decl: speed/indep/src/feng/FETypeNode.h:89
-        return static_cast<FETypeNode *>(FENode::GetNext());
+        return static_cast<FETypeNode *>(FEMinNode::GetNext());
     }
     FETypeNode *GetPrev() { // Decl: speed/indep/src/feng/FETypeNode.h:90
-        return static_cast<FETypeNode *>(FENode::GetPrev());
+        return static_cast<FETypeNode *>(FEMinNode::GetPrev());
     }
 };
 

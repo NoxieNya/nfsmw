@@ -1,14 +1,9 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeRadarDetector.hpp"
 #include "Speed/Indep/Src/Ecstasy/EcstasyE.hpp"
-#include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Generated/Messages/MMiscSound.h"
-#include "Speed/Indep/Libs/Support/Miscellaneous/StringHash.h"
 
-extern bool FEngIsScriptSet(FEObject *, unsigned int);
-extern void FEngSetScript(FEObject *, unsigned int, bool);
-extern void FEngSetMultiImageBottomRightUVs(FEMultiImage *, FEVector2 &, int);
-extern void FEngSetRotationZ(FEObject *, float);
 float TWK_RadarDetectorMinThreshold;
 
 float RadarDetector::mStaticRange;
@@ -22,7 +17,7 @@ RadarDetector::RadarDetector(UTL::COM::Object *pOutter, const char *pkg_name, in
       mCurrLedAmountShowing(0.3f),    //
       mInPursuit(false),              //
       mIsCoolingDown(false),          //
-      mTimeCycleStarted(0) {
+      mTimeCycleStarted() {
     mpDataRadarDetectorGroup = RegisterGroup(0x062743f5);
     mpDataRadarDetectorLightsLeft = FEngFindObject(pkg_name, 0x69aa01e7);
     mpDataRadarDetectorLightsRight = FEngFindObject(pkg_name, 0x9f59065a);
@@ -82,13 +77,9 @@ void RadarDetector::Update(IPlayer *player) {
         }
     }
 
-    if (mRange > 0.0f) {
-        if (mInPursuit && !mIsCoolingDown) {
-            goto low_range;
-        }
-
-        const float max_range = TWK_RadarDetectorMinThreshold;
+    if (mRange > 0.0f && !(mInPursuit && !mIsCoolingDown)) {
         float range;
+        const float max_range = TWK_RadarDetectorMinThreshold;
         if (mRange > TWK_RadarDetectorMinThreshold) {
             range = mRange;
         } else {
@@ -107,8 +98,7 @@ void RadarDetector::Update(IPlayer *player) {
         if ((WorldTimer - mTimeCycleStarted).GetSeconds() > range * 1.5f) {
             mTimeCycleStarted = WorldTimer;
             mCurrLedAmountShowing = 0.3f;
-            MMiscSound sound(0);
-            sound.Send(UCrc32("Snd"));
+            MMiscSound(0).Send(UCrc32("Snd"));
         }
 
         FEVector2 ledUVs(mCurrLedAmountShowing, 1.0f);
@@ -147,16 +137,14 @@ void RadarDetector::Update(IPlayer *player) {
             FEngSetScript(mpDataRadarDetectorLightsRight, 0x1744b3, true);
         }
         return;
+    } else {
+        if (mTimeCycleStarted.IsSet()) {
+            mTimeCycleStarted.UnSet();
+        }
+        FEVector2 ledUVs(0.0f, 1.0f);
+        FEngSetMultiImageBottomRightUVs(static_cast<FEMultiImage *>(mpDataRadarDetectorLightsLeft), ledUVs, 0);
+        FEngSetMultiImageBottomRightUVs(static_cast<FEMultiImage *>(mpDataRadarDetectorLightsRight), ledUVs, 0);
     }
-
-low_range: {
-    if (mTimeCycleStarted.IsSet()) {
-        mTimeCycleStarted.UnSet();
-    }
-    FEVector2 ledUVs(0.0f, 1.0f);
-    FEngSetMultiImageBottomRightUVs(static_cast<FEMultiImage *>(mpDataRadarDetectorLightsLeft), ledUVs, 0);
-    FEngSetMultiImageBottomRightUVs(static_cast<FEMultiImage *>(mpDataRadarDetectorLightsRight), ledUVs, 0);
-}
 
     if (!FEngIsScriptSet(mpDataRadarDetectorArrow, 0x16a259)) {
         FEngSetScript(mpDataRadarDetectorArrow, 0x16a259, true);

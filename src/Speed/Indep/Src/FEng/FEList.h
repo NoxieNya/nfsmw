@@ -39,6 +39,8 @@ class FEMinNode {
 // total size: 0x14
 // Decl: speed/indep/src/feng/FEList.h:79
 class FENode : public FEMinNode {
+    friend class FEList;
+
   protected:
     char *name;            // offset 0xC, size 0x4, Decl: speed/indep/src/feng/FEList.h:81
     unsigned int nameHash; // offset 0x10, size 0x4, Decl: speed/indep/src/feng/FEList.h:82
@@ -121,7 +123,7 @@ class FEMinList {
 
     void Purge() { // Decl: speed/indep/src/feng/FEList.h:141
         FEMinNode *cmn = RemHead();
-        while (cmn) {
+        while (cmn != nullptr) {
             delete cmn;
             cmn = RemHead();
         }
@@ -161,9 +163,13 @@ class FEList : public FEMinList {
         return static_cast<FENode *>(FEMinList::GetTail());
     }
 
-    FENode *RemHead() {} // Decl: speed/indep/src/feng/FEList.h:178
+    FENode *RemHead() { // Decl: speed/indep/src/feng/FEList.h:178
+        return static_cast<FENode *>(FEMinList::RemHead());
+    }
 
-    FENode *RemTail() {} // Decl: speed/indep/src/feng/FEList.h:179
+    FENode *RemTail() { // Decl: speed/indep/src/feng/FEList.h:179
+        return static_cast<FENode *>(FEMinList::RemTail());
+    }
 
     FENode *RemNode(FEMinNode *n) { // Decl: speed/indep/src/feng/FEList.h:180
         return static_cast<FENode *>(FEMinList::RemNode(n));

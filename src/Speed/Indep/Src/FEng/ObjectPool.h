@@ -43,15 +43,15 @@ template <class T, int N> class ObjectPool {
     ObjectPool() {}
 
     T *AllocSingle() { // Decl: speed/indep/src/feng/ObjectPool.h:73
-        T *pNode;
         FEPoolNode<T, N> *pPool = static_cast<FEPoolNode<T, N> *>(Pools.GetHead());
+        T *pNode;
         while (pPool) {
             if (pPool->Free.GetNumElements() != 0) {
                 break;
             }
             pPool = pPool->GetNext();
         }
-        if (!pPool) {
+        if (pPool == nullptr) {
             pPool = FNEW FEPoolNode<T, N>();
             Pools.AddHead(pPool);
         }
@@ -64,7 +64,7 @@ template <class T, int N> class ObjectPool {
         FEPoolNode<T, N> *pPool = static_cast<FEPoolNode<T, N> *>(Pools.GetHead());
         while (pPool) {
             if (pPool->Contains(pNode)) {
-                pPool->Free.AddNode(pPool->Free.GetTail(), pNode);
+                pPool->Free.AddTail(pNode);
                 pPool->Used--;
                 if (pPool->Used == 0) {
                     Pools.RemNode(pPool);

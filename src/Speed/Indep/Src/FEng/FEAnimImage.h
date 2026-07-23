@@ -19,9 +19,7 @@ class FEAnimImage : public FEImage {
     FEAnimImage() { // Decl: speed/indep/src/feng/FEAnimImage.h:37
         Type = FE_AnimImage;
     }
-    FEAnimImage(const FEAnimImage &Object, bool bReference) : FEImage(Object, bReference) {
-        Type = FE_AnimImage;
-    }
+    FEAnimImage(const FEAnimImage &Object, bool bReference) : FEImage(Object, bReference) {}
     ~FEAnimImage() override {}
 
     FEAnimImageData *GetImageData() {} // Decl: speed/indep/src/feng/FEAnimImage.h:41

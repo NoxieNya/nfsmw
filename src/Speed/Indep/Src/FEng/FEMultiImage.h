@@ -42,14 +42,12 @@ class FEMultiImage : public FEImage {
         }
     }
 
-    FEMultiImage(const FEMultiImage &Object, bool bReference) : FEImage(Object, bReference) {
-        Type = FE_MultiImage;
-    }
+    FEMultiImage(const FEMultiImage &Object, bool bReference) : FEImage(Object, bReference) {}
 
     ~FEMultiImage() override {} // Decl: speed/indep/src/feng/FEMultiImage.h:77
 
     FEMultiImageData *GetMultiImageData() { // Decl: speed/indep/src/feng/FEMultiImage.h:79
-        return reinterpret_cast<FEMultiImageData *>(pData);
+        return reinterpret_cast<FEMultiImageData *>(GetObjData());
     }
 
     FEObject *Clone(bool bReference) override { // Decl: speed/indep/src/feng/FEMultiImage.h:81

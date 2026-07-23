@@ -152,7 +152,7 @@ class FEObject : public FEMinNode {
 
     void SetName(const char *pNewName);
 
-    void SetNameHash(u32 nameHash) { // Decl: speed/indep/src/feng/FEObject.h:192
+    void SetNameHash(const u32 nameHash) { // Decl: speed/indep/src/feng/FEObject.h:192
         NameHash = nameHash;
     }
 

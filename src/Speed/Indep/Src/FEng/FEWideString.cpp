@@ -2,57 +2,56 @@
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
 
 u32 GetStringLength(const i16 *pString) {
-    if (!pString) {
+    if (pString == nullptr) {
         return 0;
     }
 
     u32 i = 0;
-
-    if (*pString == 0) {
-        return 0;
-    }
-
-    do {
+    while (pString[i] != 0) {
         i++;
-    } while (pString[i] != 0);
+    }
 
     return i;
 }
 
 FEWideString::FEWideString() {
-    mpsString = 0;
+    mpsString = nullptr;
     mulBufferLength = 0;
     mulBufferLength = Length();
 }
 
 FEWideString::FEWideString(const FEWideString &string) {
-    mpsString = 0;
+    mpsString = nullptr;
     mulBufferLength = 0;
     *this = string;
     mulBufferLength = Length();
 }
 
 FEWideString::~FEWideString() {
-    if (mpsString) {
+    if (mpsString != nullptr) {
         delete[] mpsString;
     }
 }
 
 FEWideString &FEWideString::operator=(const FEWideString &string) {
-    if (string.mpsString) {
-        mpsString = AllocateString(GetStringLength(string.mpsString) + 1);
-        CopyString(mpsString, string.mpsString);
+    if (string.mpsString == nullptr) {
+        return *this;
     }
+
+    u32 ulStrLen = GetStringLength(string.mpsString);
+    mpsString = AllocateString(ulStrLen + 1);
+    CopyString(mpsString, string.mpsString);
 
     return *this;
 }
 
 FEWideString &FEWideString::operator=(const i16 *psString) {
-    if (!psString) {
+    if (psString == nullptr) {
         return *this;
     }
 
-    mpsString = AllocateString(GetStringLength(psString) + 1);
+    u32 ulStrLen = GetStringLength(psString);
+    mpsString = AllocateString(ulStrLen + 1);
     CopyString(mpsString, psString);
 
     return *this;
@@ -63,13 +62,11 @@ u32 FEWideString::Length() const {
 }
 
 void FEWideString::SetLength(const u32 newLength) {
-    u32 length = Length();
-
-    if (newLength > length) {
+    if (newLength > Length()) {
         mulBufferLength = newLength;
         i16 *psNewString = FNEW i16[newLength + 1];
         CopyString(psNewString, mpsString);
-        if (mpsString) {
+        if (mpsString != nullptr) {
             delete[] mpsString;
         }
         mpsString = psNewString;

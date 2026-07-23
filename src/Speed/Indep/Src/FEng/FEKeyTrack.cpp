@@ -1,7 +1,6 @@
 #include "Speed/Indep/Src/FEng/FEKeyTrack.h"
 #include "Speed/Indep/Src/FEng/FERefList.h"
 #include "Speed/Indep/Src/FEng/ObjectPool.h"
-#include "types.h"
 
 ObjectPool<FEKeyNode, 256> FEKeyNode::NodePool;
 
@@ -19,23 +18,27 @@ void FEKeyTrack::operator=(FEKeyTrack &Src) {
 
     if (Src.IsReference()) {
         DeltaKeys.ReferenceList(Src.DeltaKeys.GetRefSource());
+        return;
+    }
 
-    } else {
-        FEKeyNode *pSrcKey = Src.GetFirstDeltaKey();
-        while (pSrcKey) {
-            FEKeyNode *pKey = new FEKeyNode();
-            pKey->tTime = pSrcKey->tTime;
-            pKey->Val = pSrcKey->Val;
-            DeltaKeys.AddTail(pKey);
-            pSrcKey = pSrcKey->GetNext();
-        }
+    FEKeyNode *pKey;
+    FEKeyNode *pSrcKey = Src.GetFirstDeltaKey();
+    while (pSrcKey != nullptr) {
+        pKey = new FEKeyNode();
+        pKey->tTime = pSrcKey->tTime;
+        pKey->Val = pSrcKey->Val;
+        DeltaKeys.AddTail(pKey);
+        pSrcKey = pSrcKey->GetNext();
     }
 }
 
-u32 FEKeyTrack::ComputeSize() {}
+u32 FEKeyTrack::ComputeSize() {
+    u32 Size;
+}
 
 void *FEKeyNode::operator new(size_t) {
     FEKeyNode *pNode = NodePool.AllocSingle();
+    pNode->Init();
     return pNode;
 }
 
@@ -46,16 +49,16 @@ void FEKeyNode::operator delete(void *pNode) {
 
 FEKeyNode *FEKeyTrack::GetKeyAt(i32 tTime) {
     if (tTime < 0) {
-        return GetBaseKey();
+        return &BaseKey;
     }
 
     FEKeyNode *pKey = GetFirstDeltaKey();
 
-    if (!pKey) {
-        return GetBaseKey();
+    if (pKey == nullptr) {
+        return &BaseKey;
     }
 
-    while (pKey->GetNext()) {
+    while (pKey->GetNext() != nullptr) {
         if (pKey->GetKeyData()->tTime >= tTime) {
             break;
         }
@@ -68,11 +71,11 @@ FEKeyNode *FEKeyTrack::GetKeyAt(i32 tTime) {
 
 FEKeyNode *FEKeyTrack::GetDeltaKeyAt(i32 tTime) {
     FEKeyNode *pKey = GetFirstDeltaKey();
-    if (!pKey) {
+    if (pKey == nullptr) {
         return nullptr;
     }
 
-    while (pKey->GetNext()) {
+    while (pKey->GetNext() != nullptr) {
         if (pKey->GetKeyData()->tTime >= tTime) {
             break;
         }

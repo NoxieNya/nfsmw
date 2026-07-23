@@ -51,7 +51,7 @@ class FEGameInterface {
     virtual bool UnloadResources(FEPackage *pPackage, i32 Count, FEResourceRequest *pList) = 0;     // [3]
     virtual void PackageWasLoaded(FEPackage *pPackage) = 0;                                         // [4]
     virtual bool PackageWillUnload(FEPackage *pPackage) = 0;                                        // [5]
-    virtual bool UnloadUnreferencedLibrary(FEPackage *pPackage) {                                   // Decl: speed/indep/src/feng/FEGameInterface.h:96
+    virtual bool UnloadUnreferencedLibrary() {                                                      // Decl: speed/indep/src/feng/FEGameInterface.h:96
         return false;
     }; // [6]
     virtual void NotificationMessage(u32 Message, FEObject *pObject, u32 Param1, u32 Param2) = 0;          // [7]

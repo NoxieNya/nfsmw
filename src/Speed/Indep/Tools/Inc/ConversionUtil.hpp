@@ -43,8 +43,8 @@ inline float DEG2RAD(const float _deg_) {
     return _deg_ * 0.017453f; //  ((float)M_PI / 180.f); // TODO why doesn't the PI one match?
 }
 
-inline float RAD2DEG(const float _rad_) {
-    return _rad_ * (180.f / (float)M_PI);
+inline float RAD2DEG(float a) {
+    return a * (180.f / (float)M_PI);
 }
 
 inline float INCH2METERS(const float _inches_) {

@@ -4,7 +4,6 @@
 #include "Speed/Indep/bWare/Inc/bWare.hpp"
 #include "Speed/Indep/bWare/Inc/bMath.hpp"
 #include "Speed/Indep/bWare/Inc/bMemory.hpp"
-#include "types.h"
 
 int FEngMemoryPoolNumber = -1; // size: 0x4, address: 0x8041D140, Decl: speed/indep/src/feng/FEngStandard.cpp:23
 
@@ -19,11 +18,11 @@ int FEngMemoryPoolTracingEnabled = 0; // size: 0x4, address: 0x8041D150, Decl: s
 void InitFEngMemoryPool() {
     if (FEngMemoryPoolNumber != 0) {
         FEngMemoryPoolNumber = bGetFreeMemoryPoolNum();
-        if (!pFEngMemoryPoolMemory) {
+        if (pFEngMemoryPoolMemory == nullptr) {
             pFEngMemoryPoolMemory = bMalloc(FEngMemoryPoolSize, "FEngMemoryPool", 0, 0);
         }
         bInitMemoryPool(FEngMemoryPoolNumber, pFEngMemoryPoolMemory, FEngMemoryPoolSize, "FEngMemoryPool");
-        bSetMemoryPoolDebugTracing(FEngMemoryPoolNumber, FEngMemoryPoolTracingEnabled);
+        bSetMemoryPoolDebugTracing(FEngMemoryPoolNumber, FEngMemoryPoolTracingEnabled != 0);
     }
 }
 
@@ -36,8 +35,7 @@ void *FEngMalloc(unsigned int size) {}
 void *FEngMalloc(unsigned int size, const char *pFilename, int Line) {
     int pool_num = 0;
     if (FEngMemoryPoolNumber != -1) {
-        int largest = bLargestMalloc(FEngMemoryPoolNumber);
-        if (largest > static_cast<int>(size) + 0x40) {
+        if (bLargestMalloc(FEngMemoryPoolNumber) > static_cast<int>(size) + 0x40) {
             pool_num = FEngMemoryPoolNumber;
         }
     }

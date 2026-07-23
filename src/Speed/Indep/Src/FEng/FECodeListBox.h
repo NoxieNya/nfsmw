@@ -20,14 +20,14 @@ static const u32 FECODELISTBOX_PUBLICFLAGS_MASK = 0xFFFFFFFE; // size: 0x4, Decl
 
 inline i32 GetValidIndex(i32 lIndex, i32 lRange) { // Decl: speed/indep/src/feng/FECodeListBox.h:58
     if (lIndex >= 0) {
-        return lIndex - (lIndex / lRange) * lRange;
+        return lIndex % lRange;
     }
 
-    int posIndex = -lIndex;
-    int rem = posIndex - (posIndex / lRange) * lRange;
+    lIndex = -lIndex % lRange;
     if (lRange > 1) {
-        return lRange - rem;
+        return lRange - lIndex;
     }
+
     return 0;
 }
 
@@ -67,13 +67,12 @@ class FECodeListBox : public FEObject {
 
     FEColor mstSelectionColor; // offset 0xAC, size 0x10, Decl: speed/indep/src/feng/FECodeListBox.h:124
 
-    void *mpvCallbackData; // offset 0xC4, size 0x4, Decl: speed/indep/src/feng/FECodeListBox.h:128
-
-  public:
     static void (*mpDefaultCallback)(FECodeListBox *);            // size: 0x4, address: 0x8041D074
     void (*mpSelectionCallback)(FECodeListBox *);                 // offset 0xBC, size 0x4
     void (*mpSetCellCallback)(void *, FECodeListBox *, u32, u32); // offset 0xC0, size 0x4
+    void *mpvCallbackData;                                        // offset 0xC4, size 0x4, Decl: speed/indep/src/feng/FECodeListBox.h:128
 
+  public:
     FECodeListBox();
     FECodeListBox(const FECodeListBox &Src, bool bReference);
     ~FECodeListBox() override;
@@ -101,8 +100,7 @@ class FECodeListBox : public FEObject {
     void SetCurrentRow(u32 ulVCurrentRow);
 
     void SetViewDimensions(const FEPoint &stViewDimensions) {
-        mstViewDimensions.h = stViewDimensions.h;
-        mstViewDimensions.v = stViewDimensions.v;
+        mstViewDimensions = stViewDimensions;
     }
 
     u32 GetTotalNumColumns() const {}
@@ -202,8 +200,8 @@ class FECodeListBox : public FEObject {
         mstSelectionColor = stColor;
     }
 
-    FEColor &GetSelectionColor() const {
-        return const_cast<FEColor &>(mstSelectionColor);
+    const FEColor &GetSelectionColor() const {
+        return mstSelectionColor;
     }
 
     void Reset();
@@ -234,11 +232,14 @@ class FECodeListBox : public FEObject {
     void DeallocateString(i16 *psString);
 
     FEListBoxCell *GetPCellData(u32 ulColumnIndex, u32 ulRowIndex) const {
-        return &mpstCells[ulRowIndex * mulNumVisibleColumns + ulColumnIndex];
+        i32 lCIndex = GetRealColumn(ulColumnIndex);
+        i32 lRIndex = GetRealRow(ulRowIndex);
+
+        return &mpstCells[lRIndex * mulNumVisibleColumns + lCIndex];
     }
 
     FEListBoxCell *GetRealCellData(i32 lColumnIndex, i32 lRowIndex) {
-        return &mpstCells[GetRealRow(lRowIndex) * mulNumVisibleColumns + GetRealColumn(lColumnIndex)];
+        return &mpstCells[lRowIndex * mulNumVisibleColumns + lColumnIndex];
     }
 
     i32 GetRealColumn(i32 i) const;

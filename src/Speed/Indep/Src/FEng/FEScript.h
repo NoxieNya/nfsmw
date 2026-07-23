@@ -68,7 +68,7 @@ class FEScript : public FEMinNode {
 
     u32 ComputeSize();
 
-    char *const GetName() const {
+    const char *GetName() const {
         return pName;
     }
 

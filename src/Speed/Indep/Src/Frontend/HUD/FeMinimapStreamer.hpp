@@ -39,15 +39,15 @@ class ChoppedMiniMapManager {
         return LoadingChopNum > 0;
     }
 
-    int Loader(struct bChunk *chunk);
+    int Loader(bChunk *chunk);
 
-    int Unloader(struct bChunk *chunk);
+    int Unloader(bChunk *chunk);
 
     void GetTextureName(char *buffer, int buffer_size, int chop_num); // Decl: speed/indep/src/frontend/hud/FeMinimapStreamer.hpp:52
 
     int CountAllocated();
 
-    void UncompressMaps(short *chop_nums, int num_chops);
+    void UncompressMaps(int16 *chop_nums, int num_chops);
 
     void RemoveUncompressedMaps() {
         UncompressMaps(nullptr, 0);

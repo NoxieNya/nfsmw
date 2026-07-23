@@ -3,7 +3,6 @@
 
 #include "FEList.h"
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
-#include "types.h"
 
 static const u16 FEngSlotsPerBlock = 32; // size: 0x2, Decl: speed/indep/src/feng/FESlotPool.h:22
 
@@ -24,7 +23,7 @@ class FESlotNode : public FEMinNode {
     }
 
     ~FESlotNode() override { // Decl: speed/indep/src/feng/FESlotPool.h:41
-        if (pData) {
+        if (pData != nullptr) {
             delete[] pData;
         }
     }

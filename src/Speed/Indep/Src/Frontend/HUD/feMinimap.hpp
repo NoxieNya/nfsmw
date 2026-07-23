@@ -17,21 +17,7 @@ class MiniMapItem : public bTNode<MiniMapItem> {
     MiniMapItem(FEImage *icon, bVector2 &pos, uint32 item_type, bool hidden) {} // Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:28
     ~MiniMapItem() {}
 
-    static void *operator new(size_t size, void *ptr) {}
-
-    static void operator delete(void *mem, void *ptr) {}
-
-    static void *operator new(size_t size) {}
-
-    static void operator delete(void *mem, size_t size) {
-        gFastMem.Free(mem, size, nullptr);
-    }
-
-    static void *operator new(size_t size, const char *name) {}
-
-    static void operator delete(void *mem, const char *name) {}
-
-    static void operator delete(void *mem, size_t size, const char *name) {}
+    USE_FASTALLOC(MiniMapItem)
 
     void UpdatePos(float x, float y) {} // Decl: speed/indep/src/frontend/hud/FeMinimap.hpp:33
 

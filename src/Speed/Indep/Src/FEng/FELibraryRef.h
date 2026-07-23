@@ -1,7 +1,7 @@
 #ifndef FELIBRARYREF_H__
 #define FELIBRARYREF_H__
 
-#include "types.h"
+#include "Speed/Indep/Src/FEng/FETypes.h"
 
 // File: speed/indep/src/feng/FELibraryRef.h
 // total size: 0xC
@@ -12,7 +12,7 @@ class FELibraryRef {
     u32 PackNameHash; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FELibraryRef.h:27
     u32 LibGUID;      // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FELibraryRef.h:28
 
-    FELibraryRef() {} // Decl: speed/indep/src/feng/FELibraryRef.h:30
+    FELibraryRef() : ObjGUID(0), PackNameHash(-1), LibGUID(0) {} // Decl: speed/indep/src/feng/FELibraryRef.h:30
 };
 
 #endif

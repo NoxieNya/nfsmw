@@ -1,10 +1,7 @@
-#include "types.h"
 #include "Speed/Indep/Src/FEng/FERefList.h"
 
 void FERefList::ReferenceList(FERefList *pList) {
-    FEMinNode *n;
-
-    if (pList) {
+    if (pList != nullptr) {
         if (!bIsReference) {
             Purge();
         }
@@ -19,21 +16,20 @@ void FERefList::ReferenceList(FERefList *pList) {
 }
 
 void FERefList::AddNode(FEMinNode *insertpoint, FEMinNode *node) {
-
-    if (!node) {
+    if (node == nullptr) {
         return;
     }
 
-    if (insertpoint) {
+    if (insertpoint != nullptr) {
         node->next = insertpoint->next;
-        if (node->next) {
+        if (node->next != nullptr) {
             node->next->prev = node;
         }
         node->prev = insertpoint;
         insertpoint->next = node;
     } else {
         node->next = head;
-        if (node->next) {
+        if (node->next != nullptr) {
             node->next->prev = node;
         }
         node->prev = nullptr;
@@ -46,7 +42,7 @@ void FERefList::AddNode(FEMinNode *insertpoint, FEMinNode *node) {
 }
 
 FEMinNode *FERefList::RemNode(FEMinNode *node) {
-    if (node) {
+    if (node != nullptr) {
         if (node == head) {
             head = node->next;
         }
@@ -55,11 +51,11 @@ FEMinNode *FERefList::RemNode(FEMinNode *node) {
             tail = node->prev;
         }
 
-        if (node->prev) {
+        if (node->prev != nullptr) {
             node->prev->next = node->next;
         }
 
-        if (node->next) {
+        if (node->next != nullptr) {
             node->next->prev = node->prev;
         }
 
@@ -73,7 +69,7 @@ FEMinNode *FERefList::RemNode(FEMinNode *node) {
 FEMinNode *FERefList::RemHead() {
     FEMinNode *n = head;
 
-    if (n) {
+    if (n != nullptr) {
         RemNode(n);
     }
 
@@ -84,7 +80,7 @@ u32 FERefList::GetNumElements() {
     u32 Count = 0;
     FEMinNode *pNode = GetHead();
 
-    while (pNode) {
+    while (pNode != nullptr) {
         pNode = pNode->GetNext();
         Count++;
     }
