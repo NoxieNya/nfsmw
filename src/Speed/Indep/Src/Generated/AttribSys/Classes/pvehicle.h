@@ -362,11 +362,12 @@ struct pvehicle : Instance {
     bool MODEL(TAttrib<Attrib::StringKey> &result) const {
         ATTRIB_CODEGEN_GETATTRIB(Attrib::StringKey, 0x9047c9e0);
     }
-    bool MODEL(Attrib::StringKey &result) const {
-        ATTRIB_CODEGEN_CHECKEDGETLAYOUT(MODEL, result);
-    }
-    const Attrib::StringKey &MODEL() const {
+    const StringKey &MODEL() const {
         ATTRIB_CODEGEN_GETLAYOUT(MODEL);
+    }
+    bool MODEL(StringKey &result) const {
+        result = MODEL();
+        return true;
     }
     bool SET_MODEL(const Attrib::StringKey &input) {
         ATTRIB_CODEGEN_SETLAYOUT(MODEL, input);

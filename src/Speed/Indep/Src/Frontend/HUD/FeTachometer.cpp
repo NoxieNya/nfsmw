@@ -16,14 +16,14 @@ static float CalcAngleForRPM(float rpm, float redline) {
         factor = 1.0f;
     }
     float min_angle = 66.0f;
-    float max_angle = 360.0f;
-    float fRange = 294.0f - min_angle;
+    float max_angle = 294.0f;
+    float fRange = max_angle - min_angle;
     float angle = factor * fRange + min_angle;
-    if (angle > max_angle) {
-        angle = angle - max_angle;
+    if (angle > 360.0f) {
+        angle = angle - 360.0f;
     }
     if (angle < 0.0f) {
-        angle = max_angle - angle;
+        angle = 360.0f - angle;
     }
     return angle;
 }
@@ -36,7 +36,6 @@ Tachometer::Tachometer(UTL::COM::Object *pOutter, const char *pkg_name, int play
       mMaxRpm(0.0f),                         //
       mGear(G_NEUTRAL),                      //
       mIsShifting(false),                    //
-      mInPerfectLaunchRange(false),          //
       mShiftPotential(SHIFT_POTENTIAL_NONE), //
       mNeedleColourSetToPerfectLaunch(false) //
 {
@@ -46,7 +45,9 @@ Tachometer::Tachometer(UTL::COM::Object *pOutter, const char *pkg_name, int play
     pShiftIndicator = FEngFindObject(pkg_name, FEHashUpper("Shift_light"));
     pRPM_bar = FEngFindObject(pkg_name, FEHashUpper("TAC_Lines_7500"));
     pGearString = static_cast<FEString *>(FEngFindObject(pkg_name, FEHashUpper("3rdPersonGear")));
-    RegisterGroup(0x045E9562);
+
+    const u32 FEObj_NOSPersuitMeterGroup = 0x045E9562;
+    RegisterGroup(FEObj_NOSPersuitMeterGroup);
     PerfectShiftDetectedTimer.ResetLow();
     MissedShiftTimer.ResetLow();
     mOriginalNeedleWidth = TachNeedle->GetObjData()->Size.x;
@@ -54,16 +55,12 @@ Tachometer::Tachometer(UTL::COM::Object *pOutter, const char *pkg_name, int play
 
 void Tachometer::Update(IPlayer *player) {
     if (Sim::GetUserMode() == 1) {
-        float topX, topY;
-        FEngGetTopLeft(TachNeedle, topX, topY);
-        float needleWidth = mRpm / mMaxRpm;
-        float sizeW, sizeH;
-        needleWidth = needleWidth * mOriginalNeedleWidth;
-        FEngGetSize(TachNeedle, sizeW, sizeH);
-        FEngSetSize(TachNeedle, needleWidth, sizeH);
-        float topX2, topY2;
-        FEngGetTopLeft(TachNeedle, topX2, topY2);
-        FEngSetTopLeft(TachNeedle, topX, topY2);
+        float originalLeftX = FEngGetTopLeftX(TachNeedle);
+        float normalizedRev = mRpm / mMaxRpm;
+        normalizedRev = normalizedRev * mOriginalNeedleWidth;
+        FEngSetSizeX(TachNeedle, normalizedRev);
+        FEngSetTopLeftX(TachNeedle, originalLeftX);
+
         if (mRpm >= mRedline) {
             FEngSetScript(TachNeedle, 0x61D30442, true);
         } else {
@@ -73,17 +70,17 @@ void Tachometer::Update(IPlayer *player) {
         FEngSetRotationZ(TachNeedle, CalcAngleForRPM(mRpm, mMaxRpm));
     }
 
-    if (pGearString) {
+    if (pGearString != nullptr) {
         FEPrintf(pGearString, "%c", GetLetterForGear(mGear));
 
         if (Sim::GetUserMode() != 1) {
-            FEColor normalColor(0xFF000000);
-            FEColor redColor(0x88000000);
+            const FEColor colourGearNormal(0xFF000000);
+            const FEColor colourGearChanging(0x88000000);
 
             if (mIsShifting) {
-                FEngSetColor(pGearString, static_cast<unsigned long>(redColor));
+                FEngSetColor(pGearString, colourGearChanging);
             } else {
-                FEngSetColor(pGearString, static_cast<unsigned long>(normalColor));
+                FEngSetColor(pGearString, colourGearNormal);
             }
         }
     }
@@ -101,14 +98,16 @@ void Tachometer::Update(IPlayer *player) {
     if (mInPerfectLaunchRange) {
         if (!mNeedleColourSetToPerfectLaunch) {
             mNeedleColourSetToPerfectLaunch = true;
-            FEColor col = FEngGetObjectColor(TachNeedle);
-            FEngSetColor(TachNeedle, (~static_cast<unsigned long>(col)) | 0xFF000000);
+            int originalNeedleColour = FEngGetColor(TachNeedle);
+            int oppositeOriginal = ~originalNeedleColour | 0xFF000000;
+            FEngSetColor(TachNeedle, oppositeOriginal);
         }
     } else {
         if (mNeedleColourSetToPerfectLaunch) {
             mNeedleColourSetToPerfectLaunch = false;
-            FEColor col = FEngGetObjectColor(TachNeedle);
-            FEngSetColor(TachNeedle, (~static_cast<unsigned long>(col)) | 0xFF000000);
+            int originalNeedleColour = FEngGetColor(TachNeedle);
+            int oppositeOriginal = ~originalNeedleColour | 0xFF000000;
+            FEngSetColor(TachNeedle, oppositeOriginal);
         }
     }
 }

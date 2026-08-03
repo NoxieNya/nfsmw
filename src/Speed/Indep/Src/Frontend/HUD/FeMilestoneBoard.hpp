@@ -15,6 +15,15 @@ class MilestoneBoard_Milestone {
     float mCurrVal;
     int mHeaderHash;
     bool mComplete;
+
+    inline MilestoneBoard_Milestone() {
+        mMilestoneIconHash = 0;
+        mType = 0;
+        mGoal = 0;
+        mCurrVal = 0;
+        mHeaderHash = 0;
+        mComplete = false;
+    }
 };
 
 // total size: 0xE0
@@ -25,11 +34,11 @@ class MilestoneBoard : public HudElement, public IMilestoneBoard {
     void SetInPursuit(bool inPursuit) override {
         mInPursuit = inPursuit;
     }
-    void SetChallengeSeries(bool challenge) override {
-        mChallengeSeries = challenge;
+    void SetChallengeSeries(bool cs) override {
+        mChallengeSeries = cs;
     };
-    void SetNumberOfMilestones(int num) override {
-        mNumMilestones = num;
+    void SetNumberOfMilestones(int numMilestones) override {
+        mNumMilestones = numMilestones;
     };
     void SetMilestoneIconHash(int milestoneNum, int hash) override {
         mMilestones[milestoneNum].mMilestoneIconHash = hash;

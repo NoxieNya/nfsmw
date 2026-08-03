@@ -1,9 +1,5 @@
-#ifndef FRONTEND_MENUSCREENS_INGAME_UISIXDAYSLATER_H
-#define FRONTEND_MENUSCREENS_INGAME_UISIXDAYSLATER_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef UISIXDAYSLATER_Hpp
+#define UISIXDAYSLATER_Hpp
 
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 #include "Speed/Indep/Src/FEng/FEString.h"

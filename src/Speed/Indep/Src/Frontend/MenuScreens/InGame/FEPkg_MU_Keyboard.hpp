@@ -168,4 +168,6 @@ const char mEmailSymbols[45] = {}; // size: 0x2D, Decl: speed/indep/src/frontend
 
 extern Timer KBCreationTimer;
 
+MenuScreen *CreateFEKeyboard(ScreenConstructorData *sd);
+
 #endif

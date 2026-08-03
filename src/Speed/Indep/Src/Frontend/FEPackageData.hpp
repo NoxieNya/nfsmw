@@ -1,6 +1,7 @@
 #ifndef FEPACKAGEDATA_H
 #define FEPACKAGEDATA_H
 
+#include "Speed/Indep/Src/Misc/SpeedChunks.hpp"
 #include "Speed/Indep/bWare/Inc/bChunk.hpp"
 #include "Speed/Indep/bWare/Inc/bList.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
@@ -27,7 +28,7 @@ class FEPackageData : public bTNode<FEPackageData> {
         return pPackage;
     }
     bool IsCompressedChunk() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:22
-        return DataChunk != nullptr;
+        return MyChunk->GetID() == BCHUNK_FENG_COMPRESSED_PACKAGE;
     }
 
     void Activate(FEPackage *pkg, int arg);
@@ -39,7 +40,7 @@ class FEPackageData : public bTNode<FEPackageData> {
     void UnActivate();
 
     bool IsActive() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:28
-        return pScreen != nullptr;
+        return pPackage != nullptr;
     }
 
     void Close();

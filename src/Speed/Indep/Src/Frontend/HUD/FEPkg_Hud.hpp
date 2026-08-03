@@ -87,7 +87,6 @@ class FEngHud : public UTL::COM::Object, public IHud {
     HudElement *pEngineTemp;        // offset 0x2F4, size 0x4
     HudElement *pNitrous;           // offset 0x2F8, size 0x4, Decl: speed/indep/src/frontend/hud/FEPkg_Hud.hpp:79
     HudElement *pSpeedBreakerMeter; // offset 0x2FC, size 0x4, Decl: speed/indep/src/frontend/hud/FEPkg_Hud.hpp:80
-    HudElement *pRadarDetector;     // offset 0x330, size 0x4, Decl: speed/indep/src/frontend/hud/FEPkg_Hud.hpp:81
     HudElement *pRaceOverMessage;   // offset 0x300, size 0x4, Decl: speed/indep/src/frontend/hud/FEPkg_Hud.hpp:84
     HudElement *pGenericMessage;    // offset 0x304, size 0x4, Decl: speed/indep/src/frontend/hud/FEPkg_Hud.hpp:85
     HudElement *pAutoSaveIcon;      // offset 0x308, size 0x4, Decl: speed/indep/src/frontend/hud/FEPkg_Hud.hpp:86
@@ -100,6 +99,7 @@ class FEngHud : public UTL::COM::Object, public IHud {
     HudElement *pWrongWIndi;        // offset 0x324, size 0x4, Decl: speed/indep/src/frontend/hud/FEPkg_Hud.hpp:93
     HudElement *pOnlineSupport;     // offset 0x328, size 0x4
     HudElement *p321Go;             // offset 0x32C, size 0x4
+    HudElement *pRadarDetector;     // offset 0x330, size 0x4, Decl: speed/indep/src/frontend/hud/FEPkg_Hud.hpp:81
     HudElement *pMinimap;           // offset 0x334, size 0x4, Decl: speed/indep/src/frontend/hud/FEPkg_Hud.hpp:94
     HudElement *pGetAwayMeter;      // offset 0x338, size 0x4
     HudElement *pMenuZoneTrigger;   // offset 0x33C, size 0x4, Decl: speed/indep/src/frontend/hud/FEPkg_Hud.hpp:95

@@ -1,8 +1,5 @@
-#ifndef FRONTEND_MENUSCREENS_INGAME_INGAMETUTORIALSCREEN_H
-#define FRONTEND_MENUSCREENS_INGAME_INGAMETUTORIALSCREEN_H
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef INGAMETUTORIALSCREEN_HPP
+#define INGAMETUTORIALSCREEN_HPP
 
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 #include "Speed/Indep/Src/Frontend/SubTitle.hpp"
@@ -12,7 +9,7 @@ class InGameAnyTutorialScreen : public MenuScreen {
     InGameAnyTutorialScreen(ScreenConstructorData *sd);
     ~InGameAnyTutorialScreen() override;
     static void LaunchMovie(const char *filename, const char *packageName);
-    void DismissMovie();
+    static void DismissMovie();
     static void SetMovieName(const char *filename);
     static void SetPackageName(const char *packageName);
     static MenuScreen *Create(ScreenConstructorData *sd);

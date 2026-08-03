@@ -1,6 +1,7 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Loading/FELoadingScreen.hpp"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Ecstasy/Ecstasy.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/bWare/Inc/bWare.hpp"
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
 #include "Speed/Indep/Src/Misc/BuildRegion.hpp"
@@ -8,26 +9,23 @@
 #include "Speed/Indep/Src/Generated/Events/ESndGameState.hpp"
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
 
-static bool bSawLoadingScreen;
+static bool bSawLoadingScreen = false;
 
 void *LoadingScreen::mLoadingScreenPtr;
 
 LoadingScreen::LoadingScreen(ScreenConstructorData *sd) : MenuScreen(sd) {
-    const u32 FEObj_LoadingBlinker = 0xCF281D29;
 
     if (FEManager::Get()->IsFirstBoot()) {
         if (BuildRegion::ShowLanguageSelect()) {
-            FEngSetScript(GetPackageName(), FEObj_LoadingBlinker, 0x5D7C6A21, true);
+            const u32 FEObj_LOADINGGROUP = 0xCF281D29;
+            FEngSetScript(GetPackageName(), FEObj_LOADINGGROUP, 0x5D7C6A21, true);
         }
     }
 
     bSawLoadingScreen = true;
 
-    {
-        const unsigned long FEObj_LOADINGGROUP = 0x06D91704;
-
-        FEngSetVisible(FEngFindObject(GetPackageName(), FEObj_LOADINGGROUP));
-    }
+    const u32 FEObj_LoadingBlinker = 0x06D91704;
+    FEngSetVisible(GetPackageName(), FEObj_LoadingBlinker);
 
     if (eIsWidescreen()) {
         cFEng::Get()->QueuePackageMessage(bStringHash("CURRENT_GEN_WIDESCREEN"), GetPackageName(), nullptr);
@@ -46,5 +44,5 @@ LoadingScreen::~LoadingScreen() {
 }
 
 void LoadingScreen::InitLoadingScreen() {
-    mLoadingScreenPtr = bMalloc(sizeof(LoadingScreen), nullptr, 0, 0);
+    mLoadingScreenPtr = bMalloc(sizeof(LoadingScreen), "LoadingScreen", 0, 0);
 }

@@ -19,7 +19,9 @@ class GenericMessage : public HudElement, public IGenericMessage {
 
     bool IsGenericMessageShowing() override;
 
-    GenericMessage_Priority GetCurrentGenericMessagePriority() override {}
+    GenericMessage_Priority GetCurrentGenericMessagePriority() override {
+        return mPriority;
+    }
 
     void Update(IPlayer *player) override;
 

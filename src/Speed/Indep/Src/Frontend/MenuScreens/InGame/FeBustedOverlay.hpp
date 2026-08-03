@@ -1,9 +1,5 @@
-#ifndef FRONTEND_MENUSCREENS_INGAME_FEBUSTEDOVERLAY_H
-#define FRONTEND_MENUSCREENS_INGAME_FEBUSTEDOVERLAY_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef FEBUSTEDOVERLAY_HPP
+#define FEBUSTEDOVERLAY_HPP
 
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 

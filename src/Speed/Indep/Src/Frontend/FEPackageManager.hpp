@@ -56,10 +56,13 @@ class FEPackageManager {
 
     FEPackageData *FindFEPackageData(FEPackage *pkg);
 
-    FEPackageData *Add(FEPackageData *screen) {} // Decl: speed/indep/src/frontend/FEPackageManager.hpp:57
+    FEPackageData *Add(FEPackageData *screen) { // Decl: speed/indep/src/frontend/FEPackageManager.hpp:57
+        return ScreenList.AddTail(screen);
+    }
 
-    FEPackageData *Remove(FEPackageData *screen) {} // Decl: speed/indep/src/frontend/FEPackageManager.hpp:58
-
+    FEPackageData *Remove(FEPackageData *screen) { // Decl: speed/indep/src/frontend/FEPackageManager.hpp:58
+        return ScreenList.Remove(screen);
+    }
     void PackageWasLoaded(FEPackage *pkg);
 
     void PackageWillBeUnloaded(FEPackage *pkg);

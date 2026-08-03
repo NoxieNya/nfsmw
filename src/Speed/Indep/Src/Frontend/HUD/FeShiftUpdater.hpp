@@ -14,12 +14,12 @@ class ShiftUpdater : public HudElement, public IShiftUpdater {
     void Update(IPlayer *player) override;
     void SetGear(GearID gear, ShiftStatus status, ShiftPotential potential, bool hasGoodEnoughTraction) override {
         if (gear != mGear) {
-            int dir = -1;
             if (gear > mGear) {
-                dir = 1;
+                mGearChanged = 1;
+            } else {
+                mGearChanged = -1;
             }
             mGear = gear;
-            mGearChanged = dir;
             mShiftPotential = SHIFT_POTENTIAL_NONE;
             if (hasGoodEnoughTraction) {
                 mLastShiftStatus = status;
@@ -34,8 +34,8 @@ class ShiftUpdater : public HudElement, public IShiftUpdater {
             mShiftPotential = SHIFT_POTENTIAL_NONE;
         }
     };
-    void SetEngineBlown(bool blown) override {
-        mIsEngineBlown = blown;
+    void SetEngineBlown(bool isBlown) override {
+        mIsEngineBlown = isBlown;
     };
     void SetEngineTemp(float temp) override {
         mEngineTemp = temp;

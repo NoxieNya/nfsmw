@@ -255,7 +255,7 @@ class ShoppingCartItem : public bTNode<ShoppingCartItem> {
         return ToBuy->GetPrice();
     }
     int GetTradeInPrice() {
-        return TradeIn ? TradeIn->GetPrice() : 0;
+        return (TradeIn != nullptr) ? TradeIn->GetPrice() : 0;
     }
     void ToggleActive() {
         bActive = !bActive;

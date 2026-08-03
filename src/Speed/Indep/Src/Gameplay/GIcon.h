@@ -108,7 +108,7 @@ class GIcon {
     }
 
     bool IsFlagSet(unsigned int mask) const { // Decl: speed/indep/src/Gameplay/GIcon.h:162
-        return (mFlags & mask) == mask;
+        return (mFlags & mask) != 0;
     }
 
     bool IsFlagClear(unsigned int mask) const { // Decl: speed/indep/src/Gameplay/GIcon.h:163

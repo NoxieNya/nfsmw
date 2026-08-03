@@ -6,7 +6,9 @@
 #include "RaceDB.hpp"
 #include "Speed/Indep/Src/Gameplay/GInfractionManager.h"
 #include "Speed/Indep/Src/Gameplay/GRace.h"
+#include "Speed/Indep/bWare/Inc/bMemory.hpp"
 #include "Speed/Indep/bWare/Inc/bTypes.hpp"
+#include "Speed/Indep/bWare/Inc/bWare.hpp"
 #include "VehicleDB.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
 #include "Speed/Indep/bWare/Inc/bMath.hpp"
@@ -130,7 +132,7 @@ class PlayerSettings {
     }
     void Default();
     void DefaultFromOptionsScreen();
-    bool operator==(const PlayerSettings &rhs) const;
+    bool operator==(const PlayerSettings &settings) const;
     void ScrollDriveCam(int dir);
     Attrib::Key GetControllerAttribs(eControllerAttribs type, bool wheel_connected) const;
 
@@ -159,7 +161,7 @@ class GameplaySettings {
     void Default();
     bool IsMapItemEnabled(eWorldMapItemType type);
     void SetMapItem(eWorldMapItemType type, bool enabled);
-    bool operator==(const GameplaySettings &rhs) const;
+    bool operator==(const GameplaySettings &settings) const;
 
     bool AutoSaveOn;            // offset 0x0, size 0x1
     bool RearviewOn;            // offset 0x4, size 0x1
@@ -182,7 +184,7 @@ class VideoSettings {
         Default();
     }
     void Default();
-    bool operator==(const VideoSettings &rhs) const;
+    bool operator==(const VideoSettings &settings) const;
 
     float FEScale;       // offset 0x0, size 0x4
     float ScreenOffsetX; // offset 0x4, size 0x4
@@ -197,7 +199,7 @@ class AudioSettings {
         Default();
     }
     void Default();
-    bool operator==(const AudioSettings &rhs) const;
+    bool operator==(const AudioSettings &settings) const;
     float GetMasteredSpeechVol() {
         return SpeechVol;
     }
@@ -272,6 +274,9 @@ enum SMSMessageFlags {
 // total size: 0x4
 class SMSMessage {
   public:
+    SMSMessage() : Handle(0xFF), Flags(0), SortOrder(0) {}
+    ~SMSMessage() {}
+
     void SetHandle(FESMSHandle handle) {
         Handle = handle;
     }
@@ -348,13 +353,9 @@ enum CS_SpecialFlags {
 // total size: 0x27C
 class CareerSettings {
   public:
-    CareerSettings() {
-        for (int i = 0; i < 150; i++) {
-            SMSMessages[i].Handle = 0xFF;
-            SMSMessages[i].Flags = 0;
-            SMSMessages[i].SortOrder = 0;
-        }
-    }
+    CareerSettings() : SMSMessages() {}
+    ~CareerSettings() {}
+
     void Default();
     const char *GetCaseFileName() {
         return CaseFileName;
@@ -396,7 +397,7 @@ class CareerSettings {
     bool HasCashBonusBeenAwarded() {
         return SpecialFlags & CS_ONE_TIME_CASH_BONUS;
     }
-    void AwardOneTimeCashBonus(bool bOldSaveExists);
+    void AwardOneTimeCashBonus(bool bGiveCashBonus);
     bool HasBeenBustedOnce() {
         return SpecialFlags & CS_BEEN_BUSTED_ONCE;
     }
@@ -408,6 +409,12 @@ class CareerSettings {
     }
     void SetAwardedBKReward() {
         SpecialFlags |= CS_AWARDED_BK_REWARD;
+    }
+    bool HasBeenAwardedCastrolGT() {
+        return SpecialFlags & CS_CASTROL_GT;
+    }
+    void SetAwardedCastrolGT() {
+        SpecialFlags |= CS_CASTROL_GT;
     }
     void SetAdaptiveDifficulty(float difficulty) {
         // TODO
@@ -509,9 +516,9 @@ class CareerSettings {
     char *SaveRaceData(void *save_to, void *maxptr);
     char *SaveUnlockData(void *save_to, void *maxptr);
     char *SaveGameplayData(void *save_to, void *maxptr);
-    char *LoadRaceData(void *load_from, void *maxptr);
-    char *LoadUnlockData(void *load_from, void *maxptr);
-    char *LoadGameplayData(void *load_from, void *maxptr);
+    char *LoadRaceData(void *load_from_here, void *maxptr);
+    char *LoadUnlockData(void *load_from_here, void *maxptr);
+    char *LoadGameplayData(void *load_from_here, void *maxptr);
     void GenerateCaseFileName();
 
   public:
@@ -558,7 +565,7 @@ class UserProfile {
     void CommitHighScoresPostRace(eHighScoresRaceTypes race_type, int track, int direction, int laps, int is_split_screen,
                                   FinishedRaceStatsEntry *stats);
     void CommitHighScoresPauseQuit();
-    void CommitPursuitInfo(IPursuit *iPursuit, uint32 car_handle, uint32 bounty, unsigned int num_infractions);
+    void CommitPursuitInfo(IPursuit *iPursuit, uint32 car_FEKey, uint32 bounty, unsigned int num_infractions);
     void IncInfration(GInfractionManager::InfractionType infrat, uint32 car);
     void CommitServeInfractions(uint32 car);
 
@@ -603,15 +610,13 @@ struct GameCompletionStats {
 // total size: 0xA28
 class cFrontendDatabase {
   public:
-    static void *operator new(size_t size, unsigned int alloc_params) {
-#ifdef MILESTONE_OPT
-        return bMalloc(size, __FILE__, __LINE__, alloc_params);
-#else
-        return bMalloc(size, alloc_params);
-#endif
+    static void *operator new(size_t size, const char *debug_name) {
+        return bMalloc(size, debug_name, 0, GetVirtualMemoryAllocParams());
     }
 
-    static void operator delete(void *ptr) {}
+    static void operator delete(void *ptr) {
+        bFree(ptr);
+    }
 
   private:
     eHighScoresRaceTypes CalcRaceTypeForHighScores();
@@ -747,7 +752,11 @@ class cFrontendDatabase {
         return FEGameMode & eFE_GAME_MODE_BEAT_GAME;
     }
     bool MatchesGameMode(uint32 mode) {
-        return FEGameMode & mode;
+        if (mode != eFE_GAME_MODE_ALL) {
+            return FEGameMode == mode;
+        }
+
+        return true;
     }
     uint32 GetGameMode() {
         return FEGameMode;

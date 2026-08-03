@@ -14,6 +14,7 @@
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
+#include "Speed/Indep/Tools/Inc/ConversionUtil.hpp"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 
 enum PostRaceScreenMode {
@@ -37,10 +38,8 @@ class RaceStat : public FEStatWidget {
 
 class InfoStat : public RaceStat {
   public:
-    InfoStat(FEString *title, FEString *info, uint32 title_hash, uint32 info_hash) : RaceStat(title, info) {
-        TitleHash = title_hash;
-        InfoHash = info_hash;
-    }
+    InfoStat(FEString *title, FEString *info, uint32 title_hash, uint32 info_hash)
+        : RaceStat(title, info), TitleHash(title_hash), InfoHash(info_hash) {}
 
     ~InfoStat() override {}
     void Draw() override {
@@ -55,24 +54,18 @@ class InfoStat : public RaceStat {
 
 class GenericStat : public RaceStat {
   public:
-    GenericStat(FEString *title, FEString *data, float stat_data, uint32 title_hash, uint32 units_hash, const char *format) : RaceStat(title, data) {
-        StatData = stat_data;
-        TitleHash = title_hash;
-        UnitsHash = units_hash;
-        Format = format;
-    }
+    GenericStat(FEString *title, FEString *data, float stat_data, uint32 title_hash, uint32 units_hash, const char *format)
+        : RaceStat(title, data), StatData(stat_data), TitleHash(title_hash), UnitsHash(units_hash), Format(format) {}
 
     ~GenericStat() override {}
     void Draw() override {
-        char text[0x20];
         FEngSetLanguageHash(GetTitleObject(), TitleHash);
-        bSNPrintf(text, 0x20, Format, StatData);
+        char sztemp[0x20];
+        bSNPrintf(sztemp, sizeof(sztemp), Format, StatData);
         if (UnitsHash != 0) {
-            FEString *data = GetDataObject();
-            const char *units = GetLocalizedString(UnitsHash);
-            FEPrintf(data, "%s %s", text, units);
+            FEPrintf(GetDataObject(), "%s %s", sztemp, GetLocalizedString(UnitsHash));
         } else {
-            FEPrintf(GetDataObject(), "%s", text);
+            FEPrintf(GetDataObject(), "%s", sztemp);
         }
     };
 
@@ -85,17 +78,14 @@ class GenericStat : public RaceStat {
 
 class TimerStat : public RaceStat {
   public:
-    TimerStat(FEString *title, FEString *data, float seconds, uint32 title_hash) : RaceStat(title, data) {
-        Seconds = seconds;
-        TitleHash = title_hash;
-    }
+    TimerStat(FEString *title, FEString *data, float seconds, uint32 title_hash) : RaceStat(title, data), Seconds(seconds), TitleHash(title_hash) {}
 
     ~TimerStat() override {}
     void Draw() override {
-        char text[0x20];
+        char sztemp[0x20];
         FEngSetLanguageHash(GetTitleObject(), TitleHash);
-        Seconds.PrintToString(text, 0);
-        FEPrintf(GetDataObject(), "%s", text);
+        Seconds.PrintToString(sztemp, 0);
+        FEPrintf(GetDataObject(), "%s", sztemp);
     };
 
   protected:
@@ -105,10 +95,8 @@ class TimerStat : public RaceStat {
 
 class ResultStat : public RaceStat {
   public:
-    ResultStat(FEString *name_str, FEString *data, FEString *pos, GRacerInfo *racer_info) : RaceStat(name_str, data) {
-        Position = pos;
-        RacerInfo = racer_info;
-    }
+    ResultStat(FEString *name_str, FEString *data, FEString *pos, GRacerInfo *racer_info)
+        : RaceStat(name_str, data), Position(pos), RacerInfo(racer_info) {}
     ~ResultStat() override {}
 
   protected:
@@ -119,41 +107,24 @@ class ResultStat : public RaceStat {
 class GenericResult : public ResultStat {
   public:
     GenericResult(FEString *name, FEString *data, FEString *pos, uint32 units_hash, float fdata, const char *format, GRacerInfo *racer_info)
-        : ResultStat(name, data, pos, racer_info) {
-        UnitsHash = units_hash;
-        FData = fdata;
-        Format = format;
-    }
+        : ResultStat(name, data, pos, racer_info), UnitsHash(units_hash), FData(fdata), Format(format) {}
 
     ~GenericResult() override {}
     void Draw() override {
-        char text[0x20];
-
         FEPrintf(GetTitleObject(), "%s", RacerInfo->GetName());
 
-        if (!RacerInfo->IsFinishedRacing()) {
-            bool showData = false;
-            if (GRaceStatus::Exists()) {
-                if (GRaceStatus::Get().GetRaceType() == GRace::kRaceType_SpeedTrap) {
-                    showData = true;
-                }
-            }
-            if (!showData) {
-                FEngSetLanguageHash(GetDataObject(), 0x0FC1BF40);
-                goto show_position;
-            }
-        }
-
-        bSNPrintf(text, 0x20, Format, FData);
-        if (UnitsHash != 0) {
-            FEString *data = GetDataObject();
-            const char *units = GetLocalizedString(UnitsHash);
-            FEPrintf(data, "%s %s", text, units);
+        if (!RacerInfo->IsFinishedRacing() && !GRaceStatus::Get().IsSpeedTrapRace()) {
+            FEngSetLanguageHash(GetDataObject(), 0x0FC1BF40);
         } else {
-            FEPrintf(GetDataObject(), "%s", text);
+            char sztemp[0x20];
+            bSNPrintf(sztemp, sizeof(sztemp), Format, FData);
+            if (UnitsHash != 0) {
+                FEPrintf(GetDataObject(), "%s %s", sztemp, GetLocalizedString(UnitsHash));
+            } else {
+                FEPrintf(GetDataObject(), "%s", sztemp);
+            }
         }
 
-    show_position:
         FEPrintf(Position, "%d", RacerInfo->GetRanking());
     };
 
@@ -167,10 +138,8 @@ class RaceResultStat : public ResultStat {
   public:
     RaceResultStat(FEString *name_str, FEString *time, FEString *pos, GRacerInfo *info) : ResultStat(name_str, time, pos, info) {}
 
-    ~RaceResultStat() override;
+    ~RaceResultStat() override {};
     void Draw() override {
-        char text[0x20];
-
         FEPrintf(GetTitleObject(), "%s", RacerInfo->GetName());
 
         if (RacerInfo->GetIsEngineBlown()) {
@@ -182,9 +151,10 @@ class RaceResultStat : public ResultStat {
         } else if (!RacerInfo->IsFinishedRacing()) {
             FEngSetLanguageHash(GetDataObject(), 0x0FC1BF40);
         } else {
+            char sztemp[0x20];
             Timer t(RacerInfo->GetRaceTime());
-            t.PrintToString(text, 0);
-            FEPrintf(GetDataObject(), "%s", text);
+            t.PrintToString(sztemp, 0);
+            FEPrintf(GetDataObject(), "%s", sztemp);
         }
 
         FEPrintf(Position, "%d", RacerInfo->GetRanking());
@@ -193,31 +163,24 @@ class RaceResultStat : public ResultStat {
 
 class LapStat : public ResultStat {
   public:
-    LapStat(FEString *lap, FEString *time, FEString *pos, int lap_num, int seconds, int pos_num) : ResultStat(lap, time, pos, nullptr) {
-        LapNum = lap_num;
-        Time = seconds;
-        PosNum = pos_num;
-    };
+    LapStat(FEString *lap, FEString *time, FEString *pos, int lap_num, float seconds, int pos_num)
+        : ResultStat(lap, time, pos, nullptr), LapNum(lap_num), Time(seconds), PosNum(pos_num) {};
 
     ~LapStat() override {};
     void Draw() override {
         FEPrintf(GetTitleObject(), "%d", LapNum);
-        if (static_cast<float>(PosNum) == 0.0f) {
+        if (static_cast<float>(PosNum) == -1.0f) {
             FEngSetLanguageHash(Position, 0x5D82DBA2);
             FEngSetLanguageHash(GetDataObject(), 0x5D82DBA2);
-            return;
-        }
-
-        if (Time.GetSeconds() == 0.0f) {
+        } else if (Time.GetSeconds() == 0.0f) {
             FEngSetLanguageHash(Position, 0x0FC1BF40);
             FEngSetLanguageHash(GetDataObject(), 0x0FC1BF40);
-            return;
+        } else {
+            FEPrintf(Position, "%d", PosNum);
+            char sztemp[32];
+            Time.PrintToString(sztemp, 0);
+            FEPrintf(GetDataObject(), "%s", sztemp);
         }
-
-        char text[40];
-        FEPrintf(Position, "%d", PosNum);
-        Time.PrintToString(text, 0);
-        FEPrintf(GetDataObject(), "%s", text);
     };
 
   protected:
@@ -228,11 +191,8 @@ class LapStat : public ResultStat {
 
 class StageStat : public ResultStat {
   public:
-    StageStat(FEString *stage, FEString *time, FEString *pos, int stage_num, float seconds, int pos_num) : ResultStat(stage, time, pos, nullptr) {
-        StageNum = stage_num;
-        Time = seconds;
-        PosNum = pos_num;
-    }
+    StageStat(FEString *stage, FEString *time, FEString *pos, int stage_num, float seconds, int pos_num)
+        : ResultStat(stage, time, pos, nullptr), StageNum(stage_num), Time(seconds), PosNum(pos_num) {}
 
     ~StageStat() override {};
     void Draw() override {
@@ -257,11 +217,8 @@ class StageStat : public ResultStat {
 
 class SpeedStat : public ResultStat {
   public:
-    SpeedStat(FEString *lap, FEString *speedStr, FEString *pos, int lap_num, float speed, int pos_num) : ResultStat(lap, speedStr, pos, nullptr) {
-        LapNum = lap_num;
-        Speed = speed;
-        PosNum = pos_num;
-    };
+    SpeedStat(FEString *lap, FEString *speedStr, FEString *pos, int lap_num, float speed, int pos_num)
+        : ResultStat(lap, speedStr, pos, nullptr), LapNum(lap_num), Speed(speed), PosNum(pos_num) {};
 
     ~SpeedStat() override {};
     void Draw() override {
@@ -269,16 +226,17 @@ class SpeedStat : public ResultStat {
         if (Speed == 0.0f) {
             FEngSetLanguageHash(Position, 0x0FC1BF40);
             FEngSetLanguageHash(GetDataObject(), 0x0FC1BF40);
-            return;
-        }
+        } else {
+            float speed;
+            if (FEDatabase->GetGameplaySettings()->SpeedoUnits == 1) {
+                speed = MPS2KPH(Speed);
+            } else {
+                speed = MPS2MPH(Speed);
+            }
 
-        float scale = 2.23699f;
-        if (FEDatabase->GetGameplaySettings()->SpeedoUnits == 1) {
-            scale = 3.6f;
+            FEPrintf(Position, "%d", PosNum);
+            FEPrintf(GetDataObject(), "%0.0f", speed);
         }
-
-        FEPrintf(Position, "%d", PosNum);
-        FEPrintf(GetDataObject(), "%0.0f", Speed * scale);
     };
 
   protected:
@@ -290,11 +248,7 @@ class SpeedStat : public ResultStat {
 class TollboothStat : public ResultStat {
   public:
     TollboothStat(FEString *tollbooth, FEString *time, FEString *pos, int tollbooth_num, float seconds, int pos_num)
-        : ResultStat(tollbooth, time, pos, nullptr) {
-        TollboothNum = tollbooth_num;
-        Time = seconds;
-        PosNum = pos_num;
-    }
+        : ResultStat(tollbooth, time, pos, nullptr), TollboothNum(tollbooth_num), Time(seconds), PosNum(pos_num) {}
 
     ~TollboothStat() override {};
     void Draw() override {
@@ -302,19 +256,15 @@ class TollboothStat : public ResultStat {
         if (static_cast<float>(PosNum) == 1.0f) {
             FEngSetLanguageHash(Position, 0x5D82DBA2);
             FEngSetLanguageHash(GetDataObject(), 0x5D82DBA2);
-            return;
-        }
-
-        if (Time.GetSeconds() == 0.0f) {
+        } else if (Time.GetSeconds() == 0.0f) {
             FEngSetLanguageHash(Position, 0x0FC1BF40);
             FEngSetLanguageHash(GetDataObject(), 0x0FC1BF40);
-            return;
+        } else {
+            char sztemp[32];
+            FEPrintf(Position, "%d", PosNum);
+            Time.PrintToString(sztemp, 0);
+            FEPrintf(GetDataObject(), "+%s", sztemp);
         }
-
-        char text[32];
-        FEPrintf(Position, "%d", PosNum);
-        Time.PrintToString(text, 0);
-        FEPrintf(GetDataObject(), "+%s", text);
     };
 
   protected:
@@ -458,7 +408,7 @@ class PursuitResultsDatum : public ArrayDatum {
     };
 
     PursuitResultsDatum(PursuitResultsDatumType type, uint32 itemName, float itemNumber, float itemGoal, PursuitResultsDatumCheckType itemChecked);
-    void NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) override;
+    void NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) override;
 
     PursuitResultsDatumType GetType() {
         return mType;

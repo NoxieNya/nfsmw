@@ -1,8 +1,7 @@
+#include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/Src/Frontend/HUD/FeSpeedBreakerMeter.hpp"
-
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/FEng/FEObject.h"
-#include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
 
 SpeedBreakerMeter::SpeedBreakerMeter(UTL::COM::Object *pOutter, const char *pkg_name, int player_number)
@@ -17,7 +16,7 @@ SpeedBreakerMeter::SpeedBreakerMeter(UTL::COM::Object *pOutter, const char *pkg_
     mpSpeedBreakerMeterBar = RegisterMultiImage(FEHashUpper("Speedbreaker_Meter_Multi_Image"));
     mpSpeedBreakerGroup = RegisterGroup(0x82D60021);
     mpSpeedBreakerBar = FEngFindObject(GetPackageName(), 0x1FDAF669);
-    if (mpSpeedBreakerBar) {
+    if (mpSpeedBreakerBar != nullptr) {
         mSpeedBreakerBarOriginalWidth = mpSpeedBreakerBar->GetObjData()->Size.x;
     }
 }
@@ -29,19 +28,26 @@ void SpeedBreakerMeter::Update(IPlayer *player) {
 
     mPursuitLevelChanged = false;
 
-    if (mpSpeedBreakerMeterBar && mpSpeedBreakerBar) {
+    if ((mpSpeedBreakerMeterBar != nullptr) && (mpSpeedBreakerBar != nullptr)) {
         float min_angle = 175.0f;
+        const float max_angle = 0;
+        const float min_pursuit = 0;
+        const float max_pursuit = 0;
+        const float frac = 0;
+
         if (bStrICmp(GetPackageName(), "HUD_Drag.fng") == 0) {
             min_angle = -48.0f;
         }
-        FEngSetMultiImageRot(mpSpeedBreakerMeterBar, mPursuitLevel * -min_angle + min_angle);
 
-        if (FEngIsScriptSet(reinterpret_cast<FEObject *>(mpSpeedBreakerGroup), 0x5b0d9106)) {
+        const float angle = mPursuitLevel;
+        FEngSetMultiImageRot(mpSpeedBreakerMeterBar, (angle * -min_angle) + min_angle);
+
+        if (FEngIsScriptSet(mpSpeedBreakerGroup, 0x5b0d9106)) {
             const float originalLeftX = FEngGetTopLeftX(mpSpeedBreakerBar);
-            FEngSetSizeX(mpSpeedBreakerBar, mSpeedBreakerBarOriginalWidth * mPursuitLevel);
+            FEngSetSizeX(mpSpeedBreakerBar, mSpeedBreakerBarOriginalWidth * angle);
             FEngSetTopLeftX(mpSpeedBreakerBar, originalLeftX);
 
-            if (mPursuitLevel <= 0.3f) {
+            if (angle <= 0.3f) {
                 if (!FEngIsScriptSet(this->mpSpeedBreakerBar, 0x26ded57)) {
                     FEngSetScript(this->mpSpeedBreakerBar, 0x26ded57, true);
                 }
@@ -52,19 +58,19 @@ void SpeedBreakerMeter::Update(IPlayer *player) {
             }
         }
     }
-    if (mpSpeedBreakerMeterIcon) {
+    if (mpSpeedBreakerMeterIcon != nullptr) {
         if (mPursuitLevel > 0.0f) {
-            FEngSetScript(mpSpeedBreakerMeterIcon, 0x61D30442, true);
+            FEngSetScript(mpSpeedBreakerMeterIcon, 0x77031c70, true);
         } else {
             FEngSetScript(mpSpeedBreakerMeterIcon, 0x1744B3, true);
         }
     }
 }
 
-void SpeedBreakerMeter::SetPursuitLevel(float level) {
-    if (mPursuitLevel == level) {
+void SpeedBreakerMeter::SetPursuitLevel(float pursuitLevel) {
+    if (mPursuitLevel == pursuitLevel) {
         return;
     }
-    mPursuitLevel = level;
+    mPursuitLevel = pursuitLevel;
     mPursuitLevelChanged = true;
 }

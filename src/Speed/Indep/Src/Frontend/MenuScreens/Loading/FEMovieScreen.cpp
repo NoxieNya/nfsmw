@@ -47,38 +47,41 @@ MovieScreen::MovieScreen(ScreenConstructorData *sd) : MenuScreen(sd), bByPassabl
 void MovieScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     mSubtitler.Update(msg);
     bool movie_is_finished = false;
-    if (msg != 0xb5af2461) {
-        if (msg > 0xb5af2461) {
-            if (msg == 0xc3960eb9) {
+
+    switch (msg) {
+        case 0xc3960eb9:
+            new ESndGameState(1, false);
+            SetSoundControlState(false, SNDSTATE_FMV, "MovieScreen");
+            if (IsDebugPlayMovie) {
+                cFEng::Get()->QueuePackagePop(1);
+                IsDebugPlayMovie = 0;
+                movie_is_finished = true;
+            } else {
+                movie_is_finished = true;
+                BootFlowManager::Get()->ChangeToNextBootFlowScreen(0xff);
+            }
+            break;
+        case 0xb5af2461:
+        case 0x406415e3: {
+            bool bypassable = bByPassable;
+
+            if (bypassable) {
                 new ESndGameState(1, false);
                 SetSoundControlState(false, SNDSTATE_FMV, "MovieScreen");
-                if (!IsDebugPlayMovie) {
-                    BootFlowManager::Get()->ChangeToNextBootFlowScreen(0xff);
+                if (IsDebugPlayMovie) {
                     movie_is_finished = true;
-                } else {
                     cFEng::Get()->QueuePackagePop(1);
                     IsDebugPlayMovie = 0;
+                } else {
                     movie_is_finished = true;
+                    BootFlowManager::Get()->ChangeToNextBootFlowScreen(0xff);
                 }
             }
-            goto end;
-        }
-        if (msg != 0x406415e3)
-            goto end;
-    }
-    if (bByPassable != 0) {
-        new ESndGameState(1, false);
-        SetSoundControlState(false, SNDSTATE_FMV, "MovieScreen");
-        if (!IsDebugPlayMovie) {
-            BootFlowManager::Get()->ChangeToNextBootFlowScreen(0xff);
-            movie_is_finished = true;
-        } else {
-            movie_is_finished = true;
-            cFEng::Get()->QueuePackagePop(1);
-            IsDebugPlayMovie = 0;
+
+            break;
         }
     }
-end:
+
     if (movie_is_finished) {
         mSubtitler.Update(0xc3960eb9);
     }

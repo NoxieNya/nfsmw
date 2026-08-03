@@ -19,9 +19,9 @@ class Tachometer : public HudElement, public ITachometer {
     void SetRpm(float rpm) override {
         mRpm = rpm;
     };
-    void SetRevLimiter(float redline, float maxRpm) override {
+    void SetRevLimiter(float redline, float maxrpm) override {
         mRedline = redline;
-        mMaxRpm = maxRpm;
+        mMaxRpm = maxrpm;
     }
     void SetShifting(bool shifting) override {
         mIsShifting = shifting;

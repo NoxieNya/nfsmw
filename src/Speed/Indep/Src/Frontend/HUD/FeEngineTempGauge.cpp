@@ -1,9 +1,8 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeEngineTempGauge.hpp"
 
-#include "Speed/Indep/Src/FEng/FEMultiImage.h"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 
-extern float warningPulseMinRpm;
+float warningPulseMinRpm = 0.5f;
 
 EngineTempGauge::EngineTempGauge(UTL::COM::Object *pOutter, const char *pkg_name, int player_number)
     : HudElement(pkg_name, 0x40), //
@@ -22,10 +21,14 @@ void EngineTempGauge::Update(IPlayer *player) {
     }
     mEngineTempChanged = false;
 
-    if (mpEngineTempGaugeBar) {
+    if (mpEngineTempGaugeBar != nullptr) {
         const float min_angle = -26.5f;
         const float max_angle = 26.5f;
-        FEngSetMultiImageRot(mpEngineTempGaugeBar, mEngineTemp * max_angle + min_angle);
+        const float min_engineheat = 0;
+        const float max_engineheat = 0;
+        const float frac = 0;
+        const float angle = mEngineTemp;
+        FEngSetMultiImageRot(mpEngineTempGaugeBar, angle * max_angle + min_angle);
 
         if (mEngineTemp > warningPulseMinRpm) {
             if (!FEngIsScriptSet(mpEngineTempGaugeBar, FEHashUpper("OVERHEAT_PULSE"))) {
@@ -38,7 +41,7 @@ void EngineTempGauge::Update(IPlayer *player) {
         }
     }
 
-    if (mpWarningLight) {
+    if (mpWarningLight != nullptr) {
         if (mEngineTemp > warningPulseMinRpm) {
             if (!FEngIsScriptSet(mpWarningLight, FEHashUpper("OVERHEAT_PULSE"))) {
                 FEngSetScript(mpWarningLight, FEHashUpper("OVERHEAT_PULSE"), true);

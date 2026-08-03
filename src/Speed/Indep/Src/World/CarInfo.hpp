@@ -776,6 +776,10 @@ inline CarTypeInfo *GetCarTypeInfo(CarType car_type) {
     return &CarTypeInfoArray[car_type];
 }
 
+inline CarTypeInfo *GetCarTypeInfo(uint32 car_type_hash) {
+    return GetCarTypeInfoFromHash(car_type_hash);
+}
+
 bool CarInfo_IsSkinned(CarType type);
 unsigned int CarInfo_GetResourceCost(CarType type, bool is_player, bool split_screen);
 void GetUsedCarTextureInfo(UsedCarTextureInfo *info, RideInfo *ride_info, int front_end_only);

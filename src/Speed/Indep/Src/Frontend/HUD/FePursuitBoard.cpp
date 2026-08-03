@@ -1,6 +1,6 @@
+#include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/Src/Frontend/HUD/FePursuitBoard.hpp"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
-#include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
@@ -78,7 +78,7 @@ void PursuitBoard::Update(IPlayer *player) {
 
             if (!FEngIsScriptSet(mpDataPursuitCooldownMeterGroup, 0x13f51124)) {
                 FEngSetScript(mpDataPursuitMeterGroup, 0x92975065, true);
-                g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(0xc));
+                g_pEAXSound->PlayUISoundFX(UISND_COMMON_SCROLL_START);
             }
 
             originalLeftX = FEngGetTopLeftX(mpDataCooldownBar);
@@ -102,7 +102,7 @@ void PursuitBoard::Update(IPlayer *player) {
 
             if (FEngIsScriptSet(mpDataPursuitCooldownMeterGroup, 0x13f51124)) {
                 FEngSetScript(mpDataPursuitCooldownMeterGroup, 0x92975065, true);
-                g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(0xc));
+                g_pEAXSound->PlayUISoundFX(UISND_COMMON_SCROLL_START);
             } else {
                 if (FEngIsScriptSet(mpDataPursuitMeterGroup, 0x16a259) || FEngIsScriptSet(mpDataPursuitMeterGroup, 0x33113ac)) {
                     FEngSetScript(mpDataPursuitMeterGroup, 0x5079c8f8, true);
@@ -257,7 +257,7 @@ void PursuitBoard::SetTimeUntilBusted(float time, bool bIsBusted) {
         mTimeUntilBusted = time;
         if (time >= 1.0f) {
             IGenericMessage *igenericmessage;
-            if (IPlayer::First(PLAYER_LOCAL)->GetSimable()->QueryInterface(&igenericmessage)) {
+            if (IPlayer::First(PLAYER_LOCAL)->GetHud()->QueryInterface(&igenericmessage)) {
                 igenericmessage->RequestGenericMessage(GetTranslatedString(0x532b5186), false, 0x9d73bc15, 0, 0, GenericMessage_Priority_1);
             }
         }
@@ -321,7 +321,7 @@ void PursuitBoard::SetNumCopsDestroyed(int numCops, UCrc32 lastCopDestroyedType,
         return;
     }
     if (numCops > mNumCopsDestroyed) {
-        const char *pCopString = nullptr;
+        char *pCopString = nullptr;
         if (lastCopDestroyedType == UCrc32("copcross")) {
             pCopString = GetLocalizedString(0x8fe02b9f);
         } else if (lastCopDestroyedType == UCrc32("copsport")) {
@@ -345,11 +345,11 @@ void PursuitBoard::SetNumCopsDestroyed(int numCops, UCrc32 lastCopDestroyedType,
         } else if (lastCopDestroyedType == UCrc32("copsuvl")) {
             pCopString = GetLocalizedString(0x1baac57f);
         }
-        if (pCopString) {
+        if (pCopString != nullptr) {
             char copCarString[64];
             bSNPrintf(copCarString, 64, pCopString, lastCopDestroyedRep * lastCopDestroyedMultiplier);
             IGenericMessage *igenericmessage;
-            if (IPlayer::First(PLAYER_LOCAL)->GetSimable()->QueryInterface(&igenericmessage)) {
+            if (IPlayer::First(PLAYER_LOCAL)->GetHud()->QueryInterface(&igenericmessage)) {
                 igenericmessage->RequestGenericMessage(copCarString, false, 0x8ab83edb, bStringHash("COPS_TAKENOUT_ICON"), 0x13ff94,
                                                        GenericMessage_Priority_4);
             }

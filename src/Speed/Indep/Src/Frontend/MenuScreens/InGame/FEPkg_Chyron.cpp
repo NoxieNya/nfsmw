@@ -8,8 +8,9 @@
 #include "Speed/Indep/Src/Misc/GameFlow.hpp"
 #include "Speed/Indep/Src/Frontend/FEPackageManager.hpp"
 
-Chyron::Chyron(ScreenConstructorData *sd) : MenuScreen(sd), mDelayTimer(0) {}
+Chyron::Chyron(ScreenConstructorData *sd) : MenuScreen(sd), mDelayTimer() {}
 
+// UNSOLVED
 void InitChyron() {
     ChyronScreenPtr = static_cast<MenuScreen *>(bMalloc(sizeof(Chyron), "Chyron", 0, 0));
 }
@@ -44,26 +45,23 @@ void Chyron::Start() {
 
     FEngFont *font = FindFont(title->Handle);
     bStrCpy(widestring, mTitle);
-    float maxString = font->GetTextWidth(reinterpret_cast<const short *>(widestring), title->Flags);
+    float maxString = font->GetTextWidth(reinterpret_cast<const int16 *>(widestring), title->Flags);
 
     font = FindFont(artist->Handle);
     bStrCpy(widestring, mArtist);
-    float artistWidth = font->GetTextWidth(reinterpret_cast<const short *>(widestring), artist->Flags);
-    maxString = bMax(maxString, artistWidth);
+    maxString = bMax(maxString, font->GetTextWidth(reinterpret_cast<const int16 *>(widestring), artist->Flags));
 
     bStrCpy(widestring, mAlbum);
     font = FindFont(album->Handle);
-    float albumWidth = font->GetTextWidth(reinterpret_cast<const short *>(widestring), album->Flags);
-    maxString = bMax(maxString, albumWidth);
+    maxString = bMax(maxString, font->GetTextWidth(reinterpret_cast<const int16 *>(widestring), album->Flags));
 
     uint32 startScript;
-    if (maxString > 185.0f) {
-        startScript = 0x73D17048;
-        if (maxString <= 250.0f) {
-            startScript = 0x57520493;
-        }
-    } else {
+    if (maxString <= 185.0f) {
         startScript = 0x57521F29;
+    } else if (maxString <= 250.0f) {
+        startScript = 0x57520493;
+    } else {
+        startScript = 0x73D17048;
     }
 
     FEPrintf(title, mTitle);
@@ -73,13 +71,11 @@ void Chyron::Start() {
     cFEng::Get()->QueuePackageMessage(startScript, GetPackageName(), nullptr);
 
     if (TheGameFlowManager.IsInFrontend()) {
-        const char *posMsg = "TRAX_POS_2";
-        cFEng::Get()->QueuePackageMessage(FEHashUpper(posMsg), GetPackageName(), nullptr);
+        cFEng::Get()->QueuePackageMessage(FEHashUpper("TRAX_POS_2"), GetPackageName(), nullptr);
     } else {
         if ((MemoryCard::GetInstance()->IsAutoSaving() || MemoryCard::GetInstance()->AutoSaveRequested()) && GRaceStatus::Exists() &&
             GRaceStatus::Get().GetRaceParameters() != nullptr && GRaceStatus::Get().GetRaceParameters()->GetIsDDayRace()) {
-            const char *posMsg = "TRAX_POS_3";
-            cFEng::Get()->QueuePackageMessage(FEHashUpper(posMsg), GetPackageName(), nullptr);
+            cFEng::Get()->QueuePackageMessage(FEHashUpper("TRAX_POS_3"), GetPackageName(), nullptr);
         } else {
             cFEng::Get()->QueuePackageMessage(FEHashUpper("TRAX_POS_1"), GetPackageName(), nullptr);
         }
@@ -87,17 +83,9 @@ void Chyron::Start() {
 
     bool widescreen = FEDatabase->GetOptionsSettings()->TheVideoSettings.WideScreen;
     if (TheGameFlowManager.IsInFrontend()) {
-        if (widescreen) {
-            cFEng::Get()->QueuePackageMessage(FEHashUpper("WIDESCREEN_MODE"), nullptr, nullptr);
-        } else {
-            cFEng::Get()->QueuePackageMessage(FEHashUpper("NORMAL_MODE"), nullptr, nullptr);
-        }
+        cFEng::Get()->QueuePackageMessage(widescreen ? FEHashUpper("WIDESCREEN_MODE") : FEHashUpper("NORMAL_MODE"), nullptr, nullptr);
     } else {
-        if (widescreen) {
-            cFEng::Get()->QueuePackageMessage(FEHashUpper("WIDESCREEN_MODEHUD"), nullptr, nullptr);
-        } else {
-            cFEng::Get()->QueuePackageMessage(FEHashUpper("NORMAL_MODEHUD"), nullptr, nullptr);
-        }
+        cFEng::Get()->QueuePackageMessage(widescreen ? FEHashUpper("WIDESCREEN_MODEHUD") : FEHashUpper("NORMAL_MODEHUD"), nullptr, nullptr);
     }
 }
 

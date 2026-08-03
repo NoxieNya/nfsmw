@@ -396,7 +396,7 @@ class GRaceStatus : public UTL::COM::Object, public IVehicleCache {
 
     bool GetRaceRouteError() {}
 
-    float GetRaceLength() const {
+    float GetRaceLength() {
         return fRaceLength;
     }
 

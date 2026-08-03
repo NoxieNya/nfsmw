@@ -102,18 +102,7 @@ class FinishedRaceStatsEntry {
     float LongestPowerSlide;     // offset 0xB8, size 0x4
     int WasRecordBreaker;        // offset 0xBC, size 0x4
 
-    FinishedRaceStatsEntry() {
-        RaceTime.ResetLow();
-        BestLapTime.ResetLow();
-        for (int i = 0; i < 11; i++) {
-            LapTimes[i].ResetLow();
-        }
-        for (int i = 0; i < 11; i++) {
-            LapRunningTimes[i].ResetLow();
-        }
-        ZeroToSixtyTime.ResetLow();
-        QuarterMileTime.ResetLow();
-    }
+    FinishedRaceStatsEntry() : RaceTime(), BestLapTime(), LapTimes(), LapRunningTimes(), ZeroToSixtyTime(), QuarterMileTime() {}
 
     void Construct(RacingCar *racing_car, bool ignore_online_info); // Decl: speed/indep/src/database/RaceDB.hpp:247
 
@@ -131,6 +120,8 @@ class cFinishedRaceStats {
   public:
     FinishedRaceStatsEntry RaceStats[8]; // offset 0x0, size 0x600, Decl: speed/indep/src/database/RaceDB.hpp:258
     int NumStats;                        // offset 0x600, size 0x4, Decl: speed/indep/src/database/RaceDB.hpp:259
+
+    cFinishedRaceStats() : RaceStats() {}
 
     void CalculatePositionsForEachLap(); // Decl: speed/indep/src/database/RaceDB.hpp:261
 
@@ -178,6 +169,10 @@ struct RaceTypeHighScores {
 // total size: 0x38
 class TopEvadedPursuitDetail {
   public:
+    TopEvadedPursuitDetail() {
+        bMemSet(this, 0, sizeof(TopEvadedPursuitDetail));
+    }
+
     void GeneratePursuitID();
 
     char PursuitName[12];       // offset 0x0, size 0xC
@@ -197,6 +192,9 @@ class TopEvadedPursuitDetail {
 // total size: 0x20
 class CareerPursuitScores {
   public:
+    CareerPursuitScores() {
+        bMemSet(this, 0, sizeof(CareerPursuitScores));
+    }
     void IncValue(ePursuitDetailTypes type, int32 amount);
     int32 GetValue(ePursuitDetailTypes type) const;
 
@@ -205,7 +203,12 @@ class CareerPursuitScores {
 };
 
 // total size: 0x8
-struct PursuitScore {
+class PursuitScore {
+  public:
+    PursuitScore() {
+        bMemSet(this, 0, sizeof(PursuitScore));
+    }
+
     uint32 CarFEKey; // offset 0x0, size 0x4
     int32 Value;     // offset 0x4, size 0x4
 };
@@ -224,7 +227,12 @@ enum RAP_CTS_ITEM {
 };
 
 // total size: 0x20
-struct CostToStateScores {
+class CostToStateScores {
+  public:
+    CostToStateScores() {
+        bMemSet(this, 0, sizeof(CostToStateScores));
+    }
+
     int mNumRoadblocksDeployed;      // offset 0x0, size 0x4
     int mNumTrafficCarsHit;          // offset 0x4, size 0x4
     int mNumSpikeStripsDeployed;     // offset 0x8, size 0x4
@@ -247,16 +255,7 @@ struct TrackHighScore {
 // Decl: speed/indep/src/database/RaceDB.hpp:1001
 class HighScoresDatabase {
   public:
-    HighScoresDatabase() {
-        for (int i = 0; i < 5; i++) {
-            bMemSet(&TopEvadedPursuitScores[i], 0, sizeof(TopEvadedPursuitDetail));
-        }
-        bMemSet(&CareerPursuitDetails, 0, sizeof(CareerPursuitScores));
-        for (int i = 0; i < 10; i++) {
-            bMemSet(&BestPursuitRankings[i], 0, sizeof(PursuitScore));
-        }
-        bMemSet(&CostToStateDetails, 0, sizeof(CostToStateScores));
-    }
+    HighScoresDatabase() : TopEvadedPursuitScores(), CareerPursuitDetails(), BestPursuitRankings(), CostToStateDetails() {}
 
   private:
     bool MaybeAddTrackHighScore(eHighScoresRaceTypes race_type, int track, int direction, int laps, FinishedRaceStatsEntry *stats);
@@ -296,11 +295,11 @@ class HighScoresDatabase {
     RaceTypeHighScores SplitScreenScores;    // offset 0xA20, size 0x8
     int32 TotalDragTotalled;                 // offset 0xA28, size 0x4
   private:
-    TopEvadedPursuitDetail TopEvadedPursuitScores[5]; // offset 0xA2C, size 0x118
-    CareerPursuitScores CareerPursuitDetails;         // offset 0xB44, size 0x20
-    PursuitScore BestPursuitRankings[10];             // offset 0xB64, size 0x50
-    CostToStateScores CostToStateDetails;             // offset 0xBB4, size 0x20
-    uint32 PreviouslyPursuedCarFEKey;                 // offset 0xBD4, size 0x4
+    TopEvadedPursuitDetail TopEvadedPursuitScores[5];                 // offset 0xA2C, size 0x118
+    CareerPursuitScores CareerPursuitDetails;                         // offset 0xB44, size 0x20
+    PursuitScore BestPursuitRankings[PD_NUM_SINGLE_PURSUIT_TO_STORE]; // offset 0xB64, size 0x50
+    CostToStateScores CostToStateDetails;                             // offset 0xBB4, size 0x20
+    uint32 PreviouslyPursuedCarFEKey;                                 // offset 0xBD4, size 0x4
 };
 
 uint32 CalcLanguageHash(const char *prefix /* r30 */, GRaceParameters *pRaceParams /* r4 */);

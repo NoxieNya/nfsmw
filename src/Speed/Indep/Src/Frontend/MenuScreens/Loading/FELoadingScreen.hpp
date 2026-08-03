@@ -8,11 +8,17 @@
 // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreen.hpp:15
 class LoadingScreen : public MenuScreen {
   public:
-    static void *operator new(size_t size) {}
+    static void *operator new(size_t size) {
+        return mLoadingScreenPtr;
+    }
 
-    static void *operator new(size_t size, char *file, int line) {}
+    static void *operator new(size_t size, char *file, int line) {
+        return mLoadingScreenPtr;
+    }
 
-    static void *operator new(size_t size, char *msg) {}
+    static void *operator new(size_t size, char *msg) {
+        return mLoadingScreenPtr;
+    }
 
     static void operator delete(void *ptr) {} // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreen.hpp:21
 

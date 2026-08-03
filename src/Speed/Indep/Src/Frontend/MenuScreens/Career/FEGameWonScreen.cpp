@@ -22,8 +22,7 @@ FEGameWonScreen::FEGameWonScreen(ScreenConstructorData *sd) : MenuScreen(sd) {
             FEPrintf(GetPackageName(), static_cast<int>(0xe3da78e7), GetLocalizedString(0x6031106e), prof.GetProfileName());
             FEPrintf(GetPackageName(), static_cast<int>(0x22f33e0a), GetLocalizedString(0x6031106e), prof.GetProfileName());
             FEPrintf(GetPackageName(), static_cast<int>(0xe3da78e8), GetLocalizedString(0x364e4525), stable->GetTotalBounty());
-            FEPrintf(GetPackageName(), static_cast<int>(0xe3da78e9), GetLocalizedString(0xa355fedd),
-                     scores->GetCareerPursuitScore(static_cast<ePursuitDetailTypes>(7)));
+            FEPrintf(GetPackageName(), static_cast<int>(0xe3da78e9), GetLocalizedString(0xa355fedd), scores->GetCareerPursuitScore(PD_COST_TO_STATE));
             FEPrintf(GetPackageName(), static_cast<int>(0xe3da78ea), GetLocalizedString(0xb1e58db1), stable->GetNumImpoundedCars());
             FEPrintf(GetPackageName(), static_cast<int>(0xe3da78eb), GetLocalizedString(0x79fb7d16), stable->GetTotalFines(true));
             FEPrintf(GetPackageName(), static_cast<int>(0xe3da78ec), GetLocalizedString(0x463b461b), stable->GetTotalEvadedPursuits());

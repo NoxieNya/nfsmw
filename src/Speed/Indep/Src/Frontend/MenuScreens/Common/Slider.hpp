@@ -4,6 +4,7 @@
 #include "Speed/Indep/Src/FEng/FEString.h"
 #include "Speed/Indep/Src/FEng/FEImage.h"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
+#include "Speed/Indep/bWare/Inc/bMath.hpp"
 #include <types.h>
 
 // File: speed/indep/src/frontend/menuscreens/common/Slider.hpp
@@ -41,10 +42,10 @@ class cSlider {
         return fPrevValue;
     }
     float GetBaseWidth() { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:97
-        return FEngGetSizeX(reinterpret_cast<FEObject *>(pBase));
+        return FEngGetSizeX(pBase);
     }
     float GetBaseHeight() { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:98
-        return FEngGetSizeY(reinterpret_cast<FEObject *>(pBase));
+        return FEngGetSizeY(pBase);
     }
 
     virtual void SetPos(float x, float y);
@@ -84,7 +85,7 @@ class TwoStageSlider : public cSlider {
     }
 
     void SetPreviewValue(float preview_value) { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:146
-        fPreviewValue = preview_value;
+        fPreviewValue = bMin(bMax(preview_value, fMinValue), fMaxValue);
     }
 
     void ToggleVisible(bool bOn) override;

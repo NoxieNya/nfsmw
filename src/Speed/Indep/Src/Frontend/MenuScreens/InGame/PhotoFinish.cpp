@@ -6,13 +6,15 @@
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/Src/Frontend/MemoryCard/MemoryCard.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feDialogBox.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/MemCard/uiMemcardInterface.hpp"
+#include "Speed/Indep/Src/Gameplay/GRace.h"
 #include "Speed/Indep/Src/Generated/Events/EAutoSave.hpp"
 #include "Speed/Indep/Src/Generated/Events/ECinematicMoment.hpp"
-#include "Speed/Indep/Src/Generated/Events/ECameraPhotoFinish.hpp"
 #include "Speed/Indep/Src/Generated/Events/EFadeScreenOn.hpp"
 #include "Speed/Indep/Src/Generated/Events/EMomentStrm.hpp"
 #include "Speed/Indep/Src/Generated/Events/EQuitToFE.hpp"
@@ -24,22 +26,24 @@
 #include "Speed/Indep/Src/Generated/Messages/MMiscSound.h"
 #include "Speed/Indep/Src/Gameplay/GRaceDatabase.h"
 #include "Speed/Indep/Src/Gameplay/GRaceStatus.h"
+#include "Speed/Indep/Src/Interfaces/Simables/IVehicle.h"
 #include "Speed/Indep/Tools/AttribSys/Runtime/AttribHash.h"
 #include "Speed/Indep/Src/World/TrackStreamer.hpp"
+#include "Speed/Indep/Tools/Inc/ConversionUtil.hpp"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 #include "Speed/Indep/Src/Camera/CameraAI.hpp"
 #include "Speed/Indep/Src/Frontend/HUD/FEPkg_Hud.hpp"
 
-static bool gSillyTextureStreamerActive;
-
+// UNSOLVED
 SillyTextureStreamerManager::SillyTextureStreamerManager(const char *stream_pack) {
-    bStrNCpy(BundleFileName, stream_pack, 0x100);
+    bStrNCpy(BundleFileName, stream_pack, sizeof(BundleFileName));
     bMemSet(LoadInfos, 0, sizeof(LoadInfos));
     mCurrentLoadingIndex = -1;
     mMakeSpaceInPoolComplete = false;
     mCurrentlyLoading = true;
-    gSillyTextureStreamerActive = true;
-    TheTrackStreamer.MakeSpaceInPool(0x60000, MakeSpaceInPoolCallbackBridge, reinterpret_cast<int>(this));
+    TheTrackStreamer.DisableZoneSwitching();
+    int mem_needed = 0x60000;
+    TheTrackStreamer.MakeSpaceInPool(mem_needed, MakeSpaceInPoolCallbackBridge, reinterpret_cast<int>(this));
 }
 
 SillyTextureStreamerManager::~SillyTextureStreamerManager() {
@@ -49,46 +53,44 @@ SillyTextureStreamerManager::~SillyTextureStreamerManager() {
     eWaitForStreamingTexturePackLoading(nullptr);
     for (int i = 0; i < 4; i++) {
         if (LoadInfos[i].LoadingTexture) {
-            unsigned int tex = LoadInfos[i].LoadingTexture;
-            eUnloadStreamingTexture(&tex, 1);
+            eUnloadStreamingTexture(LoadInfos[i].LoadingTexture);
         }
     }
     eUnloadStreamingTexturePack(BundleFileName);
-    gSillyTextureStreamerActive = false;
+    TheTrackStreamer.EnableZoneSwitching();
 }
 
 void SillyTextureStreamerManager::MakeSpaceInPoolCallback() {
     mMakeSpaceInPoolComplete = true;
-    eLoadStreamingTexturePack(BundleFileName, reinterpret_cast<void (*)(void *)>(LoadCallbackBridge), reinterpret_cast<void *>(this), 0);
+    eLoadStreamingTexturePack(BundleFileName, LoadCallbackBridge, reinterpret_cast<uint32>(this), 0);
 }
 
 void SillyTextureStreamerManager::LoadCallback() {
     mCurrentlyLoading = false;
     if (mCurrentLoadingIndex >= 0) {
-        int idx = mCurrentLoadingIndex;
-        FEngSetTextureHash(LoadInfos[idx].LoadIntoImage, LoadInfos[idx].LoadingTexture);
-        FEngSetVisible(reinterpret_cast<FEObject *>(LoadInfos[idx].LoadIntoImage));
-        LoadInfos[idx].IsLoaded = true;
+        int param = mCurrentLoadingIndex;
+        FEngSetTextureHash(LoadInfos[param].LoadIntoImage, LoadInfos[param].LoadingTexture);
+        FEngSetVisible(LoadInfos[param].LoadIntoImage);
+        LoadInfos[param].IsLoaded = true;
         mCurrentLoadingIndex = -1;
     }
     for (int i = 0; i < 4; i++) {
         if (LoadInfos[i].LoadingTexture != 0 && !LoadInfos[i].IsLoaded) {
             mCurrentlyLoading = true;
             mCurrentLoadingIndex = i;
-            unsigned int tex = LoadInfos[i].LoadingTexture;
-            eLoadStreamingTexture(&tex, 1, LoadCallbackBridge, reinterpret_cast<unsigned int>(this), 7);
+            eLoadStreamingTexture(LoadInfos[i].LoadingTexture, LoadCallbackBridge, reinterpret_cast<uint32>(this), 7);
             return;
         }
     }
     cFEng::Get()->MakeLoadedPackagesDirty();
 }
 
-void SillyTextureStreamerManager::Load(unsigned int hash, FEImage *image) {
+void SillyTextureStreamerManager::Load(uint32 hash, FEImage *image) {
     for (int i = 0; i < 4; i++) {
         if (LoadInfos[i].LoadingTexture == 0) {
             LoadInfos[i].LoadingTexture = hash;
             LoadInfos[i].LoadIntoImage = image;
-            FEngSetInvisible(reinterpret_cast<FEObject *>(image));
+            FEngSetInvisible(image);
             if (!mCurrentlyLoading) {
                 LoadCallback();
             }
@@ -100,8 +102,7 @@ void SillyTextureStreamerManager::Load(unsigned int hash, FEImage *image) {
 void SillyTextureStreamerManager::UnloadAll() {
     for (int i = 0; i < 4; i++) {
         if (LoadInfos[i].IsLoaded) {
-            unsigned int tex = LoadInfos[i].LoadingTexture;
-            eUnloadStreamingTexture(&tex, 1);
+            eUnloadStreamingTexture(LoadInfos[i].LoadingTexture);
             LoadInfos[i].LoadingTexture = 0;
             LoadInfos[i].IsLoaded = false;
         }
@@ -114,34 +115,25 @@ float PhotoFinishScreen::mSpeedtrapBounty = 0.0f;
 bool PhotoFinishScreen::mActive = false;
 
 PhotoFinishScreen::PhotoFinishScreen(ScreenConstructorData *sd)
-    : MenuScreen(sd),                                  //
-      mIceCamTimer(),                                  //
-      mSlowdownTimer(),                                //
-      fResultType(static_cast<FERESULTTYPE>(sd->Arg)), //
-      mPhotoHash(0),                                   //
+    : MenuScreen(sd), mIceCamTimer(), mSlowdownTimer(), fResultType(static_cast<FERESULTTYPE>(sd->Arg)), mPhotoHash(0),
       StreamTex("GLOBAL\\HUDTEXTURESPHOTOFINISH.BIN") {
     if (fResultType == FERESULTTYPE_RACE) {
-        if (GRaceStatus::Exists()) {
-            GRaceStatus &race_status = GRaceStatus::Get();
-            GRaceParameters *race_parameters = race_status.GetRaceParameters();
-            if (race_parameters != nullptr) {
-                bool is_boss_race = race_parameters->GetIsBossRace();
-                const char *photo_texture = "PHOTOFINISH_RIVAL";
+        bool bossRace = GRaceStatus::Get().GetRaceParameters()->GetIsBossRace();
+        bool careerMode = GRaceStatus::Get().GetRaceContext() == GRace::kRaceContext_Career;
 
-                if (race_status.GetRaceContext() != GRace::kRaceContext_Career || !is_boss_race) {
-                    photo_texture = race_parameters->GetPhotoFinishTexture();
-                }
-
-                mPhotoHash = bStringHash(photo_texture);
-                StreamTex.Load(mPhotoHash, FEngFindImage(GetPackageName(), 0x286A9CD4));
-            }
+        if (careerMode && bossRace) {
+            mPhotoHash = bStringHash("PHOTOFINISH_RIVAL");
+        } else {
+            mPhotoHash = bStringHash(GRaceStatus::Get().GetRaceParameters()->GetPhotoFinishTexture());
         }
+
+        StreamTex.Load(mPhotoHash, FEngFindImage(GetPackageName(), 0x286A9CD4));
     }
 
     mSlowdownTimer = RealTimer;
 
     CameraAI::StartCinematicSlowdown(EVIEW_PLAYER1, 0.75f);
-    SetSoundControlState(true, static_cast<eSNDCTLSTATE>(0xF), "CinemSlow");
+    SetSoundControlState(true, SNDSTATE_FADEOUT, "CinemSlow");
     new EMomentStrm(UMath::Vector4::kZero, UMath::Vector4::kZero, UMath::Vector4::kZero, 0, nullptr, 0x9FE1EE17);
 }
 
@@ -159,10 +151,12 @@ PhotoFinishScreen::~PhotoFinishScreen() {
     mActive = false;
 }
 
-void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *, u32, u32) {
+void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
     switch (msg) {
         case 0x406415E3:
             if (fResultType == FERESULTTYPE_SPEEDTRAP) {
+                extern int foo; // TODO: idk
+
                 new EUnPause();
                 new EAutoSave();
 
@@ -181,26 +175,27 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *, u32, u32) {
             }
 
             if (GRaceStatus::Exists() && GRaceStatus::Get().GetRaceContext() == GRace::kRaceContext_Career) {
-                GRaceParameters *race_parameters = GRaceStatus::Get().GetRaceParameters();
-                if (race_parameters->GetIsBossRace()) {
-                    unsigned char current_bin = FEDatabase->GetCareerSettings()->GetCurrentBin();
-                    GRaceBin *race_bin = GRaceDatabase::Get().GetBinNumber(current_bin);
-                    int remaining_races = 0;
+                GRaceParameters *parms = GRaceStatus::Get().GetRaceParameters();
+                if (parms->GetIsBossRace()) {
+                    bool all_races_done;
+                    int num_unfinished_races = 0;
+                    int bin_number = FEDatabase->GetCareerSettings()->GetCurrentBin();
+                    GRaceBin *bin = GRaceDatabase::Get().GetBinNumber(bin_number);
 
-                    for (unsigned int i = 0; i < race_bin->GetBossRaceCount(); ++i) {
-                        if (!GRaceDatabase::Get().CheckRaceScoreFlags(race_bin->GetBossRaceHash(i), GRaceDatabase::kCompleted_ContextCareer)) {
-                            ++remaining_races;
+                    for (uint32 i = 0; i < bin->GetBossRaceCount(); i++) {
+                        if (!GRaceDatabase::Get().IsCareerRaceComplete(bin->GetBossRaceHash(i))) {
+                            num_unfinished_races++;
                         }
                     }
 
                     new EFadeScreenOn(false);
 
-                    if (current_bin != 1) {
-                        if (remaining_races == 0) {
+                    if (bin_number != 1) {
+                        if (num_unfinished_races == 0) {
                             new EQuitToFE(GARAGETYPE_CAREER_SAFEHOUSE, "SafeHouseRivalChallenge.fng");
                             return;
                         }
-                    } else if (remaining_races == 1) {
+                    } else if (num_unfinished_races == 1) {
                         cFEng::Get()->QueuePackagePop(1);
 
                         MFlowReadyForOutro().Post(UCrc32(0x20D60DBF));
@@ -218,7 +213,7 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *, u32, u32) {
                 return;
             }
 
-            if ((FEDatabase->GetGameMode() & 0x2) && MemoryCard::GetInstance()->ShouldDoAutoSave(false)) {
+            if ((FEDatabase->IsChallengeMode()) && MemoryCard::GetInstance()->ShouldDoAutoSave(false)) {
                 MemcardEnter(nullptr, nullptr, 0x100B1, nullptr, nullptr, 0, 0);
             } else {
                 new EQuitToFE(GARAGETYPE_MAIN_FE, nullptr);
@@ -245,13 +240,14 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *, u32, u32) {
             new EUnPause();
             return;
         case 0xC98356BA: {
-            if (mSlowdownTimer.IsSet() && static_cast<float>(RealTimer.GetPackedTime() - mSlowdownTimer.GetPackedTime()) * 0.00025f >= 0.75f) {
+
+            if ((mSlowdownTimer.IsSet() != 0) && (RealTimer - mSlowdownTimer).GetSeconds() >= 0.75f) {
                 mSlowdownTimer.UnSet();
                 mIceCamTimer = RealTimer;
 
                 HideEverySingleHud();
                 FEManager::RequestPauseSimulation(GetPackageName());
-                *reinterpret_cast<unsigned int *>(reinterpret_cast<char *>(&TheICEManager) + 0x7C) = 1;
+                TheICEManager.SetUseRealTime(true);
 
                 if (fResultType == FERESULTTYPE_PURSUIT) {
                     new ECinematicMoment("Cinematics", "DefaultFinish", 0.0f);
@@ -263,7 +259,9 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *, u32, u32) {
                 return;
             }
 
-            if (mIceCamTimer.IsSet() && static_cast<float>(RealTimer.GetPackedTime() - mIceCamTimer.GetPackedTime()) * 0.00025f >= 0.75f) {
+            if ((mIceCamTimer.IsSet() != 0) && (RealTimer - mIceCamTimer).GetSeconds() >= 0.75f) {
+                extern ICEManager TheICEManager; // TODO: /shrug
+
                 mIceCamTimer.UnSet();
 
                 if (!FEngIsScriptSet(GetPackageName(), 0x47FF4E7C, 0x0013C37B)) {
@@ -292,14 +290,13 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *, u32, u32) {
                 }
 
                 Setup();
-                *reinterpret_cast<unsigned int *>(reinterpret_cast<char *>(&TheICEManager) + 0x7C) = 0;
+                TheICEManager.SetUseRealTime(false);
 
-                MMiscSound sound_message(2);
-                sound_message.Send(Attrib::StringHash32("Snd"));
+                MMiscSound(2).Send("Snd");
 
                 new ESndGameState(7, true);
-                SoundPause(true, static_cast<eSNDPAUSE_REASON>(0xA));
-                SetSoundControlState(false, static_cast<eSNDCTLSTATE>(0xF), "CinemSlow");
+                SoundPause(true, eSNDPAUSE_PHOTOFINISH);
+                SetSoundControlState(false, SNDSTATE_FADEOUT, "CinemSlow");
                 SetSoundControlState(true, SNDSTATE_PAUSE, "PhotoFinish");
             }
             return;
@@ -307,96 +304,93 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *, u32, u32) {
     }
 }
 
+// UNSOLVED
 void PhotoFinishScreen::Setup() {
-    FEManager *fe_manager = FEManager::Get();
-    fe_manager->AllowControllerError(true);
+    FEManager::Get()->AllowControllerError(true);
 
-    unsigned int locale_hash = 0x8569AB44;
+    uint32 speedUnits = 0x8569AB44;
     if (FEDatabase->GetGameplaySettings()->SpeedoUnits == 1) {
-        locale_hash = 0x8569A25F;
+        speedUnits = 0x8569A25F;
     }
 
     if (fResultType == FERESULTTYPE_SPEEDTRAP) {
-        float display_speed = mSpeedtrapSpeed * (locale_hash == 0x8569A25F ? 3.6f : 2.23699f);
-        unsigned int speed_hash = bStringHash("SPEEDTRAP_SPEED");
+        float converted_speed = (speedUnits == 0x8569A25F ? MPS2KPH(mSpeedtrapSpeed) : MPS2MPH(mSpeedtrapSpeed));
 
-        FEPrintf(GetPackageName(), speed_hash, "%$0.0f %s", GetTranslatedString(locale_hash), display_speed);
-        unsigned int bounty_hash = bStringHash("BOUNTY_TEXT");
-        FEPrintf(GetPackageName(), bounty_hash, GetTranslatedString(0x060C058A), static_cast<int>(mSpeedtrapBounty));
-        return;
-    }
-
-    GRaceStatus &race_status = GRaceStatus::Get();
-    GRaceParameters *race_params = race_status.GetRaceParameters();
-    GRacerInfo *racer_info = &race_status.GetRacerInfo(0);
-    int racer_count = race_status.GetRacerCount();
-
-    for (int i = 0; i < racer_count; ++i) {
-        racer_info = &race_status.GetRacerInfo(i);
-        if (racer_info->GetSimable() != nullptr) {
-            break;
-        }
-    }
-
-    float cash = race_params->GetCashValue();
-    float finishing_speed = racer_info->GetFinishingSpeed() * 2.23699f;
-    float point_total = racer_info->GetPointTotal();
-
-    if (FEDatabase->GetGameplaySettings()->SpeedoUnits == 1) {
-        finishing_speed *= 1.60931f;
+        FEPrintf(GetPackageName(), bStringHash("SPEEDTRAP_SPEED"), "%$0.0f %s", converted_speed, GetTranslatedString(speedUnits));
+        FEPrintf(GetPackageName(), bStringHash("BOUNTY_TEXT"), GetTranslatedString(0x060C058A), static_cast<int>(mSpeedtrapBounty));
     } else {
-        point_total *= 0.27778f;
-        point_total *= 2.23699f;
-    }
+        GRacerInfo &racerInfo = GRaceStatus::Get().GetRacerInfo(0);
 
-    Timer race_time;
-    Timer lap_time;
-    char race_time_buffer[32];
-    char lap_time_buffer[32];
-    char summary_buffer[64];
+        for (int i = 0; i < GRaceStatus::Get().GetRacerCount(); i++) {
+            racerInfo =
+                GRaceStatus::Get().GetRacerInfo(i); // TODO Is this memcopy a bug? Shouldn't this just assign reference? racerInfo should be a pointer
 
-    race_time.SetTime(race_status.GetRaceTimeRemaining());
-    race_time.PrintToString(race_time_buffer, 0);
-    lap_time.SetTime(racer_info->GetRaceTime());
-    lap_time.PrintToString(lap_time_buffer, 0);
+            if (racerInfo.GetSimable()->IsPlayer()) {
+                break;
+            }
+        }
 
-    bSNPrintf(summary_buffer, 64, "%s %s %$0.0f %s", lap_time_buffer, GetTranslatedString(0x474), GetTranslatedString(locale_hash), finishing_speed);
+        float cashEarned = GRaceStatus::Get().GetRaceParameters()->GetCashValue();
+        float pointsEarned = racerInfo.GetPointTotal();
+        float speed = MPS2MPH(racerInfo.GetFinishingSpeed());
 
-    unsigned int result_hash;
-
-    if (FEngIsScriptSet(GetPackageName(), bStringHash("TOLL_BOOTH_GROUP"), 0x5079C8F8)) {
-        FEPrintf(GetPackageName(), 0x8BB39726, "%$0.0f %s", GetTranslatedString(locale_hash), finishing_speed);
-        FEPrintf(GetPackageName(), 0x424BB244, "%s", summary_buffer);
-        FEPrintf(GetPackageName(), 0x8A7F929C, "+%s", race_time_buffer);
-        result_hash = 0x42423E94;
-    } else if (FEngIsScriptSet(GetPackageName(), bStringHash("RIVAL_GROUP"), 0x5079C8F8)) {
-        if (race_params->GetRaceType() == GRace::kRaceType_SpeedTrap) {
-            FEPrintf(GetPackageName(), 0x37BEA03B, "%s: %$0.0f %s", GetTranslatedString(0x7F54569D), GetTranslatedString(locale_hash), point_total);
+        if (FEDatabase->GetGameplaySettings()->SpeedoUnits == 1) {
+            speed = MPH2KPH(speed);
         } else {
-            FEPrintf(GetPackageName(), 0x37BEA03B, "%s", summary_buffer);
+            pointsEarned = MPS2MPH(KPH2MPS(pointsEarned));
         }
-        result_hash = 0x9F4DF5BB;
-    } else {
-        if (race_params->GetRaceType() == GRace::kRaceType_SpeedTrap) {
-            FEPrintf(GetPackageName(), 0xAB6AAFDD, "%s: %$0.0f %s", GetTranslatedString(0x7F54569D), GetTranslatedString(locale_hash), point_total);
+
+        char bonusTime[32];
+        Timer bt(GRaceStatus::Get().GetRaceTimeRemaining());
+        bt.PrintToString(bonusTime, 0);
+
+        char time[32];
+        Timer t(racerInfo.GetRaceTime());
+        t.PrintToString(time, 0);
+
+        char timeAndSpeed[64];
+        // "time @ speed units"
+        bSNPrintf(timeAndSpeed, sizeof(timeAndSpeed), "%s %s %$0.0f %s", time, GetTranslatedString(0x474), speed, GetTranslatedString(speedUnits));
+
+        int cashHash;
+
+        if (FEngIsScriptSet(GetPackageName(), bStringHash("TOLL_BOOTH_GROUP"), 0x5079C8F8)) {
+            FEPrintf(GetPackageName(), 0x8BB39726, "%$0.0f %s", speed, GetTranslatedString(speedUnits));
+            FEPrintf(GetPackageName(), 0x424BB244, "%s", timeAndSpeed);
+            FEPrintf(GetPackageName(), 0x8A7F929C, "+%s", bonusTime);
+            cashHash = 0x42423E94;
+        } else if (FEngIsScriptSet(GetPackageName(), bStringHash("RIVAL_GROUP"), 0x5079C8F8)) {
+            if (GRaceStatus::Get().GetRaceType() == GRace::kRaceType_SpeedTrap) {
+                FEPrintf(GetPackageName(), 0x37BEA03B, "%s: %$0.0f %s", GetTranslatedString(0x7F54569D), pointsEarned,
+                         GetTranslatedString(speedUnits));
+            } else {
+                FEPrintf(GetPackageName(), 0x37BEA03B, "%s", timeAndSpeed);
+            }
+            cashHash = 0x9F4DF5BB;
         } else {
-            FEPrintf(GetPackageName(), 0xAB6AAFDD, "%s", summary_buffer);
+            if (GRaceStatus::Get().GetRaceType() == GRace::kRaceType_SpeedTrap) {
+                FEPrintf(GetPackageName(), 0xAB6AAFDD, "%s: %$0.0f %s", GetTranslatedString(0x7F54569D), pointsEarned,
+                         GetTranslatedString(speedUnits));
+            } else {
+                FEPrintf(GetPackageName(), 0xAB6AAFDD, "%s", timeAndSpeed);
+            }
+            cashHash = 0x3D1773DD;
         }
-        result_hash = 0x3D1773DD;
+
+        if (cashEarned > 0.0f && GRaceStatus::Get().GetRaceContext() != GRace::kRaceContext_QuickRace) {
+            FEPrintf(GetPackageName(), cashHash, "%s: %$0.0f", GetTranslatedString(0xB7F2B3C8), cashEarned);
+        } else {
+            FEngSetInvisible(GetPackageName(), cashHash);
+        }
     }
 
-    if (cash > 0.0f) {
-        FEPrintf(GetPackageName(), result_hash, "%s: %$0.0f", GetTranslatedString(0xB7F2B3C8), cash);
-    } else {
-        FEngSetInvisible(FEngFindObject(GetPackageName(), result_hash));
-    }
-
-    if (race_params->GetEventHash() == Attrib::StringHash32("19.8.31")) {
+    if (GRaceStatus::Get().GetRaceParameters() != nullptr &&
+        GRaceStatus::Get().GetRaceParameters()->GetEventHash() == Attrib::StringHash32("19.8.31")) {
         DialogInterface::ShowOneButton(GetPackageName(), "", dialog_alert, 0x417B2601, 0x1FAB5998, 0x4C54B7EA);
-        FEDatabase->GetCareerSettings()->SpecialFlags |= 0x2000;
+        FEDatabase->GetCareerSettings()->SetAwardedBKReward();
     }
 }
 
 MenuScreen *PhotoFinishScreen::Create(ScreenConstructorData *sd) {
-    return new ("", 0) PhotoFinishScreen(sd);
+    return new ("PhotoFinishScreen", 0) PhotoFinishScreen(sd);
 }

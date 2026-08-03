@@ -1,6 +1,8 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/CustomTuning.hpp"
 
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/Src/Generated/Events/ETuneVehicle.hpp"
@@ -13,17 +15,15 @@
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/pvehicle.h"
 #include "Speed/Indep/Src/Physics/PhysicsInfo.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
+#include "Speed/Indep/Src/Physics/PhysicsTunings.h"
+#include "Speed/Indep/Src/Physics/PhysicsUpgrades.hpp"
+#include "Speed/Indep/Src/World/CarInfo.hpp"
+#include "Speed/Indep/bWare/Inc/bMath.hpp"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 
 TuningSlider::TuningSlider(Physics::Tunings::Path path, uint32 title, uint32 help_blurb, bool active)
-    : FEToggleWidget(true) //
-{
-    Title = title;
-    HelpBlurb = help_blurb;
-    bActive = active;
-    TuningPath = path;
-    bMovedLastUpdate = true;
-    BlinkArrows(0);
+    : FEToggleWidget(true), Title(title), HelpBlurb(help_blurb), bActive(active), TuningPath(path) {
+    Update(0);
 }
 
 void TuningSlider::Act(const char *parent_pkg, uint32 data) {
@@ -31,30 +31,33 @@ void TuningSlider::Act(const char *parent_pkg, uint32 data) {
         return;
     }
 
-    if (data == 0xB5971BF1) {
+    if (data == __PAD_RIGHT__) {
         Current += Increment;
-    } else if (data == 0x9120409E) {
+    } else if (data == __PAD_LEFT__) {
         Current -= Increment;
     }
 
-    Current = Current < Min ? Min : Current;
-    Current = Current > Max ? Max : Current;
+    Current = bMin(bMax(Current, Min), Max);
     Negative.SetValue((Max + Min) * 0.5f + Min - Current);
     Positive.SetValue(Current);
     Update(data);
+    Draw();
 }
 
-void TuningSlider::CheckMouse(const char *parent_pkg, float mouse_x, float mouse_y) {}
+void TuningSlider::CheckMouse(const char *parent_pkg, const float mouse_x, const float mouse_y) {}
 
 void TuningSlider::Draw() {
     FEngSetLanguageHash(GetTitleObject(), Title);
-    FEPrintf(GetDataObject(), "%2.1f", ((Current - Min) / (Max - Min)) * 10.0f);
+    float val = ((Current - Min) / (Max - Min)) * 10.0f;
+    FEPrintf(GetDataObject(), "%2.1f", val);
     if (bActive) {
-        FEngSetScript(reinterpret_cast<FEObject *>(GetTitleObject()), 0x7AB5521A, true);
-        FEngSetScript(pSliderGroup, 0x001744B3, true);
+        const u32 FEObj_Init = FEHASH_INIT;
+        FEngSetScript(GetTitleObject(), FEHASH_UNHIGHLIGHT, true);
+        FEngSetScript(pSliderGroup, FEObj_Init, true);
     } else {
-        FEngSetScript(reinterpret_cast<FEObject *>(GetTitleObject()), 0x00163C76, true);
-        FEngSetScript(pSliderGroup, 0x00163C76, true);
+        const u32 FEObj_GREY = FEHASH_GREY;
+        FEngSetScript(GetTitleObject(), FEObj_GREY, true);
+        FEngSetScript(pSliderGroup, FEObj_GREY, true);
     }
     Negative.Draw();
     Positive.Draw();
@@ -63,23 +66,23 @@ void TuningSlider::Draw() {
 void TuningSlider::Position() {}
 
 void TuningSlider::SetFocus(const char *parent_pkg) {
-    FEngSetCurrentButton(parent_pkg, reinterpret_cast<FEObject *>(GetTitleObject()));
+    FEngSetCurrentButton(parent_pkg, GetTitleObject());
     if (bActive) {
-        const u32 FEObj_Init = 0x001744B3;
+        const u32 FEObj_Init = FEHASH_INIT;
 
-        FEngSetScript(reinterpret_cast<FEObject *>(GetTitleObject()), 0x7AB5521A, true);
+        FEngSetScript(GetTitleObject(), FEHASH_UNHIGHLIGHT, true);
         FEngSetScript(pSliderGroup, FEObj_Init, true);
     }
 }
 
 void TuningSlider::UnsetFocus() {
     if (bActive) {
-        const u32 FEObj_Init = 0x001744B3;
-        FEngSetScript(reinterpret_cast<FEObject *>(GetTitleObject()), 0x7AB5521A, true);
+        const u32 FEObj_Init = FEHASH_INIT;
+        FEngSetScript(GetTitleObject(), FEHASH_UNHIGHLIGHT, true);
         FEngSetScript(pSliderGroup, FEObj_Init, true);
     } else {
-        const u32 FEObj_GREY = 0x00163C76;
-        FEngSetScript(reinterpret_cast<FEObject *>(GetTitleObject()), FEObj_GREY, true);
+        const u32 FEObj_GREY = FEHASH_GREY;
+        FEngSetScript(GetTitleObject(), FEObj_GREY, true);
         FEngSetScript(pSliderGroup, FEObj_GREY, true);
     }
 }
@@ -89,22 +92,20 @@ void TuningSlider::SetSliderGroup(const char *pkg_name, unsigned int group_name)
 }
 
 void TuningSlider::InitSliderObjects(const char *pkg_name, const char *name) {
-    char slider_name[32];
+    char sztemp[32];
 
-    bSNPrintf(slider_name, 32, "LEFT_%s", name);
-    Negative.InitObjects(pkg_name, slider_name);
-    bSNPrintf(slider_name, 32, "RIGHT_%s", name);
-    Positive.InitObjects(pkg_name, slider_name);
+    bSNPrintf(sztemp, sizeof(sztemp), "LEFT_%s", name);
+    Negative.InitObjects(pkg_name, sztemp);
+    bSNPrintf(sztemp, sizeof(sztemp), "RIGHT_%s", name);
+    Positive.InitObjects(pkg_name, sztemp);
 }
 
 void TuningSlider::SetSliderValues(float min, float max, float inc, float cur) {
-    float middle = (max + min) * 0.5f;
-
     Increment = inc;
     Min = min;
     Max = max;
     Current = cur;
-    Negative.InitValues(min, middle, 0.0f, middle + min - cur, -82.0f);
+    Negative.InitValues(min, (max + min) * 0.5f, 0.0f, (max + min) * 0.5f + min - cur, -82.0f);
     Positive.InitValues((Max + Min) * 0.5f, Max, 0.0f, Current, 82.0f);
 }
 
@@ -117,20 +118,22 @@ CustomTuningScreen::CustomTuningScreen(ScreenConstructorData *sd)
       CurrentTuningType(0),      //
       HelpVisible(false),        //
       ExitWithStart(false) {
-    HelpScrollBar = FNEW FEScrollBar(sd->PackageFilename, "Scrollbar", true, true, false);
+    HelpScrollBar = new ("Tuning FEScrollBar", 0) FEScrollBar(GetPackageName(), "Scrollbar", true, true, false);
     bHasScrollBar = false;
     iMaxWidgetsOnScreen = 8;
     Setup();
 }
 
+// UNSOLVED
 void CustomTuningScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     if (HelpVisible) {
         HelpTextScroller->HandleNotificationMessage(msg);
     }
 
     if (msg == 0x35F8620B) {
-        for (FEWidget *option = Options.GetHead(); option != Options.EndOfList(); option = option->GetNext()) {
-            option->UnsetFocus();
+        for (TuningSlider *slider = reinterpret_cast<TuningSlider *>(Options.GetHead()); slider != Options.EndOfList();
+             slider = reinterpret_cast<TuningSlider *>(slider->GetNext())) {
+            slider->UnsetFocus();
         }
     }
 
@@ -154,8 +157,8 @@ void CustomTuningScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1
         case 0x9120409E:
         case 0xB5971BF1:
             if (!HelpVisible) {
-                // TempTuningRecord.GetTunings()[CurrentTuningType].Value[static_cast<TuningSlider *>(pCurrentOption)->TuningPath] =
-                //     static_cast<TuningSlider *>(pCurrentOption)->Current;
+                TuningSlider *slider = reinterpret_cast<TuningSlider *>(pCurrentOption);
+                TempTuningRecord.SetTuning(slider->TuningPath, static_cast<eCustomTuningType>(CurrentTuningType), slider->Current);
             }
             break;
         case 0x5073EF13:
@@ -197,22 +200,22 @@ void CustomTuningScreen::ScrollTypes(eScrollDir dir) {
         return;
     }
 
-    int next_type = CurrentTuningType;
+    int tuning_type = CurrentTuningType;
 
     if (dir == eSD_NEXT) {
-        next_type++;
-        if (next_type > 2) {
-            next_type = 0;
+        tuning_type++;
+        if (tuning_type > 2) {
+            tuning_type = 0;
         }
     } else if (dir == eSD_PREV) {
-        next_type--;
-        if (next_type < 0) {
-            next_type = 2;
+        tuning_type--;
+        if (tuning_type < 0) {
+            tuning_type = 2;
         }
     }
 
-    if (next_type != CurrentTuningType) {
-        CurrentTuningType = next_type;
+    if (tuning_type != CurrentTuningType) {
+        CurrentTuningType = tuning_type;
         SetSlidersForType();
     }
 }
@@ -236,8 +239,8 @@ bool CustomTuningScreen::IsTuningAvailable(FEPlayerCarDB *stable, FECarRecord *r
         return false;
     }
 
-    FECustomizationRecord *custom = stable->GetCustomizationRecordByHandle(record->Customization);
-    if (custom == nullptr) {
+    FECustomizationRecord *custom_record = stable->GetCustomizationRecordByHandle(record->Customization);
+    if (custom_record == nullptr) {
         return false;
     }
 
@@ -245,30 +248,31 @@ bool CustomTuningScreen::IsTuningAvailable(FEPlayerCarDB *stable, FECarRecord *r
         case Physics::Tunings::STEERING:
         case Physics::Tunings::HANDLING:
         case Physics::Tunings::RIDEHEIGHT:
-            return custom->GetInstalledPhysics()->Part[2] > 0;
+            return custom_record->GetInstalledPhysics()->Part[Physics::Upgrades::PUT_CHASSIS] > 0;
         case Physics::Tunings::BRAKES:
-            return custom->GetInstalledPhysics()->Part[1] > 0;
+            return custom_record->GetInstalledPhysics()->Part[Physics::Upgrades::PUT_BRAKES] > 0;
         case Physics::Tunings::AERODYNAMICS: {
-            RideInfo ride;
+            RideInfo info;
+            stable->BuildRideForPlayer(record->Handle, 0, &info);
+            info.SetStockParts();
 
-            ride.Init(static_cast<CarType>(-1), CarRenderUsage_Player, 0, 0);
-            stable->BuildRideForPlayer(record->Handle, 0, &ride);
-            ride.SetStockParts();
-
-            struct CarPart *stock = ride.GetPart(0x2C);
-            struct CarPart *installed = custom->GetInstalledPart(record->GetType(), 0x2C);
-            if (installed != nullptr && installed != stock) {
+            CarPart *stock_part = info.GetPart(CARSLOTID_SPOILER);
+            CarPart *part = custom_record->GetInstalledPart(record->GetType(), CARSLOTID_SPOILER);
+            if (part != nullptr && part != stock_part) {
                 return true;
             }
 
-            stock = ride.GetPart(0x17);
-            installed = custom->GetInstalledPart(record->GetType(), 0x17);
-            return installed != nullptr && installed != stock;
+            stock_part = info.GetPart(CARSLOTID_BODY);
+            part = custom_record->GetInstalledPart(record->GetType(), CARSLOTID_BODY);
+            if (part != nullptr && part != stock_part) {
+                return true;
+            }
+            return false;
         }
         case Physics::Tunings::NOS:
-            return custom->GetInstalledPhysics()->Part[6] > 0;
+            return custom_record->GetInstalledPhysics()->Part[Physics::Upgrades::PUT_NOS] > 0;
         case Physics::Tunings::INDUCTION:
-            return custom->GetInstalledPhysics()->Part[5] > 0;
+            return custom_record->GetInstalledPhysics()->Part[Physics::Upgrades::PUT_INDUCTION] > 0;
         default:
             return false;
     }
@@ -312,75 +316,66 @@ uint32 CustomTuningScreen::GetHelpForPath(Physics::Tunings::Path path, bool acti
                 return 0xB65CFC31;
             case Physics::Tunings::INDUCTION:
                 return turbo ? 0xB5DCBFA9 : 0xD70F7468;
-            default:
-                return 0;
+        }
+    } else {
+        switch (path) {
+            case Physics::Tunings::STEERING:
+                return 0x221D7E85;
+            case Physics::Tunings::HANDLING:
+                return 0x18C12069;
+            case Physics::Tunings::BRAKES:
+                return 0xC213A6DC;
+            case Physics::Tunings::RIDEHEIGHT:
+                return 0xB6D02C60;
+            case Physics::Tunings::AERODYNAMICS:
+                return 0xC6A99483;
+            case Physics::Tunings::NOS:
+                return 0xB8124038;
+            case Physics::Tunings::INDUCTION:
+                return turbo ? 0xB7D6F7B0 : 0xE3F577AF;
         }
     }
-
-    switch (path) {
-        case Physics::Tunings::STEERING:
-            return 0x221D7E85;
-        case Physics::Tunings::HANDLING:
-            return 0x18C12069;
-        case Physics::Tunings::BRAKES:
-            return 0xC213A6DC;
-        case Physics::Tunings::RIDEHEIGHT:
-            return 0xB6D02C60;
-        case Physics::Tunings::AERODYNAMICS:
-            return 0xC6A99483;
-        case Physics::Tunings::NOS:
-            return 0xB8124038;
-        case Physics::Tunings::INDUCTION:
-            return turbo ? 0xB7D6F7B0 : 0xE3F577AF;
-        default:
-            return 0;
-    }
+    return 0;
 }
 
 uint32 CustomTuningScreen::AddTuningSlider(FEPlayerCarDB *stable, FECarRecord *record, Physics::Tunings::Path path, bool turbo) {
-    char object_name[64];
-    float button_width;
-    float x;
-    float y;
-    float width;
-    float height;
     bool active = IsTuningAvailable(stable, record, path);
-    TuningSlider *slider = new TuningSlider(path, GetNameForPath(path, turbo), GetHelpForPath(path, active, turbo), active);
+    TuningSlider *slider = new ("TuningSlider", 0) TuningSlider(path, GetNameForPath(path, turbo), GetHelpForPath(path, active, turbo), active);
+    char sztemp[64];
 
     slider->SetTitleObject(GetCurrentFEString(pTitleName));
     slider->SetDataObject(GetCurrentFEString(pDataName));
     slider->SetBacking(GetCurrentFEObject(pBackingName));
-    FEngSNPrintf(object_name, 64, "%s%d", pSliderName, iIndexToAdd);
-    slider->InitSliderObjects(GetPackageName(), object_name);
-    FEngSNPrintf(object_name, 64, "%sGROUP%d", pSliderName, iIndexToAdd);
-    slider->SetSliderGroup(GetPackageName(), FEngHashString(object_name));
+    FEngSNPrintf(sztemp, sizeof(sztemp), "%s%d", pSliderName, iIndexToAdd);
+    slider->InitSliderObjects(GetPackageName(), sztemp);
+    FEngSNPrintf(sztemp, sizeof(sztemp), "%sGROUP%d", pSliderName, iIndexToAdd);
+    slider->SetSliderGroup(GetPackageName(), FEngHashString(sztemp));
     slider->SetLeftImage(GetCurrentFEImage(pLeftArrowName));
     slider->SetRightImage(GetCurrentFEImage(pRightArrowName));
     Options.AddTail(slider);
     iIndexToAdd++;
     IncrementStartPos();
-    FEngGetTopLeft(reinterpret_cast<FEObject *>(slider->GetRightImage()), x, y);
-    FEngGetSize(reinterpret_cast<FEObject *>(slider->GetRightImage()), width, height);
-    button_width = (x + width) - x;
-    if (button_width < 0.0f) {
-        button_width = -button_width;
-    }
-    slider->SetWidth(button_width);
+
+    float img_left = FEngGetTopLeftX(slider->GetRightImage());
+    float img_right = img_left + FEngGetSizeX(slider->GetRightImage());
+
+    slider->SetWidth(bAbs(img_right - img_left));
+
     return iIndexToAdd - 1;
 }
 
+// UNSOLVED
 void CustomTuningScreen::Setup() {
-    unsigned int current_car;
-    FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
-    FECarRecord *record;
+    uint32 player_car;
 
     if (FEDatabase->IsCareerMode()) {
-        current_car = FEDatabase->GetCareerSettings()->GetCurrentCar();
+        player_car = FEDatabase->GetCareerSettings()->GetCurrentCar();
     } else {
-        current_car = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xB))->GetSelectedCar(0);
+        player_car = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes)->GetSelectedCar(0);
     }
 
-    record = stable->GetCarRecordByHandle(current_car);
+    FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
+    FECarRecord *record = stable->GetCarRecordByHandle(player_car);
     TuningRecord = stable->GetCustomizationRecordByHandle(record->Customization);
     if (TuningRecord != nullptr) {
         TempTuningRecord = *TuningRecord;
@@ -394,10 +389,18 @@ void CustomTuningScreen::Setup() {
     AddTuningSlider(stable, record, Physics::Tunings::AERODYNAMICS, false);
     AddTuningSlider(stable, record, Physics::Tunings::NOS, false);
 
-    Attrib::Gen::pvehicle vehicle(record->VehicleKey, 0, 0);
+    Attrib::Gen::pvehicle vehicle(record->VehicleKey, 0, nullptr);
 
     Physics::Upgrades::SetLevel(vehicle, Physics::Upgrades::PUT_INDUCTION, 1);
-    AddTuningSlider(stable, record, Physics::Tunings::INDUCTION, Physics::Info::InductionType(vehicle) == 1);
+
+    bool turbo = Physics::Info::InductionType(vehicle) == Physics::Info::INDUCTION_TURBO_CHARGER;
+
+    if (turbo) {
+        AddTuningSlider(stable, record, Physics::Tunings::INDUCTION, true);
+    } else {
+        AddTuningSlider(stable, record, Physics::Tunings::INDUCTION, false);
+    }
+
     SetSlidersForType();
     SetInitialOption(1);
 }
@@ -405,32 +408,39 @@ void CustomTuningScreen::Setup() {
 void CustomTuningScreen::SetSlidersForType() {
     DrawSettingName(CurrentTuningType);
 
-    for (FEWidget *option = Options.GetHead(); option != Options.EndOfList(); option = option->GetNext()) {
-        TuningSlider *slider = static_cast<TuningSlider *>(option);
-        float lower = Physics::Tunings::LowerLimit(slider->TuningPath);
-        float upper = Physics::Tunings::UpperLimit(slider->TuningPath);
+    const Physics::Tunings *tunings = TempTuningRecord.GetTunings(CurrentTuningType);
 
-        slider->SetSliderValues(lower, upper, (upper - lower) * 0.1f, TempTuningRecord.GetTunings()[CurrentTuningType].Value[slider->TuningPath]);
+    for (TuningSlider *slider = static_cast<TuningSlider *>(Options.GetHead()); slider != Options.EndOfList();
+         slider = static_cast<TuningSlider *>(slider->GetNext())) {
+        float lower_limit = Physics::Tunings::LowerLimit(slider->TuningPath);
+        float upper_limit = Physics::Tunings::UpperLimit(slider->TuningPath);
+        float inc = (upper_limit - lower_limit) * 0.1f;
+
+        slider->SetSliderValues(lower_limit, upper_limit, inc, tunings->Value[slider->TuningPath]);
         slider->Draw();
     }
 }
 
 void CustomTuningScreen::ShowHelpBlurb() {
-    cFEng::Get()->QueuePackageMessage(0x89D332A9, GetPackageName(), nullptr);
+    TuningSlider *slider = static_cast<TuningSlider *>(pCurrentOption);
+
+    const uint32 SHOWHELP = 0x89D332A9;
+    cFEng::Get()->QueuePackageMessage(SHOWHELP, GetPackageName(), nullptr);
     pCurrentOption->UnsetFocus();
     if (HelpTextScroller == nullptr) {
-        FEString *help_text = FEngFindString(GetPackageName(), FEHashUpper("HELP_TEXT_LINE1"));
+        FEString *pString = FEngFindString(GetPackageName(), FEHashUpper("HELP_TEXT_LINE1"));
 
         HelpTextScroller = new CTextScroller();
-        HelpTextScroller->Initialise(this, help_text->MaxWidth, 7, const_cast<char *>("HELP_TEXT_LINE%d"), FindFont(help_text->Handle));
+        HelpTextScroller->Initialise(this, pString->MaxWidth, 7, "HELP_TEXT_LINE%d", FindFont(pString->Handle));
         HelpTextScroller->UseScrollBar(HelpScrollBar);
-        HelpTextScroller->SetTextHash(static_cast<TuningSlider *>(pCurrentOption)->HelpBlurb);
+        HelpTextScroller->SetTextHash(slider->HelpBlurb);
     }
     HelpVisible = true;
 }
 
 void CustomTuningScreen::HideHelpBlurb() {
-    cFEng::Get()->QueuePackageMessage(0x950AD1C2, GetPackageName(), nullptr);
+    const uint32 HIDEHELP = 0x950AD1C2;
+    cFEng::Get()->QueuePackageMessage(HIDEHELP, GetPackageName(), nullptr);
     pCurrentOption->SetFocus(GetPackageName());
     if (HelpTextScroller != nullptr) {
         delete HelpTextScroller;
@@ -440,20 +450,24 @@ void CustomTuningScreen::HideHelpBlurb() {
 }
 
 void CustomTuningScreen::StoreSettings() {
-    for (int tuning = 0; tuning < NUM_CUSTOM_TUNINGS; tuning++) {
-        for (int path = 0; path < Physics::Tunings::MAX_TUNINGS; path++) {
-            // TuningRecord->GetTunings()[tuning].Value[path] = TempTuningRecord.GetTunings()[tuning].Value[path];
+    for (int i = 0; i < NUM_CUSTOM_TUNINGS; i++) {
+        for (int j = 0; j < Physics::Tunings::MAX_TUNINGS; j++) {
+            TuningRecord->SetTuning(static_cast<Physics::Tunings::Path>(j), static_cast<eCustomTuningType>(i),
+                                    TempTuningRecord.GetTunings(i)->Value[j]);
         }
     }
 
     TuningRecord->SetActiveTuning(static_cast<eCustomTuningType>(CurrentTuningType));
-    new ETuneVehicle(0, reinterpret_cast<const Tunings *>(&TuningRecord->GetTunings()[TuningRecord->GetActiveTuning()]));
+    new ETuneVehicle(0, TuningRecord->GetTunings());
 }
 
 bool CustomTuningScreen::SettingsDidNotChange() {
-    for (int tuning = 0; tuning < NUM_CUSTOM_TUNINGS; tuning++) {
-        for (int path = 0; path < Physics::Tunings::MAX_TUNINGS; path++) {
-            if (TuningRecord->GetTunings()[tuning].Value[path] != TempTuningRecord.GetTunings()[tuning].Value[path]) {
+    for (int i = 0; i < NUM_CUSTOM_TUNINGS; i++) {
+        for (int j = 0; j < Physics::Tunings::MAX_TUNINGS; j++) {
+            float original_setting = TuningRecord->GetTunings(static_cast<eCustomTuningType>(i))->Value[j];
+            float new_setting = TempTuningRecord.GetTunings(static_cast<eCustomTuningType>(i))->Value[j];
+
+            if (original_setting != new_setting) {
                 return false;
             }
         }

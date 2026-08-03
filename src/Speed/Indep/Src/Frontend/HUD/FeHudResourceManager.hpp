@@ -55,4 +55,6 @@ class HudResourceManager {
     static void LoadingCompleteCallbackBridge(void *param) {} // Decl: speed/indep/src/frontend/hud/FeHudResourceManager.hpp:47
 };
 
+HudResourceManager TheHudResourceManager; // size: 0x38, Decl:speed/indep/src/frontend/hud/FeHudResourceManager.hpp:51
+
 #endif

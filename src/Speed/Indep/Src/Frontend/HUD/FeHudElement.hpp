@@ -3,6 +3,7 @@
 
 #include "Speed/Indep/Src/FEng/FEGroup.h"
 #include "Speed/Indep/Src/FEng/FEImage.h"
+#include "Speed/Indep/Src/FEng/FEList.h"
 #include "Speed/Indep/Src/FEng/FEMultiImage.h"
 #include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/Interfaces/SimEntities/IPlayer.h"
@@ -35,13 +36,19 @@ class HudElement {
 
     virtual void Update(IPlayer *player) {} // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:35
 
-    FEString *RegisterString(const char *name) {} // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:45
-    FEString *RegisterString(uint32 hash);        // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:45
-    FEImage *RegisterImage(const char *name) {}   // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:46
-    FEImage *RegisterImage(uint32 hash);          // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:46
+    FEString *RegisterString(const char *name) { // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:45
+        return RegisterString(FEHashUpper(name));
+    }
+    FEString *RegisterString(uint32 hash);     // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:45
+    FEImage *RegisterImage(const char *name) { // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:46
+        return RegisterImage(FEHashUpper(name));
+    }
+    FEImage *RegisterImage(uint32 hash); // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:46
 
-    FEObject *RegisterObject(const char *name) {} // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:47
-    FEObject *RegisterObject(uint32 hash);        // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:47
+    FEObject *RegisterObject(const char *name) { // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:47
+        return RegisterObject(FEHashUpper(name));
+    }
+    FEObject *RegisterObject(uint32 hash); // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:47
 
     FEMultiImage *RegisterMultiImage(uint32 hash);
 

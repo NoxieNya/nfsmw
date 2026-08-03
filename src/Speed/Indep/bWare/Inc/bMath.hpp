@@ -213,7 +213,7 @@ inline float bDegToRad(float degrees) {
 }
 
 inline float bAngToDeg(bAngle angle) {
-    return static_cast<unsigned int>(angle) * (360.0f / 65536.0f);
+    return static_cast<unsigned int>(angle) * 360.0f / 65536.0f;
 }
 
 inline float bCos(float angle) {
@@ -660,35 +660,21 @@ struct ALIGN_16 bVector4 {
 
     bVector4() {}
 
-    bVector4 operator+() {}
-
     bVector4(float _x, float _y, float _z, float _w);
 
     bVector4(const bVector4 &v);
 
+    bVector4 operator+(const bVector4 &v) const;
+
+    bVector4 operator-(const bVector4 &v) const;
+
+    bVector4 operator*(const float f) {
+        bVector4 t;
+    }
+
     bVector4 &operator=(const bVector4 &v);
 
-    bVector4 operator-(const bVector4 &v);
-
-    bVector4 &operator-=(const bVector4 &v) {}
-
-    inline bVector4 &operator+=(const bVector4 &v);
-
-    bVector4 &operator*=(float scale);
-
-    bVector4 &operator/=(float inv_scale) {}
-
-    int operator==(const bVector4 &v) {}
-
-    float &operator[](int index) {
-        return reinterpret_cast<float *>(this)[index];
-    }
-
-    const float &operator[](int index) const {
-        return reinterpret_cast<const float *>(this)[index];
-    }
-
-    bVector4 operator+(const bVector4 &v);
+    bVector4 operator+() {}
 
     bVector4 operator-() {
         float x1;
@@ -697,8 +683,22 @@ struct ALIGN_16 bVector4 {
         float w1;
     }
 
-    bVector4 operator*(const float f) {
-        bVector4 t;
+    bVector4 &operator+=(const bVector4 &v);
+
+    bVector4 &operator-=(const bVector4 &v) {}
+
+    bVector4 &operator*=(float scale);
+
+    bVector4 &operator/=(float inv_scale) {}
+
+    int operator==(const bVector4 &v) const {}
+
+    float &operator[](int index) {
+        return reinterpret_cast<float *>(this)[index];
+    }
+
+    const float &operator[](int index) const {
+        return reinterpret_cast<const float *>(this)[index];
     }
 };
 
@@ -877,7 +877,7 @@ inline bVector4::bVector4(float _x, float _y, float _z, float _w) {
     bFill(this, _x, _y, _z, _w);
 }
 
-inline bVector4 bVector4::operator+(const bVector4 &v) {
+inline bVector4 bVector4::operator+(const bVector4 &v) const {
     bVector4 *pv = const_cast<bVector4 *>(&v);
     float x1 = this->x;
     float y1 = this->y;
@@ -913,7 +913,7 @@ inline bVector4 &bVector4::operator*=(float scale) {
     return *this;
 }
 
-inline bVector4 bVector4::operator-(const bVector4 &v) {
+inline bVector4 bVector4::operator-(const bVector4 &v) const {
     bVector4 *pv = const_cast<bVector4 *>(&v);
     float x1 = this->x;
     float y1 = this->y;

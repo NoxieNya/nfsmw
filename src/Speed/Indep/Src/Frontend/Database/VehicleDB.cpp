@@ -2,6 +2,9 @@
 #include "Speed/Indep/Src/Camera/CameraInfo.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/FEng/FEList.h"
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Generated/AttribSys/GenericAccessor.h"
+#include "Speed/Indep/Src/Generated/CarTypes.hpp"
 #include "Speed/Indep/Src/Main/AttribSupport.h"
 #include "Speed/Indep/Src/Misc/EasterEggs.hpp"
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/fecooling.h"
@@ -16,7 +19,9 @@
 #include "Speed/Indep/Src/Interfaces/Simables/IVehicle.h"
 #include "Speed/Indep/Src/Ecstasy/EcstasyE.hpp"
 #include "Speed/Indep/Src/Frontend/Careers/UnlockSystem.hpp"
+#include "Speed/Indep/Src/Misc/attribuserinclude.h"
 #include "Speed/Indep/Src/World/CarInfo.hpp"
+#include "Speed/Indep/Tools/AttribSys/Runtime/AttribSys.h"
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
 #include "Speed/Indep/bWare/Inc/bWare.hpp"
 #include "Speed/Indep/Src/Gameplay/GManager.h"
@@ -59,85 +64,92 @@ POVTypes GetPOVTypeFromPlayerCamera(ePlayerSettingsCameras cam) {
 }
 
 bool IsPlayerCameraSelectable(POVTypes pov_type) {
-    Attrib::Gen::camerainfo camera_info(Attrib::FindCollection(Attrib::Gen::camerainfo::ClassKey(), 0xeec2271a), 0, nullptr);
-    unsigned int model_name_key = 0;
+    Attrib::Gen::ecar model_atrs(0xeec2271a, 0, nullptr);
+    static uint32 prevModelNameHash = 0;
+    static uint32 modelNameKey = 0;
     IPlayer *player = IPlayer::First(PLAYER_LOCAL);
-    if (player) {
-        ISimable *simable = player->GetSimable();
-        if (simable) {
-            IVehicle *vehicle = nullptr;
-            if (simable->QueryInterface(&vehicle)) {
-                const char *vehicle_name = vehicle->GetVehicleName();
-                if (vehicle_name) {
-                    model_name_key = Attrib::StringToLowerCaseKey(vehicle_name);
+    if (player != nullptr) {
+        ISimable *isimable = player->GetSimable();
+        if (isimable == nullptr) {
+            // TODO: BUG? this is dereferencing a null pointer
+            const Attrib::StringKey &modelName = isimable->GetAttributes()->MODEL(0);
+
+            if (static_cast<uint32>(modelName) != prevModelNameHash) {
+                prevModelNameHash = modelName;
+                const char *name = GetCarTypeInfo(bStringHash(modelName.GetString()))->GetName();
+
+                if (name == nullptr) {
+                    name = "";
                 }
+
+                modelNameKey = Attrib::StringToLowerCaseKey(name);
             }
         }
     }
 
-    Attrib::Gen::ecar car_info(Attrib::FindCollectionWithDefault(Attrib::Gen::ecar::ClassKey(), model_name_key), 0, nullptr);
+    model_atrs.ChangeWithDefault(modelNameKey);
 
-    const Attrib::RefSpec *ref_spec = nullptr;
+    Attrib::Gen::camerainfo camera_atrs(0xeec2271a, 0, nullptr);
+
+    int index;
+
     switch (pov_type) {
         case POV_BUMPER:
-            ref_spec = &car_info.CameraInfo_Bumper();
+            camera_atrs.Change(model_atrs.CameraInfo_Bumper());
             break;
         case POV_HOOD:
-            ref_spec = &car_info.CameraInfo_Hood();
+            camera_atrs.Change(model_atrs.CameraInfo_Hood());
             break;
         case POV_OUTSIDE_CLOSE:
-            ref_spec = &car_info.CameraInfo_Close();
+            camera_atrs.Change(model_atrs.CameraInfo_Close());
             break;
         case POV_OUTSIDE_FAR:
-            ref_spec = &car_info.CameraInfo_Far();
+            camera_atrs.Change(model_atrs.CameraInfo_Far());
             break;
         case POV_SUPER_FAR:
-            ref_spec = &car_info.CameraInfo_SuperFar();
+            camera_atrs.Change(model_atrs.CameraInfo_SuperFar());
             break;
         case POV_DRIFT:
-            ref_spec = &car_info.CameraInfo_Drift();
+            camera_atrs.Change(model_atrs.CameraInfo_Drift());
             break;
         case POV_PURSUIT:
-            ref_spec = &car_info.CameraInfo_Pursuit();
+            camera_atrs.Change(model_atrs.CameraInfo_Pursuit());
+            break;
+        default:
+            camera_atrs.Change(0xeec2271a);
             break;
     }
 
-    if (!ref_spec) {
-        camera_info.Change(0xeec2271a);
-        return camera_info.SELECTABLE(eGetCurrentViewMode() == EVIEWMODE_TWOH);
-    }
-
-    static_cast<Attrib::Instance &>(camera_info).Change(*ref_spec);
-    return camera_info.SELECTABLE(eGetCurrentViewMode() == EVIEWMODE_TWOH);
+    return camera_atrs.SELECTABLE(static_cast<unsigned int>(eGetCurrentViewMode() == EVIEWMODE_TWOH));
 }
 
-ePlayerSettingsCameras GetPlayerCameraFromPOVType(POVTypes pov) {
-    switch (pov) {
-        case 0:
-            return static_cast<ePlayerSettingsCameras>(0);
-        case 1:
-            return static_cast<ePlayerSettingsCameras>(1);
-        case 2:
-            return static_cast<ePlayerSettingsCameras>(2);
-        case 3:
-            return static_cast<ePlayerSettingsCameras>(3);
-        case 4:
-            return static_cast<ePlayerSettingsCameras>(4);
-        case 5:
-            return static_cast<ePlayerSettingsCameras>(5);
-        case 6:
-            return static_cast<ePlayerSettingsCameras>(6);
+ePlayerSettingsCameras GetPlayerCameraFromPOVType(POVTypes type) {
+    switch (type) {
+        case POV_BUMPER:
+            return PSC_BUMPER;
+        case POV_HOOD:
+            return PSC_HOOD;
+        case POV_OUTSIDE_CLOSE:
+            return PSC_CLOSE;
+        case POV_OUTSIDE_FAR:
+            return PSC_FAR;
+        case POV_SUPER_FAR:
+            return PSC_SUPER_FAR;
+        case POV_DRIFT:
+            return PSC_DRIFT;
+        case POV_PURSUIT:
+            return PSC_PURSUIT;
         default:
-            return static_cast<ePlayerSettingsCameras>(2);
+            return PSC_CLOSE;
     }
 }
 
 void AdjustStableHeat_EvadePursuit(int playerNum) {
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(playerNum);
-    for (int i = 0; i <= 0xC7; i++) {
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
         FECarRecord *fe_car = stable->GetCarByIndex(i);
         FECareerRecord *fe_career = stable->GetCareerRecordByHandle(fe_car->CareerHandle);
-        if (fe_career) {
+        if (fe_career != nullptr) {
             fe_career->AdjustHeatOnEvadePursuit();
         }
     }
@@ -145,10 +157,10 @@ void AdjustStableHeat_EvadePursuit(int playerNum) {
 
 void AdjustStableHeat_EventWin(int playerNum) {
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(playerNum);
-    for (int i = 0; i <= 0xC7; i++) {
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
         FECarRecord *fe_car = stable->GetCarByIndex(i);
         FECareerRecord *fe_career = stable->GetCareerRecordByHandle(fe_car->CareerHandle);
-        if (fe_career) {
+        if (fe_career != nullptr) {
             fe_career->AdjustHeatOnEventWin();
         }
     }
@@ -156,10 +168,10 @@ void AdjustStableHeat_EventWin(int playerNum) {
 
 void AdjustStableImpound_EventWin(int playerNum) {
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(playerNum);
-    for (int i = 0; i <= 0xC7; i++) {
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
         FECarRecord *fe_car = stable->GetCarByIndex(i);
         FECareerRecord *fe_career = stable->GetCareerRecordByHandle(fe_car->CareerHandle);
-        if (fe_career) {
+        if (fe_career != nullptr) {
             if (fe_career->TheImpoundData.NotifyWin()) {
                 GManager::Get().AddSMS(0x78);
             }
@@ -169,23 +181,21 @@ void AdjustStableImpound_EventWin(int playerNum) {
 
 void AdjustStableImpound_EvadePursuit(int playerNum) {
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(playerNum);
-    for (int i = 0; i <= 0xC7; i++) {
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
         FECarRecord *fe_car = stable->GetCarByIndex(i);
         FECareerRecord *fe_career = stable->GetCareerRecordByHandle(fe_car->CareerHandle);
-        if (fe_career) {
+        if (fe_career != nullptr) {
             fe_career->TheImpoundData.NotifyEvade();
         }
     }
 }
 
-FEPlayerCarDB::FEPlayerCarDB() {
-    Default();
-}
+FEPlayerCarDB::FEPlayerCarDB() : CarTable(), CareerRecords() {}
 
 FEPlayerCarDB::~FEPlayerCarDB() {}
 
 FECarRecord *FEPlayerCarDB::GetCarRecordByHandle(uint32 handle) {
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
         if (CarTable[i].Handle == handle) {
             return &CarTable[i];
         }
@@ -194,28 +204,26 @@ FECarRecord *FEPlayerCarDB::GetCarRecordByHandle(uint32 handle) {
 }
 
 FECarRecord *FEPlayerCarDB::GetCarByIndex(int index) {
-    if (index > 199) {
-        return nullptr;
+    if (index < MAX_CARS_IN_STABLE) {
+        return &CarTable[index];
     }
-    return &CarTable[index];
+    return nullptr;
 }
 
 FECarRecord *FEPlayerCarDB::CreateNewCarRecord() {
-    for (int i = 0; i < 200; i++) {
-        if (CarTable[i].Handle == 0xFFFFFFFF) {
-            FECarRecord *record = &CarTable[i];
-
-            record->Default();
-            record->Handle = i;
-            return record;
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
+        if (CarTable[i].Handle == INVALID_CAR_HANDLE) {
+            CarTable[i].Default();
+            CarTable[i].Handle = i;
+            return &CarTable[i];
         }
     }
     return nullptr;
 }
 
 bool FEPlayerCarDB::CanCreateNewCarRecord() {
-    for (int i = 0; i < 200; i++) {
-        if (!CarTable[i].IsValid()) {
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
+        if (CarTable[i].Handle == INVALID_CAR_HANDLE) {
             return true;
         }
     }
@@ -224,7 +232,7 @@ bool FEPlayerCarDB::CanCreateNewCarRecord() {
 
 bool FEPlayerCarDB::CanCreateNewCustomizationRecord() {
     for (int i = 0; i < 75; i++) {
-        if (Customizations[i].Handle == 0xFF) {
+        if (Customizations[i].Handle == INVALID_CUSTOMIZATION_HANDLE) {
             return true;
         }
     }
@@ -233,20 +241,18 @@ bool FEPlayerCarDB::CanCreateNewCustomizationRecord() {
 
 FECustomizationRecord *FEPlayerCarDB::CreateNewCustomizationRecord() {
     for (int i = 0; i < 75; i++) {
-        if (Customizations[i].Handle == 0xFF) {
-            FECustomizationRecord *record = &Customizations[i];
-
-            record->Default();
+        if (Customizations[i].Handle == INVALID_CUSTOMIZATION_HANDLE) {
+            Customizations[i].Default();
             Customizations[i].Handle = i;
-            return record;
+            return &Customizations[i];
         }
     }
     return nullptr;
 }
 
 FECareerRecord *FEPlayerCarDB::CreateNewCareerRecord() {
-    for (int i = 0; i < 25; i++) {
-        if (CareerRecords[i].Handle == 0xFF) {
+    for (int i = 0; i < MAX_CAREER_TOTAL_CARS; i++) {
+        if (CareerRecords[i].Handle == INVALID_CAREER_HANDLE) {
             CareerRecords[i].Default();
             CareerRecords[i].Handle = i;
             return &CareerRecords[i];
@@ -258,6 +264,9 @@ FECareerRecord *FEPlayerCarDB::CreateNewCareerRecord() {
 uint16 FEPlayerCarDB::GetNumInfraction(GInfractionManager::InfractionType type, bool get_unserved) {
     class NumInfraction : public FEPlayerCarDB::MyCallback {
       public:
+        NumInfraction(GInfractionManager::InfractionType t, bool unserved) : type(t), get_unserved(unserved) {}
+        ~NumInfraction() override {}
+
         uint32 Callback(const FECareerRecord &record) const override {
             return record.GetNumInfraction(type, get_unserved);
         }
@@ -266,18 +275,16 @@ uint16 FEPlayerCarDB::GetNumInfraction(GInfractionManager::InfractionType type, 
         bool get_unserved;
     };
 
-    uint16 total = (get_unserved ? SoldHistoryUnservedInfractions : SoldHistoryServedInfractions).GetValue(type);
-    NumInfraction callback;
-
-    callback.type = type;
-    callback.get_unserved = get_unserved;
-    total += ForAllCareerRecordsSum(callback);
-    return total;
+    uint16 history = get_unserved ? SoldHistoryUnservedInfractions.GetValue(type) : SoldHistoryServedInfractions.GetValue(type);
+    return ForAllCareerRecordsSum(NumInfraction(type, get_unserved)) + history;
 }
 
 uint32 FEPlayerCarDB::GetTotalNumInfractions(bool get_unserved) {
     class TotalNumInfractions : public FEPlayerCarDB::MyCallback {
       public:
+        TotalNumInfractions(bool unserved) : get_unserved(unserved) {}
+        ~TotalNumInfractions() override {}
+
         uint32 Callback(const FECareerRecord &record) const override {
             return record.GetInfractions(get_unserved).NumInfractions();
         }
@@ -285,12 +292,8 @@ uint32 FEPlayerCarDB::GetTotalNumInfractions(bool get_unserved) {
         bool get_unserved;
     };
 
-    unsigned int total = (get_unserved ? SoldHistoryUnservedInfractions : SoldHistoryServedInfractions).NumInfractions();
-    TotalNumInfractions callback;
-
-    callback.get_unserved = get_unserved;
-    total += ForAllCareerRecordsSum(callback);
-    return total;
+    uint16 history = get_unserved ? SoldHistoryUnservedInfractions.NumInfractions() : SoldHistoryServedInfractions.NumInfractions();
+    return ForAllCareerRecordsSum(TotalNumInfractions(get_unserved)) + history;
 }
 
 uint16 FEPlayerCarDB::GetNumInfractionsOnCar(uint32 car_handle, bool get_unserved) {
@@ -305,24 +308,30 @@ uint16 FEPlayerCarDB::GetNumInfractionsOnCar(uint32 car_handle, bool get_unserve
 
 uint32 FEPlayerCarDB::GetTotalBounty() {
     class Bounty : public FEPlayerCarDB::MyCallback {
+      public:
+        Bounty() {}
+        ~Bounty() override {}
+
         uint32 Callback(const FECareerRecord &record) const override {
             return record.GetBounty();
         }
     };
 
-    Bounty callback;
-    return ForAllCareerRecordsSum(callback) + SoldHistoryBounty;
+    return ForAllCareerRecordsSum(Bounty()) + SoldHistoryBounty;
 }
 
 uint32 FEPlayerCarDB::GetTotalEvadedPursuits() {
     class EvadedPursuits : public FEPlayerCarDB::MyCallback {
+      public:
+        EvadedPursuits() {}
+        ~EvadedPursuits() override {}
+
         uint32 Callback(const FECareerRecord &record) const override {
             return record.GetNumEvadedPursuits();
         }
     };
 
-    EvadedPursuits callback;
-    return ForAllCareerRecordsSum(callback) + SoldHistoryNumEvadedPursuits;
+    return ForAllCareerRecordsSum(EvadedPursuits()) + SoldHistoryNumEvadedPursuits;
 }
 
 uint32 FEPlayerCarDB::GetTotalBustedPursuits() {
@@ -333,25 +342,26 @@ uint32 FEPlayerCarDB::GetTotalBustedPursuits() {
         }
     };
 
-    BustedPursuits callback;
-    return ForAllCareerRecordsSum(callback) + SoldHistoryNumBustedPursuits;
+    return ForAllCareerRecordsSum(BustedPursuits()) + SoldHistoryNumBustedPursuits;
 }
 
 uint32 FEPlayerCarDB::GetNumImpoundedCars() {
     class IsImpounded : public FEPlayerCarDB::MyCallback {
       public:
         uint32 Callback(const FECareerRecord &record) const override {
-            return record.TheImpoundData.IsImpounded();
+            return static_cast<uint32>(record.TheImpoundData.IsImpounded());
         }
     };
 
-    IsImpounded callback;
-    return ForAllCareerRecordsSum(callback);
+    return ForAllCareerRecordsSum(IsImpounded());
 }
 
 uint32 FEPlayerCarDB::GetTotalFines(bool get_unserved) {
     class Fines : public FEPlayerCarDB::MyCallback {
       public:
+        Fines(bool unserved) : get_unserved(unserved) {}
+        ~Fines() override {}
+
         uint32 Callback(const FECareerRecord &record) const override {
             return record.GetInfractions(get_unserved).GetFineValue();
         }
@@ -359,9 +369,7 @@ uint32 FEPlayerCarDB::GetTotalFines(bool get_unserved) {
         bool get_unserved;
     };
 
-    Fines callback;
-    callback.get_unserved = get_unserved;
-    return ForAllCareerRecordsSum(callback);
+    return ForAllCareerRecordsSum(Fines(get_unserved));
 }
 
 uint32 FEPlayerCarDB::GetNumCareerCarsWithARecord() {
@@ -372,19 +380,19 @@ uint32 FEPlayerCarDB::GetNumCareerCarsWithARecord() {
         }
     };
 
-    NumCars callback;
-    return ForAllCareerRecordsSum(callback);
+    return ForAllCareerRecordsSum(NumCars());
 }
 
-uint32 FEPlayerCarDB::ForAllCareerRecordsSum(const MyCallback &callback) {
+uint32 FEPlayerCarDB::ForAllCareerRecordsSum(const MyCallback &Callback) {
     uint32 val = 0;
+    int filter = FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_CAREER;
 
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
         FECarRecord *fe_car = GetCarByIndex(i);
-        if (fe_car->IsValid() && fe_car->MatchesFilter(0xF0002)) {
+        if (fe_car->IsValid() && fe_car->MatchesFilter(filter)) {
             const FECareerRecord *record = GetCareerRecordByHandle(fe_car->CareerHandle);
             if (record != nullptr) {
-                val += callback.Callback(*record);
+                val += Callback.Callback(*record);
             }
         }
     }
@@ -393,224 +401,226 @@ uint32 FEPlayerCarDB::ForAllCareerRecordsSum(const MyCallback &callback) {
 }
 
 void FEPlayerCarDB::BackupSoldCarHistory(uint8 sold_car) {
-    FECareerRecord *careerRecord = GetCareerRecordByHandle(sold_car);
-    if (careerRecord == nullptr) {
+    FECareerRecord *record = GetCareerRecordByHandle(sold_car);
+    if (record == nullptr) {
         return;
     }
 
-    SoldHistoryBounty += careerRecord->GetBounty();
-    SoldHistoryNumEvadedPursuits += careerRecord->GetNumEvadedPursuits();
-    SoldHistoryNumBustedPursuits += careerRecord->GetNumBustedPursuits();
-    SoldHistoryUnservedInfractions += careerRecord->GetInfractions(true);
-    SoldHistoryServedInfractions += careerRecord->GetInfractions(false);
+    SoldHistoryBounty += record->GetBounty();
+    SoldHistoryNumEvadedPursuits += record->GetNumEvadedPursuits();
+    SoldHistoryNumBustedPursuits += record->GetNumBustedPursuits();
+    SoldHistoryUnservedInfractions += record->GetInfractions(true);
+    SoldHistoryServedInfractions += record->GetInfractions(false);
 }
 
 uint32 FEPlayerCarDB::GetPreferedCarName() {
-    unsigned int max_pursuits = 0;
-    unsigned int name = 0;
+    uint32 highestTimes = 0;
+    uint32 highestCar = 0;
+    int filter = FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_CAREER;
 
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
         FECarRecord *fe_car = GetCarByIndex(i);
-        if (fe_car->IsValid() && fe_car->MatchesFilter(0xF0002)) {
-            FECareerRecord *career_record = GetCareerRecordByHandle(fe_car->CareerHandle);
-            if (career_record != nullptr) {
-                unsigned int pursuits = career_record->GetNumEvadedPursuits() + career_record->GetNumBustedPursuits();
-                if (pursuits > max_pursuits) {
-                    max_pursuits = pursuits;
-                    name = fe_car->GetNameHash();
+        if (fe_car->IsValid() && fe_car->MatchesFilter(filter)) {
+            FECareerRecord *record = GetCareerRecordByHandle(fe_car->CareerHandle);
+            if (record != nullptr) {
+                uint32 times = record->GetNumBustedPursuits() + record->GetNumEvadedPursuits();
+                if (times > highestTimes) {
+                    highestTimes = times;
+                    highestCar = fe_car->GetNameHash();
                 }
             }
         }
     }
 
-    return name;
+    return highestCar;
 }
 
 int FEPlayerCarDB::GetNumQuickRaceCars() {
-    return GetNumCars(0xF0004);
+    return GetNumCars(FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_QUICK_RACE);
 }
 
 int FEPlayerCarDB::GetNumCareerCars() {
-    return GetNumCars(0xF0002);
+    return GetNumCars(FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_CAREER);
 }
 
 int FEPlayerCarDB::GetNumPurchasedCars() {
-    int total = 0;
+    int numCars = 0;
 
-    for (int i = 0; i < 200; i++) {
-        FECarRecord *record = &CarTable[i];
-        if (record->IsValid() && record->MatchesFilter(0xF0002) && (record->FilterBits & 0x40) == 0) {
-            total++;
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
+        FECarRecord *car = &CarTable[i];
+        if (car->IsValid() && car->MatchesFilter(FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_CAREER) &&
+            (car->FilterBits & FE_CAR_FILTER_PINKSLIP) == 0) {
+            numCars++;
         }
     }
 
-    return total;
+    return numCars;
 }
 
 int FEPlayerCarDB::GetNumAvailableCareerCars() {
-    int total = 0;
+    int numCars = 0;
 
-    for (int i = 0; i < 200; i++) {
-        FECarRecord *record = &CarTable[i];
-        if (record->IsValid() && record->CareerHandle != 0xFF) {
-            FECareerRecord *career_record = GetCareerRecordByHandle(record->CareerHandle);
-            if (!career_record->TheImpoundData.IsImpounded()) {
-                total++;
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
+        FECarRecord *car = &CarTable[i];
+        if (car->IsValid() && car->IsCareer()) {
+            FECareerRecord *career = GetCareerRecordByHandle(car->CareerHandle);
+            if (!career->TheImpoundData.IsImpounded()) {
+                numCars++;
             }
         }
     }
 
-    return total;
+    return numCars;
 }
 
 int FEPlayerCarDB::GetNumCars(uint32 filter) {
-    int total = 0;
+    int numCars = 0;
 
-    for (int i = 0; i < 200; i++) {
-        if (CarTable[i].IsValid() && CarTable[i].MatchesFilter(filter)) {
-            total++;
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
+        FECarRecord *car = &CarTable[i];
+        if (car->IsValid() && car->MatchesFilter(filter)) {
+            numCars++;
         }
     }
 
-    return total;
+    return numCars;
 }
 
-FECarRecord *FEPlayerCarDB::CreateNewCustomCar(uint32 fromCar) {
-    if (GetNumQuickRaceCars() < 20) {
-        return CreateCar(fromCar, 0xF0004);
+FECarRecord *FEPlayerCarDB::CreateNewCustomCar(FECarHandle fromCar) {
+    if (GetNumQuickRaceCars() < MAX_QUICKRACE_CARS_IN_STABLE) {
+        return CreateCar(fromCar, FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_QUICK_RACE);
     }
     return nullptr;
 }
 
 FECarRecord *FEPlayerCarDB::AwardRivalCar(uint32 preset) {
     if (preset == 0x03A94520) {
-        FEDatabase->GetCareerSettings()->SpecialFlags |= 0x100000;
+        FEDatabase->GetCareerSettings()->SetHasBeenAwardedEpicCar();
     }
 
-    PresetCar *presetCar = FindFEPresetCar(preset);
-    FECarRecord *presetRecord = GetCarRecordByHandle(preset);
-    if (presetRecord == nullptr) {
-        presetRecord = CreateNewPresetCar(presetCar->PresetName);
+    PresetCar *preset_car = FindFEPresetCar(preset);
+    FECarRecord *new_preset = GetCarRecordByHandle(preset);
+    if (new_preset == nullptr) {
+        // TODO: BUG? this doesn't assign new_preset
+        FECarRecord *new_preset = CreateNewPresetCar(preset_car->PresetName);
     }
 
-    FECarRecord *car = CreateNewCareerCar(presetRecord->Handle);
-    FECustomizationRecord *customization = GetCustomizationRecordByHandle(car->Customization);
+    FECarRecord *new_rec = CreateNewCareerCar(new_preset->Handle);
+    new_rec->FilterBits |= FE_CAR_FILTER_PINKSLIP;
+
+    FECustomizationRecord *customizations = GetCustomizationRecordByHandle(new_rec->Customization);
     RideInfo ride;
 
-    car->FilterBits |= 0x40;
-    ride.Init(static_cast<CarType>(-1), CarRenderUsage_Player, 0, 0);
-    ride.FillWithPreset(FEHashUpper(presetCar->PresetName));
-    customization->WriteRideIntoRecord(&ride);
+    ride.FillWithPreset(FEHashUpper(preset_car->PresetName));
+    customizations->WriteRideIntoRecord(&ride);
 
-    Attrib::Gen::presetride ridePreset(Attrib::StringToLowerCaseKey(presetCar->PresetName), 0, nullptr);
-    if (ridePreset.IsValid() && customization != nullptr) {
-        Attrib::Gen::pvehicle vehicle(car->VehicleKey, 0, nullptr);
-        if (Physics::Upgrades::ApplyPreset(vehicle, ridePreset)) {
-            customization->WritePhysicsIntoRecord(vehicle);
+    Attrib::Gen::presetride physics_preset(Attrib::StringToLowerCaseKey(preset_car->PresetName), 0, nullptr);
+    if (physics_preset.IsValid() && customizations != nullptr) {
+        Attrib::Gen::pvehicle pvehicle(new_rec->VehicleKey, 0, nullptr);
+        if (Physics::Upgrades::ApplyPreset(pvehicle, physics_preset)) {
+            customizations->WritePhysicsIntoRecord(pvehicle);
         }
     }
 
-    return car;
+    return new_rec;
 }
 
-FECarRecord *FEPlayerCarDB::CreateNewCareerCar(uint32 fromCar) {
-    FECarRecord *car = nullptr;
-
-    if (GetNumCareerCars() < 0x19) {
-        car = CreateCar(fromCar, 0xF0002);
-        if (car != nullptr) {
-            FECareerRecord *careerRecord = CreateNewCareerRecord();
-            if (careerRecord == nullptr) {
-                GetCustomizationRecordByHandle(car->Customization)->Handle = 0xFF;
-                car->Handle = 0xFFFFFFFF;
-                car = nullptr;
-            } else {
-                car->CareerHandle = careerRecord->Handle;
-            }
+FECarRecord *FEPlayerCarDB::CreateNewCareerCar(FECarHandle fromCar) {
+    if (GetNumCareerCars() >= MAX_CAREER_TOTAL_CARS) {
+        return nullptr;
+    }
+    FECarRecord *the_car = CreateCar(fromCar, FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_CAREER);
+    if (the_car != nullptr) {
+        FECareerRecord *empty_career_record = CreateNewCareerRecord();
+        if (empty_career_record == nullptr) {
+            GetCustomizationRecordByHandle(the_car->Customization)->Handle = INVALID_CUSTOMIZATION_HANDLE;
+            the_car->Handle = INVALID_CAR_HANDLE;
+            return nullptr;
+        } else {
+            the_car->CareerHandle = empty_career_record->Handle;
         }
     }
 
-    return car;
+    return the_car;
 }
 
 FECarRecord *FEPlayerCarDB::CreateNewPresetCar(const char *preset_name) {
-    unsigned int presetHash = FEHashUpper(preset_name);
-    PresetCar *preset = FindFEPresetCar(presetHash);
-    Attrib::Gen::pvehicle vehicle(static_cast<unsigned int>(preset->VehicleKey), 0, nullptr);
+    uint32 nameHash = FEHashUpper(preset_name);
+    PresetCar *preset = FindFEPresetCar(nameHash);
+    Attrib::Gen::pvehicle car(preset->VehicleKey, 0, nullptr);
 
-    if (!vehicle.IsValid() || preset == nullptr) {
+    if (!car.IsValid()) {
         return nullptr;
     }
 
-    FECarRecord *car = CreateNewCarRecord();
-    if (car == nullptr) {
+    FECarRecord *emptyCarRecord = CreateNewCarRecord();
+    if (emptyCarRecord == nullptr || preset == nullptr) {
         return nullptr;
     }
 
-    car->Handle = presetHash;
-    FECustomizationRecord *customization = CreateNewCustomizationRecord();
-    if (customization == nullptr) {
-        car->Handle = 0xFFFFFFFF;
+    emptyCarRecord->Handle = nameHash;
+    FECustomizationRecord *emptyCustomizationRecord = CreateNewCustomizationRecord();
+    if (emptyCustomizationRecord == nullptr) {
+        emptyCarRecord->Handle = INVALID_CAR_HANDLE;
         return nullptr;
     }
 
-    car->Customization = customization->Handle;
-    SetCarToPreset(car->Handle, preset);
+    emptyCarRecord->Customization = emptyCustomizationRecord->Handle;
+    SetCarToPreset(emptyCarRecord->Handle, preset);
 
-    Attrib::Gen::presetride ridePreset(Attrib::StringToLowerCaseKey(preset->PresetName), 0, nullptr);
-    if (ridePreset.IsValid()) {
-        Attrib::Gen::pvehicle vehicleWithPreset(vehicle);
-        if (Physics::Upgrades::ApplyPreset(vehicleWithPreset, ridePreset)) {
-            customization->WritePhysicsIntoRecord(vehicleWithPreset);
+    Attrib::Gen::presetride physics_preset(Attrib::StringToLowerCaseKey(preset->PresetName), 0, nullptr);
+    if (physics_preset.IsValid()) {
+        Attrib::Gen::pvehicle pvehicle(car);
+        if (Physics::Upgrades::ApplyPreset(pvehicle, physics_preset)) {
+            emptyCustomizationRecord->WritePhysicsIntoRecord(pvehicle);
         }
-        Physics::Upgrades::Clear(vehicleWithPreset);
+        Physics::Upgrades::Clear(pvehicle);
     }
 
-    car->FilterBits = 0xF0010;
-    return car;
+    emptyCarRecord->FilterBits = FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_PRESET;
+    return emptyCarRecord;
 }
 
-FECarRecord *FEPlayerCarDB::CreateCar(uint32 fromCar, int FilterBits) {
-    FECarRecord *source = GetCarRecordByHandle(fromCar);
-    if (source == nullptr) {
+FECarRecord *FEPlayerCarDB::CreateCar(FECarHandle fromCar, int FilterBits) {
+    FECarRecord *fromCarRecord = GetCarRecordByHandle(fromCar);
+    if (fromCarRecord == nullptr) {
         return nullptr;
     }
 
-    FECarRecord *car = CreateNewCarRecord();
-    if (car == nullptr) {
+    FECarRecord *emptyCarRecord = CreateNewCarRecord();
+    if (emptyCarRecord == nullptr) {
         return nullptr;
     }
 
-    *car = *source;
-    FECustomizationRecord *customization = CreateNewCustomizationRecord();
-    if (customization == nullptr) {
-        car->Handle = 0xFFFFFFFF;
+    *emptyCarRecord = *fromCarRecord;
+    FECustomizationRecord *emptyCustomizationRecord = CreateNewCustomizationRecord();
+    if (emptyCustomizationRecord == nullptr) {
+        emptyCarRecord->Handle = INVALID_CAR_HANDLE;
         return nullptr;
     }
 
-    car->Customization = customization->Handle;
-    car->FilterBits = (car->FilterBits & 0xFFFF0000) | static_cast<unsigned int>(FilterBits);
+    emptyCarRecord->Customization = emptyCustomizationRecord->Handle;
+    emptyCarRecord->FilterBits = (emptyCarRecord->FilterBits & FE_CAR_FILTER_REGION_MASK) | FilterBits;
 
     RideInfo ride;
-    ride.Init(CARTYPE_NONE, CarRenderUsage_Player, 0, 0);
-    ride.Init(car->GetType(), CarRenderUsage_Player, 0, 0);
+    ride.Init(emptyCarRecord->GetType(), CarRenderUsage_Player, 0, 0);
     ride.SetRandomPaint();
     ride.SetStockParts();
-    customization->WriteRideIntoRecord(&ride);
-    return car;
+    emptyCustomizationRecord->WriteRideIntoRecord(&ride);
+    return emptyCarRecord;
 }
 
-void FEPlayerCarDB::DeleteCustomCar(unsigned int handle) {
-    DeleteCar(handle, 4, false);
+void FEPlayerCarDB::DeleteCustomCar(FECarHandle handle) {
+    DeleteCar(handle, FE_CAR_FILTER_LIST_QUICK_RACE, false);
 }
 
-void FEPlayerCarDB::DeleteCareerCar(unsigned int handle, bool was_sold) {
-    DeleteCar(handle, 2, was_sold);
+void FEPlayerCarDB::DeleteCareerCar(FECarHandle handle, bool was_sold) {
+    DeleteCar(handle, FE_CAR_FILTER_LIST_CAREER, was_sold);
 }
 
-bool FEPlayerCarDB::DeleteCar(uint32 handle, uint32 filter, bool was_sold) {
+bool FEPlayerCarDB::DeleteCar(FECarHandle handle, uint32 filter, bool was_sold) {
     FECarRecord *car = GetCarRecordByHandle(handle);
-    if (car == nullptr || car->Handle == 0xFFFFFFFF || (car->FilterBits & filter) == 0) {
+    if (car == nullptr || !car->IsValid() || (car->FilterBits & filter) == 0) {
         return false;
     }
 
@@ -618,22 +628,22 @@ bool FEPlayerCarDB::DeleteCar(uint32 handle, uint32 filter, bool was_sold) {
         BackupSoldCarHistory(car->CareerHandle);
     }
 
-    car->Handle = 0xFFFFFFFF;
+    car->Handle = INVALID_CAR_HANDLE;
 
-    if (car->Customization != 0xFF) {
-        GetCustomizationRecordByHandle(car->Customization)->Handle = 0xFF;
+    if (car->IsCustomized()) {
+        GetCustomizationRecordByHandle(car->Customization)->Handle = INVALID_CUSTOMIZATION_HANDLE;
     }
 
-    if (car->CareerHandle != 0xFF) {
-        GetCareerRecordByHandle(car->CareerHandle)->Handle = 0xFF;
+    if (car->IsCareer()) {
+        GetCareerRecordByHandle(car->CareerHandle)->Handle = INVALID_CAREER_HANDLE;
     }
 
     return true;
 }
 
 void FEPlayerCarDB::DeleteAllCars() {
-    for (int i = 0; i < 200; i++) {
-        CarTable[i].Handle = 0xFFFFFFFF;
+    for (int i = 0; i < MAX_CARS_IN_STABLE; i++) {
+        CarTable[i].Handle = INVALID_CAR_HANDLE;
     }
 }
 
@@ -644,7 +654,7 @@ void FEPlayerCarDB::DeleteAllCustomizations() {
 }
 
 void FEPlayerCarDB::DeleteAllCareerRecords() {
-    for (int i = 0; i < 25; i++) {
+    for (int i = 0; i < MAX_CAREER_TOTAL_CARS; i++) {
         CareerRecords[i].Handle = 0xFF;
     }
 }
@@ -652,19 +662,30 @@ void FEPlayerCarDB::DeleteAllCareerRecords() {
 bool FEPlayerCarDB::IsBonusCar(const char *preset_name) {
     uint32 nameHash = FEHashUpper(preset_name);
 
-    if (nameHash == 0x03A94520) {
-        return true;
+    switch (nameHash) {
+        case STRINGHASH_BONUS_SL65:
+        case STRINGHASH_BONUS_C6R:
+        case STRINGHASH_BONUS_GT2:
+        case STRINGHASH_CASTROLGT:
+        case STRINGHASH_E3_DEMO_BMW:
+        case STRINGHASH_BL2:
+        case STRINGHASH_BL3:
+        case STRINGHASH_BL4:
+        case STRINGHASH_BL5:
+        case STRINGHASH_BL6:
+        case STRINGHASH_BL7:
+        case STRINGHASH_BL8:
+        case STRINGHASH_BL9:
+        case STRINGHASH_BL10:
+        case STRINGHASH_BL11:
+        case STRINGHASH_BL12:
+        case STRINGHASH_BL13:
+        case STRINGHASH_BL14:
+        case STRINGHASH_BL15:
+            return true;
+        default:
+            return false;
     }
-
-    if (nameHash >= 0x0000965F && nameHash <= 0x00009666) {
-        return true;
-    }
-
-    if (nameHash >= 0x0013624E && nameHash <= 0x00136253) {
-        return true;
-    }
-
-    return nameHash == 0x2CF385B2 || nameHash == 0x2CF370F0 || nameHash == 0x34498EB2 || nameHash == 0xCB6AAF2F;
 }
 
 void FEPlayerCarDB::Default() {
@@ -672,40 +693,46 @@ void FEPlayerCarDB::Default() {
     DeleteAllCustomizations();
     DeleteAllCareerRecords();
 
-    FECarRecord *careerStart = CreateNewPresetCar("M3GTRCAREERSTART");
-    careerStart->Handle = 0x12345678;
-    careerStart->FilterBits = 0xF0020;
+    FECarRecord *car = CreateNewPresetCar("M3GTRCAREERSTART");
+    car->Handle = 0x12345678;
+    car->FilterBits = FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_DEBUG;
 
     for (int i = 0; i < GetNumPresetCars(); i++) {
-        PresetCar *preset = GetPresetCarAt(i);
-        const char *preset_name = preset->PresetName;
-        unsigned int preset_hash = FEHashUpper(preset_name);
+        PresetCar *pCar = GetPresetCarAt(i);
 
-        if (UnlockSystem::IsBonusCarCEOnly(preset_hash) || IsBonusCar(preset_name)) {
-            FECarRecord *bonusCar = CreateNewPresetCar(preset_name);
-            if (bonusCar) {
-                bonusCar->FilterBits = 0xF0008;
+        if (UnlockSystem::IsBonusCarCEOnly(FEHashUpper(pCar->PresetName))) {
+            FECarRecord *feCar = CreateNewPresetCar(pCar->PresetName);
+            if (feCar != nullptr) {
+                feCar->FilterBits = FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_BONUS;
             }
-        } else if (!bStrICmp(preset_name, "M3GTRCAREERSTART") || ShowAllPresetsInFE) {
-            CreateNewPresetCar(preset_name);
+        } else if (IsBonusCar(pCar->PresetName)) {
+            FECarRecord *feCar = CreateNewPresetCar(pCar->PresetName);
+            if (feCar != nullptr) {
+                feCar->FilterBits = FE_CAR_FILTER_REGION_ALL | FE_CAR_FILTER_LIST_BONUS;
+            }
+        } else if (!bStrICmp(pCar->PresetName, "M3GTRCAREERSTART") || ShowAllPresetsInFE) {
+            FECarRecord *feCar = CreateNewPresetCar(pCar->PresetName);
         }
         Physics::Upgrades::Flush();
     }
 
-    const Attrib::Class *carClass = Attrib::Database::Get().GetClass(Attrib::Gen::pvehicle::ClassKey());
-    unsigned int key = carClass->GetFirstCollection();
+    const Attrib::Class *carClass = Attrib::Database::Get().GetClass(Attrib::ClassName::pvehicle);
+    Attrib::Key key = carClass->GetFirstCollection();
     while (key != 0) {
-        Attrib::Gen::pvehicle vehicle(key, 0, nullptr);
-        Attrib::Gen::frontend frontendData(vehicle.frontend(), 0, nullptr);
-        if (!frontendData.IsDynamic()) {
-            if (vehicle.PlayerUsable() || ShowAllCarsInFE) {
-                const char *collection_name = vehicle.CollectionName();
-                if (collection_name && *collection_name) {
-                    FECarRecord *fe_car = CreateNewCarRecord();
-                    if (fe_car) {
-                        fe_car->FEKey = frontendData.GetCollection();
-                        fe_car->VehicleKey = vehicle.GetCollection();
-                        fe_car->Default();
+        Attrib::Gen::pvehicle pv_car(key, 0, nullptr);
+        if (!pv_car.IsDynamic()) {
+            Attrib::Gen::frontend fe_car(pv_car.frontend(), 0, nullptr);
+            Attrib::StringKey modelName;
+            pv_car.MODEL(modelName);
+
+            if (pv_car.PlayerUsable() || ShowAllCarsInFE) {
+
+                if (modelName.IsNotEmpty() && !pv_car.IsDynamic()) {
+                    FECarRecord *newCar = CreateNewCarRecord();
+                    if (newCar != nullptr) {
+                        newCar->FEKey = fe_car.GetCollection();
+                        newCar->VehicleKey = pv_car.GetCollection();
+                        newCar->Default();
                     }
                 }
             }
@@ -736,34 +763,34 @@ int32 FEPlayerCarDB::GetSaveBufferSize() {
 }
 
 void FEPlayerCarDB::AwardBonusCars() {
-    if (gEasterEggs.IsEasterEggUnlocked(EASTER_EGG_CASTROL)) {
-        unsigned int flags = FEDatabase->GetCareerSettings()->SpecialFlags;
-        if ((flags & 0x00040000) == 0) {
-            FEDatabase->GetCareerSettings()->SpecialFlags = flags | 0x00040000;
-        }
+    if (!gEasterEggs.IsEasterEggUnlocked(EASTER_EGG_CASTROL)) {
+        return;
+    }
+    if (!FEDatabase->GetCareerSettings()->HasBeenAwardedCastrolGT()) {
+        FEDatabase->GetCareerSettings()->SetAwardedCastrolGT();
     }
 }
 
 void FEPlayerCarDB::SetCarToPreset(uint32 car, PresetCar *preset) {
-    FECarRecord *record = GetCarRecordByHandle(car);
+    FECarRecord *car_record = GetCarRecordByHandle(car);
 
-    record->FEKey = static_cast<unsigned int>(preset->FEKey);
-    record->VehicleKey = static_cast<unsigned int>(preset->VehicleKey);
-    record->FilterBits = preset->FilterBits;
+    car_record->FEKey = preset->FEKey;
+    car_record->VehicleKey = preset->VehicleKey;
+    car_record->FilterBits = preset->FilterBits;
 
-    FECustomizationRecord *customization = GetCustomizationRecordByHandle(record->Customization);
-    if (customization != nullptr) {
-        customization->BecomePreset(preset);
+    FECustomizationRecord *pCustomization = GetCustomizationRecordByHandle(car_record->Customization);
+    if (pCustomization != nullptr) {
+        pCustomization->BecomePreset(preset);
     }
 }
 
 void FEPlayerCarDB::BuildRideForPlayer(uint32 car, int player, RideInfo *ride) {
-    FECarRecord *record = GetCarRecordByHandle(car);
+    FECarRecord *car_record = GetCarRecordByHandle(car);
 
-    ride->Init(record->GetType(), CarRenderUsage_Player, 0, 0);
-    FECustomizationRecord *customization = GetCustomizationRecordByHandle(record->Customization);
-    if (customization != nullptr) {
-        customization->WriteRecordIntoRide(ride);
+    ride->Init(car_record->GetType(), CarRenderUsage_Player, 0, 0);
+    FECustomizationRecord *pCustomization = GetCustomizationRecordByHandle(car_record->Customization);
+    if (pCustomization != nullptr) {
+        pCustomization->WriteRecordIntoRide(ride);
     } else {
         ride->SetRandomPaint();
         ride->SetStockParts();
@@ -778,33 +805,31 @@ FECustomizationRecord *FEPlayerCarDB::GetCustomizationRecordByHandle(uint8 handl
 }
 
 FECareerRecord *FEPlayerCarDB::GetCareerRecordByHandle(uint8 handle) {
-    if (handle >= 26) {
-        return nullptr;
-    }
-    if (CareerRecords[handle].Handle == 0xFF) {
+    if (handle > MAX_CAREER_TOTAL_CARS || CareerRecords[handle].Handle == INVALID_CAREER_HANDLE) {
         return nullptr;
     }
     return &CareerRecords[handle];
 }
 
 bool FEPlayerCarDB::WriteRecordIntoPhysics(uint32 car, Attrib::Gen::pvehicle &attributes) {
-    FECarRecord *record = GetCarRecordByHandle(car);
-    if (record != nullptr) {
-        FECustomizationRecord *customization = GetCustomizationRecordByHandle(record->Customization);
-        if (customization != nullptr) {
-            return customization->WriteRecordIntoPhysics(attributes);
-        }
+    FECarRecord *pCar = GetCarRecordByHandle(car);
+    if (pCar == nullptr) {
+        return false;
     }
-    return false;
+    FECustomizationRecord *pCustomization = GetCustomizationRecordByHandle(pCar->Customization);
+    if (pCustomization == nullptr) {
+        return false;
+    }
+    return pCustomization->WriteRecordIntoPhysics(attributes);
 }
 
 FECarRecord::FECarRecord() {
-    Handle = 0xFFFFFFFF;
-    CareerHandle = 0xFF;
-    FilterBits = 0;
     FEKey = 0;
     VehicleKey = 0;
-    Customization = 0xFF;
+    Handle = INVALID_CAR_HANDLE;
+    Customization = INVALID_CUSTOMIZATION_HANDLE;
+    CareerHandle = INVALID_CAREER_HANDLE;
+    FilterBits = 0;
 }
 
 FECarRecord &FECarRecord::operator=(const FECarRecord &other_record) {
@@ -815,87 +840,93 @@ FECarRecord &FECarRecord::operator=(const FECarRecord &other_record) {
 }
 
 void FECarRecord::Default() {
-    Customization = 0xFF;
+    Customization = INVALID_CUSTOMIZATION_HANDLE;
+    CareerHandle = INVALID_CAREER_HANDLE;
     FilterBits = 0;
-    CareerHandle = 0xFF;
-    if (Handle == 0xFFFFFFFF) {
+
+    if (!IsValid()) {
         return;
     }
 
-    Attrib::Gen::pvehicle vehicle(VehicleKey, 0, 0);
-    Attrib::Gen::frontend frontend(FEKey, 0, 0);
-    const unsigned char *frontendLayout = reinterpret_cast<const unsigned char *>(frontend.GetLayoutPointer());
-    int region = *reinterpret_cast<const int *>(frontendLayout + 0x38);
-    int isCustomizable = *reinterpret_cast<const int *>(frontendLayout + 0x58);
+    Attrib::Gen::pvehicle car(VehicleKey, 0, nullptr);
+    Attrib::Gen::frontend fe(FEKey, 0, nullptr);
 
-    if (region == 1) {
-        FilterBits |= 0x20000;
-    } else if (region == 0) {
-        FilterBits |= 0x10000;
-    } else if (region == 2) {
-        FilterBits |= 0x40000;
-    } else if (region == 3) {
-        FilterBits |= 0x80000;
+    switch (fe.region()) {
+        case 0:
+            FilterBits |= FE_CAR_FILTER_REGION_AMERICA;
+            break;
+        case 1:
+            FilterBits |= FE_CAR_FILTER_REGION_EUROPE;
+            break;
+        case 2:
+            FilterBits |= FE_CAR_FILTER_REGION_JAPAN;
+            break;
+        case 3:
+            FilterBits |= FE_CAR_FILTER_REGION_DEBUG;
+            break;
     }
 
-    if (region == 3 || isCustomizable == 0) {
-        FilterBits |= 0x20;
+    if (fe.region() == 3 || !fe.IsCustomizable()) {
+        FilterBits |= FE_CAR_FILTER_LIST_DEBUG;
     } else {
-        FilterBits |= 1;
+        FilterBits |= FE_CAR_FILTER_LIST_STOCK;
     }
 }
 
 CarType FECarRecord::GetType() {
-    Attrib::Gen::pvehicle vehicle(VehicleKey, 0, 0);
+    Attrib::Gen::pvehicle car(VehicleKey, 0, nullptr);
 
-    return CarPartDB.GetCarType(vehicle.MODEL().GetHash32());
+    return CarPartDB.GetCarType(bStringHash(car.MODEL().GetString()));
 }
 
-unsigned int FECarRecord::GetCost() {
-    Attrib::Gen::frontend frontend(FEKey, 0, 0);
+uint32 FECarRecord::GetCost() {
+    Attrib::Gen::frontend car(FEKey, 0, nullptr);
 
-    return frontend.Cost();
+    return car.Cost();
 }
 
-unsigned int FECarRecord::GetReleaseFromImpoundCost() {
-    return static_cast<unsigned int>(static_cast<float>(GetCost()) * g_fImpoundPercentageOfOriginalCost);
+// UNSOLVED  asm
+uint32 FECarRecord::GetReleaseFromImpoundCost() {
+    float cost = GetCost();
+    return cost * g_fImpoundPercentageOfOriginalCost;
 }
 
-unsigned int FECarRecord::GetNameHash() {
+// UNSOLVED (dwarf)
+uint32 FECarRecord::GetNameHash() {
     const char *manu = GetManufacturerName();
     if (bStrCmp(manu, "")) {
         char buf[128];
         Attrib::Gen::frontend frontend(FEKey, 0, nullptr);
-        FEngSNPrintf(buf, 0x80, "CARNAME_%s_%s", manu, frontend.CollectionName());
-        unsigned int hash = FEHashUpper(buf);
-        if (DoesStringExist(hash)) {
-            return hash;
+        FEngSNPrintf(buf, sizeof(buf), "CARNAME_%s_%s", manu, frontend.CollectionName());
+        uint32 CarNameHash = FEHashUpper(buf);
+        if (DoesStringExist(CarNameHash)) {
+            return CarNameHash;
         }
     }
     return 0x9BB9CCC3;
 }
 
-unsigned int FECarRecord::GetLogoHash() {
+uint32 FECarRecord::GetLogoHash() {
     const char *manu = GetManufacturerName();
     if (bStrCmp(manu, "")) {
         char buf[128];
-        Attrib::Gen::frontend frontend(FEKey, 0, 0);
-        FEngSNPrintf(buf, 0x80, "SECONDARY_LOGO_%s", frontend.CollectionName());
-        unsigned int texHash = FEHashUpper(buf);
-        if (GetTextureInfo(texHash, 0, 0)) {
+        Attrib::Gen::frontend frontend(FEKey, 0, nullptr);
+        FEngSNPrintf(buf, sizeof(buf), "SECONDARY_LOGO_%s", frontend.CollectionName());
+        uint32 texHash = FEHashUpper(buf);
+        if (GetTextureInfo(texHash, 0, 0) != nullptr) {
             return texHash;
         }
     }
     return FEHashUpper("GENERIC_LOGO_256");
 }
 
-unsigned int FECarRecord::GetManuLogoHash() {
+uint32 FECarRecord::GetManuLogoHash() {
     const char *manu = GetManufacturerName();
     if (bStrCmp(manu, "")) {
         char buf[128];
-        FEngSNPrintf(buf, 0x80, "CARSELECT_MANUFACTURER_%s", manu);
-        unsigned int texHash = FEHashUpper(buf);
-        if (GetTextureInfo(texHash, 0, 0)) {
+        FEngSNPrintf(buf, sizeof(buf), "CARSELECT_MANUFACTURER_%s", manu);
+        uint32 texHash = FEHashUpper(buf);
+        if (GetTextureInfo(texHash, 0, 0) != nullptr) {
             return texHash;
         }
     }
@@ -903,8 +934,8 @@ unsigned int FECarRecord::GetManuLogoHash() {
 }
 
 const char *FECarRecord::GetManufacturerName() {
-    Attrib::Gen::frontend fe(FEKey, 0, 0);
-    unsigned char Manufacturer = static_cast<unsigned char>(fe.manufacturer());
+    Attrib::Gen::frontend fe(FEKey, 0, nullptr);
+    uint8 Manufacturer = static_cast<uint8>(fe.manufacturer());
     switch (Manufacturer) {
         case 0:
             return "";
@@ -964,38 +995,29 @@ const char *FECarRecord::GetManufacturerName() {
 }
 
 bool FECarRecord::MatchesFilter(int theFilter) {
-    int theList = theFilter & 0xFFFF;
-    bool regionCompare = true;
-    int myList = FilterBits & 0xFFFF;
-    int myRegion = FilterBits & theFilter;
-    if ((myRegion & static_cast<int>(0xFFFF0000)) == 0) {
-        regionCompare = false;
-    }
-    bool listCompare = true;
-    if ((theList & myList) == 0) {
-        listCompare = false;
-    }
-    if (!regionCompare)
-        return false;
-    if (!listCompare)
-        return false;
-    return true;
+    int theRegion = theFilter & FE_CAR_FILTER_REGION_MASK;
+    int theList = theFilter & FE_CAR_FILTER_LIST_MASK;
+    int myRegion = FilterBits & FE_CAR_FILTER_REGION_MASK;
+    int myList = FilterBits & FE_CAR_FILTER_LIST_MASK;
+    bool regionCompare = (theRegion & myRegion) != 0;
+    bool listCompare = (theList & myList) != 0;
+
+    return regionCompare && listCompare;
 }
 
 const char *FECarRecord::GetDebugName() {
-    Attrib::Gen::pvehicle vehicle(VehicleKey, 0, 0);
-    const unsigned char *vehicleLayout = reinterpret_cast<const unsigned char *>(vehicle.GetLayoutPointer());
+    Attrib::Gen::pvehicle pvehicle(VehicleKey, 0, nullptr);
 
-    return *reinterpret_cast<const char *const *>(vehicleLayout + 0x24);
+    return pvehicle.CollectionName();
 }
 
 uint32 GetFECarNameHashFromFEKey(Attrib::Key feKey) {
     if (!feKey) {
         return 0;
     }
-    FECarRecord rec;
-    rec.FEKey = feKey;
-    return rec.GetNameHash();
+    FECarRecord fe_car;
+    fe_car.FEKey = feKey;
+    return fe_car.GetNameHash();
 }
 
 void FECustomizationRecord::Default() {
@@ -1003,16 +1025,21 @@ void FECustomizationRecord::Default() {
         InstalledPartIndices[i] = INVALID_CAR_PART_RECORD_INDEX;
     }
 
-    bMemSet(&InstalledPhysics, 0, 0x20);
-    for (int i = 0; i < 3; i++) {
-        bMemSet(&Tunings[i], 0, sizeof(Tunings[i]));
+    InstalledPhysics.Default();
+
+    for (int i = 0; i < NUM_CUSTOM_TUNINGS; i++) {
+        Tunings[i].Default();
     }
-    Preset = 0;
+
     ActiveTuning = CTT_SETTING_1;
+    Preset = 0;
 }
 
 bool FECustomizationRecord::WriteRecordIntoPhysics(Attrib::Gen::pvehicle &attributes) const {
-    return Physics::Upgrades::SetPackage(attributes, InstalledPhysics);
+    if (!Physics::Upgrades::SetPackage(attributes, InstalledPhysics)) {
+        return false;
+    }
+    return true;
 }
 
 void FECustomizationRecord::WritePhysicsIntoRecord(const Attrib::Gen::pvehicle &attributes) {
@@ -1025,78 +1052,78 @@ CarPart *FECustomizationRecord::GetInstalledPart(CarType cartype, int carslotid)
 
 void FECustomizationRecord::SetInstalledPart(int carslotid, CarPart *part) {
     if (part != nullptr) {
-        InstalledPartIndices[carslotid] = static_cast<short>(CarPartDB.GetPartIndex(part));
+#ifndef FIX_BUGS // Useless code
+        uint16 idx = CarPartDB.GetPartIndex(part);
+#endif
+        InstalledPartIndices[carslotid] = CarPartDB.GetPartIndex(part);
     } else {
         InstalledPartIndices[carslotid] = INVALID_CAR_PART_RECORD_INDEX;
     }
 }
 
 void FECustomizationRecord::WriteRecordIntoRide(RideInfo *ride) const {
-    for (int i = 0; i <= 0x8A; i++) {
-        ride->SetPart(i, GetInstalledPart(ride->Type, i), true);
+    CarType cartype;
+    for (int i = 0; i < CARSLOTID_NUM; i++) {
+        CarPart *part = GetInstalledPart(ride->Type, i);
+        ride->SetPart(i, part, true);
     }
 }
 
 void FECustomizationRecord::WriteRideIntoRecord(const RideInfo *ride) {
-    for (int i = 0; i <= 0x8A; i++) {
-        SetInstalledPart(i, ride->GetPart(i));
+    for (int i = 0; i < CARSLOTID_NUM; i++) {
+        CarPart *part = ride->GetPart(i);
+        SetInstalledPart(i, part);
     }
 }
 
-FECustomizationRecord::FECustomizationRecord() {
-    bMemSet(&InstalledPhysics, 0, sizeof(InstalledPhysics));
-    ActiveTuning = CTT_SETTING_1;
-    for (int i = 0; i < NUM_CUSTOM_TUNINGS; i++) {
-        bMemSet(&Tunings[i], 0, sizeof(Tunings[i]));
-    }
-    Handle = 0xFF;
+FECustomizationRecord::FECustomizationRecord() : InstalledPhysics(), Tunings(), Handle(INVALID_CUSTOMIZATION_HANDLE) {
     Default();
 }
 
 void FECustomizationRecord::BecomePreset(PresetCar *preset) {
     Default();
 
-    CarType cartype = CarPartDB.GetCarType(bStringHash(preset->CarTypeName));
-    for (int i = 0; i <= 0x8A; i++) {
-        unsigned int part_name_hash = preset->PartNameHashes[i];
-        if (part_name_hash > 1) {
-            struct CarPart *part = CarPartDB.NewGetCarPart(cartype, i, part_name_hash, nullptr, -1);
-            InstalledPartIndices[i] = static_cast<short>(CarPartDB.GetPartIndex(part));
+    CarType type = CarPartDB.GetCarType(bStringHash(preset->CarTypeName));
+    for (int i = 0; i < CARSLOTID_NUM; i++) {
+        if (preset->PartNameHashes[i] > 1u) { // TODO: where does this 1u come from
+            struct CarPart *part = CarPartDB.NewGetCarPart(type, i, preset->PartNameHashes[i], nullptr, -1);
+            InstalledPartIndices[i] = CarPartDB.GetPartIndex(part);
         }
     }
 
     Preset = bStringHashUpper(preset->PresetName);
 }
 
-FEInfractionsData::FEInfractionsData(unsigned int infractions) {
-    bMemSet(this, 0, sizeof(*this));
-    if ((infractions & 8) != 0) {
+FEInfractionsData::FEInfractionsData(uint32 infractions) {
+    *this = FEInfractionsData();
+
+    if ((infractions & GInfractionManager::kInfraction_Assault) != 0) {
         Assault++;
     }
-    if ((infractions & 0x20) != 0) {
+    if ((infractions & GInfractionManager::kInfraction_Damage) != 0) {
         Damage++;
     }
-    if ((infractions & 0x10) != 0) {
+    if ((infractions & GInfractionManager::kInfraction_HitAndRun) != 0) {
         HitAndRun++;
     }
-    if ((infractions & 0x80) != 0) {
+    if ((infractions & GInfractionManager::kInfraction_OffRoad) != 0) {
         OffRoad++;
     }
-    if ((infractions & 2) != 0) {
+    if ((infractions & GInfractionManager::kInfraction_Racing) != 0) {
         Racing++;
     }
-    if ((infractions & 4) != 0) {
+    if ((infractions & GInfractionManager::kInfraction_Reckless) != 0) {
         Reckless++;
     }
-    if ((infractions & 0x40) != 0) {
+    if ((infractions & GInfractionManager::kInfraction_Resist) != 0) {
         Resist++;
     }
-    if ((infractions & 1) != 0) {
+    if ((infractions & GInfractionManager::kInfraction_Speeding) != 0) {
         Speeding++;
     }
 }
 
-unsigned short FEInfractionsData::NumInfractions() const {
+uint16 FEInfractionsData::NumInfractions() const {
     return Speeding + Racing + Reckless + Assault + HitAndRun + Damage + Resist + OffRoad;
 }
 
@@ -1111,89 +1138,78 @@ void FEInfractionsData::operator+=(const FEInfractionsData &rhs) {
     OffRoad += rhs.OffRoad;
 }
 
-unsigned short FEInfractionsData::GetValue(GInfractionManager::InfractionType type) const {
-    if (type == GInfractionManager::kInfraction_Assault) {
-        return Assault;
-    }
-    if (type < GInfractionManager::kInfraction_HitAndRun) {
-        if (type == GInfractionManager::kInfraction_Racing) {
-            return Racing;
-        }
-        if (type < GInfractionManager::kInfraction_Reckless) {
-            if (type == GInfractionManager::kInfraction_Speeding) {
-                return Speeding;
-            }
-        } else if (type == GInfractionManager::kInfraction_Reckless) {
-            return Reckless;
-        }
-    } else {
-        if (type == GInfractionManager::kInfraction_Damage) {
+uint16 FEInfractionsData::GetValue(GInfractionManager::InfractionType type) const {
+    switch (type) {
+        case GInfractionManager::kInfraction_Assault:
+            return Assault;
+        case GInfractionManager::kInfraction_Damage:
             return Damage;
-        }
-        if (type < GInfractionManager::kInfraction_Resist) {
-            if (type == GInfractionManager::kInfraction_HitAndRun) {
-                return HitAndRun;
-            }
-        } else {
-            if (type == GInfractionManager::kInfraction_Resist) {
-                return Resist;
-            }
-            if (type == GInfractionManager::kInfraction_OffRoad) {
-                return OffRoad;
-            }
-        }
+        case GInfractionManager::kInfraction_HitAndRun:
+            return HitAndRun;
+        case GInfractionManager::kInfraction_OffRoad:
+            return OffRoad;
+        case GInfractionManager::kInfraction_Racing:
+            return Racing;
+        case GInfractionManager::kInfraction_Reckless:
+            return Reckless;
+        case GInfractionManager::kInfraction_Resist:
+            return Resist;
+        case GInfractionManager::kInfraction_Speeding:
+            return Speeding;
+            break;
+        default:
+            return 0;
     }
-    return 0;
 }
 
-unsigned int FEInfractionsData::GetFineValue() const {
+uint32 FEInfractionsData::GetFineValue() const {
     if (NumInfractions() == 0) {
         return 0;
     }
-    unsigned int fines = 0;
+    uint32 fines = 0;
     Attrib::Gen::infractions AssaultFine(Attrib::StringToKey("assault"), 0, nullptr);
     if (AssaultFine.IsValid()) {
-        fines = static_cast<unsigned int>(Assault) * AssaultFine.amount();
+        fines = Assault * AssaultFine.amount();
     }
     Attrib::Gen::infractions DamageFine(Attrib::StringToKey("damage"), 0, nullptr);
     if (DamageFine.IsValid()) {
-        fines += static_cast<unsigned int>(Damage) * DamageFine.amount();
+        fines += Damage * DamageFine.amount();
     }
     Attrib::Gen::infractions HitAndRunFine(Attrib::StringToKey("hit_and_run"), 0, nullptr);
     if (HitAndRunFine.IsValid()) {
-        fines += static_cast<unsigned int>(HitAndRun) * HitAndRunFine.amount();
+        fines += HitAndRun * HitAndRunFine.amount();
     }
     Attrib::Gen::infractions OffRoadFine(Attrib::StringToKey("off_road"), 0, nullptr);
     if (OffRoadFine.IsValid()) {
-        fines += static_cast<unsigned int>(OffRoad) * OffRoadFine.amount();
+        fines += OffRoad * OffRoadFine.amount();
     }
     Attrib::Gen::infractions RacingFine(Attrib::StringToKey("racing"), 0, nullptr);
     if (RacingFine.IsValid()) {
-        fines += static_cast<unsigned int>(Racing) * RacingFine.amount();
+        fines += Racing * RacingFine.amount();
     }
     Attrib::Gen::infractions RecklessFine(Attrib::StringToKey("reckless_driving"), 0, nullptr);
     if (RecklessFine.IsValid()) {
-        fines += static_cast<unsigned int>(Reckless) * RecklessFine.amount();
+        fines += Reckless * RecklessFine.amount();
     }
     Attrib::Gen::infractions ResistFine(Attrib::StringToKey("resisting_arrest"), 0, nullptr);
     if (ResistFine.IsValid()) {
-        fines += static_cast<unsigned int>(Resist) * ResistFine.amount();
+        fines += Resist * ResistFine.amount();
     }
     Attrib::Gen::infractions SpeedingFine(Attrib::StringToKey("speeding"), 0, nullptr);
     if (SpeedingFine.IsValid()) {
-        fines += static_cast<unsigned int>(Speeding) * SpeedingFine.amount();
+        fines += Speeding * SpeedingFine.amount();
     }
     return fines;
 }
 
 void FEImpoundData::Default() {
-    Pad1 = 0;
-    MaxBusted = 3;
-    EvadeCount = 0;
     TimesBusted = 0;
     ImpoundedState = 0;
     DaysBeforeRelease = 0;
+    MaxBusted = 3;
+    EvadeCount = 0;
     Pad2 = 0;
+    Pad1 = 0;
 }
 
 void FEImpoundData::BecomeImpounded(eImpoundReasons reason) {
@@ -1213,8 +1229,7 @@ void FEImpoundData::NotifyPlayerUsedMarkerToRelease() {
 }
 
 bool FEImpoundData::NotifyWin() {
-    bool impounded = ImpoundedState != 0;
-    if (impounded && ((DaysBeforeRelease == 0 || --DaysBeforeRelease == 0) && ImpoundedState != IMPOUND_RELEASED)) {
+    if (IsImpounded() && ((DaysBeforeRelease == 0 || --DaysBeforeRelease == 0) && ImpoundedState != IMPOUND_RELEASED)) {
         ImpoundedState = IMPOUND_RELEASED;
         return true;
     }
@@ -1222,17 +1237,13 @@ bool FEImpoundData::NotifyWin() {
 }
 
 bool FEImpoundData::NotifyBusted() {
-    char timesBusted = TimesBusted;
-
     EvadeCount = 0;
-    TimesBusted = timesBusted + 1;
-    return MaxBusted <= static_cast<unsigned char>(timesBusted + 1);
+    TimesBusted++;
+    return TimesBusted >= MaxBusted;
 }
 
 bool FEImpoundData::NotifyEvade() {
-    bool impounded = ImpoundedState != 0;
-
-    if (!impounded) {
+    if (!IsImpounded()) {
         EvadeCount = EvadeCount + 1;
         if (EvadeCount > 2) {
             EvadeCount = 0;
@@ -1247,7 +1258,7 @@ bool FEImpoundData::NotifyEvade() {
 }
 
 bool FEImpoundData::CanAddMaxBusted() {
-    if (static_cast<int>(MaxBusted) < g_MaximumMaximumTimesBusted && ImpoundedState == 0) {
+    if (MaxBusted < g_MaximumMaximumTimesBusted && !IsImpounded()) {
         return true;
     }
     return false;
@@ -1255,23 +1266,20 @@ bool FEImpoundData::CanAddMaxBusted() {
 
 void FEImpoundData::AddMaxBusted() {
     MaxBusted++;
-    if (static_cast<int>(MaxBusted) > g_MaximumMaximumTimesBusted) {
-        MaxBusted = static_cast<unsigned char>(g_MaximumMaximumTimesBusted);
+    if (MaxBusted > g_MaximumMaximumTimesBusted) {
+        MaxBusted = g_MaximumMaximumTimesBusted;
     }
 }
 
 void FECareerRecord::Default() {
-    Handle = 0xFF;
+    Handle = INVALID_CAREER_HANDLE;
     TheImpoundData.Default();
-    VehicleHeat = 1.0f;
+    VehicleHeat = 0.0f;
     Bounty = 0;
     NumEvadedPursuits = 0;
     NumBustedPursuits = 0;
-    FEInfractionsData unserved(0);
-    FEInfractionsData served(0);
-
-    UnservedInfractions = unserved;
-    ServedInfractions = served;
+    UnservedInfractions = FEInfractionsData();
+    ServedInfractions = FEInfractionsData();
 }
 
 void FECareerRecord::SetVehicleHeat(float h) {
@@ -1283,81 +1291,79 @@ float FECareerRecord::GetVehicleHeat() {
 }
 
 void FECareerRecord::AdjustHeatOnEventWin() {
-    Attrib::Gen::pursuitlevels pursuitLevels(0xEEC2271A, 0, 0);
+    Attrib::Gen::pursuitlevels DefaultPursuitLevelAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat = VehicleHeat * pursuitLevels.EventWinHeatAdjust();
+    VehicleHeat = VehicleHeat * DefaultPursuitLevelAttrib.EventWinHeatAdjust();
 }
 
 void FECareerRecord::AdjustHeatOnEvadePursuit() {
-    Attrib::Gen::pursuitlevels pursuitLevels(0xEEC2271A, 0, 0);
+    Attrib::Gen::pursuitlevels DefaultPursuitLevelAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat = VehicleHeat * pursuitLevels.EvadeSuccessHeatAdjust();
+    VehicleHeat = VehicleHeat * DefaultPursuitLevelAttrib.EvadeSuccessHeatAdjust();
 }
 
 void FECareerRecord::AdjustHeatOnDecalApplied(float extraAdjust) {
-    Attrib::Gen::fecooling cooling(0xEEC2271A, 0, 0);
+    Attrib::Gen::fecooling FeCoolingAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat *= cooling.NewDecal() * extraAdjust;
+    VehicleHeat *= FeCoolingAttrib.NewDecal() * extraAdjust;
 }
 
 void FECareerRecord::AdjustHeatOnPaintApplied(float extraAdjust) {
-    Attrib::Gen::fecooling cooling(0xEEC2271A, 0, 0);
+    Attrib::Gen::fecooling FeCoolingAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat *= cooling.NewPaint() * extraAdjust;
+    VehicleHeat *= FeCoolingAttrib.NewPaint() * extraAdjust;
 }
 
 void FECareerRecord::AdjustHeatOnVinylApplied(float extraAdjust) {
-    Attrib::Gen::fecooling cooling(0xEEC2271A, 0, 0);
+    Attrib::Gen::fecooling FeCoolingAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat *= cooling.NewVinyl() * extraAdjust;
+    VehicleHeat *= FeCoolingAttrib.NewVinyl() * extraAdjust;
 }
 
 void FECareerRecord::AdjustHeatOnBodyKitApplied(float extraAdjust) {
-    Attrib::Gen::fecooling cooling(0xEEC2271A, 0, 0);
+    Attrib::Gen::fecooling FeCoolingAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat *= cooling.NewBodyKit() * extraAdjust;
+    VehicleHeat *= FeCoolingAttrib.NewBodyKit() * extraAdjust;
 }
 
 void FECareerRecord::AdjustHeatOnHoodApplied(float extraAdjust) {
-    Attrib::Gen::fecooling cooling(0xEEC2271A, 0, 0);
+    Attrib::Gen::fecooling FeCoolingAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat *= cooling.NewHood() * extraAdjust;
+    VehicleHeat *= FeCoolingAttrib.NewHood() * extraAdjust;
 }
 
 void FECareerRecord::AdjustHeatOnRimApplied(float extraAdjust) {
-    Attrib::Gen::fecooling cooling(0xEEC2271A, 0, 0);
+    Attrib::Gen::fecooling FeCoolingAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat *= cooling.NewRim() * extraAdjust;
+    VehicleHeat *= FeCoolingAttrib.NewRim() * extraAdjust;
 }
 
 void FECareerRecord::AdjustHeatOnRimPaintApplied(float extraAdjust) {
-    Attrib::Gen::fecooling cooling(0xEEC2271A, 0, 0);
+    Attrib::Gen::fecooling FeCoolingAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat *= cooling.NewRimPaint() * extraAdjust;
+    VehicleHeat *= FeCoolingAttrib.NewRimPaint() * extraAdjust;
 }
 
 void FECareerRecord::AdjustHeatOnRoofScoopApplied(float extraAdjust) {
-    Attrib::Gen::fecooling cooling(0xEEC2271A, 0, 0);
+    Attrib::Gen::fecooling FeCoolingAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat *= cooling.NewRoofScoop() * extraAdjust;
+    VehicleHeat *= FeCoolingAttrib.NewRoofScoop() * extraAdjust;
 }
 
 void FECareerRecord::AdjustHeatOnSpoilerApplied(float extraAdjust) {
-    Attrib::Gen::fecooling cooling(0xEEC2271A, 0, 0);
+    Attrib::Gen::fecooling FeCoolingAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat *= cooling.NewSpoiler() * extraAdjust;
+    VehicleHeat *= FeCoolingAttrib.NewSpoiler() * extraAdjust;
 }
 
 void FECareerRecord::AdjustHeatOnWindowTintApplied(float extraAdjust) {
-    Attrib::Gen::fecooling cooling(0xEEC2271A, 0, 0);
+    Attrib::Gen::fecooling FeCoolingAttrib(0xEEC2271A, 0, nullptr);
 
-    VehicleHeat *= cooling.NewWindowTint() * extraAdjust;
+    VehicleHeat *= FeCoolingAttrib.NewWindowTint() * extraAdjust;
 }
 
 void FECareerRecord::CommitPursuitCarData(unsigned int infractions, uint32 accumulated_bounty, bool pursuit_evaded) {
-    FEInfractionsData infractionData(infractions);
-
-    UnservedInfractions += infractionData;
+    UnservedInfractions += FEInfractionsData(infractions);
     if (pursuit_evaded) {
         Bounty += accumulated_bounty;
         NumEvadedPursuits++;
@@ -1395,12 +1401,11 @@ void FECareerRecord::WaiveIncractions(unsigned int infractions) {
 }
 
 void FECareerRecord::ServeAllIncractions() {
-    FEInfractionsData cleared(0);
-
     ServedInfractions += UnservedInfractions;
-    UnservedInfractions = cleared;
+    UnservedInfractions = FEInfractionsData();
 }
 
 uint32 FECareerRecord::GetNumInfraction(GInfractionManager::InfractionType type, bool get_unserved) const {
-    return GetInfractions(get_unserved).GetValue(type);
+    const FEInfractionsData &infract = get_unserved ? UnservedInfractions : ServedInfractions;
+    return infract.GetValue(type);
 }

@@ -6,6 +6,8 @@
 #include "Speed/Indep/Src/FEng/FEString.h"
 #include "Speed/Indep/Src/Frontend/FERenderObject.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFont.hpp"
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/MoviePlayer/MoviePlayer.hpp"
 #include "Speed/Indep/Src/Misc/Profiler.hpp"
 #include "Speed/Indep/Src/Ecstasy/Texture.hpp"
@@ -14,13 +16,12 @@
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/Src/Frontend/FEPackageManager.hpp"
 
-extern float ObjectSortLastZ;
-extern FEPackage *ObjectSortRenderingPackage;
-
 // TODO: import from Movie_GC.cpp
-extern void GCDrawMovie(FEObject *obj, FERenderObject *renderObj);
+extern void GCDrawMovie();
 // TODO: import from Platform_G.cpp
 extern void FinishedRenderingFEngLayer();
+
+float ObjectSortLastZ = -999999.0f;
 
 uint32 FEngColorToEpolyColor(FEColor c) {
     return (c.a / 2) | ((c.b / 2) << 8) | ((c.g / 2) << 16) | ((c.r / 2) << 24);
@@ -54,6 +55,11 @@ FEClipInfo *cFEngRender::MakeRenderMatrix(FEObjData *pData, bMatrix4 *trans, FEC
         do_rotate = 1;
     }
 
+    int do_epoly = 0;
+    if (true) { // TODO: ?
+        do_epoly = 1;
+    }
+
     bMatrix4 feng_to_epoly;
     bIdentity(&feng_to_epoly);
     feng_to_epoly.v3.x = pData->Pos.x;
@@ -62,6 +68,9 @@ FEClipInfo *cFEngRender::MakeRenderMatrix(FEObjData *pData, bMatrix4 *trans, FEC
 
     bMatrix4 pivot;
     bMatrix4 pivotm1;
+    bMatrix4 scale;
+    bMatrix4 rotate;
+
     if (do_pivot) {
         bIdentity(&pivot);
         bIdentity(&pivotm1);
@@ -73,7 +82,6 @@ FEClipInfo *cFEngRender::MakeRenderMatrix(FEObjData *pData, bMatrix4 *trans, FEC
         pivot.v3.z = pData->Pivot.z;
     }
 
-    bMatrix4 scale;
     if (do_scale) {
         bIdentity(&scale);
         scale.v0.x = pData->Size.x * extra_scale;
@@ -81,7 +89,6 @@ FEClipInfo *cFEngRender::MakeRenderMatrix(FEObjData *pData, bMatrix4 *trans, FEC
         scale.v2.z = pData->Size.z * extra_scale;
     }
 
-    bMatrix4 rotate;
     if (do_rotate) {
         bIdentity(&rotate);
         bQuaternion quat;
@@ -91,9 +98,10 @@ FEClipInfo *cFEngRender::MakeRenderMatrix(FEObjData *pData, bMatrix4 *trans, FEC
         quat.w = pData->Rot.w;
         quat.GetMatrix(&rotate);
     }
-
-    bIdentity(trans);
-    bMulMatrix(trans, trans, &feng_to_epoly);
+    if (do_epoly) {
+        bIdentity(trans);
+        bMulMatrix(trans, trans, &feng_to_epoly);
+    }
     if (do_pivot) {
         bMulMatrix(trans, trans, &pivot);
     }
@@ -110,12 +118,12 @@ FEClipInfo *cFEngRender::MakeRenderMatrix(FEObjData *pData, bMatrix4 *trans, FEC
     FEClipInfo *clip_info = nullptr;
     if (GroupIndex != 0) {
         RenderContext &Con = RContexts[GroupIndex];
-        color.r = (static_cast<int>(Con.r) * pData->Col.r + 0x80) >> 8;
-        color.g = (static_cast<int>(Con.g) * pData->Col.g + 0x80) >> 8;
-        color.b = (static_cast<int>(Con.b) * pData->Col.b + 0x80) >> 8;
-        color.a = (static_cast<int>(Con.a) * pData->Col.a + 0x80) >> 8;
+        color.r = (static_cast<int>(Con.r) * pData->Col.r + 128) >> 8;
+        color.g = (static_cast<int>(Con.g) * pData->Col.g + 128) >> 8;
+        color.b = (static_cast<int>(Con.b) * pData->Col.b + 128) >> 8;
+        color.a = (static_cast<int>(Con.a) * pData->Col.a + 128) >> 8;
         bMulMatrix(trans, &Con.matrix, trans);
-        if (Con.clipObject) {
+        if (Con.clipObject != nullptr) {
             clip_info = &Con.clipInfo;
         }
     } else {
@@ -126,9 +134,9 @@ FEClipInfo *cFEngRender::MakeRenderMatrix(FEObjData *pData, bMatrix4 *trans, FEC
 }
 
 void cFEngRender::RenderMovie(FEMovie *movie, FERenderObject *cached, FEPackageRenderInfo *pkg_render_info) {
-    if (gMoviePlayer) {
-        if (static_cast<unsigned int>(gMoviePlayer->GetStatus() - 3) < 3) {
-            GCDrawMovie(reinterpret_cast<FEObject *>(movie), cached);
+    if (gMoviePlayer != nullptr) {
+        if (gMoviePlayer->GetStatus() == 5) {
+            GCDrawMovie();
         }
     }
 }
@@ -144,8 +152,8 @@ static void rotate_uvs(bVector2 *uvs, float angle_radians, float px, float py) {
         uvs[i].y -= py;
     }
 
-    float sin_angle = bSin(bRadToAng(angle_radians));
-    float cos_angle = bCos(bRadToAng(angle_radians));
+    const float sin_angle = bSin(bRadToAng(angle_radians));
+    const float cos_angle = bCos(bRadToAng(angle_radians));
 
     const float s2r = uvs[0].x;
     const float t2r = uvs[0].y;
@@ -166,63 +174,64 @@ static void rotate_uvs(bVector2 *uvs, float angle_radians, float px, float py) {
     uvs[3].y = t5r * cos_angle - s5r * sin_angle + py + half_height;
 }
 
+// UNSOLVED
 void cFEngRender::RenderMultiImage(FEMultiImage *image, FERenderObject *cached, FEPackageRenderInfo *pkg_render_info) {
     FEMultiImageData *image_data = reinterpret_cast<FEMultiImageData *>(image->pData);
 
     bMatrix4 screen;
     bIdentity(&screen);
-    screen.v3.x = 320.0f;
-    screen.v3.y = 240.0f;
+    screen.v3.x = SCREEN_WIDTH / 2;
+    screen.v3.y = SCREEN_HEIGHT / 2;
     screen.v3.z = 0.0f;
 
     bMatrix4 trans;
     FEColor fe_color;
 
-    FEClipInfo *clip_info = MakeRenderMatrix(reinterpret_cast<FEObjData *>(image_data), &trans, fe_color, image->RenderContext, 1.0f);
+    FEClipInfo *clip_info = MakeRenderMatrix(image_data, &trans, fe_color, image->RenderContext, 1.0f);
 
     bMulMatrix(&trans, &screen, &trans);
 
     TextureInfo *texture_info = GetTextureInfo(image->Handle, 1, 0);
     TextureInfo *texture_info_mask = GetTextureInfo(image->GetTexture(0), 1, 0);
 
-    if (!cached) {
-        cached = CreateCachedRender(reinterpret_cast<FEObject *>(image), texture_info);
+    if (cached == nullptr) {
+        cached = CreateCachedRender(image, texture_info);
     } else {
         cached->Clear(pkg_render_info);
     }
 
-    unsigned int tw = texture_info->Width;
-    unsigned int th = texture_info->Height;
+    uint32 tw = texture_info->Width;
+    uint32 th = texture_info->Height;
     float ftw = static_cast<float>(tw);
     float fth = static_cast<float>(th);
 
-    unsigned int t2w = next_power_of_2(tw);
-    unsigned int t2h = next_power_of_2(th);
+    uint32 t2w = next_power_of_2(tw);
+    uint32 t2h = next_power_of_2(th);
     float ft2w = static_cast<float>(t2w);
     float ft2h = static_cast<float>(t2h);
 
     float convertu = ftw / ft2w;
     float convertv = fth / ft2h;
 
-    unsigned int color = FEngColorToEpolyColor(fe_color);
-    unsigned int Colours[4];
+    uint32 color = FEngColorToEpolyColor(fe_color);
+    uint32 Colours[4];
     Colours[0] = color;
     Colours[1] = color;
     Colours[2] = color;
     Colours[3] = color;
 
     float s0 = image_data->UpperLeft.x * convertu;
-    float t0 = image_data->UpperLeft.y * convertv;
     float s1 = image_data->LowerRight.x * convertu;
+    float t0 = image_data->UpperLeft.y * convertv;
     float t1 = image_data->LowerRight.y * convertv;
 
-    unsigned int tw_m = texture_info->Width;
-    unsigned int th_m = texture_info->Height;
+    uint32 tw_m = texture_info->Width;
+    uint32 th_m = texture_info->Height;
     float ftw_m = static_cast<float>(tw_m);
     float fth_m = static_cast<float>(th_m);
 
-    unsigned int t2w_m = next_power_of_2(tw_m);
-    unsigned int t2h_m = next_power_of_2(th_m);
+    uint32 t2w_m = next_power_of_2(tw_m);
+    uint32 t2h_m = next_power_of_2(th_m);
     float ft2w_m = static_cast<float>(t2w_m);
     float ft2h_m = static_cast<float>(t2h_m);
 
@@ -230,21 +239,21 @@ void cFEngRender::RenderMultiImage(FEMultiImage *image, FERenderObject *cached, 
     float convertv_m = fth_m / ft2h_m;
 
     float ss2 = image_data->TopLeftUV[0].x * convertu_m;
-    float sst2 = image_data->TopLeftUV[0].y * convertv_m;
     float ss3 = image_data->BottomRightUV[0].x * convertu_m;
+    float sst2 = image_data->TopLeftUV[0].y * convertv_m;
     float sst3 = image_data->BottomRightUV[0].y * convertv_m;
 
     bVector2 uvs[4];
-    uvs[0].x = ss2 * ftw_m;
-    uvs[0].y = sst2 * fth_m;
-    uvs[1].x = ss3 * ftw_m;
-    uvs[1].y = sst2 * fth_m;
-    uvs[2].x = ss3 * ftw_m;
-    uvs[2].y = sst3 * fth_m;
-    uvs[3].x = ss2 * ftw_m;
-    uvs[3].y = sst3 * fth_m;
+    uvs[0].x = ss2 * tw_m;
+    uvs[0].y = sst2 * th_m;
+    uvs[1].x = ss3 * tw_m;
+    uvs[1].y = sst2 * th_m;
+    uvs[2].x = ss3 * tw_m;
+    uvs[2].y = sst3 * th_m;
+    uvs[3].x = ss2 * tw_m;
+    uvs[3].y = sst3 * th_m;
 
-    rotate_uvs(uvs, bDegToRad(image_data->PivotRot.z), image_data->PivotRot.x * ftw_m - ftw_m * 0.5f, image_data->PivotRot.y * fth_m - fth_m * 0.5f);
+    rotate_uvs(uvs, bDegToRad(image_data->PivotRot.z), ftw_m * image_data->PivotRot.x - ftw_m * 0.5f, fth_m * image_data->PivotRot.y - fth_m * 0.5f);
 
     uvs[0].x /= ftw_m;
     uvs[0].y /= fth_m;
@@ -267,40 +276,40 @@ void cFEngRender::RenderImage(FEImage *image, FERenderObject *cached, FEPackageR
 
     bMatrix4 screen;
     bIdentity(&screen);
-    screen.v3.x = 320.0f;
-    screen.v3.y = 240.0f;
+    screen.v3.x = SCREEN_WIDTH / 2;
+    screen.v3.y = SCREEN_HEIGHT / 2;
     screen.v3.z = 0.0f;
 
     bMatrix4 trans;
     FEColor fe_color;
 
-    FEClipInfo *clip_info = MakeRenderMatrix(reinterpret_cast<FEObjData *>(image_data), &trans, fe_color, image->RenderContext, 1.0f);
+    FEClipInfo *clip_info = MakeRenderMatrix(image_data, &trans, fe_color, image->RenderContext, 1.0f);
 
     bMulMatrix(&trans, &screen, &trans);
 
     TextureInfo *texture_info = GetTextureInfo(image->Handle, 1, 0);
 
-    if (!cached) {
-        cached = CreateCachedRender(reinterpret_cast<FEObject *>(image), texture_info);
+    if (cached == nullptr) {
+        cached = CreateCachedRender(image, texture_info);
     } else {
         cached->Clear(pkg_render_info);
     }
 
-    unsigned int tw = texture_info->Width;
-    unsigned int th = texture_info->Height;
+    uint32 tw = texture_info->Width;
+    uint32 th = texture_info->Height;
     float ftw = static_cast<float>(tw);
     float fth = static_cast<float>(th);
 
-    unsigned int t2w = next_power_of_2(tw);
-    unsigned int t2h = next_power_of_2(th);
+    uint32 t2w = next_power_of_2(tw);
+    uint32 t2h = next_power_of_2(th);
     float ft2w = static_cast<float>(t2w);
     float ft2h = static_cast<float>(t2h);
 
     float convertu = ftw / ft2w;
     float convertv = fth / ft2h;
 
-    unsigned int color = FEngColorToEpolyColor(fe_color);
-    unsigned int Colours[4];
+    uint32 color = FEngColorToEpolyColor(fe_color);
+    uint32 Colours[4];
     Colours[0] = color;
     Colours[1] = color;
     Colours[2] = color;
@@ -322,39 +331,39 @@ void cFEngRender::RenderCBVImage(FEColoredImage *image, FERenderObject *cached, 
 
     bMatrix4 screen;
     bIdentity(&screen);
-    screen.v3.x = 320.0f;
-    screen.v3.y = 240.0f;
+    screen.v3.x = SCREEN_WIDTH / 2;
+    screen.v3.y = SCREEN_HEIGHT / 2;
     screen.v3.z = 0.0f;
 
     bMatrix4 trans;
     FEColor fe_color;
 
-    FEClipInfo *clip_info = MakeRenderMatrix(reinterpret_cast<FEObjData *>(image_data), &trans, fe_color, image->RenderContext, 1.0f);
+    FEClipInfo *clip_info = MakeRenderMatrix(image_data, &trans, fe_color, image->RenderContext, 1.0f);
 
     bMulMatrix(&trans, &screen, &trans);
 
     TextureInfo *texture_info = GetTextureInfo(image->Handle, 1, 0);
 
-    if (!cached) {
-        cached = CreateCachedRender(reinterpret_cast<FEObject *>(image), texture_info);
+    if (cached == nullptr) {
+        cached = CreateCachedRender(image, texture_info);
     } else {
         cached->Clear(pkg_render_info);
     }
 
-    unsigned int tw = texture_info->Width;
-    unsigned int th = texture_info->Height;
+    uint32 tw = texture_info->Width;
+    uint32 th = texture_info->Height;
     float ftw = static_cast<float>(tw);
     float fth = static_cast<float>(th);
 
-    unsigned int t2w = next_power_of_2(tw);
-    unsigned int t2h = next_power_of_2(th);
+    uint32 t2w = next_power_of_2(tw);
+    uint32 t2h = next_power_of_2(th);
     float ft2w = static_cast<float>(t2w);
     float ft2h = static_cast<float>(t2h);
 
     float convertu = ftw / ft2w;
     float convertv = fth / ft2h;
 
-    unsigned int Colours[4];
+    uint32 Colours[4];
     Colours[0] = FEngColorToEpolyColor(image_data->VertexColors[0]);
     Colours[1] = FEngColorToEpolyColor(image_data->VertexColors[1]);
     Colours[2] = FEngColorToEpolyColor(image_data->VertexColors[2]);
@@ -373,71 +382,72 @@ void cFEngRender::RenderCBVImage(FEColoredImage *image, FERenderObject *cached, 
 
 void cFEngRender::RenderString(FEString *string, FERenderObject *cached, FEPackageRenderInfo *pkg_render_info) {
     FEngFont *font = FindFont(string->Handle);
-    if (!font) {
+    if (font == nullptr) {
         return;
     }
+
     TextureInfo *texture_info = font->GetTextureInfo();
-    if (!texture_info) {
-        return;
-    }
+    if (texture_info != nullptr) {
 
-    if (!cached) {
-        cached = CreateCachedRender(reinterpret_cast<FEObject *>(string), texture_info);
-    } else {
-        cached->Clear(pkg_render_info);
-    }
-
-    float extra_scale = 1.0f;
-    int lang = GetCurrentLanguage();
-    if ((lang == 8 || GetCurrentLanguage() == 9) && string->Handle == 0x9583AA1A) {
-        extra_scale = 2.0f;
-    }
-
-    FEObjData *obj_data = reinterpret_cast<FEObjData *>(string->pData);
-    u32 label_hash = string->GetLabelHash();
-    const int16 *characters = nullptr;
-    int16 localized_string_buffer[1024];
-
-    if (!(string->Flags & 2)) {
-        if (GetLocalizedWideString(localized_string_buffer, 0x800, label_hash)) {
-            characters = localized_string_buffer;
+        if (cached == nullptr) {
+            cached = CreateCachedRender(string, texture_info);
+        } else {
+            cached->Clear(pkg_render_info);
         }
+
+        float extra_scale = 1.0f;
+        if ((GetCurrentLanguage() == eLANGUAGE_KOREAN || GetCurrentLanguage() == eLANGUAGE_CHINESE) &&
+            string->Handle == STRINGHASH_FONT_CONDUITMDITCTT38BI) {
+            extra_scale = 2.0f;
+        }
+
+        FEObjData *obj_data = reinterpret_cast<FEObjData *>(string->pData);
+        int label_hash = string->GetLabelHash();
+        const int16 *characters = nullptr;
+        int16 localized_string_buffer[1024];
+
+        if (!(string->Flags & 2)) {
+            if (GetLocalizedWideString(localized_string_buffer, sizeof(localized_string_buffer), label_hash)) {
+                characters = localized_string_buffer;
+            }
+        }
+        if (characters == nullptr) {
+            characters = string->GetString();
+        }
+
+        bMatrix4 screen;
+        bIdentity(&screen);
+        screen.v3.x = SCREEN_WIDTH / 2;
+        screen.v3.y = SCREEN_HEIGHT / 2;
+        screen.v3.z = 0.0f;
+
+        bMatrix4 trans;
+        FEColor fe_color;
+
+        FEClipInfo *clip_info = MakeRenderMatrix(obj_data, &trans, fe_color, string->RenderContext, extra_scale);
+        bMulMatrix(&trans, &screen, &trans);
+
+        float fMaxWidth = static_cast<float>(string->MaxWidth);
+        if (fMaxWidth == 0.0f) {
+            fMaxWidth = 3.4028235e+38f;
+        }
+
+        float LineWidth = font->GetLineWidth(characters, 0, 0, false);
+        float fLineScale;
+
+        if (string->MaxWidth != 0 && LineWidth > fMaxWidth && !(string->Format & FESTRING_FORMAT_WORDWRAP)) {
+            fLineScale = fMaxWidth / LineWidth;
+            bMatrix4 scale;
+            bIdentity(&scale);
+            scale.v0.x = fLineScale;
+            bMulMatrix(&trans, &trans, &scale);
+        }
+
+        font->RenderString(fe_color, characters, string, &trans, cached, pkg_render_info);
     }
-    if (!characters) {
-        characters = string->GetString();
-    }
-
-    bMatrix4 screen;
-    bIdentity(&screen);
-    screen.v3.x = 320.0f;
-    screen.v3.y = 240.0f;
-    screen.v3.z = 0.0f;
-
-    bMatrix4 trans;
-    FEColor fe_color;
-
-    MakeRenderMatrix(obj_data, &trans, fe_color, string->RenderContext, extra_scale);
-    bMulMatrix(&trans, &screen, &trans);
-
-    float fMaxWidth = static_cast<float>(string->MaxWidth);
-    if (fMaxWidth == 0.0f) {
-        fMaxWidth = 3.4028235e+38f;
-    }
-
-    float LineWidth = font->GetLineWidth(characters, 0, 0, false);
-
-    if (string->MaxWidth != 0 && LineWidth > fMaxWidth && !(string->Format & 0x10)) {
-        float fLineScale = fMaxWidth / LineWidth;
-        bMatrix4 scale;
-        bIdentity(&scale);
-        scale.v0.x = fLineScale;
-        bMulMatrix(&trans, &trans, &scale);
-    }
-
-    font->RenderString(fe_color, characters, string, &trans, cached, pkg_render_info);
 }
 
-void cFEngRender::RenderModel(FEModel *model, FERenderObject *renderObj) {}
+void cFEngRender::RenderModel(FEModel *model, FERenderObject *cached) {}
 
 void cFEngRender::RenderObject(FEObject *object, FEPackageRenderInfo *pkg_render_info) {
     if (object->Flags & 8) {
@@ -446,9 +456,9 @@ void cFEngRender::RenderObject(FEObject *object, FEPackageRenderInfo *pkg_render
     if (object->Type == FE_Movie) {
         object->Flags |= FF_Dirty;
     }
-    ProfileNode profile_node("TODO", 0);
+    ProfileNode profile_node("TODO", 0); // TODO
     FERenderObject *cached = FindCachedRender(object);
-    if (cached && cached->IsReadyToRender() && !(object->Flags & FF_Dirty)) {
+    if ((cached != nullptr) && cached->IsReadyToRender() && !(object->Flags & FF_Dirty)) {
         cached->Render();
     } else {
         switch (object->Type) {
@@ -476,7 +486,7 @@ void cFEngRender::RenderObject(FEObject *object, FEPackageRenderInfo *pkg_render
 
 void cFEngRender::RemoveCachedRender(FEObject *object, FEPackageRenderInfo *sp) {
     FERenderObject *cached = FindCachedRender(object);
-    if (cached) {
+    if (cached != nullptr) {
         object->Cached = nullptr;
         cached->Clear(sp);
         delete cached;
@@ -488,83 +498,64 @@ FERenderObject *cFEngRender::FindCachedRender(FEObject *object) {
 }
 
 FERenderObject *cFEngRender::CreateCachedRender(FEObject *object, TextureInfo *texture_info) {
-    void *mem = bOMalloc(mpobFERenderObjectSlotPool);
     FERenderObject *ret = new FERenderObject(object, texture_info);
     object->Cached = ret;
     return ret;
 }
 
-cFEngRender::cFEngRender() {
-    Highwater = 0;
+cFEngRender::cFEngRender() : Highwater(0) {
     FERenderObject::Initialize();
     bMemSet(RContexts, 0, sizeof(RContexts));
 }
 
-RenderContext *cFEngRender::GetRenderContext(unsigned short ctx) {
-    return &RContexts[ctx];
+RenderContext *cFEngRender::GetRenderContext(uint16 RenderContext) {
+    return &RContexts[RenderContext];
 }
 
-void cFEngRender::GenerateRenderContext(unsigned short ctx, FEObject *obj) {
-    if (Highwater < ctx) {
-        Highwater = ctx;
+void cFEngRender::GenerateRenderContext(uint16 GroupContext, FEObject *pObject) {
+    if (Highwater < GroupContext) {
+        Highwater = GroupContext;
     }
-    RenderContext *rc = &RContexts[ctx];
     FEColor color;
-    MakeRenderMatrix(reinterpret_cast<FEObjData *>(obj->pData), &rc->matrix, color, obj->RenderContext, 1.0f);
-    int val;
-    val = 0;
-    if (color.b > 0)
-        val = color.b;
-    if (val > 0xff)
-        val = 0xff;
-    rc->b = static_cast<unsigned char>(val);
-    val = 0;
-    if (color.g > 0)
-        val = color.g;
-    if (val > 0xff)
-        val = 0xff;
-    rc->g = static_cast<unsigned char>(val);
-    val = 0;
-    if (color.r > 0)
-        val = color.r;
-    if (val > 0xff)
-        val = 0xff;
-    rc->r = static_cast<unsigned char>(val);
-    val = 0;
-    if (color.a > 0)
-        val = color.a;
-    if (val > 0xff)
-        val = 0xff;
-    rc->a = static_cast<unsigned char>(val);
-    if (rc->group != reinterpret_cast<FEGroup *>(obj)) {
-        rc->group = reinterpret_cast<FEGroup *>(obj);
-        rc->clipObject = nullptr;
-        FEMinNode *child = *reinterpret_cast<FEMinNode **>(reinterpret_cast<char *>(obj) + 0x60);
-        for (; child; child = child->GetNext()) {
+    RenderContext &Con = RContexts[GroupContext];
+    MakeRenderMatrix(pObject->GetObjData(), &Con.matrix, color, pObject->RenderContext, 1.0f);
+
+    Con.b = bClamp(color.b, 0, 0xff);
+    Con.g = bClamp(color.g, 0, 0xff);
+    Con.r = bClamp(color.r, 0, 0xff);
+    Con.a = bClamp(color.a, 0, 0xff);
+
+    if (Con.group != reinterpret_cast<FEGroup *>(pObject)) {
+        Con.group = reinterpret_cast<FEGroup *>(pObject);
+        Con.clipObject = nullptr;
+        for (pObject = Con.group->GetFirstChild(); pObject != nullptr; pObject = pObject->GetNext()) {
         }
     }
 }
 
 void cFEngRender::PrepForPackage(FEPackage *pPackage) {
     ObjectSortLastZ = -999999.0f;
+    extern FEPackage *ObjectSortRenderingPackage;
     ObjectSortRenderingPackage = pPackage;
 }
 
-void cFEngRender::PackageFinished(FEPackage *pkg) {}
+void cFEngRender::PackageFinished(FEPackage *pPackage) {}
 
-void cFEngRender::AddToRenderList(FEObject *obj) {
-    float z = reinterpret_cast<FEObjData *>(obj->pData)->Pos.z;
-    if (obj->RenderContext != 0) {
-        RenderContext *pctx = &RContexts[obj->RenderContext];
-        z += pctx->matrix.v3.z;
+void cFEngRender::AddToRenderList(FEObject *pObject) {
+    float obj_z = pObject->GetObjData()->Pos.z;
+    if (pObject->RenderContext != 0) {
+        RenderContext &context = RContexts[pObject->RenderContext];
+        obj_z += context.matrix.v3.z;
     }
-    bool visible = obj && !(obj->Flags & 1);
-    if (visible) {
-        if (z != ObjectSortLastZ) {
-            ObjectSortLastZ = z;
+    FEPackageRenderInfo *ri;
+    if (FEngIsVisible(pObject)) {
+        if (obj_z != ObjectSortLastZ) {
+            ObjectSortLastZ = obj_z;
             FinishedRenderingFEngLayer();
         }
-        FEPackageRenderInfo *info = HACK_FEPkgMgr_GetPackageRenderInfo(ObjectSortRenderingPackage);
-        RenderObject(obj, info);
+
+        extern FEPackage *ObjectSortRenderingPackage;
+        ri = HACK_FEPkgMgr_GetPackageRenderInfo(ObjectSortRenderingPackage);
+        RenderObject(pObject, ri);
     }
 }

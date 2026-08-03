@@ -28,23 +28,22 @@ class StringKey {
           ,
           mString(src.mString) {}
 
-    bool operator==(const StringKey &rhs) const {
-        return mHash64 == rhs.mHash64;
-    }
-
-    operator long long() const {
-        return this->mHash64;
-    }
-
-    operator unsigned int() const {
-        return mHash32;
+    const StringKey &operator=(const StringKey &rhs) {
+        this->mString = rhs.mString;
+        this->mHash64 = rhs.mHash64;
+        this->mHash32 = rhs.mHash32;
+        return *this;
     }
 
     const char *GetString() const {
-        return mString;
+        return mString != nullptr ? mString : "";
     }
 
-    unsigned int GetHash32() const {
+    uint64_t GetHash64() const {
+        return mHash64;
+    }
+
+    uint32_t GetHash32() const {
         return mHash32;
     }
 
@@ -55,8 +54,36 @@ class StringKey {
         return true;
     }
 
+    bool IsNotEmpty() const {
+        if (mString == nullptr) {
+            return false;
+        }
+        if (mString[0] == '\0') {
+            return false;
+        }
+        return true;
+    }
+
     bool IsValid() const {
         return mString != nullptr;
+    }
+
+    bool operator==(const StringKey &rhs) const {
+        return mHash64 == rhs.mHash64;
+    }
+
+    bool operator!=(const StringKey &rhs) const {
+        return mHash64 != rhs.mHash64;
+    }
+
+    bool operator<(const StringKey &rhs) const {};
+
+    operator uint64_t() const {
+        return this->mHash64;
+    }
+
+    operator uint32_t() const {
+        return mHash32;
     }
 
   private:

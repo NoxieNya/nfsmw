@@ -16,13 +16,19 @@ NitrousGauge::NitrousGauge(UTL::COM::Object *pOutter, const char *pkg_name, int 
 void NitrousGauge::Update(IPlayer *player) {
     if (mpNosMeterBar != nullptr) {
         float min_angle = 175.0f;
+        const float max_angle = 0;
+        const float min_nos = 0;
+        const float max_nos = 0;
+        const float frac = 0;
+
         if (bStrICmp(GetPackageName(), "HUD_Drag.fng") == 0) {
             min_angle = -48.0f;
         } else if (Sim::GetUserMode() == Sim::USER_SPLIT_SCREEN) {
             min_angle = 180.0f;
         }
 
-        FEngSetMultiImageRot(mpNosMeterBar, mNos * -min_angle + min_angle);
+        const float angle = mNos;
+        FEngSetMultiImageRot(mpNosMeterBar, angle * -min_angle + min_angle);
     }
 }
 

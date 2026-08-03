@@ -600,7 +600,7 @@ float GarageMainScreen::GetGeometryZPos() {
 }
 
 void GarageMainScreen::UpdateRenderingCarParameters(FrontEndRenderingCar *fe_car) {
-    if (reinterpret_cast<int>(fe_car) == -8 || fe_car->GetRideInfo()->Type == static_cast<CarType>(-1) || HideEntireScreen) {
+    if (reinterpret_cast<int>(fe_car) == -8 || fe_car->GetRideInfo()->Type == CARTYPE_NONE || HideEntireScreen) {
         fe_car->Visible = 0;
         return;
     }

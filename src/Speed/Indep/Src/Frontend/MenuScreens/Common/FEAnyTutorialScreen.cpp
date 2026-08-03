@@ -63,8 +63,8 @@ FEAnyTutorialScreen::FEAnyTutorialScreen(ScreenConstructorData *sd) : MenuScreen
     }
 
     if (mSkipable) {
-        uint32 einput;
-        cFEng::Get()->QueuePackageMessage(0x59291F95, GetPackageName(), nullptr);
+        uint32 einput = 0x59291F95;
+        cFEng::Get()->QueuePackageMessage(einput, GetPackageName(), nullptr);
     }
 
     uint32 label_hash = bStringHash("_LABEL", str_hash);

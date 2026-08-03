@@ -269,16 +269,16 @@ bAngle bASin(float x) {
     }
     if (x >= 1.0f) {
         if (negative) {
-            return 49152;
+            return 0xC000;
         } else {
-            return 16384;
+            return 0x4000;
         }
     }
 
     bFix fix_x = static_cast<int>(x * 65536.0f);
-    int table_number = 0;    // r7
-    bFix table_size = 32768; // r8
-    bFix table_top = 32768;  // r0
+    int table_number = 0;     // r7
+    bFix table_size = 0x8000; // r8
+    bFix table_top = 0x8000;  // r0
 
     while (fix_x >= table_top && table_number < 11) {
         table_size >>= 1;
@@ -323,21 +323,19 @@ bAngle bATan(float x, float y) {
 
     bAngle a;
     if (x > y) {
-        float r = y;
-        int i = static_cast<int>((r / x) * 65536.0f);
-        const bAngle *table = &bFastATanTable[i >> 8];
-        a = (table[0] + (((table[1] - table[0]) * (i & 0xFF)) >> 8));
+        float r = ((y / x) * 65536.0f);
+        int index = static_cast<int>(r);
+        bAngle *table = &bFastATanTable[index >> 8];
+        a = table[0] + (((table[1] - table[0]) * (index & 0xFF)) >> 8);
+    } else if (y > x) {
+        float r = ((y / r) * 65536.0f);
+        int index = static_cast<int>(r);
+        bAngle *table = &bFastATanTable[index >> 8];
+        a = bDegToAng(90.0f) - (table[0] + (((table[1] - table[0]) * (index & 0xFF)) >> 8));
+    } else if (y == 0.0f) {
+        a = 0;
     } else {
-        if (y > x) {
-            float r = y;
-            int i = static_cast<int>((x / r) * 65536.0f);
-            const bAngle *table = &bFastATanTable[i >> 8];
-            a = bDegToAng(90.0f) - (table[0] + (((table[1] - table[0]) * (i & 0xFF)) >> 8));
-        } else if (y == 0.0f) {
-            a = 0;
-        } else {
-            a = bDegToAng(45.0f);
-        }
+        a = bDegToAng(45.0f);
     }
 
     if (quad == 0)
@@ -356,7 +354,6 @@ bFix bFixSin(bAngle angle) {}
 // STRIPPED
 void bFixSinCos(bFix *result_sin, bFix *result_cos, bAngle angle) {}
 
-// TODO where to use bDegToAng?
 bAngle bFixATan(bFix x) {
     int quad = 0;
     if (x < 0) {
@@ -368,10 +365,10 @@ bAngle bFixATan(bFix x) {
     bAngle b;
     bFix interpolation_ratio;
 
-    if (x < 2097152) {
+    if (x < 0x200000) {
         bAngle *table_entry;
 
-        if (x < 262144) {
+        if (x < 0x40000) {
             table_entry = bFixATanTableLow + (x >> 0xb);
             interpolation_ratio = (x << 5) & 0xffff;
         } else {
@@ -381,10 +378,10 @@ bAngle bFixATan(bFix x) {
 
         a = table_entry[0];
         b = table_entry[1];
-    } else if (x < 16777216) {
+    } else if (x < 0x1000000) {
         interpolation_ratio = x >> 8;
-        a = 0x3eba;
-        b = 0x3fd7;
+        a = bDegToAng(88.21f);
+        b = bDegToAng(89.78f);
     } else {
         a = 0x3fff;
         b = 0x3fff;

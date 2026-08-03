@@ -1,5 +1,6 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feKeyboardInput.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEJoyInput.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFont.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
@@ -9,15 +10,15 @@
 KeyboardEditString::KeyboardEditString() {
     TextInputObject = nullptr;
     MaxTextLength = 0;
-    bMemSet(EditStringUCS2, 0, 0x200);
+    bMemSet(EditStringUCS2, 0, sizeof(EditStringUCS2));
     CursorPosUCS2 = 0;
-    bMemSet(EditStringPacked, 0, 0x100);
-    bMemSet(InitialString, 0, 0x100);
+    bMemSet(EditStringPacked, 0, sizeof(EditStringPacked));
+    bMemSet(InitialString, 0, sizeof(InitialString));
     mEnabled = false;
 }
 
 void KeyboardEditString::SyncEditIntoPacked() {
-    WideStringToPackedString(EditStringPacked, 0x100, EditStringUCS2);
+    WideStringToPackedString(EditStringPacked, sizeof(EditStringPacked), EditStringUCS2);
 }
 
 char *KeyboardEditString::GetEditedString() {
@@ -26,11 +27,11 @@ char *KeyboardEditString::GetEditedString() {
 }
 
 void KeyboardEditString::EndCapture() {
-    TextInputObject = nullptr;
-    bMemSet(EditStringUCS2, 0, 0x200);
     mEnabled = false;
-    bMemSet(EditStringPacked, 0, 0x100);
-    bMemSet(InitialString, 0, 0x100);
+    TextInputObject = nullptr;
+    bMemSet(EditStringUCS2, 0, sizeof(EditStringUCS2));
+    bMemSet(EditStringPacked, 0, sizeof(EditStringPacked));
+    bMemSet(InitialString, 0, sizeof(InitialString));
 }
 
 void KeyboardEditString::GetStringForDisplay(char *buffer, int size) {
@@ -45,6 +46,11 @@ void KeyboardEditString::GetStringForDisplay(char *buffer, int size) {
 void KeyboardEditString::RevertToOriginalString() {
     PackedStringToWideString(EditStringUCS2, 0x200, InitialString);
     SyncEditIntoPacked();
+}
+
+FEngTextInputObject::FEngTextInputObject(MenuScreen *pkg, FEString *obj, uint32 mode, const char *start_string, uint32 max_text_length)
+    : DisplayString(obj), ParentPackage(pkg), mBlinkTime(0) {
+    gKeyboardManager.StartCapture(this, mode, start_string, max_text_length);
 }
 
 FEngTextInputObject::~FEngTextInputObject() {
@@ -73,21 +79,16 @@ void FEngTextInputObject::EscapePressed() {
 }
 
 void FEngTextInputObject::RedrawString(bool pIncludeCursor) {
-    if (DisplayString) {
+    if (DisplayString != nullptr) {
         char buffer[156];
-        u16 widestring[156];
-        FEngFont *font;
-        int width;
-        int flags;
-        i16 *fitstring;
 
         gKeyboardManager.GetStringForDisplay(buffer, 0x9C);
         if (pIncludeCursor) {
-            int blink_time = mBlinkTime;
-            mBlinkTime = blink_time + 1;
-            if (blink_time + 1 > 0x59) {
+            mBlinkTime++;
+            if (mBlinkTime > 0x59) {
                 mBlinkTime = 0;
             }
+
             if (mBlinkTime < 0x2D) {
                 bStrCat(buffer, buffer, "|");
             } else {
@@ -95,16 +96,18 @@ void FEngTextInputObject::RedrawString(bool pIncludeCursor) {
             }
         }
 
+        u16 widestring[156];
         bStrCpy(widestring, buffer);
-        font = FindFont(DisplayString->Handle);
-        width = DisplayString->MaxWidth;
-        flags = DisplayString->Flags;
-        fitstring = reinterpret_cast<short *>(widestring);
+        FEngFont *font = FindFont(DisplayString->Handle);
+        int width = DisplayString->MaxWidth;
+        int flags = DisplayString->Flags;
+        i16 *fitstring = reinterpret_cast<i16 *>(widestring);
 
-        for (; *fitstring != 0; fitstring++) {
+        while (*fitstring != 0) {
             if (font->GetLineWidth(fitstring, flags, 0, false) <= static_cast<float>(width)) {
                 break;
             }
+            fitstring++;
         }
 
         FESetString(DisplayString, fitstring);
@@ -112,7 +115,7 @@ void FEngTextInputObject::RedrawString(bool pIncludeCursor) {
 }
 
 void FEngTextInputObject::Notify(uint32 msg) {
-    if (msg == 0xc98356ba) {
+    if (msg == FEMSG_SCREEN_TICK) {
         RedrawString(true);
     } else if (msg == 0x0c407210) {
         ReturnPressed();

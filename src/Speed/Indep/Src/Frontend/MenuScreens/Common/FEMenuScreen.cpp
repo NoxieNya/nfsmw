@@ -1,40 +1,50 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
+#include "Speed/Indep/Src/FEng/FEPackage.h"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
+#include "Speed/Indep/Src/Frontend/HUD/FeHudElement.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feKeyboardInput.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/InGame/FEPkg_MU_Keyboard.hpp"
 
 extern KeyboardEditString gKeyboardManager;
-extern MenuScreen *g_pOLCurrentScreen;
+MenuScreen *g_pOLCurrentScreen = nullptr;
 
-MenuScreen::MenuScreen(ScreenConstructorData *sd)
-    : mPlaySound(true),                     //
-      mDirectionForNextSound(0),            //
-      bEnableEAMessenger(false),            //
-      PackageFilename(sd->PackageFilename), //
-      ConstructData(*sd),                   //
-      IsGarageScreen(false),                //
-      TextInputObject(nullptr),             //
-      mStartCapturingFromKeyboard(0) {
+MenuScreen::MenuScreen(ScreenConstructorData *sd) {
+    mDirectionForNextSound = 0;
+    bEnableEAMessenger = false;
+    ConstructData = *sd;
+    PackageFilename = sd->PackageFilename;
+    IsGarageScreen = false;
+    TextInputObject = nullptr;
+    mPlaySound = true;
+
     FESoundControl(true, PackageFilename);
-    FEngSetButtonTexture(FEngFindImage(PackageFilename, 0x6B364F8B), 0x5BC);
-    FEngSetButtonTexture(FEngFindImage(PackageFilename, 0x79354351), 0x682);
+    mStartCapturingFromKeyboard = 0;
+    FEngSetButtonTexture(FEngFindImage(GetPackageName(), 0x6B364F8B), 0x5BC);
+    FEngSetButtonTexture(FEngFindImage(GetPackageName(), 0x79354351), 0x682);
 
-    if (bStrCmp(PackageFilename, "InGameDialog.fng") == 0                  //
-        || bStrCmp(PackageFilename, "OL_Dialog.fng") == 0                  //
-        || bStrCmp(PackageFilename, "ControllerUnplugged.fng") == 0        //
-        || bStrCmp(PackageFilename, "Dialog.fng") == 0                     //
-        || bStrCmp(PackageFilename, "EA_Trax.fng") == 0                    //
-        || bStrCmp(PackageFilename, "OL_Dialog_Stacked_Buttons.fng") == 0  //
-        || bStrCmp(PackageFilename, "OL_GameRoom_Car_Select.fng") == 0     //
-        || bStrCmp(PackageFilename, "OL_GameRoom_Edit_Race.fng") == 0      //
-        || bStrCmp(PackageFilename, "OL_GameRoom_Player_Details.fng") == 0 //
-        || bStrCmp(PackageFilename, "OL_EAMessenger.fng") == 0) {
-    } else if (!cFEng::Get()->IsPackagePushed("OL_EAMessenger.fng")) {
+    bool pleaseSomebodyJustShootMeInTheHead = false;
+
+    if (bStrCmp(GetPackageName(), "InGameDialog.fng") != 0                  //
+        && bStrCmp(GetPackageName(), "OL_Dialog.fng") != 0                  //
+        && bStrCmp(GetPackageName(), "ControllerUnplugged.fng") != 0        //
+        && bStrCmp(GetPackageName(), "Dialog.fng") != 0                     //
+        && bStrCmp(GetPackageName(), "EA_Trax.fng") != 0                    //
+        && bStrCmp(GetPackageName(), "OL_Dialog_Stacked_Buttons.fng") != 0  //
+        && bStrCmp(GetPackageName(), "OL_GameRoom_Car_Select.fng") != 0     //
+        && bStrCmp(GetPackageName(), "OL_GameRoom_Edit_Race.fng") != 0      //
+        && bStrCmp(GetPackageName(), "OL_GameRoom_Player_Details.fng") != 0 //
+        && bStrCmp(GetPackageName(), "OL_EAMessenger.fng") != 0) {
+        pleaseSomebodyJustShootMeInTheHead = cFEng::Get()->IsPackagePushed("OL_EAMessenger.fng") == false;
+    }
+
+    if (pleaseSomebodyJustShootMeInTheHead) {
         g_pOLCurrentScreen = this;
     }
 }
@@ -42,21 +52,40 @@ MenuScreen::MenuScreen(ScreenConstructorData *sd)
 MenuScreen::~MenuScreen() {
     FESoundControl(false, PackageFilename);
 
-    if (bStrCmp(PackageFilename, "InGameDialog.fng") == 0 || bStrCmp(PackageFilename, "OL_Dialog.fng") == 0 ||
-        bStrCmp(PackageFilename, "ControllerUnplugged.fng") == 0 || bStrCmp(PackageFilename, "Dialog.fng") == 0 ||
-        bStrCmp(PackageFilename, "EA_Trax.fng") == 0 || bStrCmp(PackageFilename, "OL_Dialog_Stacked_Buttons.fng") == 0 ||
-        bStrCmp(PackageFilename, "OL_GameRoom_Car_Select.fng") == 0 || bStrCmp(PackageFilename, "OL_GameRoom_Edit_Race.fng") == 0 ||
-        bStrCmp(PackageFilename, "OL_GameRoom_Player_Details.fng") == 0 || bStrCmp(PackageFilename, "OL_EAMessenger.fng") == 0) {
-    } else if (!cFEng::Get()->IsPackagePushed("OL_EAMessenger.fng")) {
+    bool pleaseSomebodyJustShootMeInTheHead = false;
+
+    if (bStrCmp(GetPackageName(), "InGameDialog.fng") != 0                  //
+        && bStrCmp(GetPackageName(), "OL_Dialog.fng") != 0                  //
+        && bStrCmp(GetPackageName(), "ControllerUnplugged.fng") != 0        //
+        && bStrCmp(GetPackageName(), "Dialog.fng") != 0                     //
+        && bStrCmp(GetPackageName(), "EA_Trax.fng") != 0                    //
+        && bStrCmp(GetPackageName(), "OL_Dialog_Stacked_Buttons.fng") != 0  //
+        && bStrCmp(GetPackageName(), "OL_GameRoom_Car_Select.fng") != 0     //
+        && bStrCmp(GetPackageName(), "OL_GameRoom_Edit_Race.fng") != 0      //
+        && bStrCmp(GetPackageName(), "OL_GameRoom_Player_Details.fng") != 0 //
+        && bStrCmp(GetPackageName(), "OL_EAMessenger.fng") != 0)            //
+    {
+        pleaseSomebodyJustShootMeInTheHead = cFEng::Get()->IsPackagePushed("OL_EAMessenger.fng") == false;
+    }
+
+    if (pleaseSomebodyJustShootMeInTheHead) {
         g_pOLCurrentScreen = nullptr;
     }
 }
 
 void MenuScreen::BaseNotify(u32 Message, FEObject *pObject, u32 Param1, u32 Param2) {
-    if (!CheckKeyboard(Message)) {
-        if (Message != FEMSG_MOUSE_CHANGED || ConstructData.pPackage->GetControlMask() != 0) {
-            NotificationMessage(Message, pObject, Param1, Param2);
-        }
+    if (CheckKeyboard(Message)) {
+        return;
+    }
+
+    int send_notify = 1;
+
+    if (Message == FEMSG_MOUSE_CHANGED && ConstructData.pPackage->GetControlMask() == 0) {
+        send_notify = 0;
+    }
+
+    if (send_notify) {
+        NotificationMessage(Message, pObject, Param1, Param2);
     }
 }
 
@@ -69,46 +98,60 @@ void MenuScreen::FEngEndTextInput() {
         delete TextInputObject;
     }
 
-    mStartCapturingFromKeyboard = 0;
     TextInputObject = nullptr;
+    mStartCapturingFromKeyboard = 0;
 }
 
-void MenuScreen::FEngBeginTextInput(uint32 /* object_hash */, uint32 edit_mode, const char *initial_string, const char *title_string,
+void MenuScreen::FEngBeginTextInput(uint32 object_hash, uint32 edit_mode, const char *initial_string, const char *title_string,
                                     uint32 max_text_length) {
-    FEKeyboardSettings &settings = FEDatabase->mFEKeyboardSettings;
+    bool is_plat_pc = false;
+    if (is_plat_pc) {
+        TextInputObject = new ("FEngTextInputObject", 0)
+            FEngTextInputObject(this, FEngFindString(GetPackageName(), object_hash), edit_mode, initial_string, max_text_length);
 
-    bStrNCpy(settings.Buffer, initial_string, sizeof(settings.Buffer));
-    settings.AcceptCallbackHash = 0xDA5B8712;
-    settings.MaxTextLength = max_text_length;
-    settings.DeclineCallbackHash = 0xC9D30688;
-    settings.DefaultTextHash = 0;
-    bMemSet(settings.Title, 0, sizeof(settings.Title));
-    bStrNCpy(settings.Title, title_string, sizeof(settings.Title) - 1);
+        gKeyboardManager.Disable();
+        mStartCapturingFromKeyboard = 1;
+    } else {
+        bStrNCpy(FEDatabase->mFEKeyboardSettings.Buffer, initial_string, sizeof(FEDatabase->mFEKeyboardSettings.Buffer));
+        FEDatabase->mFEKeyboardSettings.MaxTextLength = max_text_length;
+        FEDatabase->mFEKeyboardSettings.AcceptCallbackHash = 0xDA5B8712;
+        FEDatabase->mFEKeyboardSettings.DeclineCallbackHash = 0xC9D30688;
+        FEDatabase->mFEKeyboardSettings.DefaultTextHash = 0;
+        bMemSet(FEDatabase->mFEKeyboardSettings.Title, 0, sizeof(FEDatabase->mFEKeyboardSettings.Title));
+        bStrNCpy(FEDatabase->mFEKeyboardSettings.Title, title_string, sizeof(FEDatabase->mFEKeyboardSettings.Title) - 1);
 
-    settings.Mode = 1;
-    switch (edit_mode) {
-        case 0:
-            settings.Mode = 0;
-            break;
-        case 1:
-        case 3:
-            settings.Mode = 1;
-            break;
-        case 2:
-            settings.Mode = 5;
-            break;
-        case 4:
-            settings.Mode = 4;
-            break;
-        case 5:
-            settings.Mode = 2;
-            break;
-        case 6:
-            settings.Mode = 3;
-            break;
+        FEPackage *pkg;
+        FEKeyboard::MODE kbd_mode = FEKeyboard::MODE_ALPHANUMERIC;
+
+        switch (edit_mode) {
+            case 0:
+                kbd_mode = FEKeyboard::MODE_ALL_KEYS;
+                break;
+            case 1:
+                kbd_mode = FEKeyboard::MODE_ALPHANUMERIC;
+                break;
+            case 2:
+                kbd_mode = FEKeyboard::MODE_PROFILE_ENTRY;
+                break;
+            case 3:
+                kbd_mode = FEKeyboard::MODE_ALPHANUMERIC;
+                break;
+            case 4:
+                kbd_mode = FEKeyboard::MODE_EMAIL;
+                break;
+            case 5:
+                kbd_mode = FEKeyboard::MODE_ALPHANUMERIC_PASSWORD;
+                break;
+            case 6:
+                kbd_mode = FEKeyboard::MODE_FILENAME;
+                break;
+        }
+
+        FEDatabase->mFEKeyboardSettings.Mode = kbd_mode;
+
+        // TODO: Keybaoard_GC.fng vs Keyboard.fng
+        cFEng::Get()->QueuePackagePush("Keyboard_GC.fng", 0, 0, false);
     }
-
-    cFEng::Get()->QueuePackagePush("Keyboard_GC.fng", 0, 0, false);
 }
 
 bool MenuScreen::CheckKeyboard(uint32 msg) {
@@ -144,6 +187,7 @@ bool MenuScreen::CheckKeyboard(uint32 msg) {
     return false;
 }
 
+// UNSOLVED
 void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controller_mask */, u32 /* pkg_ptr */) {
     eMenuSoundTriggers soundToPlay = UISND_NONE;
 
@@ -194,7 +238,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
             soundToPlay = static_cast<eMenuSoundTriggers>(0x57);
             break;
         case 0x2AC2CD24:
-            soundToPlay = static_cast<eMenuSoundTriggers>(0x2f);
+            soundToPlay = UISND_UGNEW_ENTER;
             break;
         case 0x2DD4FE18:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x26);
@@ -356,7 +400,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
             soundToPlay = static_cast<eMenuSoundTriggers>(0x99);
             break;
         case 0x7D35DA25:
-            soundToPlay = static_cast<eMenuSoundTriggers>(0xC);
+            soundToPlay = UISND_COMMON_SCROLL_START;
             break;
         case 0x7F63059B:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x88);
@@ -380,10 +424,10 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
             soundToPlay = static_cast<eMenuSoundTriggers>(0x75);
             break;
         case 0x90429475:
-            soundToPlay = static_cast<eMenuSoundTriggers>(0x2e);
+            soundToPlay = UISND_UGNEW_KBTYPE;
             break;
         case 0x905FB857:
-            soundToPlay = static_cast<eMenuSoundTriggers>(0xC);
+            soundToPlay = UISND_COMMON_SCROLL_START;
             break;
         case 0x91970159:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x15);
@@ -398,7 +442,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
             soundToPlay = static_cast<eMenuSoundTriggers>(0x9e);
             break;
         case 0x9AFA53A7:
-            soundToPlay = static_cast<eMenuSoundTriggers>(3);
+            soundToPlay = UISND_COMMON_RIGHT;
             break;
         case 0x9B59E056:
             soundToPlay = UISND_COMMON_WRONG;
@@ -419,7 +463,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
             soundToPlay = static_cast<eMenuSoundTriggers>(0x69);
             break;
         case 0xAC57BDB2:
-            soundToPlay = static_cast<eMenuSoundTriggers>(0x13);
+            soundToPlay = UISND_ENTER_TRIGGER;
             break;
         case 0xAD0FBB98:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x82);
@@ -494,7 +538,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
             soundToPlay = static_cast<eMenuSoundTriggers>(0x71);
             break;
         case 0xE7DAFAEE:
-            soundToPlay = static_cast<eMenuSoundTriggers>(0);
+            soundToPlay = UISND_COMMON_UP;
             break;
         case 0xE9B28A67:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x68);

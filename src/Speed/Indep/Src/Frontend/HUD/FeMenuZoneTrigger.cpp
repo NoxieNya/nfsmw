@@ -1,8 +1,9 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeMenuZoneTrigger.hpp"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Frontend/Database/VehicleDB.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
-#include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/customize/FECustomize.hpp"
 #include "Speed/Indep/Src/Gameplay/GActivity.h"
 #include "Speed/Indep/Src/Gameplay/GRaceStatus.h"
@@ -11,15 +12,12 @@
 #include "Speed/Indep/Src/Generated/Events/ERequestEventInfoDialog.hpp"
 #include "Speed/Indep/Src/Generated/Events/ERaceSheetOn.hpp"
 #include "Speed/Indep/Src/Generated/Messages/MEnterSafeHouse.h"
+#include "Speed/Indep/Src/Misc/Timer.hpp"
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
 
-MenuZoneTrigger::MenuZoneTrigger(UTL::COM::Object *pOutter, const char *pkg_name, int player_number)
-    : HudElement(pkg_name, 0x400000), IMenuZoneTrigger(pOutter) {
-    mCingularTimer = 0;
-    mbInsideTrigger = false;
-    mbCingularQueued = false;
-    mpRaceActivity = nullptr;
-    mZoneType = nullptr;
+MenuZoneTrigger::MenuZoneTrigger(UTL::COM::Object *pOuter, const char *pkg_name, int player_number)
+    : HudElement(pkg_name, 0x400000), IMenuZoneTrigger(pOuter), mCingularTimer(), mbInsideTrigger(false), mbCingularQueued(false),
+      mpRaceActivity(nullptr), mZoneType(nullptr) {
     mEngageMechanic = RegisterGroup(FEHashUpper("Engage_Mechanic"));
     mEventIcon = RegisterImage(FEHashUpper("EventIcon"));
     mCingularIcon = RegisterGroup(0xDA8141D4);
@@ -27,23 +25,25 @@ MenuZoneTrigger::MenuZoneTrigger(UTL::COM::Object *pOutter, const char *pkg_name
 
 void MenuZoneTrigger::Update(IPlayer *player) {
     if (mbCingularQueued) {
-        return;
-    }
-    if (mCingularTimer.IsSet()) {
-        Timer diff = WorldTimer - mCingularTimer;
-        if (diff.GetSeconds() >= 6.0f) {
-            mCingularTimer.UnSet();
-            if (!mbInsideTrigger) {
-                HideDPadButton();
-            } else {
-                PulseDPadButton(ENGAGE_DPAD_ELEMENT_UP, mEventIcon);
+        mbCingularQueued = false;
+        mCingularTimer = WorldTimer;
+        PulseDPadButton(ENGAGE_DPAD_ELEMENT_RIGHT, mCingularIcon);
+    } else {
+        if (mCingularTimer.IsSet()) {
+            if ((WorldTimer - mCingularTimer).GetSeconds() >= 6.0f) {
+                mCingularTimer.UnSet();
+                if (mbInsideTrigger) {
+                    PulseDPadButton(ENGAGE_DPAD_ELEMENT_UP, mEventIcon);
+                } else {
+                    HideDPadButton();
+                }
             }
         }
     }
 }
 
 bool MenuZoneTrigger::ShouldSeeMenuZoneCluster() {
-    return *reinterpret_cast<int *>(reinterpret_cast<char *>(&GRaceStatus::Get()) + 0x1AA4) == 0;
+    return GRaceStatus::Get().GetPlayMode() == GRaceStatus::kPlayMode_Roaming;
 }
 
 bool MenuZoneTrigger::IsPlayerInsideTrigger() {
@@ -54,7 +54,8 @@ void MenuZoneTrigger::EnterTrigger(GRuntimeInstance *pRaceActivity) {
     mpRaceActivity = pRaceActivity;
     mbInsideTrigger = true;
     PulseDPadButton(ENGAGE_DPAD_ELEMENT_UP, mEventIcon);
-    GRaceParameters *parms = GRaceDatabase::Get().GetRaceFromActivity(static_cast<GActivity *>(mpRaceActivity));
+    GActivity *activity = static_cast<GActivity *>(mpRaceActivity);
+    GRaceParameters *parms = GRaceDatabase::Get().GetRaceFromActivity(activity);
     FEngSetTextureHash(mEventIcon, FEDatabase->GetRaceIconHash(parms->GetRaceType()));
 }
 
@@ -66,27 +67,26 @@ void MenuZoneTrigger::EnterTrigger(const char *zoneType) {
 }
 
 void MenuZoneTrigger::ExitTrigger() {
-    mpRaceActivity = nullptr;
     mbInsideTrigger = false;
     mZoneType = nullptr;
+    mpRaceActivity = nullptr;
     HideDPadButton();
 }
 
 void MenuZoneTrigger::RequestEventInfoDialog(int port) {
-    if (mpRaceActivity) {
+    if (mpRaceActivity != nullptr) {
         GRaceParameters *parms = GRaceDatabase::Get().GetRaceFromActivity(static_cast<GActivity *>(mpRaceActivity));
-        if (!parms || !parms->GetIsBossRace()) {
-            new ERequestEventInfoDialog(port, mpRaceActivity);
-        } else {
+        if ((parms != nullptr) && parms->GetIsBossRace()) {
             new ERaceSheetOn(3);
+        } else {
+            new ERequestEventInfoDialog(port, mpRaceActivity);
         }
     }
 }
 
 void MenuZoneTrigger::RequestZoneInfoDialog(int port) {
     if (bStrCmp(mZoneType, "safehouse") == 0 || bStrCmp(mZoneType, "carlot") == 0 || bStrCmp(mZoneType, "customshop") == 0) {
-        MEnterSafeHouse msg(mZoneType);
-        msg.Post(0x20D60DBF);
+        MEnterSafeHouse(mZoneType).Post(0x20D60DBF);
     }
 }
 
@@ -100,9 +100,11 @@ void MenuZoneTrigger::RequestDoAction() {
     } else if (bStrCmp(mZoneType, "carlot") == 0) {
         new EQuitToFE(GARAGETYPE_CAR_LOT, "Car_Select.fng");
     } else if (bStrCmp(mZoneType, "customshop") == 0) {
-        FECarRecord *rec = FEDatabase->GetPlayerCarStable(0)->GetCarRecordByHandle(FEDatabase->GetCareerSettings()->GetCurrentCar());
-        if (rec->IsCustomized()) {
-            BeginCarCustomize(CEP_GAMEPLAY, rec);
+        uint32 player_car = FEDatabase->GetCareerSettings()->GetCurrentCar();
+        FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
+        FECarRecord *record = stable->GetCarRecordByHandle(player_car);
+        if (record->IsCustomized()) {
+            BeginCarCustomize(CEP_GAMEPLAY, record);
             new EQuitToFE(GARAGETYPE_CUSTOMIZATION_SHOP, "CustomizeMain.fng");
         }
     }
@@ -119,25 +121,25 @@ void MenuZoneTrigger::HideDPadButton() {
         }
     }
     objectPtr = FEngFindObject(GetPackageName(), 0xA729B1B);
-    if (objectPtr) {
+    if (objectPtr != nullptr) {
         if (!FEngIsScriptSet(objectPtr, 0x33113AC) && !FEngIsScriptSet(objectPtr, 0x1744B3)) {
             FEngSetScript(objectPtr, 0x33113AC, true);
         }
     }
     objectPtr = FEngFindObject(GetPackageName(), 0x717C82AE);
-    if (objectPtr) {
+    if (objectPtr != nullptr) {
         if (!FEngIsScriptSet(objectPtr, 0x33113AC) && !FEngIsScriptSet(objectPtr, 0x1744B3)) {
             FEngSetScript(objectPtr, 0x33113AC, true);
         }
     }
     objectPtr = FEngFindObject(GetPackageName(), 0xA206A0B4);
-    if (objectPtr) {
+    if (objectPtr != nullptr) {
         if (!FEngIsScriptSet(objectPtr, 0x33113AC) && !FEngIsScriptSet(objectPtr, 0x1744B3)) {
             FEngSetScript(objectPtr, 0x33113AC, true);
         }
     }
     objectPtr = FEngFindObject(GetPackageName(), 0x7180B901);
-    if (objectPtr) {
+    if (objectPtr != nullptr) {
         if (!FEngIsScriptSet(objectPtr, 0x33113AC) && !FEngIsScriptSet(objectPtr, 0x1744B3)) {
             FEngSetScript(objectPtr, 0x33113AC, true);
         }
@@ -149,29 +151,38 @@ void MenuZoneTrigger::HideDPadButton() {
 
 void MenuZoneTrigger::PulseDPadButton(ENGAGE_DPAD_ELEMENT_DIRECTION direction, FEObject *iconToShow) {
     HideDPadButton();
-    if (iconToShow && !FEngIsScriptSet(iconToShow, 0x5079C8F8) && !FEngIsScriptSet(iconToShow, 0x280164F)) {
+    if ((iconToShow != nullptr) && !FEngIsScriptSet(iconToShow, 0x5079C8F8) && !FEngIsScriptSet(iconToShow, 0x280164F)) {
         FEngSetScript(iconToShow, 0x5079C8F8, true);
     }
-    if (direction == ENGAGE_DPAD_ELEMENT_UP) {
-        if (!FEngIsScriptSet(mEngageMechanic, 0x5079C8F8)) {
-            FEngSetScript(mEngageMechanic, 0x5079C8F8, true);
-            g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(0x13));
+    if (direction != ENGAGE_DPAD_ELEMENT_NONE) {
+        uint32 objectHash = 0;
+
+        switch (direction) {
+            case ENGAGE_DPAD_ELEMENT_UP:
+                objectHash = 0xA729B1B;
+                break;
+            case ENGAGE_DPAD_ELEMENT_DOWN:
+                objectHash = 0x717C82AE;
+                break;
+            case ENGAGE_DPAD_ELEMENT_RIGHT:
+                objectHash = 0xa206a0b4;
+                break;
+            case ENGAGE_DPAD_ELEMENT_LEFT:
+                objectHash = 0x7180b901;
+                break;
+        }
+
+        FEObject *objectPtr = FEngFindObject(GetPackageName(), objectHash);
+        if (objectPtr != nullptr) {
+            if (!FEngIsScriptSet(objectPtr, 0x5079C8F8)) {
+                FEngSetScript(objectPtr, 0x5079C8F8, true);
+                g_pEAXSound->PlayUISoundFX(UISND_ENTER_TRIGGER);
+            }
         }
     } else {
-        unsigned int hash = 0;
-        if (direction == ENGAGE_DPAD_ELEMENT_DOWN) {
-            hash = 0x717C82AE;
-        } else if (direction == ENGAGE_DPAD_ELEMENT_UP) {
-            hash = 0xA729B1B;
-        }
-        if (hash) {
-            FEObject *btn = FEngFindObject(GetPackageName(), hash);
-            if (btn) {
-                if (!FEngIsScriptSet(btn, 0x5079C8F8) && !FEngIsScriptSet(btn, 0x280164F)) {
-                    FEngSetScript(btn, 0x5079C8F8, true);
-                    g_pEAXSound->PlayUISoundFX(static_cast<eMenuSoundTriggers>(0x13));
-                }
-            }
+        if (!FEngIsScriptSet(mEngageMechanic, 0x5079C8F8)) {
+            FEngSetScript(mEngageMechanic, 0x5079C8F8, true);
+            g_pEAXSound->PlayUISoundFX(UISND_ENTER_TRIGGER);
         }
     }
 }

@@ -1,6 +1,8 @@
 
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Ecstasy/Ecstasy.hpp"
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEMovies.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/FEPkg_Chyron.hpp"
 #include "Speed/Indep/Src/World/CarLoader.hpp"
@@ -19,8 +21,8 @@
 #include "Speed/Indep/Src/Misc/Config.h"
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
 
-static bool gInGameMoviePlaying;
-char InGameAnyMovieScreen::MovieFilename[64];
+static bool gInGameMoviePlaying = false;
+char InGameAnyMovieScreen::MovieFilename[64] = "unknown";
 
 InGameAnyMovieScreen::InGameAnyMovieScreen(ScreenConstructorData *sd) : MenuScreen(sd) {
     bAllowingControllerErrors = FEManager::Get()->IsAllowingControllerError();
@@ -29,7 +31,8 @@ InGameAnyMovieScreen::InGameAnyMovieScreen(ScreenConstructorData *sd) : MenuScre
         MiniMainLoop();
     }
     DismissChyron();
-    FEngSetMovieName(GetPackageName(), 0x348ff9f, MovieFilename);
+    const u32 FEObj_movie = 0x348ff9f;
+    FEngSetMovieName(GetPackageName(), FEObj_movie, MovieFilename);
     mSubtitler.BeginningMovie(MovieFilename, GetPackageName());
     new EFadeScreenOff(0x14035fb);
 }
@@ -45,21 +48,18 @@ MenuScreen *InGameAnyMovieScreen::Create(ScreenConstructorData *sd) {
 
 void InGameAnyMovieScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     mSubtitler.Update(msg);
-    if (msg != 0xb5af2461) {
-        if (msg > 0xb5af2461) {
-            if (msg != 0xc3960eb9) {
-                return;
-            }
+    switch (msg) {
+        case FEMSG_MOVIE_FINISHED:
             DismissMovie();
-            return;
-        }
-        if (msg != 0x406415e3) {
-            return;
-        }
-    }
-    if (FEDatabase->GetCareerSettings()->GetCurrentBin() < 0x10 || SkipMovies || MoviePlayer_Bypass()) {
-        mSubtitler.Update(0xc3960eb9);
-        DismissMovie();
+            break;
+        case __PAD_START__:
+        case __PAD_ACCEPT__: {
+            extern int SkipMovies;
+            if (FEDatabase->IsDDay() || SkipMovies || MoviePlayer_Bypass()) {
+                mSubtitler.Update(FEMSG_MOVIE_FINISHED);
+                DismissMovie();
+            }
+        } break;
     }
 }
 
@@ -78,10 +78,8 @@ void InGameAnyMovieScreen::LaunchMovie(const char *filename) {
 }
 
 void InGameAnyMovieScreen::DismissMovie() {
-    UCrc32 port(0x20d60dbf);
     gInGameMoviePlaying = false;
-    MNotifyMovieFinished msg;
-    msg.Post(port);
+    MNotifyMovieFinished().Post(0x20d60dbf);
     cFEng::Get()->QueuePackagePop(0);
     new EFadeScreenOn(false);
 }

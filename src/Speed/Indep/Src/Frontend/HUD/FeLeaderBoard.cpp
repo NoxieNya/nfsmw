@@ -1,7 +1,6 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeLeaderBoard.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
-#include "Speed/Indep/Src/Frontend/HUD/FEPkg_Hud.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
 #include "Speed/Indep/Src/Misc/Timer.hpp"
@@ -48,6 +47,7 @@ LeaderBoard::LeaderBoard(UTL::COM::Object *pOutter, const char *pkg_name, int pl
     }
 }
 
+// UNSOLVED
 void LeaderBoard::Update(IPlayer *player) {
     if (player->GetSettings()->LeaderboardOn) {
         if (!FEngIsScriptSet(mDataLeaderboardGroup, 0x001744B3)) {
@@ -69,8 +69,8 @@ void LeaderBoard::Update(IPlayer *player) {
                 }
             }
             if (toggleRacerTimesNow) {
-                mShowingRacerTimes ^= 1;
                 mNumFramesBeforeTogglingPlayerTimes = 90;
+                mShowingRacerTimes = !mShowingRacerTimes;
             }
         }
 
@@ -84,7 +84,7 @@ void LeaderBoard::Update(IPlayer *player) {
                         FEPrintf(mDataRacerText[i], "%s", GetTranslatedString(0x5d82dba2));
                     } else if (GRaceStatus::Get().GetRaceType() == GRace::kRaceType_SpeedTrap) {
                         float val = mTopRacers[i].mTotalPoints;
-                        unsigned int unit = 0x8569a25f;
+                        uint32 unit = 0x8569a25f;
                         if (!FEDatabase->GetGameplaySettings()->SpeedoUnits) {
                             val = MPS2MPH(KPH2MPS(val));
                             unit = 0x8569ab44;
@@ -93,8 +93,8 @@ void LeaderBoard::Update(IPlayer *player) {
                     } else if (i == mPlayerIndex) {
                         FEPrintf(mDataRacerText[i], "-----");
                     } else {
-                        int unit = 0xe2078322;
                         float totalRaceLenMetres = GRaceStatus::Get().GetRaceLength();
+                        uint32 unit = 0xe2078322;
                         if (!FEDatabase->GetGameplaySettings()->SpeedoUnits) {
                             totalRaceLenMetres = METERS2FT(totalRaceLenMetres);
                             unit = 0x2e8496b1;
@@ -181,30 +181,25 @@ void LeaderBoard::SetRacerPercentComplete(int pos, float percent, float time, IP
     if (pos > 3)
         return;
     if (percent > 0.0f && percent < 100.0f) {
-        int ipercent = static_cast<int>(percent * static_cast<float>(mNumLaps));
-        if (ipercent > static_cast<int>(mTopRacers[pos].mPercentComplete * static_cast<float>(mNumLaps))) {
+        int ipercent = static_cast<int>(percent * mNumLaps);
+        if (ipercent > static_cast<int>(mTopRacers[pos].mPercentComplete * mNumLaps)) {
             bool showSplitTime = false;
             int index = 0;
-            GRace::Type raceType = GRaceStatus::Get().GetRaceType();
-            switch (raceType) {
+            switch (GRaceStatus::Get().GetRaceType()) {
                 case GRace::kRaceType_Circuit:
-                case GRace::kRaceType_Knockout: {
-                    int q = ipercent / 50;
-                    if (ipercent == q * 50) {
+                case GRace::kRaceType_Knockout:
+                    if (ipercent == ipercent / 50 * 50) {
                         showSplitTime = true;
-                        index = q;
+                        index = ipercent / 50;
                     }
                     break;
-                }
                 case GRace::kRaceType_P2P:
-                case GRace::kRaceType_Tollbooth: {
-                    int q = ipercent / 25;
-                    if (ipercent == q * 25) {
+                case GRace::kRaceType_Tollbooth:
+                    if (ipercent == ipercent / 25 * 25) {
                         showSplitTime = true;
-                        index = q;
+                        index = ipercent / 25;
                     }
                     break;
-                }
                 default:
                     break;
             }
@@ -239,69 +234,54 @@ bool LeaderBoard::ShowSplitTime(IPlayer *player) {
 
     IGenericMessage *igenericmessage;
     IHud *hud = player->GetHud();
-    if (!hud) {
-        return false;
+    if (hud != nullptr && hud->QueryInterface(&igenericmessage) && !igenericmessage->IsGenericMessageShowing()) {
+        Timer timer;
+        int index;
+        int divisor = 50;
+        if (GRaceStatus::Get().GetRaceType() == GRace::kRaceType_P2P || GRaceStatus::Get().GetRaceType() == GRace::kRaceType_Tollbooth) {
+            divisor = 25;
+        }
+
+        if (mPlayerIndex == 0) {
+            int ipercent = static_cast<int>(mTopRacers[1].mPercentComplete * mNumLaps);
+            index = ipercent / divisor;
+            timer = Timer(mTopRacers[1].mRaceTimeOfSegment[index] - mTopRacers[0].mRaceTimeOfSegment[index]);
+        } else {
+            int ipercent = static_cast<int>(mTopRacers[mPlayerIndex].mPercentComplete * mNumLaps);
+            index = ipercent / divisor;
+            timer = Timer(mTopRacers[mPlayerIndex].mRaceTimeOfSegment[index] - mTopRacers[0].mRaceTimeOfSegment[index]);
+        }
+
+        char timeToPrint[16];
+        char messageString[32];
+        timer.PrintToString(timeToPrint, 4);
+
+        int hash;
+        if (mPlayerIndex == 0) {
+            bSNPrintf(messageString, 32, "%s\n+%s", GetTranslatedString(0x7771a159), timeToPrint);
+            hash = 0xa19bb14c;
+        } else {
+            bSNPrintf(messageString, 32, "%s\n-%s", GetTranslatedString(0x7771a159), timeToPrint);
+            hash = 0x5230faf6;
+        }
+
+        igenericmessage->RequestGenericMessage(messageString, false, hash, 0, 0, GenericMessage_Priority_3);
+        return true;
     }
-
-    if (!hud->QueryInterface(&igenericmessage)) {
-        return false;
-    }
-
-    if (igenericmessage->IsGenericMessageShowing()) {
-        return false;
-    }
-
-    Timer timer;
-    int index;
-    int divisor = 50;
-    if (GRaceStatus::Get().GetRaceType() == GRace::kRaceType_P2P || GRaceStatus::Get().GetRaceType() == GRace::kRaceType_Tollbooth) {
-        divisor = 25;
-    }
-
-    if (mPlayerIndex == 0) {
-        int ipercent = static_cast<int>(mTopRacers[1].mPercentComplete * static_cast<float>(mNumLaps));
-        index = ipercent / divisor;
-        timer = Timer(mTopRacers[1].mRaceTimeOfSegment[index] - mTopRacers[0].mRaceTimeOfSegment[index]);
-    } else {
-        int ipercent = static_cast<int>(mTopRacers[mPlayerIndex].mPercentComplete * static_cast<float>(mNumLaps));
-        index = ipercent / divisor;
-        timer = Timer(mTopRacers[mPlayerIndex].mRaceTimeOfSegment[index] - mTopRacers[0].mRaceTimeOfSegment[index]);
-    }
-
-    char timeToPrint[16];
-    char messageString[32];
-    timer.PrintToString(timeToPrint, 4);
-
-    int hash;
-    if (mPlayerIndex == 0) {
-        bSNPrintf(messageString, 32, "%s\n+%s", GetTranslatedString(0x7771a159), timeToPrint);
-        hash = 0xa19bb14c;
-    } else {
-        bSNPrintf(messageString, 32, "%s\n-%s", GetTranslatedString(0x7771a159), timeToPrint);
-        hash = 0x5230faf6;
-    }
-
-    igenericmessage->RequestGenericMessage(messageString, false, hash, 0, 0, GenericMessage_Priority_3);
-    return true;
+    return false;
 }
 
 bool LeaderBoard::ShowLapTime(IPlayer *player) const {
-    IHud *hud = player->GetHud();
-    if (!hud)
-        return false;
     IGenericMessage *igenericmessage;
-    if (!hud->QueryInterface(&igenericmessage))
-        return false;
-    if (igenericmessage->IsGenericMessageShowing())
-        return false;
-
-    Timer timer(mTopRacers[mPlayerIndex].mRaceTimeOfLastLap);
-    char timeToPrint[16];
-    char messageString[32];
-    timer.PrintToString(timeToPrint, 4);
-    const char *fmt = "%s\n%s";
-    char *translated = GetTranslatedString(0x7A6F9F0A);
-    bSNPrintf(messageString, 32, fmt, translated, timeToPrint);
-    igenericmessage->RequestGenericMessage(messageString, false, 0x8AB83EDB, bStringHash("TIMER_ICON"), 0x609F6B15, GenericMessage_Priority_3);
-    return true;
+    IHud *hud = player->GetHud();
+    if (hud != nullptr && hud->QueryInterface(&igenericmessage) && !igenericmessage->IsGenericMessageShowing()) {
+        Timer timer(mTopRacers[mPlayerIndex].mRaceTimeOfLastLap);
+        char timeToPrint[16];
+        char messageString[32];
+        timer.PrintToString(timeToPrint, 4);
+        bSNPrintf(messageString, 32, "%s\n%s", GetTranslatedString(0x7A6F9F0A), timeToPrint);
+        igenericmessage->RequestGenericMessage(messageString, false, 0x8AB83EDB, bStringHash("TIMER_ICON"), 0x609F6B15, GenericMessage_Priority_3);
+        return true;
+    }
+    return false;
 }

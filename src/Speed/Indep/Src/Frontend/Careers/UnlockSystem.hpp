@@ -61,17 +61,17 @@ class CareerUnlocker {
     static bool IsCarPartUnlocked(eUnlockFilters filter, int carslot, CarPart *part, bool backroom);
     static bool IsPerfPackageUnlocked(eUnlockFilters filter, Physics::Upgrades::Type pkg_type, int level, bool backroom);
     static bool IsTrackUnlocked(eUnlockFilters filter, int event_hash);
-    static bool IsCarUnlocked(eUnlockFilters filter, unsigned int car);
+    static bool IsCarUnlocked(eUnlockFilters filter, uint32 car);
     static bool IsBackroomAvailable(eUnlockFilters filter, eUnlockableEntity ent, int level);
 };
 
 class QuickRaceUnlocker {
   public:
-    static int IsUnlockableUnlocked(eUnlockFilters filter, eUnlockableEntity ent, int level, int player, bool backroom);
-    static int IsCarPartUnlocked(eUnlockFilters filter, int carslot, CarPart *part, int player, bool backroom);
-    static int IsPerfPackageUnlocked(eUnlockFilters filter, Physics::Upgrades::Type pkg_type, int level, int player, bool backroom);
+    static bool IsUnlockableUnlocked(eUnlockFilters filter, eUnlockableEntity ent, int level, int player, bool backroom);
+    static bool IsCarPartUnlocked(eUnlockFilters filter, int carslot, CarPart *part, int player, bool backroom);
+    static bool IsPerfPackageUnlocked(eUnlockFilters filter, Physics::Upgrades::Type pkg_type, int level, int player, bool backroom);
     static bool IsTrackUnlocked(eUnlockFilters filter, int event_hash, int player);
-    static bool IsCarUnlocked(eUnlockFilters filter, unsigned int car, int player);
+    static bool IsCarUnlocked(eUnlockFilters filter, uint32 car, int player);
     static bool IsBackroomAvailable(eUnlockFilters filter, eUnlockableEntity ent, int level, int player);
 };
 
@@ -81,7 +81,7 @@ class OnlineUnlocker {
     static bool IsCarPartUnlocked(eUnlockFilters filter, int carslot, CarPart *part, bool backroom);
     static bool IsPerfPackageUnlocked(eUnlockFilters filter, Physics::Upgrades::Type pkg_type, int level, bool backroom);
     static bool IsTrackUnlocked(eUnlockFilters filter, int event_hash);
-    static bool IsCarUnlocked(eUnlockFilters filter, unsigned int car);
+    static bool IsCarUnlocked(eUnlockFilters filter, uint32 car);
     static bool IsBackroomAvailable(eUnlockFilters filter, eUnlockableEntity ent, int level);
 };
 

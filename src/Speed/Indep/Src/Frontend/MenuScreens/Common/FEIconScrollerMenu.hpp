@@ -74,6 +74,7 @@ class IconOption : public bTNode<IconOption> {
         return pTutorialMovieName;
     }
     void SetTutorialMovieName(const char *name) {
+        bIsTutorialAvailable = true;
         pTutorialMovieName = name;
     }
 
@@ -126,11 +127,7 @@ class IconPanel {
     virtual void Update();
     virtual FEImage *AddOption(IconOption *option);
     virtual void RemoveAll() {
-        while (Options.GetHead() != Options.EndOfList()) {
-            IconOption *node = Options.GetHead();
-            node->Remove();
-            delete node;
-        }
+        Options.DeleteAllElements();
         iIndexToAdd = 1;
     }
     virtual void Act(uint32 data, FEObject *obj, uint32 param1, uint32 param2);
@@ -181,7 +178,7 @@ class IconPanel {
         return iIndexToAdd;
     }
     int GetCurrentIndex() {
-        if (pCurrentNode) {
+        if (pCurrentNode != nullptr) {
             return GetOptionIndex(pCurrentNode);
         }
         return 0;
@@ -269,8 +266,8 @@ class IconScroller : public IconPanel {
     }
     void StartFadeOut() {
         bFadingIn = false;
-        fCurFadeTime = fMaxFadeTime;
         bFadingOut = true;
+        fCurFadeTime = fMaxFadeTime;
     }
     void SetIdleColor(uint32 color) {
         IdleColor = color;

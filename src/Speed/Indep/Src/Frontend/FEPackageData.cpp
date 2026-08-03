@@ -4,19 +4,30 @@
 #include "Speed/Indep/Src/FEng/FEPackageChunks.h"
 #include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Frontend/Database/uiProfileManager.hpp"
 #include "Speed/Indep/Src/Frontend/FEObjectCallbacks.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Career/FEGameWonScreen.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Career/FEPkg_EngageEventDialog.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEAnyMovieScreen.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEAnyTutorialScreen.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/ControllerUnplugged.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/CustomTuning.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/InGame/FEPkg_Chyron.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/InGame/FEPkg_MU_Keyboard.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/FeBustedOverlay.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/FeFadeScreen.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/InGame/InGameMovieScreen.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/InGame/InGameTutorialScreen.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/InGame/PhotoFinish.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/uiSMS.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/uiSMSMessage.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/uiSixDaysLater.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Loading/FEMovieScreen.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Loading/FESplashScreen.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/MemCard/uiMemcard.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/FEPkg_GarageMain.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/career/uiInfractions.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/career/uiMarkerSelect.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/career/uiRapSheetCTS.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/career/uiRapSheetLogin.hpp"
@@ -65,6 +76,7 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/quickrace/uiQRModeSelect.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Misc/LZCompress.hpp"
+#include "Speed/Indep/Src/Misc/SpeedChunks.hpp"
 #include "Speed/Indep/bWare/Inc/bWare.hpp"
 #include "Speed/Indep/bWare/Inc/bMemory.hpp"
 #include "Speed/Indep/Src/Frontend/FEPackageManager.hpp"
@@ -72,11 +84,13 @@
 #include "types.h"
 
 // File: speed/indep/src/frontend/FEPackageData.cpp
-const char *gLoadinScreenPackageName; // size: 0x4, address: 0x8041C4BC, Decl: speed/indep/src/frontend/FEPackageData.cpp:176
+const char *gLoadinScreenPackageName = ""; // size: 0x4, address: 0x8041C4BC, Decl: speed/indep/src/frontend/FEPackageData.cpp:176
 
 // Decl: speed/indep/src/frontend/FEPackageData.cpp:178
 // Range: 0x8016BDDC -> 0x8016BDE8
-void SetLoadingScreenPackageName(const char *name) {}
+void SetLoadingScreenPackageName(const char *name) {
+    gLoadinScreenPackageName = name;
+}
 
 // Decl: speed/indep/src/frontend/FEPackageData.cpp:183
 // Range: 0x8016BDE8 -> 0x8016BDF4
@@ -90,7 +104,7 @@ const char *GetSplashScreenPackageName() {}
 // Decl: speed/indep/src/frontend/FEPackageData.cpp:194
 // Range: 0x8016BDF4 -> 0x8016BE2C
 static MenuScreen *CreateMainMenu(ScreenConstructorData *sd) {
-    return new ("", 0) UIMain(sd);
+    return new ("UIMain", 0) UIMain(sd);
 }
 
 // Decl: speed/indep/src/frontend/FEPackageData.cpp:196
@@ -98,274 +112,278 @@ static MenuScreen *CreateMainMenu(ScreenConstructorData *sd) {
 static MenuScreen *CreateSubMenu(ScreenConstructorData *sd) {
     if (FEDatabase->IsOptionsMode()) {
         if (FEDatabase->GetOptionsSettings()->CurrentCategory == OC_TRAILERS) {
-            return new ("", 0) UIOptionsTrailers(sd);
+            return new ("UIOptionsTrailers", 0) UIOptionsTrailers(sd);
         }
-        return new ("", 0) UIOptionsMain(sd);
+        return new ("UIOptionsMain", 0) UIOptionsMain(sd);
     }
     if (FEDatabase->IsCareerMode()) {
-        return new ("", 0) uiCareerCrib(sd);
+        return new ("uiCareerCrib", 0) uiCareerCrib(sd);
     }
     if (FEDatabase->IsCareerManagerMode()) {
-        return new ("", 0) uiCareerManager(sd);
+        return new ("uiCareerManager", 0) uiCareerManager(sd);
     }
     if (FEDatabase->IsModeSelectMode()) {
-        return new ("", 0) UIQRModeSelect(sd);
+        return new ("UIQRModeSelect", 0) UIQRModeSelect(sd);
     }
     if (FEDatabase->IsQuickRaceMode()) {
-        return new ("", 0) UIQRMainMenu(sd);
+        return new ("UIQRMainMenu", 0) UIQRMainMenu(sd);
     }
-    return new ("", 0) UIOptionsMain(sd);
+    return new ("UIOptionsMain", 0) UIOptionsMain(sd);
 }
 
 static MenuScreen *CreateCommonPauseMenu(ScreenConstructorData *sd) {
     if (FEDatabase->IsOptionsMode()) {
-        return new ("", 0) UIOptionsMain(sd);
+        return new ("UIOptionsMain", 0) UIOptionsMain(sd);
     }
-    return new ("", 0) PauseMenu(sd);
+    return new ("PauseMenu", 0) PauseMenu(sd);
 }
 
+#if ONLINE_SUPPORT
+static MenuScreen *CreateOLConnectingScreen(ScreenConstructorData *sd) {}
+#endif
+
 static MenuScreen *CreateOptionsScreen(ScreenConstructorData *sd) {
-    return new ("", 0) UIOptionsScreen(sd);
+    return new ("UIOptionsScreen", 0) UIOptionsScreen(sd);
 }
 
 static MenuScreen *CreateQRBrief(ScreenConstructorData *sd) {
-    return new ("", 0) UIQRBrief(sd);
+    return new ("UIQRBrief", 0) UIQRBrief(sd);
 }
 
 static MenuScreen *CreateQRTrackSelect(ScreenConstructorData *sd) {
-    return new ("", 0) UIQRTrackSelect(sd);
+    return new ("UIQRTrackSelect", 0) UIQRTrackSelect(sd);
 }
 
 static MenuScreen *CreateQRTrackOptions(ScreenConstructorData *sd) {
-    return new ("", 0) UIQRTrackOptions(sd);
+    return new ("UIQRTrackOptions", 0) UIQRTrackOptions(sd);
 }
 
 static MenuScreen *CreateQRCarSelect(ScreenConstructorData *sd) {
-    return new ("", 0) UIQRCarSelect(sd);
+    return new ("UIQRCarSelect", 0) UIQRCarSelect(sd);
 }
 
 static MenuScreen *CreateQRPressStart(ScreenConstructorData *sd) {
-    return new ("", 0) uiQRPressStart(sd);
+    return new ("uiQRPressStart", 0) uiQRPressStart(sd);
 }
 
 static MenuScreen *CreateQRChallengeSeries(ScreenConstructorData *sd) {
-    return new ("", 0) UIQRChallengeSeries(sd);
+    return new ("UIQRChallengeSeries", 0) UIQRChallengeSeries(sd);
 }
 
 static MenuScreen *CreateShowcase(ScreenConstructorData *sd) {
-    return new ("", 0) Showcase(sd);
+    return new ("Showcase", 0) Showcase(sd);
 }
 
 static MenuScreen *CreateFadeScreen(ScreenConstructorData *sd) {
-    return new ("", 0) FadeScreen(sd);
+    return new ("FadeScreen", 0) FadeScreen(sd);
 }
 
 static MenuScreen *CreateWorldMap(ScreenConstructorData *sd) {
-    return new ("", 0) WorldMap(sd);
+    return new ("WorldMap", 0) WorldMap(sd);
 }
 
 static MenuScreen *CreateSMS(ScreenConstructorData *sd) {
-    return new ("", 0) uiSMS(sd);
+    return new ("uiSMS", 0) uiSMS(sd);
 }
 
 static MenuScreen *CreateSMSMessage(ScreenConstructorData *sd) {
-    return new ("", 0) uiSMSMessage(sd);
+    return new ("uiSMSMessage", 0) uiSMSMessage(sd);
 }
 
 static MenuScreen *CreateControllerUnplugged(ScreenConstructorData *sd) {
-    return new ("", 0) ControllerUnplugged(sd);
+    return new ("ControllerUnplugged", 0) ControllerUnplugged(sd);
 }
 
 static MenuScreen *CreateMovieScreen(ScreenConstructorData *sd) {
-    return new ("", 0) MovieScreen(sd);
+    return new ("MovieScreen", 0) MovieScreen(sd);
 }
 
 static MenuScreen *CreateSplashScreen(ScreenConstructorData *sd) {
-    return new ("", 0) SplashScreen(sd);
+    return new ("SplashScreen", 0) SplashScreen(sd);
 }
 
 static MenuScreen *CreateLoadingTipsScreen(ScreenConstructorData *sd) {
-    return new LoadingTips(sd);
+    return new ("LoadingTips") LoadingTips(sd);
 }
 
 static MenuScreen *CreateLanguageSelectScreen(ScreenConstructorData *sd) {
-    return new ("", 0) LanguageSelectScreen(sd);
+    return new ("LanguageSelectScreen", 0) LanguageSelectScreen(sd);
 }
 
 static MenuScreen *CreateSixDaysLaterScreen(ScreenConstructorData *sd) {
-    return new ("", 0) SixDaysLater(sd);
+    return new ("SixDaysLater", 0) SixDaysLater(sd);
 }
 
 static MenuScreen *CreateEngageEventDialog(ScreenConstructorData *sd) {
-    return new ("", 0) nsEngageEventDialog::EngageEventDialog(sd);
+    return new ("EngageEventDialog", 0) nsEngageEventDialog::EngageEventDialog(sd);
 }
 
 static MenuScreen *CreateUISafeHouseRaceSheet(ScreenConstructorData *sd) {
-    return new ("", 0) UISafehouseRaceSheet(sd);
+    return new ("UISafehouseRaceSheet", 0) UISafehouseRaceSheet(sd);
 }
 
 static MenuScreen *CreateUIRapSheetLogin(ScreenConstructorData *sd) {
-    return new ("", 0) uiRapSheetLogin(sd);
+    return new ("uiRapSheetLogin", 0) uiRapSheetLogin(sd);
 }
 
 static MenuScreen *CreateUIRapSheetMain(ScreenConstructorData *sd) {
-    return new ("", 0) uiRapSheetMain(sd);
+    return new ("uiRapSheetMain", 0) uiRapSheetMain(sd);
 }
 
 static MenuScreen *CreateUIRapSheetRS(ScreenConstructorData *sd) {
-    return new ("", 0) uiRapSheetRS(sd);
+    return new ("uiRapSheetRS", 0) uiRapSheetRS(sd);
 }
 
 static MenuScreen *CreateUIRapSheetUS(ScreenConstructorData *sd) {
-    return new ("", 0) uiRapSheetUS(sd);
+    return new ("uiRapSheetUS", 0) uiRapSheetUS(sd);
 }
 
 static MenuScreen *CreateUIRapSheetVD(ScreenConstructorData *sd) {
-    return new ("", 0) uiRapSheetVD(sd);
+    return new ("uiRapSheetVD", 0) uiRapSheetVD(sd);
 }
 
 static MenuScreen *CreateUIRapSheetCTS(ScreenConstructorData *sd) {
-    return new ("", 0) uiRapSheetCTS(sd);
+    return new ("uiRapSheetCTS", 0) uiRapSheetCTS(sd);
 }
 
 static MenuScreen *CreateUIRapSheetTEP(ScreenConstructorData *sd) {
-    return new ("", 0) uiRapSheetTEP(sd);
+    return new ("uiRapSheetTEP", 0) uiRapSheetTEP(sd);
 }
 
 static MenuScreen *CreateUIRapSheetPD(ScreenConstructorData *sd) {
-    return new ("", 0) uiRapSheetPD(sd);
+    return new ("uiRapSheetPD", 0) uiRapSheetPD(sd);
 }
 
 static MenuScreen *CreateUIRapSheetRankings(ScreenConstructorData *sd) {
-    return new ("", 0) uiRapSheetRankings(sd);
+    return new ("uiRapSheetRankings", 0) uiRapSheetRankings(sd);
 }
 
 static MenuScreen *CreateUIRapSheetRankingsDetail(ScreenConstructorData *sd) {
-    return new ("", 0) uiRapSheetRankingsDetail(sd);
+    return new ("uiRapSheetRankingsDetail", 0) uiRapSheetRankingsDetail(sd);
 }
 
 static MenuScreen *CreateUISafeHouseRepSheetMain(ScreenConstructorData *sd) {
-    return new ("", 0) uiRepSheetMain(sd);
+    return new ("uiRepSheetMain", 0) uiRepSheetMain(sd);
 }
 
 static MenuScreen *CreateUISafeHouseRivalChallenge(ScreenConstructorData *sd) {
-    return new ("", 0) uiRepSheetRival(sd);
+    return new ("uiRepSheetRival", 0) uiRepSheetRival(sd);
 }
 
 static MenuScreen *CreateUISafeHouseRivalBio(ScreenConstructorData *sd) {
-    return new ("", 0) uiRepSheetRivalBio(sd);
+    return new ("uiRepSheetRivalBio", 0) uiRepSheetRivalBio(sd);
 }
 
 static MenuScreen *CreateUISafeHouseMilestones(ScreenConstructorData *sd) {
-    return new ("", 0) uiRepSheetMilestones(sd);
+    return new ("uiRepSheetMilestones", 0) uiRepSheetMilestones(sd);
 }
 
 static MenuScreen *CreateUISafeHouseRegionUnlock(ScreenConstructorData *sd) {
-    return new ("", 0) uiSafehouseRegionUnlock(sd);
+    return new ("uiSafehouseRegionUnlock", 0) uiSafehouseRegionUnlock(sd);
 }
 
 static MenuScreen *CreateUISafeHouseBounty(ScreenConstructorData *sd) {
-    return new ("", 0) uiRepSheetBounty(sd);
+    return new ("uiRepSheetBounty", 0) uiRepSheetBounty(sd);
 }
 
 static MenuScreen *CreateUISafeHouseMarkers(ScreenConstructorData *sd) {
-    return new ("", 0) FEMarkerSelection(sd);
+    return new ("FEMarkerSelection", 0) FEMarkerSelection(sd);
 }
 
 static MenuScreen *CreateGameWonScreen(ScreenConstructorData *sd) {
-    return new ("", 0) FEGameWonScreen(sd);
+    return new ("FEGameWonScreen", 0) FEGameWonScreen(sd);
 }
 
 static MenuScreen *CreateDebugCarCustomize(ScreenConstructorData *sd) {
-    return new ("", 0) DebugCarCustomizeScreen(sd);
+    return new ("DebugCarCustomizeScreen", 0) DebugCarCustomizeScreen(sd);
 }
 
 static MenuScreen *CreateMyCarsManager(ScreenConstructorData *sd) {
-    return new ("", 0) MyCarsManager(sd);
+    return new ("MyCarsManager", 0) MyCarsManager(sd);
 }
 
 static MenuScreen *CreateCustomizeMainScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizeMain(sd);
+    return new ("CustomizeMain", 0) CustomizeMain(sd);
 }
 
 static MenuScreen *CreateCustomizeSubScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizeSub(sd);
+    return new ("CustomizeSub", 0) CustomizeSub(sd);
 }
 
 static MenuScreen *CreateCustomizeShoppingCartScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizeShoppingCart(sd);
+    return new ("CustomizeShoppingCart", 0) CustomizeShoppingCart(sd);
 }
 
 static MenuScreen *CreateCustomizePartsScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizeParts(sd);
+    return new ("CustomizeParts", 0) CustomizeParts(sd);
 }
 
 static MenuScreen *CreateCustomHUDColorScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizeHUDColor(sd);
+    return new ("CustomizeHUDColor", 0) CustomizeHUDColor(sd);
 }
 
 static MenuScreen *CreateDecalsScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizeDecals(sd);
+    return new ("CustomizeDecals", 0) CustomizeDecals(sd);
 }
 
 static MenuScreen *CreateNumbersScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizeNumbers(sd);
+    return new ("CustomizeNumbers", 0) CustomizeNumbers(sd);
 }
 
 static MenuScreen *CreatePaintScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizePaint(sd);
+    return new ("CustomizePaint", 0) CustomizePaint(sd);
 }
 
 static MenuScreen *CreateRimmingScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizeRims(sd);
+    return new ("CustomizeRims", 0) CustomizeRims(sd);
 }
 
 static MenuScreen *CreateSpoilersScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizeSpoiler(sd);
+    return new ("CustomizeSpoiler", 0) CustomizeSpoiler(sd);
 }
 
 static MenuScreen *CreateCustomizePerformanceScreen(ScreenConstructorData *sd) {
-    return new ("", 0) CustomizePerformance(sd);
+    return new ("CustomizePerformance", 0) CustomizePerformance(sd);
 }
 
 static MenuScreen *CreateCustomTuningScreen(ScreenConstructorData *sd) {
-    return new CustomTuningScreen(sd);
+    return new ("CustomTuningScreen", 0) CustomTuningScreen(sd);
 }
 
 static MenuScreen *CreatePostRaceResultsScreen(ScreenConstructorData *sd) {
-    return new ("", 0) PostRaceResultsScreen(sd);
+    return new ("PostRaceResultsScreen", 0) PostRaceResultsScreen(sd);
 }
 
 static MenuScreen *CreateBustedOverlayScreen(ScreenConstructorData *sd) {
-    return new ("", 0) BustedOverlayScreen(sd);
+    return new ("BustedOverlayScreen", 0) BustedOverlayScreen(sd);
 }
 
 static MenuScreen *CreatePostRacePursuitScreen(ScreenConstructorData *sd) {
-    return new ("", 0) PostRacePursuitScreen(sd);
+    return new ("PostRacePursuitScreen", 0) PostRacePursuitScreen(sd);
 }
 
 static MenuScreen *CreatePostRaceMilestonesScreen(ScreenConstructorData *sd) {
-    return new ("", 0) PostRaceMilestonesScreen(sd);
+    return new ("PostRaceMilestonesScreen", 0) PostRaceMilestonesScreen(sd);
 }
 
 static MenuScreen *CreateCreditsScreen(ScreenConstructorData *sd) {
-    return new ("", 0) uiCredits(sd);
+    return new ("uiCredits", 0) uiCredits(sd);
 }
 
 static MenuScreen *CreateUIEATraxScreen(ScreenConstructorData *sd) {
-    return new ("", 0) UIEATraxScreen(sd);
+    return new ("UIEATraxScreen", 0) UIEATraxScreen(sd);
 }
 
 static MenuScreen *CreateLoadingScreen(ScreenConstructorData *sd) {
-    return new LoadingScreen(sd);
+    return new ("LoadingScreen") LoadingScreen(sd);
 }
 
 static MenuScreen *CreateLoadingControllerScreen(ScreenConstructorData *sd) {
-    return new LoadingControllerScreen(sd);
+    return new ("LoadingControllerScreen") LoadingControllerScreen(sd);
 }
 
 static MenuScreen *CreateOptionsControllerScreen(ScreenConstructorData *sd) {
-    return new ("", 0) UIOptionsController(sd);
+    return new ("UIOptionsController", 0) UIOptionsController(sd);
 }
 
 // File: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEButtons.cpp
@@ -378,7 +396,7 @@ struct ScreenButtonDatum {
 };
 
 // size: 0x258, address: 0x8041C908, Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEButtons.cpp:101
-static ScreenButtonDatum ScreenButtonData[0x32] = {};
+static ScreenButtonDatum ScreenButtonData[50] = {};
 
 // File: speed/indep/src/frontend/FEPackageData.cpp
 // total size: 0x8
@@ -407,9 +425,9 @@ static ScreenFactoryDatum ScreenFactoryData[] = {
     {"Pause_Options.fng", CreateOptionsScreen},
     {"HUD_SingleRace.fng", nullptr},
     {"HUD_Drag.fng", nullptr},
-    {"InGameAnyMovie.fng", nullptr},
-    {"WS_InGameAnyMovie.fng", nullptr},
-    {"InGameAnyTutorial.fng", nullptr},
+    {"InGameAnyMovie.fng", InGameAnyMovieScreen::Create},
+    {"WS_InGameAnyMovie.fng", InGameAnyMovieScreen::Create},
+    {"InGameAnyTutorial.fng", InGameAnyTutorialScreen::Create},
     {"EngageEventDialog.fng", CreateEngageEventDialog},
     {"SafehouseRaceSheet.fng", CreateUISafeHouseRaceSheet},
     {"OPM_SafehouseRaceSheet.fng", CreateUISafeHouseRaceSheet},
@@ -472,35 +490,35 @@ static ScreenFactoryDatum ScreenFactoryData[] = {
     {"Spoilers_BACKROOM.fng", CreateSpoilersScreen},
     {"CustomizePerformance.fng", CreateCustomizePerformanceScreen},
     {"CustomizePerformance_BACKROOM.fng", CreateCustomizePerformanceScreen},
-    {"GarageMain.fng", nullptr},
+    {"GarageMain.fng", CreateGarageMainScreen},
     {"DiscError.fng", nullptr},
     {"Dialog.fng", nullptr},
     {"GenericDialog_ThreeButton.fng", nullptr},
     {"GameOver.fng", nullptr},
     {"EA_Trax_Jukebox.fng", CreateUIEATraxScreen},
-    {"EA_Trax.fng", nullptr},
-    {"Chyron_IG.fng", nullptr},
+    {"EA_Trax.fng", CreateChyronScreen},
+    {"Chyron_IG.fng", CreateChyronScreen},
     {"InGameDialog.fng", nullptr},
-    {"Keyboard.fng", nullptr},
-    {"Keyboard_GC.fng", nullptr},
+    {"Keyboard.fng", CreateFEKeyboard},
+    {"Keyboard_GC.fng", CreateFEKeyboard},
     {"ScreenPrintf.fng", nullptr},
     {"Credits.fng", CreateCreditsScreen},
-    {"FEAnyMovie.fng", nullptr},
-    {"WS_FEAnyMovie.fng", nullptr},
-    {"FEAnyTutorial.fng", nullptr},
-    {"LS_EALogo.fng", CreateSplashScreen},
-    {"LS_EA_hidef.fng", CreateSplashScreen},
-    {"LS_PSA.fng", CreateSplashScreen},
-    {"LS_THXMovie.fng", CreateSplashScreen},
-    {"MW_LS_IntroFMV.fng", CreateSplashScreen},
-    {"MW_LS_AttractFMV.fng", CreateSplashScreen},
-    {"MW_LS_Splash.fng", CreateMovieScreen},
-    {"WS_LS_EALogo.fng", CreateSplashScreen},
-    {"WS_LS_EA_hidef.fng", CreateSplashScreen},
-    {"WS_LS_PSA.fng", CreateSplashScreen},
-    {"WS_LS_IntroFMV.fng", CreateSplashScreen},
-    {"WS_MW_LS_AttractFMV.fng", CreateSplashScreen},
-    {"WS_MW_LS_Splash.fng", CreateMovieScreen},
+    {"FEAnyMovie.fng", FEAnyMovieScreen::Create},
+    {"WS_FEAnyMovie.fng", FEAnyMovieScreen::Create},
+    {"FEAnyTutorial.fng", FEAnyTutorialScreen::Create},
+    {"LS_EALogo.fng", CreateMovieScreen},
+    {"LS_EA_hidef.fng", CreateMovieScreen},
+    {"LS_PSA.fng", CreateMovieScreen},
+    {"LS_THXMovie.fng", CreateMovieScreen},
+    {"MW_LS_IntroFMV.fng", CreateMovieScreen},
+    {"MW_LS_AttractFMV.fng", CreateMovieScreen},
+    {"MW_LS_Splash.fng", CreateSplashScreen},
+    {"WS_LS_EALogo.fng", CreateMovieScreen},
+    {"WS_LS_EA_hidef.fng", CreateMovieScreen},
+    {"WS_LS_PSA.fng", CreateMovieScreen},
+    {"WS_LS_IntroFMV.fng", CreateMovieScreen},
+    {"WS_MW_LS_AttractFMV.fng", CreateMovieScreen},
+    {"WS_MW_LS_Splash.fng", CreateSplashScreen},
     {"Loading_Tips.fng", CreateLoadingTipsScreen},
     {"loading_boot.fng", nullptr},
     {"LS_LangSelect.fng", CreateLanguageSelectScreen},
@@ -513,49 +531,50 @@ static ScreenFactoryDatum ScreenFactoryData[] = {
     {"PostRace_Results.fng", CreatePostRaceResultsScreen},
     {"BUSTED_OVERLAY.fng", CreateBustedOverlayScreen},
     {"PostBusted.fng", CreatePostRacePursuitScreen},
-    {"Infractions.fng", nullptr},
-    {"InGamePhotoMaster.fng", nullptr},
+    {"Infractions.fng", PostPursuitInfractionsScreen::Create},
+    {"InGamePhotoMaster.fng", PhotoFinishScreen::Create},
     {"PostRace_Pursuit.fng", CreatePostRacePursuitScreen},
     {"PostRace_MilestoneRewards.fng", CreatePostRaceMilestonesScreen},
-    {"MC_ProfileManager.fng", nullptr},
-    {"MC_Deleteprofile.fng", nullptr},
-    {"MC_Bootup.fng", nullptr},
-    {"MC_Bootup_GC.fng", nullptr},
-    {"MC_List.fng", nullptr},
-    {"InGame_MC_Main.fng", nullptr},
-    {"InGame_MC_Main_GC.fng", nullptr},
-    {"MC_Main.fng", nullptr},
-    {"MC_Main_GC.fng", nullptr},
+    {"MC_ProfileManager.fng", CreateUIProfileManager},
+    {"MC_Deleteprofile.fng", CreateUIDeleteProfile},
+    {"MC_Bootup.fng", CreateMemCardBootScreen},
+    {"MC_Bootup_GC.fng", CreateMemCardBootScreen},
+    {"MC_List.fng", CreateMemcardListFiles},
+    {"InGame_MC_Main.fng", CreateMemcardMainMenu},
+    {"InGame_MC_Main_GC.fng", CreateMemcardMainMenu},
+    {"MC_Main.fng", CreateMemcardMainMenu},
+    {"MC_Main_GC.fng", CreateMemcardMainMenu},
 };
 
-static MenuScreen *ScreenFactory(uint32 hash, FEPackage *pkg, int arg) {
+// UNSOLVED
+static MenuScreen *ScreenFactory(uint32 screen_filename_hash, FEPackage *pkg, int arg) {
     for (int i = 0; i < NUM_ENTRIES(ScreenFactoryData); i++) {
-        uint32 nameHash = FEHashUpper(ScreenFactoryData[i].FEngPackageFilename);
-        if (hash == nameHash && ScreenFactoryData[i].ConstructorFunction) {
-            ScreenConstructorData sd;
+        if (screen_filename_hash == FEHashUpper(ScreenFactoryData[i].FEngPackageFilename) && (ScreenFactoryData[i].ConstructorFunction != nullptr)) {
+            ScreenConstructorData sd = {};
             sd.PackageFilename = ScreenFactoryData[i].FEngPackageFilename;
             sd.pPackage = pkg;
             sd.Arg = arg;
-            return ScreenFactoryData[i].ConstructorFunction(&sd);
+
+            MenuScreen *screen = ScreenFactoryData[i].ConstructorFunction(&sd);
+            return screen;
         }
     }
     return nullptr;
 }
 
-static ScreenFactoryDatum *FindScreenCreateData(uint32 hash) {
+static ScreenFactoryDatum *FindScreenCreateData(uint32 screen_filename_hash) {
     for (int i = 0; i < NUM_ENTRIES(ScreenFactoryData); i++) {
-        uint32 nameHash = FEHashUpper(ScreenFactoryData[i].FEngPackageFilename);
-        if (hash == nameHash) {
+        if (screen_filename_hash == FEHashUpper(ScreenFactoryData[i].FEngPackageFilename)) {
             return &ScreenFactoryData[i];
         }
     }
     return nullptr;
 }
 
-ScreenButtonDatum *FindScreenButtonDatum(uint32 screen_filename_hash) {
-    for (int i = 0; i <= NUM_ENTRIES(ScreenButtonData); i++) {
+static ScreenButtonDatum *FindScreenButtonDatum(uint32 screen_filename_hash) {
+    for (int i = 0; i < NUM_ENTRIES(ScreenButtonData); i++) {
         if (screen_filename_hash == ScreenButtonData[i].ScreenHash) {
-            if (ScreenButtonData[i].GameMode == 0xFFFFFFFF || FEDatabase->MatchesGameMode(ScreenButtonData[i].GameMode)) {
+            if (FEDatabase->MatchesGameMode(ScreenButtonData[i].GameMode)) {
                 return &ScreenButtonData[i];
             }
         }
@@ -564,7 +583,7 @@ ScreenButtonDatum *FindScreenButtonDatum(uint32 screen_filename_hash) {
 }
 
 static ScreenButtonDatum *FindAvailableButtonDatum() {
-    for (int i = 0; i <= 0x31; i++) {
+    for (int i = 0; i < NUM_ENTRIES(ScreenButtonData); i++) {
         if (ScreenButtonData[i].ScreenHash == 0) {
             return &ScreenButtonData[i];
         }
@@ -574,7 +593,7 @@ static ScreenButtonDatum *FindAvailableButtonDatum() {
 
 uint8 FEngGetLastButton(const char *pkg_name) {
     ScreenButtonDatum *sd = FindScreenButtonDatum(FEHashUpper(pkg_name));
-    if (sd) {
+    if (sd != nullptr) {
         return sd->LastButton;
     }
     return 0;
@@ -582,15 +601,15 @@ uint8 FEngGetLastButton(const char *pkg_name) {
 
 void FEngSetLastButton(const char *pkg_name, uint8 button_hash) {
     ScreenButtonDatum *sd = FindScreenButtonDatum(FEHashUpper(pkg_name));
-    if (sd) {
+    if (sd != nullptr) {
         sd->LastButton = button_hash;
         return;
     }
-    ScreenButtonDatum *avail = FindAvailableButtonDatum();
-    if (avail) {
-        avail->ScreenHash = FEHashUpper(pkg_name);
-        avail->LastButton = button_hash;
-        avail->GameMode = FEDatabase->GetGameMode();
+    sd = FindAvailableButtonDatum();
+    if (sd != nullptr) {
+        sd->ScreenHash = FEHashUpper(pkg_name);
+        sd->LastButton = button_hash;
+        sd->GameMode = FEDatabase->GetGameMode();
     }
 }
 
@@ -616,9 +635,9 @@ FEPackageData::FEPackageData(bChunk *chunk) {
     RenderInfo.AllowOverflows = false;
     mArg = 0;
 
-    if (chunk->GetID() == 0x30203) {
-        DataChunk = reinterpret_cast<int *>(chunk) + 2;
-    } else if (chunk->GetID() == 0x30210) {
+    if (chunk->GetID() == BCHUNK_FENG_PACKAGE) {
+        DataChunk = chunk->GetData();
+    } else if (chunk->GetID() == BCHUNK_FENG_COMPRESSED_PACKAGE) {
         DataChunk = nullptr;
     }
 
@@ -626,7 +645,7 @@ FEPackageData::FEPackageData(bChunk *chunk) {
 }
 
 FEPackageData::~FEPackageData() {
-    if (MyChunk->GetID() != 0x30203 && MyChunk->GetID() == 0x30210) {
+    if (MyChunk->GetID() != BCHUNK_FENG_PACKAGE && MyChunk->GetID() == BCHUNK_FENG_COMPRESSED_PACKAGE) {
         bFree(DataChunk);
     }
     DataChunk = nullptr;
@@ -642,22 +661,23 @@ void FEPackageData::Activate(FEPackage *pkg, int arg) {
 }
 
 void FEPackageData::UnActivate() {
-    if (pScreen) {
+    if (pScreen != nullptr) {
         delete pScreen;
     }
     pScreen = nullptr;
-    if (pPackage) {
+    pPackage->GetName();
+    if (pPackage != nullptr) {
         pPackage->SetUserParam(0);
     }
     pPackage = nullptr;
-    if (MyChunk->GetID() == 0x30210) {
+    if (IsCompressedChunk()) {
         bFree(DataChunk);
         DataChunk = nullptr;
     }
 }
 
 void FEPackageData::Close() {
-    if (pPackage) {
+    if (pPackage != nullptr) {
         HackClearCache(pPackage);
         RenderObjectDisconnect disconnect;
         disconnect.pFEngRenderer = cFEngRender::mInstance;
@@ -668,21 +688,26 @@ void FEPackageData::Close() {
     }
 }
 
+// UNSOLVED (dwarf)
 void *FEPackageData::GetDataChunk() {
-    if (MyChunk->GetID() == 0x30203) {
+    if (MyChunk->GetID() == BCHUNK_FENG_PACKAGE) {
         return DataChunk;
     }
-    if (MyChunk->GetID() == 0x30210) {
-        int decompressedSize = reinterpret_cast<int *>(MyChunk)[5];
-        DataChunk = bMalloc(decompressedSize, GetVirtualMemoryAllocParams());
-        LZDecompress(reinterpret_cast<unsigned char *>(reinterpret_cast<int *>(MyChunk) + 3), static_cast<unsigned char *>(DataChunk));
+    if (MyChunk->GetID() == BCHUNK_FENG_COMPRESSED_PACKAGE) {
+        uint32 *chunkdata = reinterpret_cast<uint32 *>(MyChunk->GetData());
+        LZHeader *header = reinterpret_cast<LZHeader *>(&chunkdata[1]);
+        int data_bytes = header->UncompressedSize;
+
+        DataChunk = bMalloc(data_bytes, "DECOMPRESSED FENG PACKAGE", 0, GetVirtualMemoryAllocParams());
+        LZDecompress(reinterpret_cast<uint8 *>(header), static_cast<uint8 *>(DataChunk));
         return DataChunk;
     }
     return nullptr;
 }
 
+// UNSOLVED
 uint32 FEPackageData::GetNameHash() {
-    if (MyChunk->GetID() == 0x30203) {
+    if (MyChunk->GetID() == BCHUNK_FENG_PACKAGE) {
         FEChunk *chunk = static_cast<FEChunk *>(GetDataChunk());
 
         if (chunk->GetID() != Chunk_FEPackage) {
@@ -707,7 +732,7 @@ uint32 FEPackageData::GetNameHash() {
         uint32 hash = FEHashUpper(pShortName);
         return hash;
 
-    } else if (MyChunk->GetID() == 0x30210) {
+    } else if (MyChunk->GetID() == BCHUNK_FENG_COMPRESSED_PACKAGE) {
         uint32 *chunk_data = reinterpret_cast<uint32 *>(MyChunk->GetData());
         uint32 hash = chunk_data[0];
         return hash;
@@ -716,13 +741,13 @@ uint32 FEPackageData::GetNameHash() {
 }
 
 void FEPackageData::NotificationMessage(u32 Message, FEObject *pObject, u32 Param1, u32 Param2) {
-    if (pScreen) {
+    if (pScreen != nullptr) {
         pScreen->BaseNotify(Message, pObject, Param1, Param2);
     }
 }
 
 void FEPackageData::NotifySoundMessage(u32 msg, FEObject *obj, u32 control_mask, u32 pkg_ptr) {
-    if (pScreen) {
+    if (pScreen != nullptr) {
         pScreen->BaseNotifySound(msg, obj, control_mask, pkg_ptr);
     }
 }

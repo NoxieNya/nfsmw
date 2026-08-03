@@ -2,6 +2,7 @@
 
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
+#include "Speed/Indep/Src/Gameplay/GRace.h"
 #include "Speed/Indep/Src/Gameplay/GRaceStatus.h"
 #include "Speed/Indep/Src/Misc/Timer.hpp"
 
@@ -29,15 +30,7 @@ RaceInformation::RaceInformation(UTL::COM::Object *pOutter, const char *pkg_name
 }
 
 void RaceInformation::Update(IPlayer *player) {
-    bool isTollbooth = false;
-    if (GRaceStatus::Exists()) {
-        GRace::Type raceType = GRaceStatus::Get().GetRaceType();
-        if (raceType == GRace::kRaceType_Tollbooth) {
-            isTollbooth = true;
-        }
-    }
-
-    if (isTollbooth) {
+    if (GRaceStatus::IsTollboothRace()) {
         if (!FEngIsScriptSet(mDataPositionGroup, 0x16A259)) {
             FEngSetScript(mDataPositionGroup, 0x16A259, true);
         }
@@ -57,22 +50,25 @@ void RaceInformation::Update(IPlayer *player) {
         FEPrintf(GetPackageName(), mpDataRacerCount, "%d", mNumRacers);
     }
 
-    GRace::Type raceType2 = GRaceStatus::Get().GetRaceType();
+    switch (GRaceStatus::Get().GetRaceType()) {
+        case GRace::kRaceType_P2P:
+        case GRace::kRaceType_SpeedTrap:
+        case GRace::kRaceType_Tollbooth:
+            FEngSetLanguageHash(mDataCompleteText, 0x59BB1918);
+            FEPrintf(GetPackageName(), mpDataPercentComplete, "%d %%", static_cast<int>(mPlayerPercentComplete));
+            break;
+        default:
 
-    if (raceType2 == GRace::kRaceType_P2P || raceType2 == GRace::kRaceType_Tollbooth || raceType2 == GRace::kRaceType_SpeedTrap) {
-        FEngSetLanguageHash(mDataCompleteText, 0x59BB1918);
-        FEPrintf(GetPackageName(), mpDataPercentComplete, "%d %%", static_cast<int>(mPlayerPercentComplete));
-    } else {
-        FEngSetLanguageHash(mDataCompleteText, 0xBF9C);
-        FEPrintf(GetPackageName(), mpDataPercentComplete, "%d %%", mPlayerLapNumber, mNumLaps);
+            FEngSetLanguageHash(mDataCompleteText, 0xBF9C);
+            FEPrintf(GetPackageName(), mpDataPercentComplete, "%d/%d", mPlayerLapNumber, mNumLaps);
     }
 
-    if (!mSuddenDeath) {
-        Timer t = Timer(mPlayerLapTime);
-        char buf[16];
-        t.PrintToString(buf, 4);
-        FEPrintf(mDataCurrentLapTime, "%s", buf);
-    } else {
+    if (mSuddenDeath) {
         FEngSetLanguageHash(mDataCurrentLapTime, 0x733C8147);
+    } else {
+        Timer timer = Timer(mPlayerLapTime);
+        char timeToPrint[16];
+        timer.PrintToString(timeToPrint, 4);
+        FEPrintf(mDataCurrentLapTime, "%s", timeToPrint);
     }
 }

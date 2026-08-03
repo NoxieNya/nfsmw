@@ -34,7 +34,9 @@ class TuningSlider : public FEToggleWidget {
 class CustomTuningScreen : public UIWidgetMenu {
   public:
     CustomTuningScreen(ScreenConstructorData *sd);
-    ~CustomTuningScreen() override {}
+    ~CustomTuningScreen() override {
+        delete HelpScrollBar;
+    }
 
     void NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) override;
 

@@ -76,7 +76,7 @@ void QRCarSelectBustedManager::NotificationMessage(u32 msg, FEObject *pobj, u32 
             TheFEMarkerManager.UtilizeMarker(FEMarkerManager::MARKER_IMPOUND_RELEASE, 0);
             break;
         case 0x3fdc64c1:
-            FEManager::Get()->SetGarageType(static_cast<eGarageType>(1));
+            FEManager::Get()->SetGarageType(GARAGETYPE_MAIN_FE);
             FEDatabase->ClearGameMode(static_cast<eFEGameModes>(1));
             FEDatabase->SetGameMode(static_cast<eFEGameModes>(0x100));
             cFEng::Get()->QueuePackageSwitch("MainMenu_Sub.fng", 0, 0, false);
@@ -429,7 +429,7 @@ void UIQRCarSelect::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
                 RideInfo ride;
                 FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(iPlayerNum);
                 stable->BuildRideForPlayer(pSelectedCar->mHandle, iPlayerNum, &ride);
-                CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), static_cast<eCarViewerWhichCar>(0));
+                CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), eCARVIEWER_PLAYER1_CAR);
                 tLastEventTimer.UnSet();
             }
             return;
@@ -551,7 +551,7 @@ void UIQRCarSelect::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
             if (iPrevButtonMsg == 0x406415e3) {
                 unsigned int flags = FEDatabase->GetGameMode();
                 if ((flags & 8) != 0 || (flags & 0x40) != 0) {
-                    RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+                    RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
                     settings->SelectedCar[iPlayerNum] = originalCar;
                     cFEng::Get()->QueuePackageSwitch("OL_MAIN.fng", 0, 0, false);
                     return;
@@ -577,7 +577,7 @@ void UIQRCarSelect::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
                             FECarRecord *new_car = FEDatabase->GetPlayerCarStable(iPlayerNum)->CreateNewCustomCar(car->Handle);
                             car = new_car;
                         }
-                        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+                        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
                         settings->SelectedCar[iPlayerNum] = car->Handle;
                         cFEng::Get()->QueuePackageSwitch("MyCarsManager.fng", 0, 0, false);
                         return;
@@ -609,7 +609,7 @@ void UIQRCarSelect::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
                     }
                     cFEng::Get()->QueuePackageSwitch("MainMenu_Sub.fng", 0, 0, false);
                 } else if ((flags & 8) != 0 || (flags & 0x40) != 0) {
-                    RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+                    RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
                     settings->SelectedCar[iPlayerNum] = originalCar;
                     cFEng::Get()->QueuePackageSwitch("OL_MAIN.fng", 0, 0, false);
                 } else if ((flags & 0x20) != 0) {
@@ -629,7 +629,7 @@ void UIQRCarSelect::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
                         returnToPressStart = !returnToPressStart;
                         cFEng::Get()->QueuePackageSwitch("PressStart.fng", returnToPressStart, 0xff, false);
                     } else {
-                        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+                        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
                         settings->SelectedCar[iPlayerNum] = originalCar;
                         iVar3 = originalCar;
                         FEManager::Get()->SetGarageType(GARAGETYPE_NONE);
@@ -640,7 +640,7 @@ void UIQRCarSelect::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
                     RideInfo ride;
                     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(iPlayerNum);
                     stable->BuildRideForPlayer(iVar3, iPlayerNum, &ride);
-                    CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), static_cast<eCarViewerWhichCar>(0));
+                    CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), eCARVIEWER_PLAYER1_CAR);
                 }
                 return;
             }
@@ -754,7 +754,7 @@ void UIQRCarSelect::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
                     RideInfo ride;
                     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(iPlayerNum);
                     stable->BuildRideForPlayer(originalCar, iPlayerNum, &ride);
-                    CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), static_cast<eCarViewerWhichCar>(0));
+                    CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), eCARVIEWER_PLAYER1_CAR);
                 }
             } else if ((flags & 0x8000) == 0) {
                 FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
@@ -906,7 +906,7 @@ after_queue:
         }
         filter = 0xf0002;
     } else {
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         originalCar = settings->GetSelectedCar(iPlayerNum);
         if ((FEDatabase->GetGameMode() & 0x20) == 0 && originalCar != 0x12345678) {
             unsigned int m3gtrHash = FEHashUpper("M3GTRCAREERSTART");
@@ -978,18 +978,15 @@ void UIQRCarSelect::UpdateSliders() {
     }
 
     AccelerationSlider.SetValue(perf1.Acceleration);
-    float acc_preview = bMin(bMax(perf2.Acceleration, AccelerationSlider.GetMin()), AccelerationSlider.GetMax());
-    AccelerationSlider.SetPreviewValue(acc_preview);
+    AccelerationSlider.SetPreviewValue(perf2.Acceleration);
     AccelerationSlider.Draw();
 
     TopSpeedSlider.SetValue(perf1.TopSpeed);
-    float top_preview = bMin(bMax(perf2.TopSpeed, TopSpeedSlider.GetMin()), TopSpeedSlider.GetMax());
-    TopSpeedSlider.SetPreviewValue(top_preview);
+    TopSpeedSlider.SetPreviewValue(perf2.TopSpeed);
     TopSpeedSlider.Draw();
 
     HandlingSlider.SetValue(perf1.Handling);
-    float hdl_preview = bMin(bMax(perf2.Handling, HandlingSlider.GetMin()), HandlingSlider.GetMax());
-    HandlingSlider.SetPreviewValue(hdl_preview);
+    HandlingSlider.SetPreviewValue(perf2.Handling);
     HandlingSlider.Draw();
 }
 
@@ -1024,7 +1021,7 @@ void UIQRCarSelect::SetupForPlayer(int player) {
                 break;
             unsigned int targetHandle;
             if ((FEDatabase->GetGameMode() & 1) == 0) {
-                RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+                RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
                 nodeHandle = node->mHandle;
                 targetHandle = settings->SelectedCar[iPlayerNum];
             } else {
@@ -1170,7 +1167,7 @@ void UIQRCarSelect::RefreshHeader() {
         }
         FEngSetInvisible(reinterpret_cast<MenuScreen *>(this)->GetPackageName(), 0x0e9ed0a2);
         FEngSetInvisible(reinterpret_cast<MenuScreen *>(this)->GetPackageName(), 0x18a4384f);
-        CarViewer::CancelCarLoad(static_cast<eCarViewerWhichCar>(0));
+        CarViewer::CancelCarLoad(eCARVIEWER_PLAYER1_CAR);
         GarageMainScreen::GetInstance()->DisableCarRendering();
         cFEng::Get()->QueuePackageMessage(0x913fa282, reinterpret_cast<MenuScreen *>(this)->GetPackageName(), nullptr);
         bLoadingBarActive = false;
@@ -1344,7 +1341,7 @@ void UIQRCarSelect::SetSelectedCar(SelectableCar *newCar, int player_num) {
                 FEDatabase->GetCareerSettings()->SetCurrentCar(newCar->mHandle);
             }
         } else if ((mode & 0x20) == 0) {
-            RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+            RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
             settings->SelectedCar[player_num] = newCar->mHandle;
         }
         tLastEventTimer = RealTimer;

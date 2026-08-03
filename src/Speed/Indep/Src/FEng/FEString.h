@@ -62,12 +62,14 @@ class FEString : public FEObject {
         return string;
     }
 
-    void SetString(short *pNewText) {
+    void SetString(i16 *pNewText) {
         string = pNewText;
+        Flags |= FF_DirtyCode;
     }
 
     void SetString(const char *pcString) {
         string = pcString;
+        Flags |= FF_DirtyCode;
     }
 
     void SetStringFromUTF8(const char *pUTF8String) {}

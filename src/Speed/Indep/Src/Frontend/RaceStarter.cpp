@@ -5,11 +5,6 @@
 #include "Speed/Indep/Src/World/RaceParameters.hpp"
 #include "Speed/Indep/Src/Misc/Config.h"
 
-extern RaceParameters TheRaceParameters;
-extern cFrontendDatabase *FEDatabase;
-
-extern ePlayerSettingsCameras GetPlayerCameraFromPOVType(POVTypes pov);
-
 // STRIPPED
 void RaceStarter::SetupPlayerCarsAndStuff(int num_players) {}
 
@@ -41,6 +36,8 @@ void RaceStarter::SetupCircuit() {
     RaceSettings *settings;
     DriverInfo *player_1_driver_info;
     DriverInfo *player_2_driver_info;
+
+    FEDatabase->GetGameplaySettings();
 }
 
 // STRIPPED
@@ -52,11 +49,13 @@ void RaceStarter::SetupSprint() {}
 // STRIPPED
 void RaceStarter::SetupFreeRun() {
     RaceSettings *settings;
+    FEDatabase->GetGameplaySettings();
 }
 
 // STRIPPED
 void RaceStarter::SetupBurnout() {
     RaceSettings *settings;
+    FEDatabase->GetGameplaySettings();
 }
 
 // STRIPPED
@@ -93,8 +92,10 @@ void RaceStarter::SetRaceTheRaceParametersThatHaveNothingToDoWithTheRaceType() {
 // STRIPPED
 void RaceStarter::SwapAICarOutOfPlayersPosition(int position, PlayerNumbers player_number) {}
 
+// UNSOLVED
 void RaceStarter::StartSkipFERace() {
     int track_num = SkipFETrackNumber;
+    float SkipFEStyleStars;
 
     if (OnlineEnabled) {
         TheRaceParameters.bOnlineRace = true;
@@ -129,14 +130,15 @@ void RaceStarter::StartSkipFERace() {
         TheRaceParameters.PlayerJoyports[kk] = static_cast<int>(FEDatabase->GetPlayersJoystickPort(kk));
     }
 
-    TheRaceParameters.NumDriverInfo = 0;
-    TheRaceParameters.BoostScale[1] = 1.0f;
     TheRaceParameters.BoostScale[0] = 1.0f;
-
-    if (TheGameFlowManager.IsInFrontend()) {
-        TheGameFlowManager.UnloadFrontend();
-    } else {
-        TheGameFlowManager.LoadTrack();
+    TheRaceParameters.BoostScale[1] = 1.0f;
+    TheRaceParameters.NumDriverInfo = 0;
+    {
+        if (TheGameFlowManager.IsInFrontend()) {
+            TheGameFlowManager.UnloadFrontend();
+        } else {
+            TheGameFlowManager.LoadTrack();
+        }
     }
 }
 
@@ -147,7 +149,7 @@ void RaceStarter::StartReplayRace() {}
 void RaceStarter::StartCarTuningRace() {}
 
 void RaceStarter::StartCareerFreeRoam() {
-    if (TheGameFlowManager.GetState() == GAMEFLOW_STATE_IN_FRONTEND) {
+    if (TheGameFlowManager.IsInFrontend()) {
         TheGameFlowManager.UnloadFrontend();
     } else {
         TheGameFlowManager.LoadTrack();

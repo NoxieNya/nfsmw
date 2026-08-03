@@ -14,7 +14,7 @@ class IHud : public UTL::COM::IUnknown, public UTL::Collections::Listable<IHud, 
 
     IHud(UTL::COM::Object *owner) : UTL::COM::IUnknown(owner, _IHandle()) {}
 
-    virtual ~IHud();
+    virtual ~IHud() {};
 
     virtual void Update(class IPlayer *player, float dT);
     virtual void Release();
@@ -111,11 +111,11 @@ class ILeaderBoard : public UTL::COM::IUnknown {
     virtual void SetRacerName(int index, const char *name);
     virtual void SetRacerNum(int index, int num);
     virtual void SetRacerTotalPoints(int index, float points);
-    virtual void SetRacerNumLapsCompleted(int index, int laps);
-    virtual void SetRacerPercentComplete(int index, float percent);
-    virtual void SetRacerHasHeadset(int index, bool hasHeadset);
-    virtual void SetRacerIsBusted(int index, bool isBusted);
-    virtual void SetRacerIsKoed(int index, bool isKoed);
+    virtual void SetRacerNumLapsCompleted(int pos, int numLaps, float time, IPlayer *player);
+    virtual void SetRacerPercentComplete(int pos, float percent, float time, struct IPlayer *player);
+    virtual void SetRacerHasHeadset(int pos, bool racerHasHeadset);
+    virtual void SetRacerIsBusted(int pos, bool busted);
+    virtual void SetRacerIsKoed(int index, bool koed);
 };
 
 class ITurbometer : public UTL::COM::IUnknown {
@@ -186,8 +186,8 @@ class ITimeExtension : public UTL::COM::IUnknown {
     ITimeExtension(UTL::COM::Object *owner) : UTL::COM::IUnknown(owner, _IHandle()) {}
 
   public:
-    virtual void SetPlayerLapTime(float lapTime);
-    virtual void RequestTimeExtensionMessage(float time);
+    virtual void SetPlayerLapTime(float time);
+    virtual void RequestTimeExtensionMessage(IPlayer *iplayer, float timeToShow);
 };
 
 class IPursuitBoard : public UTL::COM::IUnknown {
@@ -232,7 +232,7 @@ class IMilestoneBoard : public UTL::COM::IUnknown {
     virtual void SetInPursuit(bool inPursuit);
     virtual void SetChallengeSeries(bool challenge);
     virtual void SetNumberOfMilestones(int num);
-    virtual void SetMilestoneIconHash(int index, unsigned int hash);
+    virtual void SetMilestoneIconHash(int milestoneNum, int hash);
     virtual void SetMilestoneType(int index, unsigned int type);
     virtual void SetMilestoneGoal(int index, float goal);
     virtual void SetMilestoneComplete(int index, bool complete);
@@ -254,7 +254,7 @@ class IBustedMeter : public UTL::COM::IUnknown {
     virtual void SetInPursuit(bool inPursuit);
     virtual void SetIsHiding(bool isHiding);
     virtual void SetTimeUntilBusted(float time);
-    virtual void SetIsBusted(bool busted);
+    virtual void SetIsBusted(bool isBusted);
 };
 
 class ISpeedometer : public UTL::COM::IUnknown {
@@ -339,13 +339,13 @@ class ITachometer : public UTL::COM::IUnknown {
     ITachometer(UTL::COM::Object *owner) : UTL::COM::IUnknown(owner, _IHandle()) {}
 
     virtual void SetRpm(float rpm);
-    virtual void SetRevLimiter(float redline, float maxRpm);
+    virtual void SetRevLimiter(float redline, float maxrpm);
     virtual void SetGear(GearID gear, ShiftPotential potential, bool hasGoodEnoughTraction);
     virtual void SetShifting(bool shifting);
     virtual void SetInPerfectLaunchRange(bool inRange);
 
   protected:
-    virtual ~ITachometer();
+    virtual ~ITachometer() {};
 };
 
 class IGetAwayMeter : public UTL::COM::IUnknown {
@@ -412,7 +412,7 @@ class IInfractions : public UTL::COM::IUnknown {
     IInfractions(UTL::COM::Object *owner) : UTL::COM::IUnknown(owner, _IHandle()) {}
 
   public:
-    virtual void RequestInfraction(unsigned int type, int count);
+    virtual void RequestInfraction(const char *infractionString);
 };
 
 class IRadarDetector : public UTL::COM::IUnknown {

@@ -2,11 +2,11 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/customize/FECustomize.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 
-bool g_bCustomizeInBackRoom;
-bool g_bCustomizeInPerformance;
-bool g_bCustomizeInParts;
-eCustomizeEntryPoint g_TheCustomizeEntryPoint;
-FECarRecord *g_pCustomizeCarRecordToUse;
+bool g_bCustomizeInBackRoom = false;
+bool g_bCustomizeInPerformance = false;
+bool g_bCustomizeInParts = false;
+eCustomizeEntryPoint g_TheCustomizeEntryPoint = CEP_MAIN_MENU;
+FECarRecord *g_pCustomizeCarRecordToUse = nullptr;
 
 // Decl: speed/indep/src/frontend/menuscreens/safehouse/customize/FECustomize.cpp (line 30)
 void BeginCarCustomize(eCustomizeEntryPoint entry_point, FECarRecord *theCustomCar) {

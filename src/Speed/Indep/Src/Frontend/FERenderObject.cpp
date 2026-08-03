@@ -1,23 +1,10 @@
 #include "Speed/Indep/Src/Frontend/FERenderObject.hpp"
+#include "Speed/Indep/Src/Ecstasy/Ecstasy.hpp"
 #include "Speed/Indep/bWare/Inc/bMath.hpp"
 #include "Speed/Indep/bWare/Inc/bSlotPool.hpp"
 
 SlotPool *FERenderEPolySlotPool;
 SlotPool *FERenderEPolySlotPoolOverflow;
-// extern void PSMTX44Identity(float *mtx);
-// extern void FEBeginBatchRender(eView *view, int polyCount);
-// extern void FEEndBatchRender(eView *view);
-// extern void FERender(eView *view, ePoly *poly, TextureInfo *tex, TextureInfo *mask, int param);
-// extern void FERender(eView *view, ePoly *poly, TextureInfo *tex, int param);
-
-// extern unsigned int ClipTop(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVector3 *pSrc, bVector2 *pSrcUVs, bVector4 *pSrcColors,
-//                             unsigned int num_verts, float value);
-// extern unsigned int ClipBottom(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVector3 *pSrc, bVector2 *pSrcUVs, bVector4 *pSrcColors,
-//                                unsigned int num_verts, float value);
-// extern unsigned int ClipLeft(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVector3 *pSrc, bVector2 *pSrcUVs, bVector4 *pSrcColors,
-//                              unsigned int num_verts, float value);
-// extern unsigned int ClipRight(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVector3 *pSrc, bVector2 *pSrcUVs, bVector4 *pSrcColors,
-//                               unsigned int num_verts, float value);
 
 void FERenderObject::Initialize() {
     mpobFERenderObjectSlotPool = bNewSlotPool(0x64, 0x180, "FERenderObjectSlotPool", 0);
@@ -27,23 +14,12 @@ void FERenderObject::Initialize() {
 // STRIPPED
 void FERenderObject::Terminate() {}
 
-FERenderObject::FERenderObject(FEObject *pOwner, TextureInfo *pTexture) {
-    mpobOwner = pOwner;
-    mpobTexture = pTexture;
-    mobPolyList.InitList();
-    mulNumTimesRendered = 0;
-    mulFlags = 0;
-    mPolyCount = 0;
+FERenderObject::FERenderObject(FEObject *pOwner, TextureInfo *pTexture)
+    : mpobOwner(pOwner), mpobTexture(pTexture), mobPolyList(), mulNumTimesRendered(0), mulFlags(0), mPolyCount(0) {
     bIdentity(&mstTransform);
 }
 
-FERenderObject::~FERenderObject() {
-    while (mobPolyList.GetHead() != mobPolyList.EndOfList()) {
-        FERenderEPoly *poly = mobPolyList.GetHead();
-        poly->Remove();
-        delete poly;
-    }
-}
+FERenderObject::~FERenderObject() {}
 
 void FERenderObject::SetTransform(bMatrix4 *pMatrix) {
     bMemCpy(&mstTransform, pMatrix, sizeof(bMatrix4));
@@ -53,15 +29,15 @@ void *FERenderEPoly::operator new(size_t size) {
     if (!FERenderEPolySlotPool->IsFull()) {
         return FERenderEPolySlotPool->FastMalloc();
     }
-    if (!FERenderEPolySlotPoolOverflow) {
-        FERenderEPolySlotPoolOverflow = bNewSlotPool(0xA4, 0x200, "FERenderEPolySlotPoolOverflow", 0);
+    if (FERenderEPolySlotPoolOverflow == nullptr) {
+        FERenderEPolySlotPoolOverflow = bNewSlotPool(sizeof(FERenderEPoly), 0x200, "FERenderEPolySlotPoolOverflow", 0);
         FERenderEPolySlotPoolOverflow->ClearFlag(SLOTPOOL_FLAG_WARN_IF_OVERFLOW);
     }
     return FERenderEPolySlotPoolOverflow->Malloc();
 }
 
 void FERenderEPoly::operator delete(void *ptr) {
-    if (FERenderEPolySlotPool->GetSlotNumber(ptr) >= 0) {
+    if (FERenderEPolySlotPool->IsInPool(ptr)) {
         FERenderEPolySlotPool->Free(ptr);
     } else {
         FERenderEPolySlotPoolOverflow->Free(ptr);
@@ -127,7 +103,7 @@ FERenderEPoly *FERenderObject::AddPoly(float x0, float y0, float x1, float y1, f
 void FERenderObject::AddPoly(float x0, float y0, float x1, float y1, float z, float s0, float t0, float s1, float t1, uint32 *colors,
                              TextureInfo *texture, FEPackageRenderInfo *pkg_render_info) {
     FERenderEPoly *render = AddPoly(x0, y0, x1, y1, z, s0, t0, s1, t1, colors, pkg_render_info);
-    if (render) {
+    if (render != nullptr) {
         render->pTexture = texture;
     }
 }
@@ -160,8 +136,7 @@ void FERenderObject::AddPolyWithRotatedMask(float x0, float y0, float x1, float 
     bMulMatrix(&pPoly->Vertices[2], &mstTransform, &pPoly->Vertices[2]);
     bMulMatrix(&pPoly->Vertices[3], &mstTransform, &pPoly->Vertices[3]);
 
-    pPoly->SetFlags(0);
-    pPoly->SetFlailer(5);
+    pPoly->SetFlags(5);
 
     pPoly->Vertices[0].z = z;
     pPoly->Vertices[1].z = z;
@@ -173,16 +148,25 @@ void FERenderObject::AddPolyWithRotatedMask(float x0, float y0, float x1, float 
     pPoly->UVs[1][0] = s1;
     pPoly->UVs[1][1] = t0;
     pPoly->UVs[2][0] = s1;
-    pPoly->UVs[2][1] = s5;
+    pPoly->UVs[2][1] = t1;
     pPoly->UVs[3][0] = s0;
-    pPoly->UVs[3][1] = s5;
+    pPoly->UVs[3][1] = t1;
 
-    reinterpret_cast<unsigned int *>(pPoly->Colours)[0] = colors[0];
-    reinterpret_cast<unsigned int *>(pPoly->Colours)[1] = colors[1];
-    reinterpret_cast<unsigned int *>(pPoly->Colours)[2] = colors[2];
-    reinterpret_cast<unsigned int *>(pPoly->Colours)[3] = colors[3];
+    pPoly->UVsMask[0][0] = s2;
+    pPoly->UVsMask[0][1] = t2;
+    pPoly->UVsMask[1][0] = s3;
+    pPoly->UVsMask[1][1] = t3;
+    pPoly->UVsMask[2][0] = s4;
+    pPoly->UVsMask[2][1] = t4;
+    pPoly->UVsMask[3][0] = s5;
+    pPoly->UVsMask[3][1] = t5;
 
-    pPoly->SetFlags(1);
+    reinterpret_cast<uint32 *>(pPoly->Colours)[0] = colors[0];
+    reinterpret_cast<uint32 *>(pPoly->Colours)[1] = colors[1];
+    reinterpret_cast<uint32 *>(pPoly->Colours)[2] = colors[2];
+    reinterpret_cast<uint32 *>(pPoly->Colours)[3] = colors[3];
+
+    pPoly->SetFlailer(1);
 }
 
 // STRIPPED
@@ -195,7 +179,7 @@ bVector4 V4Mult(const bVector4 &v, float d) {
 
 void FERenderObject::AddPoly(float x0, float y0, float x1, float y1, float z, float s0, float t0, float s1, float t1, uint32 *in_colors,
                              FEClipInfo *pClipInfo, FEPackageRenderInfo *pkg_render_info) {
-    if (!pClipInfo) {
+    if (pClipInfo == nullptr) {
         AddPoly(x0, y0, x1, y1, z, s0, t0, s1, t1, in_colors, pkg_render_info);
         return;
     }
@@ -203,11 +187,6 @@ void FERenderObject::AddPoly(float x0, float y0, float x1, float y1, float z, fl
     bVector3 v[8];
     bVector2 uv[8];
     bVector4 colors[8];
-    bVector3 nv[8];
-    bVector2 nuv[8];
-    bVector4 ncolors[8];
-    unsigned int packed_colors[8];
-    unsigned char *color_bytes = reinterpret_cast<unsigned char *>(in_colors);
 
     v[0].x = x0;
     v[0].y = y0;
@@ -231,11 +210,12 @@ void FERenderObject::AddPoly(float x0, float y0, float x1, float y1, float z, fl
     uv[3].x = s0;
     uv[3].y = t1;
 
-    for (unsigned int i = 0; i < 4; i++) {
-        colors[i].x = color_bytes[i * 4 + 0] * (1.0f / 255.0f);
-        colors[i].y = color_bytes[i * 4 + 1] * (1.0f / 255.0f);
-        colors[i].z = color_bytes[i * 4 + 2] * (1.0f / 255.0f);
-        colors[i].w = color_bytes[i * 4 + 3] * (1.0f / 255.0f);
+    u32 i;
+    u8 *pcColors = reinterpret_cast<u8 *>(in_colors);
+
+    for (i = 0; i < 4; i++) {
+        colors[i] = bVector4(static_cast<float>(pcColors[(i * 4) + 0]) / 255.0f, static_cast<float>(pcColors[(i * 4) + 1]) / 255.0f,
+                             static_cast<float>(pcColors[(i * 4) + 2]) / 255.0f, static_cast<float>(pcColors[(i * 4) + 3]) / 255.0f);
     }
 
     bMulMatrix(&v[0], &mstTransform, &v[0]);
@@ -243,21 +223,32 @@ void FERenderObject::AddPoly(float x0, float y0, float x1, float y1, float z, fl
     bMulMatrix(&v[2], &mstTransform, &v[2]);
     bMulMatrix(&v[3], &mstTransform, &v[3]);
 
-    unsigned int num_verts =
+    for (i = 0; i < 4; i++) {
+    }
+
+    bVector3 nv[8];
+    bVector2 nuv[8];
+    bVector4 ncolors[8];
+
+    u32 num_verts =
         (pClipInfo->flags & 1) ? ClipAligned(pClipInfo, v, uv, colors, nv, nuv, ncolors) : ClipGeneral(pClipInfo, v, uv, colors, nv, nuv, ncolors);
-    if (!num_verts || num_verts == 2) {
+
+    if (num_verts == 0) {
         return;
     }
 
-    for (unsigned int i = 0; i < num_verts; i++) {
-        unsigned char *packed_bytes = reinterpret_cast<unsigned char *>(&packed_colors[i]);
-        packed_bytes[0] = static_cast<unsigned char>(colors[i].x * 255.0f);
-        packed_bytes[1] = static_cast<unsigned char>(colors[i].y * 255.0f);
-        packed_bytes[2] = static_cast<unsigned char>(colors[i].z * 255.0f);
-        packed_bytes[3] = static_cast<unsigned char>(colors[i].w * 255.0f);
+    uint32 new_colors[8];
+
+    pcColors = reinterpret_cast<u8 *>(new_colors);
+
+    for (i = 0; i < num_verts; i++) {
+        pcColors[i * 4 + 0] = static_cast<unsigned char>(ncolors[i].x * 255.0f);
+        pcColors[i * 4 + 1] = static_cast<unsigned char>(ncolors[i].y * 255.0f);
+        pcColors[i * 4 + 2] = static_cast<unsigned char>(ncolors[i].z * 255.0f);
+        pcColors[i * 4 + 3] = static_cast<unsigned char>(ncolors[i].w * 255.0f);
     }
 
-    for (unsigned int i = 0; i < num_verts - 2; i++) {
+    for (i = 0; i < num_verts - 2; i++) {
         FERenderEPoly *render = new FERenderEPoly();
         ePoly *pPoly = &render->EPoly;
         render->pTextureMask = nullptr;
@@ -266,23 +257,25 @@ void FERenderObject::AddPoly(float x0, float y0, float x1, float y1, float z, fl
         mPolyCount++;
 
         pPoly->Vertices[0] = v[0];
-        pPoly->Vertices[1] = v[i + 1];
-        pPoly->Vertices[2] = v[i + 2];
-        pPoly->Vertices[3] = v[i + 2];
-
         pPoly->UVs[0][0] = uv[0].x;
         pPoly->UVs[0][1] = uv[0].y;
+        reinterpret_cast<uint32 *>(pPoly->Colours)[0] = new_colors[0];
+
+        pPoly->Vertices[1] = v[i + 1];
         pPoly->UVs[1][0] = uv[i + 1].x;
         pPoly->UVs[1][1] = uv[i + 1].y;
+        reinterpret_cast<uint32 *>(pPoly->Colours)[1] = new_colors[i + 1];
+
+        pPoly->Vertices[2] = v[i + 2];
         pPoly->UVs[2][0] = uv[i + 2].x;
         pPoly->UVs[2][1] = uv[i + 2].y;
-        pPoly->UVs[3][0] = uv[i + 2].x;
-        pPoly->UVs[3][1] = uv[i + 2].y;
+        reinterpret_cast<uint32 *>(pPoly->Colours)[2] = new_colors[i + 2];
 
-        reinterpret_cast<unsigned int *>(pPoly->Colours)[0] = packed_colors[0];
-        reinterpret_cast<unsigned int *>(pPoly->Colours)[1] = packed_colors[i + 1];
-        reinterpret_cast<unsigned int *>(pPoly->Colours)[2] = packed_colors[i + 2];
-        reinterpret_cast<unsigned int *>(pPoly->Colours)[3] = packed_colors[i + 2];
+        pPoly->Vertices[3] = pPoly->Vertices[2];
+        pPoly->UVs[3][0] = pPoly->UVs[2][0];
+        pPoly->UVs[3][1] = pPoly->UVs[2][1];
+        pPoly->UVsMask[0][0] = pPoly->UVs[2][0];
+        reinterpret_cast<uint32 *>(pPoly->Colours)[3] = new_colors[i + 2];
 
         pPoly->SetFlailer(1);
         pPoly->SetFlags(1);
@@ -290,29 +283,28 @@ void FERenderObject::AddPoly(float x0, float y0, float x1, float y1, float z, fl
 }
 
 void FERenderObject::Render() {
-    eView *view = &eViews[0];
+    eView *view = eGetView(0, false);
     view->FEBeginBatchRender(mPolyCount);
-    FERenderEPoly *render = mobPolyList.GetHead();
-    while (render != mobPolyList.EndOfList()) {
-        TextureInfo *texture = render->pTexture;
-        if (!texture) {
-            texture = mpobTexture;
+    for (FERenderEPoly *render = mobPolyList.GetHead(); render != mobPolyList.EndOfList(); render = render->GetNext()) {
+        TextureInfo *texture = mpobTexture;
+        if (render->pTexture != nullptr) {
+            texture = render->pTexture;
         }
-        if (render->EPoly.GetFlags() & 0x4) {
+        if (render->EPoly.GetFlags() & EPOLY_MULTI_TEXT_MASK) {
             view->FERender(&render->EPoly, texture, render->pTextureMask, 0);
         } else {
             view->FERender(&render->EPoly, texture, 0);
         }
-        render = render->GetNext();
     }
     view->FEEndBatchRender();
     ReadyToRender();
 }
 
 void FERenderObject::Clear(FEPackageRenderInfo *pkg_render_info) {
-    while (mobPolyList.GetHead() != mobPolyList.EndOfList()) {
+    while (!mobPolyList.IsEmpty()) {
         FERenderEPoly *render = mobPolyList.GetHead();
-        render->Remove();
+        ePoly *pPoly = &render->EPoly;
+        mobPolyList.Remove(render);
         delete render;
     }
     mPolyCount = 0;
@@ -320,24 +312,23 @@ void FERenderObject::Clear(FEPackageRenderInfo *pkg_render_info) {
     mulNumTimesRendered = 0;
 }
 
+// UNSOLVED
 uint32 FERenderObject::ClipGeneral(FEClipInfo *pClipInfo, bVector3 *v, bVector2 *uv, bVector4 *colors, bVector3 *nv, bVector2 *nuv,
                                    bVector4 *ncolors) {
-    bVector3 *pSrc = v;
-    bVector2 *pSrcUVs = uv;
-    bVector4 *pSrcColors = colors;
     bVector3 *pDst = nv;
     bVector2 *pDstUVs = nuv;
     bVector4 *pDstColors = ncolors;
-    unsigned long num_verts = 4;
+    bVector3 *pSrc = v;
+    bVector2 *pSrcUVs = uv;
+    bVector4 *pSrcColors = colors;
+    u32 num_verts = 4;
+    u32 new_num_verts;
 
     for (int i = 0; i < 4; i++) {
         bVector3 normal(pClipInfo->normals[i]);
         float constant = pClipInfo->constants[i];
         bool bFlag;
-        unsigned long last_vert;
-        unsigned long new_num_verts;
-
-        last_vert = num_verts - 1;
+        u32 last_vert = num_verts - 1;
 
         if (bDot(&normal, &pSrc[last_vert]) + constant > -0.5f) {
             pDst[0] = pSrc[last_vert];
@@ -351,12 +342,11 @@ uint32 FERenderObject::ClipGeneral(FEClipInfo *pClipInfo, bVector3 *v, bVector2 
         }
 
         if (num_verts != 0) {
-            for (unsigned long k = 0; k < num_verts; k++) {
+            for (u32 k = 0; k < num_verts; k++) {
                 if (bDot(&normal, &pSrc[k]) + constant > -0.5f) {
                     if (!bFlag) {
-                        bVector3 diff = pSrc[k] - pSrc[last_vert];
-                        pDst[new_num_verts] = diff;
-                        float t = -(bDot(&normal, &pSrc[last_vert]) + constant) / bDot(&normal, &diff);
+                        pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
+                        float t = -(bDot(&normal, &pSrc[last_vert]) + constant) / bDot(&normal, &pDst[new_num_verts]);
                         pDst[new_num_verts] *= t;
                         pDst[new_num_verts] += pSrc[last_vert];
                         pDstUVs[new_num_verts] = (pSrcUVs[k] - pSrcUVs[last_vert]) * t + pSrcUVs[last_vert];
@@ -370,9 +360,8 @@ uint32 FERenderObject::ClipGeneral(FEClipInfo *pClipInfo, bVector3 *v, bVector2 
                     new_num_verts++;
                 } else {
                     if (bFlag) {
-                        bVector3 diff = pSrc[k] - pSrc[last_vert];
-                        pDst[new_num_verts] = diff;
-                        float t = -(bDot(&normal, &pSrc[last_vert]) + constant) / bDot(&normal, &diff);
+                        pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
+                        float t = -(bDot(&normal, &pSrc[last_vert]) + constant) / bDot(&normal, &pDst[new_num_verts]);
                         pDst[new_num_verts] *= t;
                         pDst[new_num_verts] += pSrc[last_vert];
                         pDstUVs[new_num_verts] = (pSrcUVs[k] - pSrcUVs[last_vert]) * t + pSrcUVs[last_vert];
@@ -401,18 +390,15 @@ uint32 FERenderObject::ClipGeneral(FEClipInfo *pClipInfo, bVector3 *v, bVector2 
             return 0;
     }
 
-    return num_verts;
+    return new_num_verts;
 }
 
-//==========================================================================================================================
-
+// UNSOLVED (dwarf register)
 uint32 ClipLeft(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVector3 *pSrc, bVector2 *pSrcUVs, bVector4 *pSrcColors, uint32 num_verts,
                 float value) {
-    unsigned int new_num_verts = 0;
+    uint32 new_num_verts = 0;
     bool bFlag;
-    unsigned long last_vert;
-
-    last_vert = num_verts - 1;
+    u32 last_vert = num_verts - 1;
 
     if (pSrc[last_vert].x >= value) {
         pDst[0] = pSrc[last_vert];
@@ -424,57 +410,46 @@ uint32 ClipLeft(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVector
         bFlag = false;
     }
 
-    if (num_verts != 0) {
-        for (unsigned long k = 0; k < num_verts; k++) {
-            if (pSrc[k].x >= value) {
-                if (!bFlag) {
-                    float t;
-                    pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
-                    t = (value - pSrc[last_vert].x) / pDst[new_num_verts].x;
-                    pDst[new_num_verts] *= t;
-                    pDst[new_num_verts] += pSrc[last_vert];
-                    pDstUVs[new_num_verts] = pSrcUVs[k] - pSrcUVs[last_vert];
-                    pDstUVs[new_num_verts] *= t;
-                    pDstUVs[new_num_verts].x += pSrcUVs[last_vert].x;
-                    pDstUVs[new_num_verts].y += pSrcUVs[last_vert].y;
-                    pDstColors[new_num_verts] = V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
-                    pDstColors[new_num_verts] += pSrcColors[last_vert];
-                    new_num_verts++;
-                    bFlag = true;
-                }
-                pDst[new_num_verts] = pSrc[k];
-                pDstUVs[new_num_verts] = pSrcUVs[k];
-                pDstColors[new_num_verts] = pSrcColors[k];
+    for (u32 k = 0; k < num_verts; k++) {
+        if (pSrc[k].x >= value) {
+            if (!bFlag) {
+                pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
+                float t = (value - pSrc[last_vert].x) / pDst[new_num_verts].x;
+                pDst[new_num_verts] *= t;
+                pDst[new_num_verts] += pSrc[last_vert];
+                pDstUVs[new_num_verts] = pSrcUVs[last_vert] + ((pSrcUVs[k] - pSrcUVs[last_vert]) * t);
+                pDstColors[new_num_verts] = pSrcColors[last_vert] + V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
                 new_num_verts++;
-            } else {
-                if (bFlag) {
-                    float t;
-                    pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
-                    t = (value - pSrc[last_vert].x) / pDst[new_num_verts].x;
-                    pDst[new_num_verts] *= t;
-                    pDst[new_num_verts] += pSrc[last_vert];
-                    pDstUVs[new_num_verts] = pSrcUVs[k] - pSrcUVs[last_vert];
-                    pDstUVs[new_num_verts] *= t;
-                    pDstUVs[new_num_verts].x += pSrcUVs[last_vert].x;
-                    pDstUVs[new_num_verts].y += pSrcUVs[last_vert].y;
-                    pDstColors[new_num_verts] = V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
-                    pDstColors[new_num_verts] += pSrcColors[last_vert];
-                    new_num_verts++;
-                    bFlag = false;
-                }
+                bFlag = true;
             }
-            last_vert = k;
+            pDst[new_num_verts] = pSrc[k];
+            pDstUVs[new_num_verts] = pSrcUVs[k];
+            pDstColors[new_num_verts] = pSrcColors[k];
+            new_num_verts++;
+        } else {
+            if (bFlag) {
+                pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
+                float t = (value - pSrc[last_vert].x) / pDst[new_num_verts].x;
+                pDst[new_num_verts] *= t;
+                pDst[new_num_verts] += pSrc[last_vert];
+                pDstUVs[new_num_verts] = pSrcUVs[last_vert] + ((pSrcUVs[k] - pSrcUVs[last_vert]) * t);
+                pDstColors[new_num_verts] = pSrcColors[last_vert] + V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
+                new_num_verts++;
+                bFlag = false;
+            }
         }
+        last_vert = k;
     }
 
     return new_num_verts;
 }
 
+// UNSOLVED (dwarf register)
 uint32 ClipTop(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVector3 *pSrc, bVector2 *pSrcUVs, bVector4 *pSrcColors, uint32 num_verts,
                float value) {
-    unsigned int new_num_verts = 0;
+    uint32 new_num_verts = 0;
     bool bFlag;
-    unsigned long last_vert;
+    u32 last_vert;
 
     last_vert = num_verts - 1;
 
@@ -488,57 +463,46 @@ uint32 ClipTop(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVector3
         bFlag = false;
     }
 
-    if (num_verts != 0) {
-        for (unsigned long k = 0; k < num_verts; k++) {
-            if (pSrc[k].y >= value) {
-                if (!bFlag) {
-                    float t;
-                    pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
-                    t = (value - pSrc[last_vert].y) / pDst[new_num_verts].y;
-                    pDst[new_num_verts] *= t;
-                    pDst[new_num_verts] += pSrc[last_vert];
-                    pDstUVs[new_num_verts] = pSrcUVs[k] - pSrcUVs[last_vert];
-                    pDstUVs[new_num_verts] *= t;
-                    pDstUVs[new_num_verts].x += pSrcUVs[last_vert].x;
-                    pDstUVs[new_num_verts].y += pSrcUVs[last_vert].y;
-                    pDstColors[new_num_verts] = V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
-                    pDstColors[new_num_verts] += pSrcColors[last_vert];
-                    new_num_verts++;
-                    bFlag = true;
-                }
-                pDst[new_num_verts] = pSrc[k];
-                pDstUVs[new_num_verts] = pSrcUVs[k];
-                pDstColors[new_num_verts] = pSrcColors[k];
+    for (u32 k = 0; k < num_verts; k++) {
+        if (pSrc[k].y >= value) {
+            if (!bFlag) {
+                pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
+                float t = (value - pSrc[last_vert].y) / pDst[new_num_verts].y;
+                pDst[new_num_verts] *= t;
+                pDst[new_num_verts] += pSrc[last_vert];
+                pDstUVs[new_num_verts] = pSrcUVs[last_vert] + ((pSrcUVs[k] - pSrcUVs[last_vert]) * t);
+                pDstColors[new_num_verts] = pSrcColors[last_vert] + V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
                 new_num_verts++;
-            } else {
-                if (bFlag) {
-                    float t;
-                    pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
-                    t = (value - pSrc[last_vert].y) / pDst[new_num_verts].y;
-                    pDst[new_num_verts] *= t;
-                    pDst[new_num_verts] += pSrc[last_vert];
-                    pDstUVs[new_num_verts] = pSrcUVs[k] - pSrcUVs[last_vert];
-                    pDstUVs[new_num_verts] *= t;
-                    pDstUVs[new_num_verts].x += pSrcUVs[last_vert].x;
-                    pDstUVs[new_num_verts].y += pSrcUVs[last_vert].y;
-                    pDstColors[new_num_verts] = V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
-                    pDstColors[new_num_verts] += pSrcColors[last_vert];
-                    new_num_verts++;
-                    bFlag = false;
-                }
+                bFlag = true;
             }
-            last_vert = k;
+            pDst[new_num_verts] = pSrc[k];
+            pDstUVs[new_num_verts] = pSrcUVs[k];
+            pDstColors[new_num_verts] = pSrcColors[k];
+            new_num_verts++;
+        } else {
+            if (bFlag) {
+                pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
+                float t = (value - pSrc[last_vert].y) / pDst[new_num_verts].y;
+                pDst[new_num_verts] *= t;
+                pDst[new_num_verts] += pSrc[last_vert];
+                pDstUVs[new_num_verts] = pSrcUVs[last_vert] + ((pSrcUVs[k] - pSrcUVs[last_vert]) * t);
+                pDstColors[new_num_verts] = pSrcColors[last_vert] + V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
+                new_num_verts++;
+                bFlag = false;
+            }
         }
+        last_vert = k;
     }
 
     return new_num_verts;
 }
 
+// UNSOLVED (dwarf register)
 uint32 ClipRight(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVector3 *pSrc, bVector2 *pSrcUVs, bVector4 *pSrcColors, uint32 num_verts,
                  float value) {
-    unsigned int new_num_verts = 0;
+    uint32 new_num_verts = 0;
     bool bFlag;
-    unsigned long last_vert;
+    u32 last_vert;
 
     last_vert = num_verts - 1;
 
@@ -552,57 +516,46 @@ uint32 ClipRight(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVecto
         bFlag = false;
     }
 
-    if (num_verts != 0) {
-        for (unsigned long k = 0; k < num_verts; k++) {
-            if (pSrc[k].x <= value) {
-                if (!bFlag) {
-                    float t;
-                    pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
-                    t = (value - pSrc[last_vert].x) / pDst[new_num_verts].x;
-                    pDst[new_num_verts] *= t;
-                    pDst[new_num_verts] += pSrc[last_vert];
-                    pDstUVs[new_num_verts] = pSrcUVs[k] - pSrcUVs[last_vert];
-                    pDstUVs[new_num_verts] *= t;
-                    pDstUVs[new_num_verts].x += pSrcUVs[last_vert].x;
-                    pDstUVs[new_num_verts].y += pSrcUVs[last_vert].y;
-                    pDstColors[new_num_verts] = V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
-                    pDstColors[new_num_verts] += pSrcColors[last_vert];
-                    new_num_verts++;
-                    bFlag = true;
-                }
-                pDst[new_num_verts] = pSrc[k];
-                pDstUVs[new_num_verts] = pSrcUVs[k];
-                pDstColors[new_num_verts] = pSrcColors[k];
+    for (u32 k = 0; k < num_verts; k++) {
+        if (pSrc[k].x <= value) {
+            if (!bFlag) {
+                pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
+                float t = (value - pSrc[last_vert].x) / pDst[new_num_verts].x;
+                pDst[new_num_verts] *= t;
+                pDst[new_num_verts] += pSrc[last_vert];
+                pDstUVs[new_num_verts] = pSrcUVs[last_vert] + ((pSrcUVs[k] - pSrcUVs[last_vert]) * t);
+                pDstColors[new_num_verts] = pSrcColors[last_vert] + V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
                 new_num_verts++;
-            } else {
-                if (bFlag) {
-                    float t;
-                    pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
-                    t = (value - pSrc[last_vert].x) / pDst[new_num_verts].x;
-                    pDst[new_num_verts] *= t;
-                    pDst[new_num_verts] += pSrc[last_vert];
-                    pDstUVs[new_num_verts] = pSrcUVs[k] - pSrcUVs[last_vert];
-                    pDstUVs[new_num_verts] *= t;
-                    pDstUVs[new_num_verts].x += pSrcUVs[last_vert].x;
-                    pDstUVs[new_num_verts].y += pSrcUVs[last_vert].y;
-                    pDstColors[new_num_verts] = V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
-                    pDstColors[new_num_verts] += pSrcColors[last_vert];
-                    new_num_verts++;
-                    bFlag = false;
-                }
+                bFlag = true;
             }
-            last_vert = k;
+            pDst[new_num_verts] = pSrc[k];
+            pDstUVs[new_num_verts] = pSrcUVs[k];
+            pDstColors[new_num_verts] = pSrcColors[k];
+            new_num_verts++;
+        } else {
+            if (bFlag) {
+                pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
+                float t = (value - pSrc[last_vert].x) / pDst[new_num_verts].x;
+                pDst[new_num_verts] *= t;
+                pDst[new_num_verts] += pSrc[last_vert];
+                pDstUVs[new_num_verts] = pSrcUVs[last_vert] + ((pSrcUVs[k] - pSrcUVs[last_vert]) * t);
+                pDstColors[new_num_verts] = pSrcColors[last_vert] + V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
+                new_num_verts++;
+                bFlag = false;
+            }
         }
+        last_vert = k;
     }
 
     return new_num_verts;
 }
 
+// UNSOLVED (dwarf register)
 uint32 ClipBottom(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVector3 *pSrc, bVector2 *pSrcUVs, bVector4 *pSrcColors, uint32 num_verts,
                   float value) {
-    unsigned int new_num_verts = 0;
+    uint32 new_num_verts = 0;
     bool bFlag;
-    unsigned long last_vert;
+    u32 last_vert;
 
     last_vert = num_verts - 1;
 
@@ -616,47 +569,35 @@ uint32 ClipBottom(bVector3 *pDst, bVector2 *pDstUVs, bVector4 *pDstColors, bVect
         bFlag = false;
     }
 
-    if (num_verts != 0) {
-        for (unsigned long k = 0; k < num_verts; k++) {
-            if (pSrc[k].y <= value) {
-                if (!bFlag) {
-                    float t;
-                    pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
-                    t = (value - pSrc[last_vert].y) / pDst[new_num_verts].y;
-                    pDst[new_num_verts] *= t;
-                    pDst[new_num_verts] += pSrc[last_vert];
-                    pDstUVs[new_num_verts] = pSrcUVs[k] - pSrcUVs[last_vert];
-                    pDstUVs[new_num_verts] *= t;
-                    pDstUVs[new_num_verts].x += pSrcUVs[last_vert].x;
-                    pDstUVs[new_num_verts].y += pSrcUVs[last_vert].y;
-                    pDstColors[new_num_verts] = V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
-                    pDstColors[new_num_verts] += pSrcColors[last_vert];
-                    new_num_verts++;
-                    bFlag = true;
-                }
-                pDst[new_num_verts] = pSrc[k];
-                pDstUVs[new_num_verts] = pSrcUVs[k];
-                pDstColors[new_num_verts] = pSrcColors[k];
+    for (u32 k = 0; k < num_verts; k++) {
+        if (pSrc[k].y <= value) {
+            if (!bFlag) {
+                pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
+                float t = (value - pSrc[last_vert].y) / pDst[new_num_verts].y;
+                pDst[new_num_verts] *= t;
+                pDst[new_num_verts] += pSrc[last_vert];
+                pDstUVs[new_num_verts] = pSrcUVs[last_vert] + ((pSrcUVs[k] - pSrcUVs[last_vert]) * t);
+                pDstColors[new_num_verts] = pSrcColors[last_vert] + V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
                 new_num_verts++;
-            } else {
-                if (bFlag) {
-                    float t;
-                    pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
-                    t = (value - pSrc[last_vert].y) / pDst[new_num_verts].y;
-                    pDst[new_num_verts] *= t;
-                    pDst[new_num_verts] += pSrc[last_vert];
-                    pDstUVs[new_num_verts] = pSrcUVs[k] - pSrcUVs[last_vert];
-                    pDstUVs[new_num_verts] *= t;
-                    pDstUVs[new_num_verts].x += pSrcUVs[last_vert].x;
-                    pDstUVs[new_num_verts].y += pSrcUVs[last_vert].y;
-                    pDstColors[new_num_verts] = V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
-                    pDstColors[new_num_verts] += pSrcColors[last_vert];
-                    new_num_verts++;
-                    bFlag = false;
-                }
+                bFlag = true;
             }
-            last_vert = k;
+            pDst[new_num_verts] = pSrc[k];
+            pDstUVs[new_num_verts] = pSrcUVs[k];
+            pDstColors[new_num_verts] = pSrcColors[k];
+            new_num_verts++;
+        } else {
+            if (bFlag) {
+                pDst[new_num_verts] = pSrc[k] - pSrc[last_vert];
+                float t = (value - pSrc[last_vert].y) / pDst[new_num_verts].y;
+                pDst[new_num_verts] *= t;
+                pDst[new_num_verts] += pSrc[last_vert];
+                pDstUVs[new_num_verts] = pSrcUVs[last_vert] + ((pSrcUVs[k] - pSrcUVs[last_vert]) * t);
+                pDstColors[new_num_verts] = pSrcColors[last_vert] + V4Mult(pSrcColors[k] - pSrcColors[last_vert], t);
+                new_num_verts++;
+                bFlag = false;
+            }
         }
+        last_vert = k;
     }
 
     return new_num_verts;
@@ -670,7 +611,7 @@ uint32 FERenderObject::ClipAligned(FEClipInfo *pClipInfo, bVector3 *v, bVector2 
     bVector3 *pSrc = v;
     bVector2 *pSrcUVs = uv;
     bVector4 *pSrcColors = colors;
-    unsigned long num_verts;
+    u32 num_verts;
 
     num_verts = ClipLeft(pDst, pDstUVs, pDstColors, pSrc, pSrcUVs, pSrcColors, 4, pClipInfo->constants[3]);
     if (!num_verts)

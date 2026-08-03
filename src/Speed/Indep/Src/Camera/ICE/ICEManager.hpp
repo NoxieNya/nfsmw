@@ -1,72 +1,104 @@
-#ifndef CAMERA_ICE_ICEMANAGER_H
-#define CAMERA_ICE_ICEMANAGER_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef ICEMANAGER_HPP_
+#define ICEMANAGER_HPP_
 
 #include "Speed/Indep/Src/Camera/ICE/ICEData.hpp"
-#include "Speed/Indep/bWare/Inc/bList.hpp"
+#include "Speed/Indep/Src/Ecstasy/Ecstasy.hpp"
 
-class ICEGroup {
-  private:
-    // total size: 0x14
-    uint32 Handle;                     // offset 0x0, size 0x4
-    int Context;                       // offset 0x4, size 0x4
-    int NumTracks;                     // offset 0x8, size 0x4
-    bTList<struct ICETrack> TrackList; // offset 0xC, size 0x8
-};
+struct Matrix4; // TODO where is this from
 
-// total size: 0x19F0
-class ICETrack : public bTNode<ICETrack> {
-  private:
-    ICEGroup *Group;  // offset 0x8, size 0x4
-    float Start;      // offset 0xC, size 0x4
-    float Length;     // offset 0x10, size 0x4
-    int16 NumKeys;    // offset 0x14, size 0x2
-    int8 Allocated;   // offset 0x16, size 0x1
-    char Name[14];    // offset 0x17, size 0xE
-    ICEData Keys[50]; // offset 0x28, size 0x19C8
-};
-
-// total size: 0xC
-class ICEShakeGroup {
-  private:
-    int NumTracks;                                 // offset 0x0, size 0x4
-    struct bTList<struct ICEShakeTrack> TrackList; // offset 0x4, size 0x8
-};
-
-// total size: 0x18
-struct ICEShakeData {
-    float q[3]; // offset 0x0, size 0xC
-    float p[3]; // offset 0xC, size 0xC
-};
-
-// total size: 0xB60
-class ICEShakeTrack : public bTNode<ICEShakeTrack> {
-  public:
-    ICEShakeGroup *Group;   // offset 0x8, size 0x4
-    int16 NumKeys;          // offset 0xC, size 0x2
-    int8 Allocated;         // offset 0xE, size 0x1
-    char Name[14];          // offset 0xF, size 0xE
-    ICEShakeData Keys[120]; // offset 0x20, size 0xB40
-};
-
+// File: speed/indep/src/Camera/ICE/ICEManager.hpp
 // total size: 0x80
+// Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:14
 class ICEManager {
   public:
-    void Init();
-    void Resolve();
-    ICEData *GetCameraData(uint32 scene_hash, int camTrack);
-    int GetNumSceneCameraTrack(uint32 scene_hash);
-    void SetGenericCameraToPlay(const char *group_name, const char *track_name);
+    ICEManager();  // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:17
+    ~ICEManager(); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:18
 
-    bool IsEditorOn() {
+    bool IsEditorOn() { // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:26
         // TODO maybe negated?
         return nState >= 1;
     }
+    bool IsEditorOff() { // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:27
+        return nState == 0;
+    }
+
+    int GetState() {
+        return nState;
+    }
+
+    float GetParameter();
+
+    float GetParameterLength() {
+        return fParameterLength;
+    }
+
+    void Init();                                // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:36
+    void Update();                              // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:37
+    void Resolve();                             // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:38
+    void Render(eView *p_view);                 // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:39
+    void LoadCameraSet(bChunk *set_chunk);      // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:40
+    void UnloadCameraSet(bChunk *set_chunk);    // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:41
+    void LoadCameraShakes(bChunk *set_chunk);   // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:42
+    void UnloadCameraShakes(bChunk *set_chunk); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:43
+
+    struct ICEData *GetCameraData(uint32 scene_hash, int camTrack);
+    struct ICEData *GetCameraData(ICETrack **p_track, float *p_start, float *p_end);
+
+    void GetSlope(Vector3 *p_eye_slope, Vector3 *p_look_slope, float *p_dutch_slope, float *p_lens_slope, ICEData *p_camera, int n_key,
+                  ICETrack *p_track);
+
+    bool RefreshCameraSplines();
+
+    void FixAnimElevation(Vector3 *position);
+    void SetupAnimElevation();
+    float GetAnimElevationFixup(Vector3 *position);
+
+    void SetGenericCameraToPlay(const char *group_name, const char *track_name); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:48
+    bool IsGenericCameraPlaying() {}                                             // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:49
+
+    ICEGroup *GetCurrentGroup();
+    ICETrack *GetCurrentTrack();
+    ICETrack *GetPlaybackTrack() {}
+    ICEShakeTrack *GetShakeTrack(uint32 shake_type);
+    char *GetShakeTypeName(uint32 shake_type);
+    uint32 GetRelativeShakeType(uint32 shake_type, int inc);
+
+    float GetTrackLengthByName(char *trackName);
+
+    void ChooseReplayCamera();        // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:51
+    bool ChooseCameraPlaybackTrack(); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:52
+    int GetNumSceneCameraTrack(uint32 scene_hash);
+    int GetCameraIndex(float f_param, ICETrack *track);
+    void SetSmoothExit(bool smooth) {} // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:53
+    bool IsSmoothExit() {}             // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:54
+    int ChooseGoodSceneCameraTrackIndex(uint32 scene_hash, Matrix4 *scene_origin);
+    void SetUseRealTime(bool val) { // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:55
+        bUseRealTime = val;
+    }
+    float IsUsingRealTime() { // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:56
+    }
+    float GetTimerSeconds(); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:57
 
   private:
+    float GetParameter(int i, ICETrack *track);
+    float GetIntervalSize(ICEData *data, ICETrack *track);
+    float GetIntervalSize(int i);
+
+    ICEData *GetNeighbour(ICEData *data, int key, ICETrack *track);
+
+    ICETrack *ChooseGenericCamera();
+
+    ICEGroup *GetNisCameraGroup(uint32 scene_hash);              // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:65
+    ICEGroup *GetFmvCameraGroup(uint32 scene_hash);              // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:66
+    ICEGroup *GetReplayCameraGroup(uint32 category_hash);        // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:68
+    ICEGroup *GetGenericCameraGroup(uint32 name_hash);           // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:69
+    ICEGroup *AddCameraGroup(ICEContext context, uint32 handle); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:62
+    ICEGroup *GetCameraGroup(ICEContext context, uint32 handle); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:63
+
+    int GetNumGroupsWithData(ICEContext context);
+    int GetNumGroups();
+    int GetNumTracks();
+
     ICEGroup *pNisCameras;          // offset 0x0, size 0x4
     ICEGroup *pFmvCameras;          // offset 0x4, size 0x4
     ICEGroup *pReplayCameras;       // offset 0x8, size 0x4
@@ -91,14 +123,14 @@ class ICEManager {
     float fParameterStart;          // offset 0x54, size 0x4
     float fParameterLength;         // offset 0x58, size 0x4
     float fParameterLengthBackup;   // offset 0x5C, size 0x4
-    uint32 nPlayGenericGroupHash;   // offset 0x60, size 0x4
     char nPlayGenericTrackName[14]; // offset 0x64, size 0xE
-    bool bSmoothExit;               // offset 0x74, size 0x1
     int nMarkerIndex;               // offset 0x78, size 0x4
     bool bUseRealTime;              // offset 0x7C, size 0x1
+    uint32 nPlayGenericGroupHash;   // offset 0x60, size 0x4, Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:83
+    bool bSmoothExit;               // offset 0x74, size 0x1, Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:85
 };
 
-extern ICEManager TheICEManager;
+ICEManager TheICEManager; // size: 0x80, Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:93
 
 void ICECompleteEventTags();
 

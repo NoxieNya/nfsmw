@@ -165,41 +165,45 @@ void bInitSharedStringPool(int size);
 void bCloseSharedStringPool();
 
 inline void bPlatEndianSwap(uint64 *value) {
-#ifndef EA_BUILD_A124
+#ifdef EA_PLATFORM_GAMECUBE
     bEndianSwap64(value);
 #endif
 }
 
 inline void bPlatEndianSwap(int32 *value) {
-#ifndef EA_BUILD_A124
+#ifdef EA_PLATFORM_GAMECUBE
     bEndianSwap32(value);
 #endif
 }
 
 inline void bPlatEndianSwap(uint32 *value) {
-#ifndef EA_BUILD_A124
+#ifdef EA_PLATFORM_GAMECUBE
     bEndianSwap32(value);
 #endif
 }
 
 inline void bPlatEndianSwap(int16 *value) {
-#ifndef EA_BUILD_A124
+#ifdef EA_PLATFORM_GAMECUBE
     bEndianSwap16(value);
 #endif
 }
 
 inline void bPlatEndianSwap(uint16 *value) {
-#ifndef EA_BUILD_A124
+#ifdef EA_PLATFORM_GAMECUBE
     bEndianSwap16(value);
 #endif
 }
 
-inline void bPlatEndianSwap(uint8 *value) {}
+inline void bPlatEndianSwap(uint8 *value) {
+#ifdef EA_PLATFORM_GAMECUBE
+    // bEndianSwap32(value);
+#endif
+}
 
 inline void bPlatEndianSwap(int8 *value) {}
 
 inline void bPlatEndianSwap(float *value) {
-#ifndef EA_BUILD_A124
+#ifdef EA_PLATFORM_GAMECUBE
     bEndianSwap32(value);
 #endif
 }

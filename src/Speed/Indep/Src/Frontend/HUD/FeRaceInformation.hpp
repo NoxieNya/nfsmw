@@ -21,8 +21,8 @@ class RaceInformation : public HudElement, public IRaceInformation {
     void SetNumLaps(int numLaps) override {
         mNumLaps = numLaps;
     };
-    void SetPlayerPosition(int position) override {
-        mPlayerPosition = position;
+    void SetPlayerPosition(int pos) override {
+        mPlayerPosition = pos;
     };
     void SetPlayerLapNumber(int lap) override {
         if (lap > mNumLaps) {
@@ -30,20 +30,20 @@ class RaceInformation : public HudElement, public IRaceInformation {
         }
         mPlayerLapNumber = lap;
     };
-    void SetPlayerLapTime(float lapTime) override {
-        mPlayerLapTime = lapTime;
+    void SetPlayerLapTime(float time) override {
+        mPlayerLapTime = time;
     };
     void SetSuddenDeathMode(bool suddenDeath) override {
         mSuddenDeath = suddenDeath;
     };
-    void SetPlayerPercentComplete(float percent) override {
-        mPlayerPercentComplete = percent;
+    void SetPlayerPercentComplete(float percentComplete) override {
+        mPlayerPercentComplete = percentComplete;
     };
-    void SetPlayerTollboothsCrossed(int num) override {
-        mPlayerTollboothNumber = num;
+    void SetPlayerTollboothsCrossed(int numTollbooths) override {
+        mPlayerTollboothNumber = numTollbooths;
     };
-    void SetNumTollbooths(int num) override {
-        mNumTollbooths = num;
+    void SetNumTollbooths(int numTollbooths) override {
+        mNumTollbooths = numTollbooths;
     };
 
   private:

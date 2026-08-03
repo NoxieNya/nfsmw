@@ -7,6 +7,7 @@
 #include "Speed/Indep/Src/Physics/PhysicsUpgrades.hpp"
 #include "Speed/Indep/Src/World/CarInfo.hpp"
 #include "Speed/Indep/Src/Camera/CameraInfo.hpp"
+#include "Speed/Indep/bWare/Inc/Strings.hpp"
 
 #define INVALID_CAR_HANDLE 0xFFFFFFFF        // :35
 #define QUICK_PLAY_HANDLE 0x12345678         // :36
@@ -28,7 +29,7 @@
 // Decl: speed/indep/src/database/VehicleDB.hpp:102
 class FECustomizationRecord {
   private:
-    FECarPartIndex InstalledPartIndices[139];     // offset 0x0, size 0x116
+    int16 InstalledPartIndices[CARSLOTID_NUM];    // offset 0x0, size 0x116
     Physics::Upgrades::Package InstalledPhysics;  // offset 0x118, size 0x20, Decl: speed/indep/src/database/VehicleDB.hpp:110
     Physics::Tunings Tunings[NUM_CUSTOM_TUNINGS]; // offset 0x138, size 0x54, Decl: speed/indep/src/database/VehicleDB.hpp:115
     eCustomTuningType ActiveTuning;               // offset 0x18C, size 0x4, Decl: speed/indep/src/database/VehicleDB.hpp:116
@@ -54,8 +55,12 @@ class FECustomizationRecord {
 
     void Default(); // Decl: speed/indep/src/database/VehicleDB.hpp:149
 
-    eCustomTuningType GetActiveTuning() const {}    // Decl: speed/indep/src/database/VehicleDB.hpp:152
-    void SetActiveTuning(eCustomTuningType type) {} // Decl: speed/indep/src/database/VehicleDB.hpp:153
+    eCustomTuningType GetActiveTuning() const { // Decl: speed/indep/src/database/VehicleDB.hpp:152
+        return ActiveTuning;
+    }
+    void SetActiveTuning(eCustomTuningType type) { // Decl: speed/indep/src/database/VehicleDB.hpp:153
+        ActiveTuning = type;
+    }
 
     // Decl: speed/indep/src/database/VehicleDB.hpp:155
     bool IsPreset() const {
@@ -102,15 +107,25 @@ class FECustomizationRecord {
         return &InstalledPhysics;
     }
 
-    void SetTuning(Physics::Tunings::Path id, float value) {}
+    void SetTuning(Physics::Tunings::Path id, float value) {
+        Tunings[ActiveTuning].Value[id] = value;
+    }
 
-    void SetTuning(Physics::Tunings::Path id, eCustomTuningType type, float value) {}
+    void SetTuning(Physics::Tunings::Path id, eCustomTuningType type, float value) {
+        Tunings[type].Value[id] = value;
+    }
 
-    float GetTuning(Physics::Tunings::Path id) const {} // Decl: speed/indep/src/database/VehicleDB.hpp:277
+    float GetTuning(Physics::Tunings::Path id) const { // Decl: speed/indep/src/database/VehicleDB.hpp:277
+        return Tunings[ActiveTuning].Value[id];
+    }
 
-    const Physics::Tunings *GetTunings() const {}
+    const Physics::Tunings *GetTunings() const {
+        return &Tunings[ActiveTuning];
+    }
 
-    const Physics::Tunings *GetTunings(uint32 type) const {}
+    const Physics::Tunings *GetTunings(uint32 type) const {
+        return &Tunings[type];
+    }
 };
 
 // Decl: speed/indep/src/database/VehicleDB.hpp:302
@@ -130,7 +145,9 @@ enum ePlayerSettingsCameras {
 // Decl: speed/indep/src/database/VehicleDB.hpp:322
 class FEInfractionsData {
   public:
-    FEInfractionsData() {} // Decl: speed/indep/src/database/VehicleDB.hpp:324
+    FEInfractionsData() { // Decl: speed/indep/src/database/VehicleDB.hpp:324
+        bMemSet(this, 0, sizeof(*this));
+    }
     FEInfractionsData(uint32 infractions);
 
     void operator+=(const FEInfractionsData &rhs); // Decl: speed/indep/src/database/VehicleDB.hpp:327
@@ -195,6 +212,8 @@ class FEImpoundData {
 // Decl: speed/indep/src/database/VehicleDB.hpp:377
 class FECareerRecord {
   public:
+    FECareerRecord() {}
+
     void Default(); // Decl: speed/indep/src/database/VehicleDB.hpp:380
 
     void SetVehicleHeat(float h); // Decl: speed/indep/src/database/VehicleDB.hpp:383
@@ -298,9 +317,15 @@ class FECarRecord {
 // TODO: values
 static const int MAX_CAREER_PURCHASED_CARS_IN_STABLE = 0; // size: 0x4, Decl: speed/indep/src/database/VehicleDB.hpp:478
 static const int MAX_CAREER_AWARDED_CARS_IN_STABLE = 0;   // size: 0x4, Decl: speed/indep/src/database/VehicleDB.hpp:479
-static const int MAX_CAREER_TOTAL_CARS = 0;               // size: 0x4, Decl: speed/indep/src/database/VehicleDB.hpp:480
-
-static const int MAX_CUSTOMIZE_BLOCKS = 0; // size: 0x4, Decl: speed/indep/src/database/VehicleDB.hpp:485
+#ifdef EA_BUILD_A124
+static const int MAX_CAREER_TOTAL_CARS = 10; // size: 0x4, Decl: speed/indep/src/database/VehicleDB.hpp:480
+#else
+static const int MAX_CAREER_TOTAL_CARS = 25; // size: 0x4, Decl: speed/indep/src/database/VehicleDB.hpp:480
+#endif
+static const int MAX_QUICKRACE_CARS_IN_STABLE = 20; // size: 0x4
+static const int MAX_PRESET_CARS_IN_STABLE = 0;     // size: 0x4
+static const int MAX_CARS_IN_STABLE = 200;          // size: 0x4
+static const int MAX_CUSTOMIZE_BLOCKS = 0;          // size: 0x4, Decl: speed/indep/src/database/VehicleDB.hpp:485
 
 enum FEPlayerCarDBFilterBits {
     FE_CAR_FILTER_LIST_STOCK = 1 << 0,
@@ -312,7 +337,7 @@ enum FEPlayerCarDBFilterBits {
     FE_CAR_FILTER_PINKSLIP = 1 << 6,
     FE_CAR_FILTER_LIST_MIN = FE_CAR_FILTER_LIST_STOCK,
     FE_CAR_FILTER_LIST_MAX = FE_CAR_FILTER_LIST_BONUS,
-    FE_CAR_FILTER_LIST_MASK = (1 << 16) - 1,
+    FE_CAR_FILTER_LIST_MASK = 0xFFFF,
     FE_CAR_FILTER_REGION_AMERICA = 1 << 16,
     FE_CAR_FILTER_REGION_EUROPE = 1 << 17,
     FE_CAR_FILTER_REGION_JAPAN = 1 << 18,
@@ -320,7 +345,7 @@ enum FEPlayerCarDBFilterBits {
     FE_CAR_FILTER_REGION_MIN = FE_CAR_FILTER_REGION_AMERICA,
     FE_CAR_FILTER_REGION_MAX = FE_CAR_FILTER_REGION_DEBUG,
     FE_CAR_FILTER_REGION_ALL = FE_CAR_FILTER_REGION_AMERICA | FE_CAR_FILTER_REGION_EUROPE | FE_CAR_FILTER_REGION_JAPAN | FE_CAR_FILTER_REGION_DEBUG,
-    FE_CAR_FILTER_REGION_MASK = -65536,
+    FE_CAR_FILTER_REGION_MASK = 0xFFFF0000,
 };
 
 // total size: 0x8CC8
@@ -414,13 +439,10 @@ class FEPlayerCarDB {
     uint32 ForAllCareerRecordsSum(const MyCallback &Callback); // Decl: speed/indep/src/database/VehicleDB.hpp:663
     void BackupSoldCarHistory(uint8 sold_car);                 // Decl: speed/indep/src/database/VehicleDB.hpp:664
 
-    FECarRecord CarTable[200];                // offset 0x0, size 0xFA0, Decl: speed/indep/src/database/VehicleDB.hpp:666
-    FECustomizationRecord Customizations[75]; // offset 0xFA0, size 0x7788, Decl: speed/indep/src/database/VehicleDB.hpp:667
-#ifdef EA_BUILD_A124
-    FECareerRecord CareerRecords[10];
-#else
-    FECareerRecord CareerRecords[25]; // offset 0x8728, size 0x578, Decl: speed/indep/src/database/VehicleDB.hpp:668
-#endif
+    FECarRecord CarTable[200];                           // offset 0x0, size 0xFA0, Decl: speed/indep/src/database/VehicleDB.hpp:666
+    FECustomizationRecord Customizations[75];            // offset 0xFA0, size 0x7788, Decl: speed/indep/src/database/VehicleDB.hpp:667
+    FECareerRecord CareerRecords[MAX_CAREER_TOTAL_CARS]; // offset 0x8728, size 0x578, Decl: speed/indep/src/database/VehicleDB.hpp:668
+
     uint32 SoldHistoryBounty;                         // offset 0x8CA0, size 0x4, Decl: speed/indep/src/database/VehicleDB.hpp:689
     uint16 SoldHistoryNumEvadedPursuits;              // offset 0x8CA4, size 0x2, Decl: speed/indep/src/database/VehicleDB.hpp:690
     uint16 SoldHistoryNumBustedPursuits;              // offset 0x8CA6, size 0x2, Decl: speed/indep/src/database/VehicleDB.hpp:691
@@ -436,5 +458,7 @@ POVTypes GetPOVTypeFromPlayerCamera(ePlayerSettingsCameras cam);
 bool IsPlayerCameraSelectable(POVTypes pov);
 
 uint32 GetFECarNameHashFromFEKey(Attrib::Key feKey);
+
+ePlayerSettingsCameras GetPlayerCameraFromPOVType(POVTypes type);
 
 #endif

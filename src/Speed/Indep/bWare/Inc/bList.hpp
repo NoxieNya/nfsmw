@@ -191,62 +191,62 @@ template <typename T> class bTList : public bList {
         }
     }
 
-    T *AddSorted(SortFuncT check_flip, T *node);
+    pointer AddSorted(SortFuncT check_flip, pointer node);
 
-    T *EndOfList() {
-        return (T *)bList::EndOfList();
+    pointer EndOfList() {
+        return (pointer)bList::EndOfList();
     }
 
-    T *GetHead() {
-        return (T *)bList::GetHead();
+    pointer GetHead() {
+        return (pointer)bList::GetHead();
     }
 
-    T *GetTail() {
-        return (T *)bList::GetTail();
+    pointer GetTail() {
+        return (pointer)bList::GetTail();
     }
 
-    T *GetNextCircular(bNode *node) {
-        return (T *)bList::GetNextCircular(node);
+    pointer GetNextCircular(bNode *node) {
+        return (pointer)bList::GetNextCircular(node);
     }
 
-    T *GetPrevCircular(bNode *node) {
-        return (T *)bList::GetPrevCircular(node);
+    pointer GetPrevCircular(bNode *node) {
+        return (pointer)bList::GetPrevCircular(node);
     }
 
-    T *AddHead(bNode *node) {
-        return (T *)bList::AddHead(node);
+    pointer AddHead(bNode *node) {
+        return (pointer)bList::AddHead(node);
     }
 
-    T *AddTail(bNode *node) {
-        return (T *)bList::AddTail(node);
+    pointer AddTail(bNode *node) {
+        return (pointer)bList::AddTail(node);
     }
 
-    T *AddBefore(bNode *insert_point, bNode *node) {
-        return (T *)bList::AddBefore(insert_point, node);
+    pointer AddBefore(bNode *insert_point, bNode *node) {
+        return (pointer)bList::AddBefore(insert_point, node);
     }
 
-    T *AddAfter(bNode *insert_point, bNode *node) {
-        return (T *)bList::AddAfter(insert_point, node);
+    pointer AddAfter(bNode *insert_point, bNode *node) {
+        return (pointer)bList::AddAfter(insert_point, node);
     }
 
-    T *Remove(bNode *node) {
-        return (T *)bList::Remove(node);
+    pointer Remove(bNode *node) {
+        return (pointer)bList::Remove(node);
     }
 
-    T *RemoveHead() {
-        return (T *)bList::RemoveHead();
+    pointer RemoveHead() {
+        return (pointer)bList::RemoveHead();
     }
 
-    T *RemoveTail() {
-        return (T *)bList::RemoveTail();
+    pointer RemoveTail() {
+        return (pointer)bList::RemoveTail();
     }
 
-    T *AddSorted(SortFuncT check_flip) {
+    pointer AddSorted(SortFuncT check_flip) {
         // TODO
     }
 
-    T *GetNode(int ordinal_number) {
-        return (T *)bList::GetNode(ordinal_number);
+    pointer GetNode(int ordinal_number) {
+        return (pointer)bList::GetNode(ordinal_number);
     }
 
     void Sort(SortFuncT check_flip) {

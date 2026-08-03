@@ -7,8 +7,7 @@
 #include "Speed/Indep/Src/Generated/Messages/MNotifyMessageDone.h"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 
-SixDaysLater::SixDaysLater(ScreenConstructorData *sd) : MenuScreen(sd) {
-    mStringMode = sd->Arg;
+SixDaysLater::SixDaysLater(ScreenConstructorData *sd) : MenuScreen(sd), mStringMode(sd->Arg) {
     mpDataMainString = FEngFindString(GetPackageName(), 0xb769701e);
     FEngSetLanguageHash(mpDataMainString, FEngHashString("DDAY_TIMELAPSE_%d", mStringMode + 1));
     new EFadeScreenOff(0x14035fb);
@@ -24,9 +23,7 @@ void SixDaysLater::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
         if (FEngIsScriptSet(mpDataMainString, 0x5a8e4ebe)) {
             if (!FEngIsScriptRunning(mpDataMainString, 0x5a8e4ebe)) {
                 cFEng::Get()->QueuePackagePop(0);
-                UCrc32 target(0x20d60dbf);
-                MNotifyMessageDone done;
-                done.Post(target);
+                MNotifyMessageDone().Post(0x20d60dbf);
             }
         }
     }

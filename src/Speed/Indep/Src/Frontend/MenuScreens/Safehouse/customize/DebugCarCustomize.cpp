@@ -25,7 +25,7 @@ int SortCarsByName(DebugCar *before, DebugCar *after) {
 DebugCarCustomizeScreen::DebugCarCustomizeScreen(ScreenConstructorData *sd)
     : MenuScreen(sd), //
       iFastScroll(1) {
-    FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+    FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
     for (int i = 0; i < 200; i++) {
         FECarRecord *car = stable->GetCarByIndex(i);
@@ -86,7 +86,7 @@ void DebugCarCustomizeScreen::LoadCurrentCar() {
             wasCarCustomized = false;
             car->Customization = custom->Handle;
             RideInfo ride;
-            ride.Init(static_cast<CarType>(-1), static_cast<CarRenderUsage>(0), 0, 0);
+            ride.Init(CARTYPE_NONE, static_cast<CarRenderUsage>(0), 0, 0);
             ride.Init(car->GetType(), static_cast<CarRenderUsage>(0), 0, 0);
             ride.SetRandomPaint();
             ride.SetStockParts();

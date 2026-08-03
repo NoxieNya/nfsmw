@@ -7,12 +7,12 @@
 Infractions::Infractions(UTL::COM::Object *pOutter, const char *pkg_name, int player_number)
     : HudElement(pkg_name, 0x200000000ULL), IInfractions(pOutter) {
     RegisterGroup(FEHashUpper("INFRACTIONS_HEADER_GROUP"));
-    mpDataGenericIcon = RegisterObject(FEHashUpper("GENERIC_ICONS"));
-    mpDataTotalInfractions = RegisterString(FEHashUpper("TOTAL_INFRACTIONS_TEXT"));
+    mpDataGenericIcon = RegisterObject("GENERIC_ICONS");
+    mpDataTotalInfractions = RegisterString("TOTAL_INFRACTIONS_TEXT");
     for (int i = 0; i < 4; i++) {
-        char buf[32];
-        bSPrintf(buf, "INFRACTION_GROUP_%d", i + 1);
-        mpDataInfractionStrings[i] = RegisterGroup(FEHashUpper(buf));
+        char sztemp[32];
+        bSPrintf(sztemp, "INFRACTION_GROUP_%d", i + 1);
+        mpDataInfractionStrings[i] = RegisterGroup(FEHashUpper(sztemp));
     }
 }
 

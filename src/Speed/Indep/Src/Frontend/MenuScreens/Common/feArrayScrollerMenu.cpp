@@ -5,6 +5,7 @@
 #include "Speed/Indep/Src/Frontend/FEngHashes/SoundHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feWidget.hpp"
 
 ArrayScripts::ArrayScripts() {
@@ -14,97 +15,91 @@ ArrayScripts::ArrayScripts() {
     SetUnHighlightHash(FEHashUpper("UNHIGHLIGHT"));
 }
 
-ArraySlot::ArraySlot(FEObject *obj)
-    : FEngObject(obj), //
-      scripts(nullptr) {}
+ArraySlot::ArraySlot(FEObject *obj) : FEngObject(obj), scripts(nullptr) {}
 
 void ArraySlot::Update(ArrayDatum *datum, bool isSelected) {
-    if (!datum) {
-        FEngSetInvisible(GetFEngObject());
+    if (datum == nullptr) {
+        FEngSetInvisible(FEngObject);
     } else {
-        FEngSetVisible(GetFEngObject());
-        if (!datum->IsGreyedOut() && datum->IsEnabled()) {
-            if (isSelected) {
-                if (!FEngIsScriptSet(GetFEngObject(), scripts->GetHighlightHash())) {
-                    FEngSetScript(GetFEngObject(), scripts->GetHighlightHash(), true);
-                }
-            } else {
-                if (FEngIsScriptSet(GetFEngObject(), scripts->GetHighlightHash())) {
-                    FEngSetScript(GetFEngObject(), scripts->GetUnHighlightHash(), true);
-                } else {
-                    if (!FEngIsScriptSet(GetFEngObject(), scripts->GetNormalHash())) {
-                        FEngSetScript(GetFEngObject(), scripts->GetNormalHash(), true);
-                    }
-                }
+        FEngSetVisible(FEngObject);
+        if (datum->IsGreyedOut() || !datum->IsEnabled()) {
+            if (!FEngIsScriptSet(FEngObject, scripts->GetGreyHash())) {
+                FEngSetScript(FEngObject, scripts->GetGreyHash(), true);
             }
         } else {
-            if (!FEngIsScriptSet(GetFEngObject(), scripts->GetGreyHash())) {
-                FEngSetScript(GetFEngObject(), scripts->GetGreyHash(), true);
+            if (isSelected) {
+                if (!FEngIsScriptSet(FEngObject, scripts->GetHighlightHash())) {
+                    FEngSetScript(FEngObject, scripts->GetHighlightHash(), true);
+                }
+            } else {
+                if (FEngIsScriptSet(FEngObject, scripts->GetHighlightHash())) {
+                    FEngSetScript(FEngObject, scripts->GetUnHighlightHash(), true);
+                } else {
+                    if (!FEngIsScriptSet(FEngObject, scripts->GetNormalHash())) {
+                        FEngSetScript(FEngObject, scripts->GetNormalHash(), true);
+                    }
+                }
             }
         }
     }
 }
 
-ImageArraySlot::ImageArraySlot(FEImage *img) : ArraySlot(static_cast<FEObject *>(static_cast<void *>(img))) {}
+ImageArraySlot::ImageArraySlot(FEImage *img) : ArraySlot(img) {}
 
-void ImageArraySlot::SetTexture(unsigned int tex_hash) {
+void ImageArraySlot::SetTexture(uint32 tex_hash) {
     FEngSetTextureHash(static_cast<FEImage *>(GetFEngObject()), tex_hash);
 }
 
 void ImageArraySlot::Update(ArrayDatum *datum, bool isSelected) {
     ArraySlot::Update(datum, isSelected);
-    if (datum) {
+    if (datum != nullptr) {
         SetTexture(datum->GetHash());
     }
 }
 
-ArrayDatum::ArrayDatum(uint32 h, uint32 d)
-    : hash(h),          //
-      desc(d),          //
-      enabled(true),    //
-      greyedOut(false), //
-      locked(false),    //
-      checked(false) {}
+ArrayDatum::ArrayDatum(uint32 hash, uint32 desc) : hash(hash), desc(desc) {
+    SetEnabled(true);
+    SetGreyedOut(false);
+    SetLocked(false);
+    SetChecked(false);
+}
 
-ArrayScroller::ArrayScroller(const char *name, int w, int h, bool selectable)
-    : bShouldPlaySound(false),                         //
-      currentDatum(nullptr),                           //
-      startDatum(0),                                   //
-      width(w),                                        //
-      height(h),                                       //
-      descLabel(0),                                    //
-      pkg_name(name),                                  //
-      pScrollRegion(nullptr),                          //
-      bSelectableArray(selectable),                    //
-      mouseDownMsg(0),                                 //
-      bInClickToSelectMode(false),                     //
-      ScrollBar(name, "scrollbar", true, true, false), //
-      scripts() {
-    pScrollRegion = FEngFindObject(name, FEHashUpper("ARRAY_SCROLL_REGION"));
-    pkg = cFEng::Get()->FindPackage(name);
+ArrayScroller::ArrayScroller(const char *pkg_name, int w, int h, bool selectable)
+    : ScrollBar(pkg_name, "scrollbar", true, true, false), //
+      bShouldPlaySound(false),                             //
+      currentDatum(nullptr),                               //
+      startDatum(0),                                       //
+      pkg_name(pkg_name),                                  //
+      bSelectableArray(selectable),                        //
+      bInClickToSelectMode(false) {
+    SetMouseDownMsg(__BUTTON_PRESSED__);
+    SetDimensions(w, h);
+    SetDescLabel(0);
+    SetScrollRegion(FEngFindObject(pkg_name, FEHashUpper("ARRAY_SCROLL_REGION")));
+    pkg = cFEng::Get()->FindPackage(GetPkgName());
 }
 
 void ArrayScroller::RefreshHeader() {
     for (int i = 0; i < GetNumSlots(); i++) {
         ArrayDatum *datum = GetDatumAt(startDatum + i);
         ArraySlot *slot = GetSlotAt(i);
-        if (slot) {
-            slot->Update(datum, currentDatum == datum);
+        if (slot != nullptr) {
+            slot->Update(datum, GetCurrentDatum() == datum);
         }
     }
-    if (currentDatum) {
+    if (currentDatum != nullptr) {
         FEngSetLanguageHash(GetPkgName(), descLabel, currentDatum->GetDesc());
     }
 }
 
 void ArrayScroller::AddSlot(ArraySlot *slot) {
-    slot->SetScripts(&scripts);
+    slot->SetScripts(this->GetScripts());
     slots.AddTail(slot);
 }
 
 void ArrayScroller::AddDatum(ArrayDatum *datum) {
     data.AddTail(datum);
-    if (!currentDatum) {
+    if (currentDatum == nullptr) {
         SetSelection(datum, 0);
     }
 }
@@ -114,14 +109,15 @@ void ArrayScroller::SetSelection(ArrayDatum *newDatum, int newStartDatum) {
         startDatum = newStartDatum;
         currentDatum = newDatum;
         if (bSelectableArray) {
-            ArraySlot *pSlot = GetSlotAt(data.GetNodeNumber(currentDatum) - startDatum);
-            if (pSlot) {
-                FEngSetCurrentButton(GetPkgName(), pSlot->GetFEngObject()->NameHash);
+            ArraySlot *pSlot = GetSlotAt(GetCurrentDatumNum() - (startDatum + 1));
+            if (pSlot != nullptr) {
+                FEngSetCurrentButton(GetPkgName(), pSlot->GetFEngObject());
             }
         }
     }
 }
 
+// UNSOLVED
 int ArrayScroller::ForceSelectionOnScreen(int new_datum, int start) {
     int w = GetWidth();
     int h = GetHeight();
@@ -135,115 +131,99 @@ int ArrayScroller::ForceSelectionOnScreen(int new_datum, int start) {
 }
 
 void ArrayScroller::ScrollHor(eScrollDir dir) {
-    int num_data = data.CountElements();
-    if (num_data == 0) {
+    if (data.CountElements() == 0) {
         return;
     }
+
     ArrayDatum *new_datum = currentDatum;
-    int current_num = data.GetNodeNumber(currentDatum) - 1;
+    int current_num = GetCurrentDatumNum() - 1;
     int new_index = current_num;
     if (dir == eSD_PREV) {
-        int w = width;
-        new_index = current_num - 2;
-        if (current_num == (current_num / w) * w) {
-            new_index = new_index + w;
+        new_index = new_index - 1;
+        if ((new_index + 1) == ((new_index + 1) / width) * width) {
+            new_index = new_index + width;
         }
-        int num_data2 = data.CountElements();
-        if (num_data2 <= new_index) {
-            new_index = data.CountElements() - 1;
+        if (new_index >= GetNumDatum()) {
+            new_index = GetNumDatum() - 1;
         }
     } else if (dir == eSD_NEXT) {
-        int w = width;
-        new_index = current_num;
-        if (current_num == (current_num / w) * w) {
-            new_index = current_num - w;
+        new_index = current_num + 1;
+        if ((new_index) == ((new_index) / width) * width) {
+            new_index = new_index - width;
         }
-        int num_data2 = data.CountElements();
-        if (num_data2 <= new_index) {
+        if (new_index >= GetNumDatum()) {
             new_index = (new_index / width) * width;
         }
     }
-    if (new_index > current_num && new_index < data.CountElements()) {
-        ArrayDatum *old = currentDatum;
-        do {
-            current_num++;
+
+    if (current_num < new_index && new_index < GetNumDatum()) {
+        for (int i = current_num; i < new_index; i++) {
             new_datum = static_cast<ArrayDatum *>(new_datum->GetNext());
-        } while (current_num < new_index);
-    } else if (new_index < current_num && new_index > -1) {
-        ArrayDatum *old = currentDatum;
+        }
+    } else if (current_num > new_index && new_index >= 0) {
         for (int i = new_index; i < current_num; i++) {
             new_datum = static_cast<ArrayDatum *>(new_datum->GetPrev());
         }
     }
+
     if (new_datum != currentDatum) {
-        int forced = ForceSelectionOnScreen(new_index, startDatum);
-        SetSelection(new_datum, forced);
+        int start = ForceSelectionOnScreen(new_index, startDatum);
+        SetSelection(new_datum, start);
         bShouldPlaySound = true;
     }
     RefreshHeader();
 }
 
+// UNSOLVED
 void ArrayScroller::ScrollVer(eScrollDir dir) {
-    int num_data = data.CountElements();
-    if (num_data == 0) {
+    if (data.CountElements() == 0) {
         return;
     }
     ArrayDatum *new_datum = currentDatum;
-    int current_num = data.GetNodeNumber(currentDatum) - 1;
+    int new_index = GetCurrentDatumNum() - 1;
     int new_start = startDatum;
-    int new_index;
     if (dir == eSD_PREV) {
-        int w = width;
-        new_index = current_num - w;
-        if (!pScrollRegion) {
-            int last_row_start = (height - 1) * w;
-            if (new_index >= last_row_start && new_index < height * w) {
-                new_index = new_index - last_row_start;
+        new_index = new_index - width;
+        if (pScrollRegion == nullptr) {
+            if (new_index >= (height - 1) * width && new_index < height * width) {
+                new_index = new_index - (height - 1) * width;
             }
-            new_start = new_start - w;
+            new_start = new_start - width;
         } else if (new_index < new_start) {
-            new_start = new_start - w;
+            new_start = new_start - width;
         }
         if (new_index > -1) {
-            int old_num = data.GetNodeNumber(currentDatum) - 1;
-            for (int i = 0; i < old_num - new_index; i++) {
-                new_datum = static_cast<ArrayDatum *>(new_datum->GetPrev());
+            for (int i = 0; i < GetCurrentDatumNum() - 1 - new_index; i++) {
+                new_datum = new_datum->GetPrev();
             }
         }
     } else if (dir == eSD_NEXT) {
-        int w = width;
-        new_index = current_num + w;
-        if (!pScrollRegion) {
-            if (new_index >= w && new_index < w * 2) {
-                new_index = new_index + (height - 1) * w;
+        new_index = new_index + width;
+        if (pScrollRegion == nullptr) {
+            if (new_index >= width && new_index < width * 2) {
+                new_index = new_index + (height - 1) * width;
             }
-            new_start = new_start + w;
+            new_start = new_start + width;
         } else {
-            int total = data.CountElements();
-            if (total <= new_index) {
-                int total2 = data.CountElements();
-                int w2 = width;
-                int h2 = height;
-                int cur_page = (data.GetNodeNumber(currentDatum) - 1) / width + 1;
-                if (cur_page * height < ((total2 - 1) / w2 + 1) * h2) {
-                    new_index = data.CountElements() - 1;
+            if (GetNumDatum() <= new_index) {
+                if (((data.GetNodeNumber(currentDatum) - 1) / width + 1) * height < ((GetNumDatum() - 1) / width + 1) * height) {
+                    new_index = GetNumDatum() - 1;
                 }
             }
-            int num_slots = slots.CountElements();
-            if (new_start + num_slots <= new_index) {
+            if (new_start + slots.CountElements() <= new_index) {
                 new_start = new_start + width;
             }
         }
-        if (new_index < data.CountElements()) {
-            int old_num = data.GetNodeNumber(currentDatum);
-            for (int i = 0; i < new_index - (old_num - 1); i++) {
-                new_datum = static_cast<ArrayDatum *>(new_datum->GetNext());
+        if (new_index < GetNumDatum()) {
+            for (int i = 0; i < new_index - (data.GetNodeNumber(currentDatum) - 1); i++) {
+                new_datum = new_datum->GetNext();
             }
         }
     }
+
     if (new_datum != currentDatum) {
-        int forced = ForceSelectionOnScreen(new_index, new_start);
-        SetSelection(new_datum, forced);
+        int start = ForceSelectionOnScreen(new_index, new_start);
+        SetSelection(new_datum, start);
         UpdateScrollbar();
         bShouldPlaySound = true;
     }
@@ -251,46 +231,47 @@ void ArrayScroller::ScrollVer(eScrollDir dir) {
 }
 
 void ArrayScroller::UpdateScrollbar() {
-    int h = height;
-    int num_data = data.CountElements();
-    int w = GetWidth();
-    int top_item = startDatum / w + 1;
-    int selected_item = data.GetNodeNumber(currentDatum) / width + 1;
-    ScrollBar.Update(h, (num_data - 1) / w + 1, top_item, selected_item);
+    int view_size = GetHeight();
+    int num_rows_of_data = (GetNumDatum() - 1) / GetWidth() + 1;
+    int top_item = startDatum / GetWidth() + 1;
+    int selected_item = (GetCurrentDatumNum() - 1) / GetWidth() + 1;
+    ScrollBar.Update(view_size, num_rows_of_data, top_item, selected_item);
 }
 
 ArraySlot *ArrayScroller::GetSlotAt(int index) {
-    if (index < GetNumSlots()) {
-        return slots.GetNode(index);
+    if (index >= GetNumSlots()) {
+        return nullptr;
     }
-    return nullptr;
+    return slots.GetNode(index);
 }
 
 ArrayDatum *ArrayScroller::GetDatumAt(int index) {
-    if (index < GetNumDatum()) {
-        return data.GetNode(index);
+    if (index >= GetNumDatum()) {
+        return nullptr;
     }
-    return nullptr;
+    return data.GetNode(index);
 }
 
 void ArrayScroller::SetInitialPosition(int index) {
     if (GetNumDatum() == 0) {
         UpdateScrollbar();
     }
-    if (index < GetNumDatum()) {
-        int size = width * height;
-        int newStartDatum = 0;
-        if (index > size - 1) {
-            int new_start = ((index / width * width + 1) - size) / width * width;
-            newStartDatum = new_start + width;
-            if (width == 1) {
-                newStartDatum = new_start;
-            }
-        }
-        ArrayDatum *datum = GetDatumAt(index);
-        SetSelection(datum, newStartDatum);
-        UpdateScrollbar();
+    if (index >= GetNumDatum()) {
+        return;
     }
+    int newStartDatum = 0;
+    int size = GetWidth() * GetHeight();
+
+    if (index > size - 1) {
+        int new_index = (index / GetWidth() * GetWidth() - (size - 1)) / GetWidth() * GetWidth();
+        newStartDatum = new_index + GetWidth();
+        if (GetWidth() == 1) {
+            newStartDatum--;
+        }
+    }
+
+    SetSelection(GetDatumAt(index), newStartDatum);
+    UpdateScrollbar();
 }
 
 void ArrayScroller::UpdateMouse() {}
@@ -303,26 +284,31 @@ void ArrayScroller::ClearData() {
 
 void ArrayScroller::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
     ArrayDatum *currentDatum = GetCurrentDatum();
-    if (currentDatum) {
+    if (currentDatum != nullptr) {
         currentDatum->NotificationMessage(msg, pObj, param1, param2);
     }
-    if (msg == __PAD_LEFT__) {
-        ScrollHor(eSD_PREV);
-    } else if (msg == __PAD_UP__) {
-        ScrollVer(eSD_PREV);
-    } else if (msg == __PAD_DOWN__) {
-        ScrollVer(eSD_NEXT);
-    } else if (msg == FEMSG_MOUSE_CHANGED) {
-        UpdateMouse();
-    } else if (msg == __PAD_RIGHT__) {
-        ScrollHor(eSD_NEXT);
+
+    switch (msg) {
+        case __PAD_LEFT__:
+            ScrollLeft();
+            break;
+        case __PAD_RIGHT__:
+            ScrollRight();
+            break;
+        case __PAD_UP__:
+            ScrollUp();
+            break;
+        case __PAD_DOWN__:
+            ScrollDown();
+            break;
+        case FEMSG_MOUSE_CHANGED:
+            UpdateMouse();
+            break;
     }
 }
 
 ArrayScrollerMenu::ArrayScrollerMenu(ScreenConstructorData *sd, int w, int h, bool selectable)
-    : MenuScreen(sd),                                      //
-      ArrayScroller(sd->PackageFilename, w, h, selectable) //
-{}
+    : MenuScreen(sd), ArrayScroller(sd->PackageFilename, w, h, selectable) {}
 
 void ArrayScrollerMenu::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
     ArrayScroller::NotificationMessage(msg, pObj, param1, param2);

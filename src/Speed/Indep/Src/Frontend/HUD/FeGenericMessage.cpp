@@ -1,17 +1,17 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeGenericMessage.hpp"
-#include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 
 GenericMessage::GenericMessage(UTL::COM::Object *pOutter, const char *pkg_name, int player_number)
-    : HudElement(pkg_name, 0x01000000ULL), //
+    : HudElement(pkg_name, 0x01000000), //
       IGenericMessage(pOutter) {
     mPriority = GenericMessage_Priority_None;
     mNumFramesPlayed = 0;
     mFengHash = 0;
     mPlayOneFrame = false;
     bStrCpy(mStringBuffer, "");
-    mpMessageFirstLine = reinterpret_cast<FEObject *>(RegisterGroup(0x32a7a521));
+    mpMessageFirstLine = RegisterGroup(0x32a7a521);
     mpIcon = RegisterObject(0x6dd754ec);
     RegisterObject(0xcaec9d04);
 }
@@ -32,8 +32,8 @@ void GenericMessage::Update(IPlayer *player) {
     }
 }
 
-bool GenericMessage::RequestGenericMessage(const char *string, bool singleFrame, unsigned int fengHash, unsigned int iconTextureHash,
-                                           unsigned int iconFengHash, GenericMessage_Priority priority) {
+bool GenericMessage::RequestGenericMessage(const char *string, bool singleFrame, uint32 fengHash, uint32 iconTextureHash, uint32 iconFengHash,
+                                           GenericMessage_Priority priority) {
     if (priority < mPriority) {
         return false;
     }
@@ -44,32 +44,32 @@ bool GenericMessage::RequestGenericMessage(const char *string, bool singleFrame,
     mNumFramesPlayed = 0;
     mPlayOneFrame = singleFrame;
     mFengHash = fengHash;
-    if (string) {
-        bSafeStrCpy(mStringBuffer, string, 0x40);
+    if (string != nullptr) {
+        bSafeStrCpy(mStringBuffer, string, sizeof(mStringBuffer));
         if (fengHash) {
-            if (!mPlayOneFrame) {
-                FEngSetScript(mpMessageFirstLine, fengHash, true);
-            } else {
+            if (mPlayOneFrame) {
                 if (!FEngIsScriptSet(mpMessageFirstLine, fengHash)) {
                     FEngSetScript(mpMessageFirstLine, fengHash, true);
                 }
+            } else {
+                FEngSetScript(mpMessageFirstLine, fengHash, true);
             }
         }
         FEPrintf(GetPackageName(), 0x32a7a521, "%s", mStringBuffer);
     }
-    if (iconFengHash == 0 || iconTextureHash == 0) {
-        if (!FEngIsScriptSet(mpIcon, 0x16a259)) {
-            FEngSetScript(mpIcon, 0x16a259, true);
-        }
-    } else {
-        if (!mPlayOneFrame) {
-            FEngSetScript(mpIcon, iconFengHash, true);
-        } else {
+    if (iconFengHash != 0 && iconTextureHash != 0) {
+        if (mPlayOneFrame) {
             if (!FEngIsScriptSet(mpIcon, iconFengHash)) {
                 FEngSetScript(mpIcon, iconFengHash, true);
             }
+        } else {
+            FEngSetScript(mpIcon, iconFengHash, true);
         }
         FEngSetTextureHash(static_cast<FEImage *>(mpIcon), iconTextureHash);
+    } else {
+        if (!FEngIsScriptSet(mpIcon, 0x16a259)) {
+            FEngSetScript(mpIcon, 0x16a259, true);
+        }
     }
     return true;
 }

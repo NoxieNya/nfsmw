@@ -16,7 +16,7 @@ class NumOpponents : public FEToggleWidget {
     ~NumOpponents() override {};
     void Act(const char *parent_pkg, uint32 data) override {
         int numPlayers = FEDatabase->iNumPlayers;
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         int val = settings->NumOpponents;
         if (data == 0x9120409e) {
             val = val - 1;
@@ -29,10 +29,10 @@ class NumOpponents : public FEToggleWidget {
                 val = 1;
             }
         }
-        settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         settings->NumOpponents = static_cast<uint8>(val);
         if (FEDatabase->RaceMode == static_cast<GRace::Type>(3)) {
-            settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+            settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
             settings->NumLaps = static_cast<uint8>(val);
             cFEng::Get()->QueueGameMessage(0x92b703b5, parent_pkg, 0xff);
         }
@@ -44,7 +44,7 @@ class NumOpponents : public FEToggleWidget {
         FEngSetLanguageHash(GetTitleObject(), 0x3384a679);
         FEString *data = GetDataObject();
         const char *fmt = "%d";
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         FEPrintf(data, fmt, settings->NumOpponents);
     };
 };
@@ -54,7 +54,7 @@ class AISkill : public FEToggleWidget {
     AISkill(bool enabled) : FEToggleWidget(enabled) {}
     ~AISkill() override {};
     void Act(const char *parent_pkg, uint32 data) override {
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         int val = settings->AISkill;
         if (data == 0x9120409e) {
             val = val - 1;
@@ -67,7 +67,7 @@ class AISkill : public FEToggleWidget {
                 val = 0;
             }
         }
-        settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         settings->AISkill = static_cast<uint8>(val);
         bMovedLastUpdate = true;
         BlinkArrows(data);
@@ -75,7 +75,7 @@ class AISkill : public FEToggleWidget {
     }
     void Draw() override {
         unsigned int hash = 0;
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         unsigned char skill = settings->AISkill;
         switch (skill) {
             case 0:
@@ -99,8 +99,8 @@ class CatchUp : public FEToggleWidget {
     ~CatchUp() override;
     void Act(const char *parent_pkg, uint32 data) override {
         if (data == 0x9120409e || data == 0xb5971bf1) {
-            RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
-            RaceSettings *settings2 = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+            RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
+            RaceSettings *settings2 = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
             settings->CatchUp = !settings2->CatchUp;
         }
         bMovedLastUpdate = true;
@@ -108,7 +108,7 @@ class CatchUp : public FEToggleWidget {
         Draw();
     };
     void Draw() override {
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         if (settings->CatchUp) {
             FEngSetLanguageHash(GetDataObject(), 0x417b2604);
         } else {
@@ -123,7 +123,7 @@ class TrafficLevel : public FEToggleWidget {
     TrafficLevel(bool enabled) : FEToggleWidget(enabled) {}
     ~TrafficLevel() override {};
     void Act(const char *parent_pkg, uint32 data) override {
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         int val = settings->TrafficDensity;
         if (data == 0x9120409e) {
             val = val - 1;
@@ -136,7 +136,7 @@ class TrafficLevel : public FEToggleWidget {
                 val = 0;
             }
         }
-        settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         settings->TrafficDensity = static_cast<uint8>(val);
         bMovedLastUpdate = true;
         BlinkArrows(data);
@@ -144,7 +144,7 @@ class TrafficLevel : public FEToggleWidget {
     };
     void Draw() override {
         unsigned int hash = 0;
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         unsigned char level = settings->TrafficDensity;
         switch (level) {
             case 0:
@@ -170,7 +170,7 @@ class NumLaps : public FEToggleWidget {
     NumLaps(bool enabled) : FEToggleWidget(enabled) {}
     ~NumLaps() override {};
     void Act(const char *parent_pkg, uint32 data) override {
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         int val = settings->NumLaps;
         if (data == 0x9120409e) {
             val = val - 1;
@@ -183,7 +183,7 @@ class NumLaps : public FEToggleWidget {
                 val = 1;
             }
         }
-        settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         settings->NumLaps = static_cast<uint8>(val);
         bMovedLastUpdate = true;
         BlinkArrows(data);
@@ -192,7 +192,7 @@ class NumLaps : public FEToggleWidget {
     void Draw() override {
         FEString *data = GetDataObject();
         const char *fmt = "%d";
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         FEPrintf(data, fmt, settings->NumLaps);
         FEngSetLanguageHash(GetTitleObject(), 0x48494e83);
     };
@@ -204,8 +204,8 @@ class TrackDirection : public FEToggleWidget {
     ~TrackDirection() override {};
     void Act(const char *parent_pkg, uint32 data) override {
         if (data == 0x9120409e || data == 0xb5971bf1) {
-            RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
-            RaceSettings *settings2 = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+            RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
+            RaceSettings *settings2 = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
             settings->TrackDirection = (settings2->TrackDirection == 0);
         }
         bMovedLastUpdate = true;
@@ -213,7 +213,7 @@ class TrackDirection : public FEToggleWidget {
         Draw();
     };
     void Draw() override {
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         if (settings->TrackDirection == 0) {
             FEngSetLanguageHash(GetDataObject(), 0xde6eff34);
         } else {

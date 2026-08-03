@@ -22,7 +22,7 @@ RaceOverMessage::RaceOverMessage(UTL::COM::Object *pOutter, const char *pkg_name
       bShowTotalledMessage(false) {}
 
 void RaceOverMessage::Update(IPlayer *player) {
-    if (bShowTotalledMessage != 0) {
+    if (bShowTotalledMessage) {
         eView *view = eGetView(player->GetRenderPort(), false);
         CameraMover *cammover = nullptr;
 
@@ -31,7 +31,7 @@ void RaceOverMessage::Update(IPlayer *player) {
         }
 
         if (cammover != nullptr && cammover->GetType() == CM_DRIVE_CUBIC) {
-            bShowTotalledMessage = 0;
+            bShowTotalledMessage = false;
 
             IGenericMessage *igenericmessage;
             if (player->GetHud()->QueryInterface(&igenericmessage)) {
@@ -42,16 +42,16 @@ void RaceOverMessage::Update(IPlayer *player) {
 }
 
 void RaceOverMessage::RequestRaceOverMessage(IPlayer *player) {
-    bShowMessage = 1;
+    bShowMessage = true;
 
     ISimable *simable = player->GetSimable();
     GRacerInfo *info = GRaceStatus::Get().GetRacerInfo(simable);
 
     float racerTime = info->GetRaceTime();
     float raceTimeLimit = GRaceStatus::Get().GetRaceParameters()->GetTimeLimit();
-    float rankByPoints = GRaceStatus::Get().GetRaceParameters()->GetRankPlayersByPoints();
+    float rankByPoints = static_cast<float>(GRaceStatus::Get().GetRaceParameters()->GetRankPlayersByPoints());
 
-    int wasVehicleTotalled = 0;
+    bool wasVehicleTotalled = false;
 
     IVehicle *ivehicle;
     if (info->GetSimable()->QueryInterface(&ivehicle)) {
@@ -61,8 +61,8 @@ void RaceOverMessage::RequestRaceOverMessage(IPlayer *player) {
     bool isCompletedChallengeRace = GRaceStatus::IsChallengeRace() && info->GetChallengeComplete();
     char raceOverMessage[64];
 
-    if (wasVehicleTotalled != 0) {
-        bShowTotalledMessage = 1;
+    if (wasVehicleTotalled) {
+        bShowTotalledMessage = true;
     } else if (info->GetIsEngineBlown()) {
         IGenericMessage *igenericmessage;
 
@@ -84,7 +84,7 @@ void RaceOverMessage::RequestRaceOverMessage(IPlayer *player) {
             igenericmessage->RequestGenericMessage(raceOverMessage, false, 0x8AB83EDB, 0, 0, GenericMessage_Priority_1);
         }
     } else if (0.0f < raceTimeLimit && racerTime > raceTimeLimit && rankByPoints == 0.0f && !isCompletedChallengeRace) {
-        char timeLimitStr[16];
+        char timeLimitStr[64];
         Timer timerLimit = Timer(raceTimeLimit);
 
         timerLimit.PrintToString(timeLimitStr, 4);
@@ -93,7 +93,7 @@ void RaceOverMessage::RequestRaceOverMessage(IPlayer *player) {
         if (player->GetHud()->QueryInterface(&igenericmessage)) {
             igenericmessage->RequestGenericMessage(GetTranslatedString(0x556ED1B2), false, 0x9D73BC15, 0, 0, GenericMessage_Priority_1);
         }
-    } else if (GRaceStatus::IsChallengeRace() != 0 && !info->GetChallengeComplete()) {
+    } else if (GRaceStatus::IsChallengeRace() && !info->GetChallengeComplete()) {
         IGenericMessage *igenericmessage;
 
         bSNPrintf(raceOverMessage, 64, "%s\n%s", GetTranslatedString(0x82E4DAFD), GetTranslatedString(0xF8ED7926));
@@ -108,17 +108,18 @@ void RaceOverMessage::RequestRaceOverMessage(IPlayer *player) {
 
         timerRace.PrintToString(raceTimeStr, 4);
 
-        int last_place = GRaceStatus::Get().GetRacerCount();
-
         int hash;
+        int last_place = GRaceStatus::Get().GetRacerCount();
 
         if (info->GetRanking() > 1 && info->GetRanking() == last_place) {
             hash = 0xEAC720D3;
         } else {
-            hash = RaceOverFinishStrings[info->GetRanking() - 1];
+            info->GetRanking(); // IDK
+            int index = info->GetRanking();
+            hash = RaceOverFinishStrings[index - 1];
         }
 
-        char botMessageString[48];
+        char botMessageString[32];
         bSPrintf(botMessageString, GetLocalizedString(0xC2878EBC), raceTimeStr);
 
         char messageString[64];
@@ -136,6 +137,6 @@ void RaceOverMessage::RequestRaceOverMessage(IPlayer *player) {
 }
 
 void RaceOverMessage::DismissRaceOverMessage() {
-    bShowMessage = 0;
-    bShowTotalledMessage = 0;
+    bShowMessage = false;
+    bShowTotalledMessage = false;
 }

@@ -58,116 +58,8 @@ struct GRaceSaveInfo {
     udecfix16 mTopSpeed;          // offset 0xC, size 0x2
     udecfix16 mAverageSpeed;      // offset 0xE, size 0x2
 
-    GRaceSaveInfo() : mTopSpeed(0), mAverageSpeed(0) {}
+    GRaceSaveInfo() : mTopSpeed(), mAverageSpeed() {}
 };
-
-// class GRaceParameters { // 0x14
-//   public:
-//     GRaceParameters();
-//     Attrib::Key GetCollectionKey();
-//     GameplayObj *GetGameplayObj();
-//     GActivity *GetActivity();
-//     GVault *GetChildVault();
-//     GVault *GetParentVault();
-//     char *GetEventID();
-//     unsigned int GetEventHash();
-//     bool GetIsAvailable();
-//     bool GetIsLoaded();
-//     void BlockUntilLoaded();
-//     int GetLocalizationTag();
-//     unsigned int GetChallengeType();
-//     float GetChallengeGoal();
-//     GRace::Type GetRaceType();
-//     Region GetRegion();
-//     int GetNumLaps();
-//     int GetReputation();
-//     float GetCashValue();
-//     float GetRaceLengthMeters();
-//     bool GetCopsEnabled();
-//     CopDensity GetCopDensity();
-//     bool GetScriptedCopsInRace();
-//     float GetRivalBestTime();
-//     bool GetCanBeReversed();
-//     bool GetIsDDayRace();
-//     bool GetIsBossRace();
-//     bool GetIsMarkerRace();
-//     bool GetIsPursuitRace();
-//     bool GetIsLoopingRace();
-//     bool GetRankPlayersByPoints();
-//     bool GetRankPlayersByDistance();
-//     bool GetNeverInQuickRace();
-//     bool GetIsChallengeSeriesRace();
-//     void GetBoundingBox();
-//     float GetTimeLimit();
-//     int GetBustedLives();
-//     int GetKnockoutsPerLap();
-//     float GetTimedKnockout();
-//     int GetTrafficDensity();
-//     GRace::Difficulty GetDifficulty();
-//     char *GetTrafficPattern();
-//     float GetMaxHeatLevel();
-//     float GetInitialPlayerSpeed();
-//     bool GetIsRollingStart();
-//     char *GetPlayerCarType();
-//     float GetPlayerCarPerformance();
-//     bool GetUseWorldHeatInRace();
-//     float GetForceHeatLevel();
-//     float GetMaxRaceHeatLevel();
-//     bool GetCatchUp();
-//     bool GetCatchUpOverride();
-//     char *GetCatchUpSkill();
-//     char *GetCatchUpSpread();
-//     float GetCatchUpIntegral();
-//     float GetCatchUpDerivative();
-//     bool GetPhotofinish();
-//     int GetNumOpponents();
-//     GCharacter *GetOpponentChar();
-//     unsigned int GetNumCheckpoints();
-//     /* vtable[1] */ virtual void GetCheckpointPosition();
-//     /* vtable[2] */ virtual void GetCheckpointDirection();
-//     bool GetCheckpointsVisible();
-//     unsigned int GetNumShortcuts();
-//     GMarker *GetShortcut();
-//     unsigned int GetNumBarrierExemptions();
-//     GMarker *GetBarrierExemption();
-//     bool HasFinishLine();
-//     void GetStartPosition();
-//     void GetStartDirection();
-//     Angle GetStartAngle();
-//     void GetFinishPosition();
-//     void GetFinishDirection();
-//     unsigned int GetBarrierCount();
-//     char *GetBarrierName();
-//     unsigned int GetBarrierHash();
-//     bool GetBarrierIsFlipped();
-//     bool GetNoPostRaceScreen();
-//     char *GetPhotoFinishCamera();
-//     char *GetPhotoFinishTexture();
-//     float GetTimeOfDay();
-//     bool GetIsSunsetRace();
-//     float GetStartTime();
-//     float GetStartPercent();
-//     char *GetSpeedTrapCamera();
-//     bool SetupTimeOfDay();
-
-//   protected:
-//     // GRaceParameters();
-//     /* vtable[3] */ virtual ~GRaceParameters();
-//     bool GetInitiallyUnlockedQuickRace();
-//     bool GetInitiallyUnlockedOnline();
-//     bool GetInitiallyUnlockedChallenge();
-//     void GenerateIndex();
-//     void EnsureLoaded();
-//     void NotifyParentVaultUnloading();
-//     void NotifyParentVaultLoaded();
-//     void ExtractPosition();
-//     void ExtractDirection();
-
-//     /* 0x00 */ GRaceIndexData *mIndex;
-//     /* 0x04 */ Attrib::Gen::gameplay *mRaceRecord;
-//     /* 0x08 */ GVault *mParentVault;
-//     /* 0x0c */ GVault *mChildVault;
-// };
 
 // total size: 0x14
 class GRaceParameters {
@@ -510,6 +402,18 @@ class GRaceDatabase {
 
     bool IsQuickRaceComplete(unsigned int eventHash) {
         return CheckRaceScoreFlags(eventHash, kCompleted_ContextQuickRace);
+    }
+
+    bool IsCareerRaceUnlocked(unsigned int eventHash) {
+        return CheckRaceScoreFlags(eventHash, kUnlocked_Career);
+    }
+
+    bool IsQuickRaceUnlocked(unsigned int eventHash) {
+        return CheckRaceScoreFlags(eventHash, kUnlocked_QuickRace);
+    }
+
+    bool IsOnlineRaceUnlocked(unsigned int eventHash) {
+        return CheckRaceScoreFlags(eventHash, kUnlocked_Online);
     }
 
     const char *GetDDayStartRace() const {

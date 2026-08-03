@@ -1,9 +1,5 @@
-#ifndef FRONTEND_MENUSCREENS_INGAME_PHOTOFINISH_H
-#define FRONTEND_MENUSCREENS_INGAME_PHOTOFINISH_H
-
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
+#ifndef PHOTOFINISH_HPP
+#define PHOTOFINISH_HPP
 
 #include "Speed/Indep/Src/Generated/Events/EShowResults.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
@@ -20,10 +16,10 @@ class SillyTextureStreamerManager {
   public:
     SillyTextureStreamerManager(const char *stream_pack);
     ~SillyTextureStreamerManager();
-    void Load(unsigned int hash, FEImage *image);
-    void Unload(unsigned int hash);
+    void Load(uint32 hash, FEImage *image);
+    void Unload(uint32 hash);
     void UnloadAll();
-    bool IsLoaded(unsigned int hash);
+    bool IsLoaded(uint32 hash);
     bool IsBusyLoading();
 
   private:
@@ -31,7 +27,7 @@ class SillyTextureStreamerManager {
         reinterpret_cast<SillyTextureStreamerManager *>(param)->MakeSpaceInPoolCallback();
     }
     void MakeSpaceInPoolCallback();
-    static void LoadCallbackBridge(unsigned int param) {
+    static void LoadCallbackBridge(uint32 param) {
         reinterpret_cast<SillyTextureStreamerManager *>(param)->LoadCallback();
     }
     void LoadCallback();
@@ -47,7 +43,7 @@ class PhotoFinishScreen : public MenuScreen {
   public:
     PhotoFinishScreen(ScreenConstructorData *sd);
     ~PhotoFinishScreen() override;
-    void NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) override;
+    void NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) override;
     static MenuScreen *Create(ScreenConstructorData *sd);
     static bool mRestartSelected;
 

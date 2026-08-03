@@ -6,26 +6,21 @@
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 
 TimeExtension::TimeExtension(UTL::COM::Object *pOutter, const char *pkg_name, int player_number)
-    : HudElement(pkg_name, 0x2000000), ITimeExtension(pOutter) {
-    mPlayerLapTime = 0.0f;
-    mTimeToShow = 0.0f;
-    mScriptHash = 0;
-    mTimerTimeExtension.ResetLow();
-    mTimerNextTollbooth.ResetLow();
-}
+    : HudElement(pkg_name, 0x2000000), ITimeExtension(pOutter), mPlayerLapTime(0.0f), mTimeToShow(0.0f), mScriptHash(0), mTimerTimeExtension(),
+      mTimerNextTollbooth() {}
 
+// UNSOLVED
 void TimeExtension::Update(IPlayer *player) {
     if (GRaceStatus::Get().GetRaceType() != 4)
         return;
 
+    char messageString[32];
     if (mTimeToShow > 0.0f) {
-        IHud *hud = player->GetHud();
         IGenericMessage *igenericmessage;
-        if (hud->QueryInterface(&igenericmessage) && !igenericmessage->IsGenericMessageShowing()) {
+        if (player->GetHud()->QueryInterface(&igenericmessage) && !igenericmessage->IsGenericMessageShowing()) {
             mTimerTimeExtension = WorldTimer;
-            char messageString[32];
-            char timeToPrint[16];
             Timer timer(GRaceStatus::Get().GetRaceTimeRemaining() - mTimeToShow);
+            char timeToPrint[16];
             timer.PrintToString(timeToPrint, 4);
             bSPrintf(messageString, "%s\n+%s", GetTranslatedString(0x1c074e14), timeToPrint);
             igenericmessage->RequestGenericMessage(messageString, false, 0x8ab83edb, bStringHash("TIMER_ICON"), 0x609f6b15,
@@ -53,9 +48,8 @@ void TimeExtension::Update(IPlayer *player) {
     }
 
     if (mPlayerLapTime <= 10.0f) {
-        char messageString[32];
-        char timeToPrint[16];
         Timer timer(mPlayerLapTime);
+        char timeToPrint[16];
         timer.PrintToString(timeToPrint, 4);
         bSPrintf(messageString, "%s!\n%s", GetTranslatedString(0x862a0519), timeToPrint);
 
@@ -63,18 +57,16 @@ void TimeExtension::Update(IPlayer *player) {
             if (mScriptHash == 0 || mScriptHash == 0x821e6378) {
                 mScriptHash = 0x4f79cba2;
             }
-            IHud *hud = player->GetHud();
             IGenericMessage *igenericmessage;
-            if (hud->QueryInterface(&igenericmessage)) {
+            if (player->GetHud()->QueryInterface(&igenericmessage)) {
                 igenericmessage->RequestGenericMessage(messageString, true, mScriptHash, 0, 0, GenericMessage_Priority_5);
             }
         } else if (mPlayerLapTime <= 10.0f) {
             if (!mScriptHash) {
                 mScriptHash = 0x821e6378;
             }
-            IHud *hud = player->GetHud();
             IGenericMessage *igenericmessage;
-            if (hud->QueryInterface(&igenericmessage)) {
+            if (player->GetHud()->QueryInterface(&igenericmessage)) {
                 igenericmessage->RequestGenericMessage(messageString, true, mScriptHash, 0, 0, GenericMessage_Priority_5);
             }
         }
@@ -83,22 +75,19 @@ void TimeExtension::Update(IPlayer *player) {
             if ((WorldTimer - mTimerNextTollbooth).GetSeconds() >= 2.0f) {
                 mScriptHash = 0;
                 mTimerNextTollbooth.UnSet();
-                return;
-            }
-            mScriptHash = 0x8ab83edb;
-            char messageString[32];
-            char timeToPrint[16];
-            Timer timer(GRaceStatus::Get().GetRaceTimeRemaining());
-            timer.PrintToString(timeToPrint, 4);
-            bSPrintf(messageString, "%s\n%s", GetTranslatedString(0x171471b4), timeToPrint);
-            IHud *hud = player->GetHud();
-            IGenericMessage *igenericmessage;
-            if (hud->QueryInterface(&igenericmessage)) {
-                igenericmessage->RequestGenericMessage(messageString, true, mScriptHash, bStringHash("TIMER_ICON"), 0x609f6b15,
-                                                       GenericMessage_Priority_3);
+            } else {
+                mScriptHash = 0x8ab83edb;
+                Timer timer(GRaceStatus::Get().GetRaceTimeRemaining());
+                char timeToPrint[16];
+                timer.PrintToString(timeToPrint, 4);
+                bSPrintf(messageString, "%s\n%s", GetTranslatedString(0x171471b4), timeToPrint);
+                IGenericMessage *igenericmessage;
+                if (player->GetHud()->QueryInterface(&igenericmessage)) {
+                    igenericmessage->RequestGenericMessage(messageString, true, mScriptHash, bStringHash("TIMER_ICON"), 0x609f6b15,
+                                                           GenericMessage_Priority_3);
+                }
             }
         }
-        mScriptHash = 0;
     }
 }
 

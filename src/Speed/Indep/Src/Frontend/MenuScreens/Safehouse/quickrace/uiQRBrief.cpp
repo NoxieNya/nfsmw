@@ -138,36 +138,15 @@ void UIQRBrief::UpdateSliders() {
     Physics::Info::EstimatePerformance(pveh, stock_perf);
 
     AccelerationSlider.SetValue(stock_perf.Acceleration);
-    float acc_val = stock_perf.Acceleration;
-    float acc_min = AccelerationSlider.GetMin();
-    float acc_max = AccelerationSlider.GetMax();
-    if (acc_val < acc_min)
-        acc_val = acc_min;
-    if (acc_val > acc_max)
-        acc_val = acc_max;
-    AccelerationSlider.SetPreviewValue(acc_val);
+    AccelerationSlider.SetPreviewValue(stock_perf.Acceleration);
     AccelerationSlider.Draw();
 
     TopSpeedSlider.SetValue(stock_perf.TopSpeed);
-    float top_val = stock_perf.TopSpeed;
-    float top_min = TopSpeedSlider.GetMin();
-    float top_max = TopSpeedSlider.GetMax();
-    if (top_val < top_min)
-        top_val = top_min;
-    if (top_val > top_max)
-        top_val = top_max;
-    TopSpeedSlider.SetPreviewValue(top_val);
+    TopSpeedSlider.SetPreviewValue(stock_perf.TopSpeed);
     TopSpeedSlider.Draw();
 
     HandlingSlider.SetValue(stock_perf.Handling);
-    float hdl_val = stock_perf.Handling;
-    float hdl_min = HandlingSlider.GetMin();
-    float hdl_max = HandlingSlider.GetMax();
-    if (hdl_val < hdl_min)
-        hdl_val = hdl_min;
-    if (hdl_val > hdl_max)
-        hdl_val = hdl_max;
-    HandlingSlider.SetPreviewValue(hdl_val);
+    HandlingSlider.SetPreviewValue(stock_perf.Handling);
     HandlingSlider.Draw();
 }
 
@@ -245,7 +224,7 @@ void UIQRBrief::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 par
             stable->BuildRideForPlayer(pSelectedCar->mHandle, 0, &ride);
             ride.SetRandomPaint();
             ride.SetRandomParts();
-            CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), static_cast<eCarViewerWhichCar>(0));
+            CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), eCARVIEWER_PLAYER1_CAR);
             break;
         }
         case 0x406415e3: {
@@ -255,7 +234,7 @@ void UIQRBrief::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 par
             break;
         }
         case 0xe1fde1d1: {
-            RaceSettings *qr_settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+            RaceSettings *qr_settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
             qr_settings->SelectedCar[0] = 0x12345678;
             FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
             FECarRecord *placeholder = stable->GetCarRecordByHandle(0x12345678);
@@ -263,7 +242,7 @@ void UIQRBrief::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 par
             *placeholder = *real_car;
             placeholder->FilterBits = 0xf0020;
             FECustomizationRecord *cust_rec = stable->GetCustomizationRecordByHandle(placeholder->Customization);
-            RideInfo *player_ride = CarViewer::GetRideInfo(static_cast<eCarViewerWhichCar>(0));
+            RideInfo *player_ride = CarViewer::GetRideInfo(eCARVIEWER_PLAYER1_CAR);
             cust_rec->WriteRideIntoRecord(player_ride);
             Attrib::Gen::pvehicle pveh(placeholder->VehicleKey, 0, nullptr);
             int max_nitrous = Physics::Upgrades::GetMaxLevel(pveh, static_cast<Physics::Upgrades::Type>(6));

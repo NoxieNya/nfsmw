@@ -6,27 +6,28 @@ extern int DisableWideStringHistogram;
 WideCharHistogram *pWideCharHistogram;
 
 void WideCharHistogram::PlatEndianSwap() {
-    bEndianSwap32(&NumEntries);
-    for (int i = 0; i < NumEntries; i++) {
-        bEndianSwap16(&EntryTable[i]);
+    bPlatEndianSwap(&NumEntries);
+    for (int n = 0; n < NumEntries; n++) {
+        bPlatEndianSwap(&EntryTable[n]);
     }
 }
 
+// UNSOLVED
 bool WideCharHistogram::PackString(char *packed, int size, const uint16 *wide) {
-    unsigned int error = 0;
-    int out = 0;
-    int in = 0;
+    bool error = false;
+    int string_pos = 0;
+    int wide_string_pos = 0;
     uint16 ch;
     if (size > 0) {
         do {
-            ch = wide[in];
-            in++;
+            ch = wide[wide_string_pos];
+            wide_string_pos++;
             if (ch > 0xFF7F) {
                 ch = ch + 0x100;
             }
             if (ch < 0x80) {
-                packed[out] = static_cast<char>(ch);
-                out++;
+                packed[string_pos] = static_cast<char>(ch);
+                string_pos++;
             } else if (DisableWideStringHistogram == 0) {
                 int numEntries = NumEntries;
                 int idx = 0x80;
@@ -39,8 +40,8 @@ bool WideCharHistogram::PackString(char *packed, int size, const uint16 *wide) {
                 if (idx == numEntries) {
                     error = 1;
                 } else if (idx < 0x100) {
-                    packed[out] = static_cast<char>(idx);
-                    out++;
+                    packed[string_pos] = static_cast<char>(idx);
+                    string_pos++;
                 } else {
                     int j = 0x80;
                     do {
@@ -50,9 +51,9 @@ bool WideCharHistogram::PackString(char *packed, int size, const uint16 *wide) {
                             idxVal = idx + 0x7f;
                         }
                         if (static_cast<unsigned int>(entry) == static_cast<unsigned int>(idxVal >> 7)) {
-                            packed[out] = static_cast<char>(j);
-                            packed[out + 1] = static_cast<char>(idx) + static_cast<char>(entry) * -0x80 + -0x80;
-                            out += 2;
+                            packed[string_pos] = static_cast<char>(j);
+                            packed[string_pos + 1] = static_cast<char>(idx) + static_cast<char>(entry) * -0x80 + -0x80;
+                            string_pos += 2;
                             break;
                         }
                         j++;
@@ -62,15 +63,16 @@ bool WideCharHistogram::PackString(char *packed, int size, const uint16 *wide) {
                     }
                 }
             } else if (ch < 0x100) {
-                packed[out] = static_cast<char>(ch);
-                out++;
+                packed[string_pos] = static_cast<char>(ch);
+                string_pos++;
             }
-        } while (ch != 0 && out < size);
+        } while (ch != 0 && string_pos < size);
     }
 }
 
+// UNSOLVED
 bool WideCharHistogram::UnpackString(uint16 *wide, int size, const char *packed) {
-    unsigned int error = 0;
+    bool error = false;
     int out = 0;
     if (size > 0) {
         bool histEnabled = DisableWideStringHistogram == 0;

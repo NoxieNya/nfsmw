@@ -72,7 +72,7 @@ class ResourceFile : public bTNode<ResourceFile> {
     }
 
     void BeginLoading() {
-        BeginLoading(nullptr, 0);
+        BeginLoading(reinterpret_cast<void (*)(void *)>(0), reinterpret_cast<void *>(0));
     }
 
     int IsFinishedLoading() {

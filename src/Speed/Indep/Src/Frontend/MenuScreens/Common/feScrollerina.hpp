@@ -84,10 +84,10 @@ class ScrollerSlot : public bTNode<ScrollerSlot> {
     void Show();
     void Highlight() {
         SetScript(FEHASH_HIGHLIGHT);
-    };
+    }
     void UnHighlight() {
         SetScript(FEHASH_UNHIGHLIGHT);
-    };
+    }
     void Enable() {
         bEnabled = true;
     }
@@ -146,18 +146,22 @@ class Scrollerina {
     void PageDown();
     void MoveNext() {
         MoveSelected(eSD_NEXT, true);
-    };
+    }
     void MovePrev() {
         MoveSelected(eSD_PREV, true);
-    };
+    }
     bool Reset(bool update);
     void Update(bool print);
-    void UnHighlightSelected();
+    void UnHighlightSelected() {
+        if (SelectedSlot != nullptr) {
+            SelectedSlot->UnHighlight();
+        }
+    }
     void HighlightSelected() {
         if (SelectedSlot != nullptr) {
             SelectedSlot->Highlight();
         }
-    };
+    }
     void Enable(ScrollerDatum *datum);
     void Disable(ScrollerDatum *datum);
     void DeleteScrollerData();
@@ -181,8 +185,8 @@ class Scrollerina {
     }
     uint32 GetSelectedSlotIndex() {
         return GetNodeIndex(GetSelectedSlot());
-    };
-    void SetSelectedDatum(uint32 index) {};
+    }
+    void SetSelectedDatum(uint32 index);
     void SetSelectedDatum(ScrollerDatum *datum) {
         SelectedDatum = datum;
     }
@@ -204,7 +208,7 @@ class Scrollerina {
     }
     ScrollerSlot *GetFirstSlot() {
         return Slots.GetHead();
-    };
+    }
     ScrollerSlot *GetLastSlot();
     ScrollerSlot *GetSlot(int ordinal_number);
     ScrollerDatum *FindDatumInSlot(ScrollerSlot *to_find);

@@ -79,7 +79,7 @@ void UIQRTrackSelect::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
             break;
         case 0x911ab364: {
             GRaceDatabase::Get().ClearStartupRace();
-            RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+            RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
             settings->EventHash = 0;
             const char *pkg;
             if (FEDatabase->IsOnlineMode() || FEDatabase->IsLANMode()) {
@@ -174,7 +174,7 @@ void UIQRTrackSelect::TryToAddTrack(GRaceParameters *parms, int unlock_filter, i
         SelectableTrack *node = new SelectableTrack(parms, isDDay, bin_num);
         Tracks.AddTail(node);
     } else {
-        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         unsigned char region = settings->RegionFilterBits;
         if (parms->GetRegion() != region && region != GRace::kRaceRegion_NumRegions) {
             return;
@@ -183,7 +183,7 @@ void UIQRTrackSelect::TryToAddTrack(GRaceParameters *parms, int unlock_filter, i
         bool isUnlocked = UnlockSystem::IsTrackUnlocked(static_cast<eUnlockFilters>(unlock_filter), eventHash, 0);
         SelectableTrack *node = new SelectableTrack(parms, !isUnlocked, bin_num);
         Tracks.AddTail(node);
-        settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+        settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
         unsigned int settingsHash = settings->EventHash;
         if (parms->GetEventHash() == settingsHash) {
             pCurrentNode = node;
@@ -241,7 +241,7 @@ void UIQRTrackSelect::RefreshHeader() {
     img = FEngFindImage(GetPackageName(), 0x2d145be3);
     FEngSetButtonTexture(img, 0x682);
 
-    RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+    RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
     unsigned int hash;
     switch (settings->RegionFilterBits) {
         case 0:
@@ -387,7 +387,7 @@ void UIQRTrackSelect::ScrollTracks(eScrollDir dir) {
 }
 
 void UIQRTrackSelect::ScrollRegions(eScrollDir dir) {
-    RaceSettings *settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+    RaceSettings *settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
     unsigned char region = settings->RegionFilterBits;
     if (dir == eSD_PREV) {
         if (region == 0) {
@@ -402,7 +402,7 @@ void UIQRTrackSelect::ScrollRegions(eScrollDir dir) {
             region++;
         }
     }
-    settings = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+    settings = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
     settings->RegionFilterBits = region;
     BuildPresetTrackList();
     RefreshHeader();

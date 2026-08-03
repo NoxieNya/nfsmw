@@ -49,7 +49,9 @@ class KeyboardEditString {
     void Enable() {
         mEnabled = true;
     }
-    void Disable() {}
+    void Disable() {
+        mEnabled = false;
+    }
     void NotifyChar(int keycode);
     void ProcessHotkeys(int keycode);
     void CursorLeft();

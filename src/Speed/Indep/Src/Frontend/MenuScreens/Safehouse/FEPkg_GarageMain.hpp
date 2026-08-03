@@ -99,4 +99,7 @@ class GarageMainScreen : public MenuScreen {
     float mZoom;                        // offset 0x88, size 0x4
     int mCustomizationCategory;         // offset 0x8C, size 0x4
 };
+
+MenuScreen *CreateGarageMainScreen(ScreenConstructorData *sd);
+
 #endif

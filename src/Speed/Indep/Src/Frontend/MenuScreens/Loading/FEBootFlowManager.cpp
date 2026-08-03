@@ -1,5 +1,6 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Loading/FEBootFlowManager.hpp"
 #include "Speed/Indep/Src/Ecstasy/Ecstasy.hpp"
+#include "Speed/Indep/Src/Frontend/FEManager.hpp"
 #include "Speed/Indep/Src/Misc/BuildRegion.hpp"
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
@@ -19,7 +20,7 @@ BootFlowManager *BootFlowManager::mInstance;
 
 void BootFlowManager::Init() {
     if (mInstance == nullptr) {
-        mInstance = new BootFlowManager();
+        mInstance = new ("BootFlowManager", 0) BootFlowManager();
     }
 }
 
@@ -40,64 +41,67 @@ BootFlowManager::BootFlowManager() {
     if (!BuildRegion::IsPal()) {
         if (eIsWidescreen()) {
             for (int i = 0; i < 7; i++) {
-                if (*sBootFlowWideScreen[i] != '\0') {
-                    BootFlowScreen *screen = new BootFlowScreen();
-                    screen->Name = sBootFlowWideScreen[i];
-                    BootFlowScreens.AddTail(screen);
+                bool add_screen = true;
+
+                if (bStrICmp(sBootFlowWideScreen[i], "WS_LS_EA_hidef.fng") == 0) {
+                    // haha we don't do that here
+                }
+
+                if (add_screen && *sBootFlowWideScreen[i] != '\0') {
+                    BootFlowScreens.AddTail(new ("BootFlowScreen", 0) BootFlowScreen(sBootFlowWideScreen[i]));
                 }
             }
         } else {
             for (int i = 0; i < 7; i++) {
                 if (*sBootFlowNTSC[i] != '\0') {
-                    BootFlowScreen *screen = new BootFlowScreen();
-                    screen->Name = sBootFlowNTSC[i];
-                    BootFlowScreens.AddTail(screen);
+                    BootFlowScreens.AddTail(new ("BootFlowScreen", 0) BootFlowScreen(sBootFlowNTSC[i]));
                 }
             }
         }
     } else {
         if (eIsWidescreen()) {
             for (int i = 0; i < 7; i++) {
-                if (*sBootFlowPALWidescreen[i] != '\0') {
-                    BootFlowScreen *screen = new BootFlowScreen();
-                    screen->Name = sBootFlowPALWidescreen[i];
-                    BootFlowScreens.AddTail(screen);
+                bool add_screen = true;
+
+                if (bStrICmp(sBootFlowPALWidescreen[i], "LS_LangSelect.fng") == 0 && !BuildRegion::ShowLanguageSelect()) {
+                    add_screen = false;
+                }
+
+                if (add_screen && *sBootFlowPALWidescreen[i] != '\0') {
+                    BootFlowScreens.AddTail(new ("BootFlowScreen", 0) BootFlowScreen(sBootFlowPALWidescreen[i]));
                 }
             }
         } else {
             for (int i = 0; i < 7; i++) {
-                if (*sBootFlowPAL[i] != '\0') {
-                    BootFlowScreen *screen = new BootFlowScreen();
-                    screen->Name = sBootFlowPAL[i];
-                    BootFlowScreens.AddTail(screen);
+                bool add_screen = true;
+
+                if (bStrICmp(sBootFlowPAL[i], "LS_LangSelect.fng") == 0 && !BuildRegion::ShowLanguageSelect()) {
+                    add_screen = false;
+                }
+
+                if (add_screen && *sBootFlowPAL[i] != '\0') {
+                    BootFlowScreens.AddTail(new ("BootFlowScreen", 0) BootFlowScreen(sBootFlowPAL[i]));
                 }
             }
         }
     }
     CurrentScreen = BootFlowScreens.GetHead();
+    FEManager::Get()->SetFirstScreen(CurrentScreen->Name, 0, 0);
 }
 
 BootFlowScreen *BootFlowManager::FindScreen(const char *name) {
-    {
-        BootFlowScreen *s = BootFlowScreens.GetHead();
-        while (s != BootFlowScreens.EndOfList()) {
-            if (bStrICmp(s->Name, name) == 0) {
-                return s;
-            }
-            s = s->GetNext();
+    for (BootFlowScreen *s = BootFlowScreens.GetHead(); s != BootFlowScreens.EndOfList(); s = s->GetNext()) {
+        if (bStrICmp(s->Name, name) == 0) {
+            return s;
         }
     }
     return nullptr;
 }
 
 BootFlowScreen *BootFlowManager::FindScreenSubStr(const char *name) {
-    {
-        BootFlowScreen *s = BootFlowScreens.GetHead();
-        while (s != BootFlowScreens.EndOfList()) {
-            if (bStrStr(s->Name, name) != nullptr) {
-                return s;
-            }
-            s = s->GetNext();
+    for (BootFlowScreen *s = BootFlowScreens.GetHead(); s != BootFlowScreens.EndOfList(); s = s->GetNext()) {
+        if (bStrStr(s->Name, name) != nullptr) {
+            return s;
         }
     }
     return nullptr;
@@ -109,11 +113,11 @@ void BootFlowManager::JumpToHead() {
 }
 
 bool BootFlowManager::JumpToScreen(const char *screen_name) {
-    BootFlowScreen *screen = FindScreen(screen_name);
-    if (screen == nullptr) {
+    BootFlowScreen *new_screen = FindScreen(screen_name);
+    if (new_screen == nullptr) {
         return false;
     }
-    CurrentScreen = screen;
+    CurrentScreen = new_screen;
     cFEng::Get()->QueuePackagePop(0);
     cFEng::Get()->QueuePackagePush(CurrentScreen->Name, 0, 0, false);
     if (BootFlowScreens.GetTail() == CurrentScreen) {
@@ -123,11 +127,11 @@ bool BootFlowManager::JumpToScreen(const char *screen_name) {
 }
 
 bool BootFlowManager::DoAttract() {
-    BootFlowScreen *screen = FindScreenSubStr("Attract");
-    if (screen == nullptr) {
+    BootFlowScreen *new_screen = FindScreenSubStr("Attract");
+    if (new_screen == nullptr) {
         return false;
     }
-    return JumpToScreen(screen->Name);
+    return JumpToScreen(new_screen->Name);
 }
 
 void BootFlowManager::ChangeToNextBootFlowScreen(int mask) {

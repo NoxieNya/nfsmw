@@ -11,85 +11,70 @@ Countdown::Countdown(UTL::COM::Object *pOutter, const char *pkg_name, int player
     : HudElement(pkg_name, 0x400),            //
       ICountdown(pOutter),                    //
       mCountdown(RACE_COUNTDOWN_NUMBER_NONE), //
-      mSecondTimer(0) {
+      mSecondTimer() {
     pMessageGroup = RegisterGroup(FEHashUpper("321_GO_GROUP"));
     pMessage = static_cast<FEString *>(FEngFindObject(pkg_name, FEHashUpper("321_GO")));
     pMessageShadow = static_cast<FEString *>(FEngFindObject(pkg_name, FEHashUpper("321_GO_SHADOW")));
 }
 
 void Countdown::Update(IPlayer *player) {
-    if (!pMessageGroup)
+    if (pMessageGroup == nullptr)
         return;
-    if (!pMessage)
+    if (pMessage == nullptr)
         return;
-    if (!pMessageShadow)
+    if (pMessageShadow == nullptr)
         return;
 
     if (WorldTimer.IsSet()) {
-        int countdown = mCountdown;
-        bool shouldStep = false;
+        if (mCountdown == RACE_COUNTDOWN_NUMBER_4 || (mCountdown > 0 && (WorldTimer - mSecondTimer).GetSeconds() >= 1.0f) ||
+            (mCountdown == 0 && (WorldTimer - mSecondTimer).GetSeconds() >= 6.0f)) {
 
-        if (countdown == RACE_COUNTDOWN_NUMBER_4) {
-            shouldStep = true;
-        } else if (countdown > 0) {
-            if ((WorldTimer - mSecondTimer).GetSeconds() >= 1.0f) {
-                shouldStep = true;
+            mCountdown = static_cast<eRaceCountdownNumber>(mCountdown - 1);
+
+            if (mCountdown == RACE_COUNTDOWN_NUMBER_NONE) {
+                FEngSetScript(pMessageGroup, 0x16a259, true);
+                mSecondTimer.UnSet();
+                return;
             }
-        } else if (!countdown) {
-            if ((WorldTimer - mSecondTimer).GetSeconds() >= 6.0f) {
-                shouldStep = true;
-            }
-        }
 
-        if (!shouldStep)
-            return;
+            if (mCountdown == RACE_COUNTDOWN_NUMBER_GO) {
+                FEngSetScript(pMessageGroup, 0x535, true);
+                FEngSetLanguageHash(pMessage, 0x61223ab5);
+                FEngSetLanguageHash(pMessageShadow, 0x61223ab5);
 
-        mCountdown = static_cast<eRaceCountdownNumber>(countdown - 1);
+                extern Timer WorldTimer; // Not exactly sure what is extern here
 
-        if (mCountdown == RACE_COUNTDOWN_NUMBER_NONE) {
-            FEngSetScript(pMessageGroup, 0x16a259, true);
-            mSecondTimer.UnSet();
-            return;
-        }
-
-        if (mCountdown == RACE_COUNTDOWN_NUMBER_GO) {
-            FEngSetScript(pMessageGroup, 0x535, true);
-            FEngSetLanguageHash(pMessage, 0x61223ab5);
-            FEngSetLanguageHash(pMessageShadow, 0x61223ab5);
-
-            {
-                MCountdownDone msg;
-                msg.Post(UCrc32(0x20d60dbf));
+                MCountdownDone().Post(UCrc32(0x20d60dbf));
                 mSecondTimer = WorldTimer;
+
+                new ENISWorldAnimTrigger("EN_TollBoothArm_01", 0.0f, 0, 0);
+                new ENISWorldAnimTrigger("EN_TollBoothArm_02", 0.0f, 0, 0);
+                new ENISWorldAnimTrigger("EN_TollBoothArm_03", 0.0f, 0, 0);
+                new ENISWorldAnimTrigger("EN_TollBoothArm_04", 0.0f, 0, 0);
+
+                SetSoundControlState(false, SNDSTATE_NIS_321, "NIS 321");
+                return;
             }
 
-            new ENISWorldAnimTrigger("EN_TollBoothArm_01", 0.0f, 0, 0);
-            new ENISWorldAnimTrigger("EN_TollBoothArm_02", 0.0f, 0, 0);
-            new ENISWorldAnimTrigger("EN_TollBoothArm_03", 0.0f, 0, 0);
-            new ENISWorldAnimTrigger("EN_TollBoothArm_04", 0.0f, 0, 0);
+            if (mCountdown == RACE_COUNTDOWN_NUMBER_3) {
+                FEngSetScript(pMessageGroup, 0x3c3c2f7, true);
 
-            SetSoundControlState(false, SNDSTATE_NIS_321, "NIS 321");
-            return;
+                new ENISWorldAnimTrigger("EN_TollBoothArm_01", 0.0f, 1, 0);
+                new ENISWorldAnimTrigger("EN_TollBoothArm_02", 0.0f, 1, 0);
+                new ENISWorldAnimTrigger("EN_TollBoothArm_03", 0.0f, 1, 0);
+                new ENISWorldAnimTrigger("EN_TollBoothArm_04", 0.0f, 1, 0);
+
+                g_pEAXSound->START_321Countdown();
+            } else if (mCountdown == RACE_COUNTDOWN_NUMBER_2) {
+                FEngSetScript(pMessageGroup, 0xe479, true);
+            } else if (mCountdown == RACE_COUNTDOWN_NUMBER_1) {
+                FEngSetScript(pMessageGroup, 0xce01, true);
+            }
+
+            FEPrintf(pMessage, "%d", mCountdown);
+            FEPrintf(pMessageShadow, "%d", mCountdown);
+            mSecondTimer = WorldTimer;
         }
-
-        if (mCountdown == RACE_COUNTDOWN_NUMBER_3) {
-            FEngSetScript(pMessageGroup, 0x3c3c2f7, true);
-
-            new ENISWorldAnimTrigger("EN_TollBoothArm_01", 0.0f, 1, 0);
-            new ENISWorldAnimTrigger("EN_TollBoothArm_02", 0.0f, 1, 0);
-            new ENISWorldAnimTrigger("EN_TollBoothArm_03", 0.0f, 1, 0);
-            new ENISWorldAnimTrigger("EN_TollBoothArm_04", 0.0f, 1, 0);
-
-            g_pEAXSound->START_321Countdown();
-        } else if (mCountdown == RACE_COUNTDOWN_NUMBER_2) {
-            FEngSetScript(pMessageGroup, 0xe479, true);
-        } else if (mCountdown == RACE_COUNTDOWN_NUMBER_1) {
-            FEngSetScript(pMessageGroup, 0xce01, true);
-        }
-
-        FEPrintf(pMessage, "%d", mCountdown);
-        FEPrintf(pMessageShadow, "%d", mCountdown);
-        mSecondTimer = WorldTimer;
     } else {
         FEngSetScript(pMessageGroup, 0x16a259, true);
         mSecondTimer.UnSet();

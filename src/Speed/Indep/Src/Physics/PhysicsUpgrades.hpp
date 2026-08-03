@@ -22,8 +22,18 @@ enum Type {
 
 // total size: 0x20
 struct Package {
-    int Part[7];   // offset 0x0, size 0x1C
-    int32 Junkman; // offset 0x1C, size 0x4
+    int Part[PUT_MAX]; // offset 0x0, size 0x1C
+    int32 Junkman;     // offset 0x1C, size 0x4.
+
+    Package() {
+        bMemSet(this, 0, sizeof(*this));
+        Junkman = 0; // in case bMemSet didn't work I guess?
+    }
+
+    void Default() {
+        bMemSet(this, 0, sizeof(*this));
+        Junkman = 0; // in case bMemSet didn't work I guess?
+    }
 };
 
 int GetMaxLevel(const Attrib::Gen::pvehicle &vehicle, Type type);

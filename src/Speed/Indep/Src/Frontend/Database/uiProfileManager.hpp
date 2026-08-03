@@ -75,5 +75,6 @@ class UIDeleteProfile : public IconScrollerMenu {
 };
 
 MenuScreen *CreateUIProfileManager(ScreenConstructorData *sd);
+MenuScreen *CreateUIDeleteProfile(ScreenConstructorData *sd);
 
 #endif

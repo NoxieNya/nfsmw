@@ -7,9 +7,12 @@ FadeScreen::FadeScreen(ScreenConstructorData *sd) : MenuScreen(sd) {}
 FadeScreen::~FadeScreen() {}
 
 void FadeScreen::NotificationMessage(u32 Message, FEObject *pObject, u32 Param1, u32 Param2) {
-    if (Message == 0x83323AEB) {
+    const u32 FEHash_Activate_Controllers = 0xC7D61AC7;
+    const u32 FEHash_Supress_Controllers = 0x83323AEB;
+
+    if (Message == FEHash_Supress_Controllers) {
         FEManager::Get()->SuppressControllerError(true);
-    } else if (Message == 0xC7D61AC7) {
+    } else if (Message == FEHash_Activate_Controllers) {
         FEManager::Get()->SuppressControllerError(false);
     }
 }

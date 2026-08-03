@@ -105,7 +105,12 @@ class Font {
 
     int GetVersion() const {}
 
-    const RealFontOld::Glyph *GetGlyph(int unicode) const {}
+    // UNSOLVED
+    const RealFontOld::Glyph *GetGlyph(int unicode) const {
+        const int GlyphSize = 0;
+        const struct Glyph *GlyphTbl;
+        const struct Glyph *ch;
+    }
 
     int GetState();
     bool SetState();

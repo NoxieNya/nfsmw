@@ -3,6 +3,7 @@
 #include "Speed/Indep/Src/Ecstasy/Ecstasy.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEMovies.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/FEPkg_Chyron.hpp"
 #include "Speed/Indep/Src/Generated/Events/EFadeScreenOff.hpp"
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
@@ -15,66 +16,61 @@ extern bool gInGameMoviePlaying;
 
 static const char *InGameTutorialScreenName = "InGameAnyTutorial.fng";
 
-char InGameAnyTutorialScreen::MovieFilename[64];
-char InGameAnyTutorialScreen::PackageFilename[64];
-bool InGameAnyTutorialScreen::PackageSet;
+char InGameAnyTutorialScreen::MovieFilename[64] = "unknown";
+char InGameAnyTutorialScreen::PackageFilename[64] = "unknown";
+bool InGameAnyTutorialScreen::PackageSet = false;
 
 InGameAnyTutorialScreen::InGameAnyTutorialScreen(ScreenConstructorData *sd) : MenuScreen(sd) {
+    uint32 str_hash = 0;
     bool mSkipable = true;
-    unsigned int str_hash = 0;
-    const char *label;
 
     DismissChyron();
     FEngSetMovieName(GetPackageName(), 0x348ff9f, MovieFilename);
 
     if (eIsWidescreen()) {
-        cFEng::Get()->QueuePackageMessage(0x70d2183b, GetPackageName(), 0);
+        cFEng::Get()->QueuePackageMessage(0x70d2183b, GetPackageName(), nullptr);
     }
 
     CareerSettings *career = FEDatabase->GetCareerSettings();
 
     if (bStrCmp(MovieFilename, "drag_tutorial") == 0) {
-        if (career && !career->HasDoneDragTutorial()) {
+        if ((career != nullptr) && !career->HasDoneDragTutorial()) {
             mSkipable = false;
             career->SetHasDoneDragTutorial();
         }
-        label = "TUTORIAL_DRAG";
+        str_hash = FEngHashString("TUTORIAL_DRAG");
     } else if (bStrCmp(MovieFilename, "speedtrap_tutorial") == 0) {
-        if (career && !career->HasDoneSpeedTrapTutorial()) {
+        if ((career != nullptr) && !career->HasDoneSpeedTrapTutorial()) {
             mSkipable = false;
             career->SetHasDoneSpeedTrapTutorial();
         }
-        label = "TUTORIAL_SPEEDTRAPRACE";
+        str_hash = FEngHashString("TUTORIAL_SPEEDTRAPRACE");
     } else if (bStrCmp(MovieFilename, "tollbooth_tutorial") == 0) {
-        if (career && !career->HasDoneTollBoothTutorial()) {
+        if ((career != nullptr) && !career->HasDoneTollBoothTutorial()) {
             mSkipable = false;
             career->SetHasDoneTollBoothTutorial();
         }
-        label = "TUTORIAL_TOLLBOOTH";
+        str_hash = FEngHashString("TUTORIAL_TOLLBOOTH");
     } else if (bStrCmp(MovieFilename, "bounty_tutorial") == 0) {
-        if (career && !career->HasDoneBountyTutorial()) {
+        if ((career != nullptr) && !career->HasDoneBountyTutorial()) {
             mSkipable = false;
             career->SetHasDoneBountyTutorial();
         }
-        label = "TUTORIAL_BOUNTY";
+        str_hash = FEngHashString("TUTORIAL_BOUNTY");
     } else if (bStrCmp(MovieFilename, "pursuit_tutorial") == 0) {
-        if (career && !career->HasDonePursuitTutorial()) {
+        if ((career != nullptr) && !career->HasDonePursuitTutorial()) {
             mSkipable = false;
             career->SetHasDonePursuitTutorial();
         }
-        label = "TUTORIAL_PURSUIT";
-    } else {
-        goto skip_hash;
+        str_hash = FEngHashString("TUTORIAL_PURSUIT");
     }
 
-    str_hash = FEngHashString(label);
-
-skip_hash:
     if (mSkipable) {
-        cFEng::Get()->QueuePackageMessage(0x59291f95, GetPackageName(), 0);
+        uint32 einput = 0x59291f95;
+        cFEng::Get()->QueuePackageMessage(einput, GetPackageName(), nullptr);
     }
 
-    unsigned int label_hash = bStringHash("_LABEL", str_hash);
+    uint32 label_hash = bStringHash("_LABEL", str_hash);
     FEngSetLanguageHash(GetPackageName(), 0x5a0ee0d9, label_hash);
     FEngSetLanguageHash(GetPackageName(), 0xf414bf3e, label_hash);
     FEngSetLanguageHash(GetPackageName(), 0x5a0ee0d8, label_hash);
@@ -85,25 +81,22 @@ skip_hash:
 }
 
 MenuScreen *InGameAnyTutorialScreen::Create(ScreenConstructorData *sd) {
-    return new ("", 0) InGameAnyTutorialScreen(sd);
+    return new ("InGameAnyTutorialScreen", 0) InGameAnyTutorialScreen(sd);
 }
 
 void InGameAnyTutorialScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     mSubtitler.Update(msg);
-    if (msg != 0xb5af2461) {
-        if (msg > 0xb5af2461) {
-            if (msg != 0xc3960eb9) {
-                return;
-            }
+    switch (msg) {
+        case 0xc3960eb9:
             DismissMovie();
-            return;
-        }
-        if (msg != 0x406415e3) {
-            return;
-        }
+            break;
+
+        case 0xb5af2461:
+        case 0x406415e3:
+            DismissMovie();
+            mSubtitler.Update(0xc3960eb9);
+            break;
     }
-    DismissMovie();
-    mSubtitler.Update(0xc3960eb9);
 }
 
 InGameAnyTutorialScreen::~InGameAnyTutorialScreen() {
@@ -114,7 +107,7 @@ void InGameAnyTutorialScreen::LaunchMovie(const char *filename, const char *pack
     gInGameMoviePlaying = true;
     PackageSet = false;
     SetMovieName(filename);
-    if (packageName) {
+    if (packageName != nullptr) {
         SetPackageName(packageName);
     }
     if (cFEng::Get()->IsPackageInControl(GetLoadingScreenPackageName())) {
@@ -125,20 +118,18 @@ void InGameAnyTutorialScreen::LaunchMovie(const char *filename, const char *pack
 }
 
 void InGameAnyTutorialScreen::DismissMovie() {
-    UCrc32 port(0x20d60dbf);
     gInGameMoviePlaying = false;
-    MNotifyMovieFinished msg;
-    msg.Post(port);
+    MNotifyMovieFinished().Post(0x20d60dbf);
     cFEng::Get()->QueuePackagePop(0);
     cFEng::Get()->QueueGameMessage(0xc3960eb9, PackageFilename, 0xff);
     new EFadeScreenOn(false);
 }
 
 void InGameAnyTutorialScreen::SetMovieName(const char *filename) {
-    bStrNCpy(MovieFilename, filename, 0x40);
+    bStrNCpy(MovieFilename, filename, sizeof(MovieFilename));
 }
 
 void InGameAnyTutorialScreen::SetPackageName(const char *packageName) {
     PackageSet = true;
-    bStrNCpy(PackageFilename, packageName, 0x40);
+    bStrNCpy(PackageFilename, packageName, sizeof(PackageFilename));
 }

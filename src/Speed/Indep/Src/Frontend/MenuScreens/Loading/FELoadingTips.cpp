@@ -1,13 +1,14 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Loading/FELoadingTips.hpp"
 #include "Speed/Indep/Src/Ecstasy/Texture.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Frontend/FEPackageManager.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
+#include "Speed/Indep/Src/Gameplay/GRaceDatabase.h"
 #include "Speed/Indep/bWare/Inc/bWare.hpp"
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
-
-extern MenuScreen *FEngFindScreen(const char *package_name);
-extern void eUnloadStreamingTexture(unsigned int *name_hash, int param);
 
 void *LoadingTips::mLoadingTipsScreenPtr;
 bool LoadingTips::mDoneLoading;
@@ -15,7 +16,7 @@ bool LoadingTips::mDoneShowingLoadingTips;
 
 static void LoadingTips_FinishLoadingTexBridge(uint32 p) {
     LoadingTips *ls = static_cast<LoadingTips *>(FEngFindScreen("Loading_Tips.fng"));
-    if (ls) {
+    if (ls != nullptr) {
         ls->FinishLoadingTexCallback(p);
     }
 }
@@ -23,9 +24,8 @@ static void LoadingTips_FinishLoadingTexBridge(uint32 p) {
 LoadingTips::LoadingTips(ScreenConstructorData *sd) : MenuScreen(sd) {
     DisplayTime.ResetHigh();
     CurrentTip = nullptr;
-    GameTipInfo *tip = GetGameTip(static_cast<eGameTips>(sd->Arg));
-    CurrentTip = tip;
-    if (tip->Flags & 0x400) {
+    CurrentTip = GetGameTip(static_cast<eGameTips>(sd->Arg));
+    if (CurrentTip->Flags & GFT_WAIT_FOR_BUTTON_PRESS) {
         mDoneShowingLoadingTips = false;
     } else {
         mDoneShowingLoadingTips = true;
@@ -36,94 +36,97 @@ LoadingTips::LoadingTips(ScreenConstructorData *sd) : MenuScreen(sd) {
 }
 
 LoadingTips::~LoadingTips() {
-    unsigned int hash = TipTextureHash;
-    eUnloadStreamingTexture(&hash, 1);
+    eUnloadStreamingTexture(TipTextureHash);
 }
 
 void LoadingTips::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    if (msg == 0x406415E3) {
-        goto shared;
-    }
-    if (msg <= 0x406415E3) {
-        if (msg == 0x0C407210) {
-            goto shared;
-        }
-        return;
-    }
-    if (msg != 0xC98356BA) {
-        return;
-    }
-    if (!mDoneLoading) {
-        return;
-    }
-    if ((RealTimer - DisplayTime).GetSeconds() <= 5.0f) {
-        return;
-    }
-    if (!(CurrentTip->Flags & 0x400)) {
-        return;
-    }
-    AllowInput();
-    return;
+    switch (msg) {
+        case 0x406415E3:
+        case 0x0C407210:
+            break;
 
-shared:
-    if (CurrentTip && (CurrentTip->Flags & 0x400)) {
+        case 0xC98356BA:
+            if (!mDoneLoading) {
+                return;
+            }
+            if ((RealTimer - DisplayTime).GetSeconds() <= 5.0f) {
+                return;
+            }
+            if (!(CurrentTip->Flags & GFT_WAIT_FOR_BUTTON_PRESS)) {
+                return;
+            }
+            AllowInput();
+            return;
+
+        default:
+            return;
+    }
+
+    if ((CurrentTip != nullptr) && (CurrentTip->Flags & GFT_WAIT_FOR_BUTTON_PRESS)) {
         mDoneShowingLoadingTips = true;
         FEManager::Get()->AllowControllerError(false);
     }
 }
 
 void LoadingTips::StartLoadingTipImage() {
-    if (CurrentTip) {
+    if (CurrentTip != nullptr) {
         TipTextureHash = FEngHashString(CurrentTip->Name);
         eLoadStreamingTexture(TipTextureHash, LoadingTips_FinishLoadingTexBridge, 0, 0);
     }
 }
 
 void LoadingTips::ShowTipInfo() {
-    if (!CurrentTip) {
-        CurrentTip = &GameTipInfoTable[0];
+    if (CurrentTip == nullptr) {
+        CurrentTip = &GameTipInfoTable[16];
     }
-    unsigned int lang_hash = FEngHashString("%s_DESC", CurrentTip->Name);
-    FEngSetLanguageHash(GetPackageName(), 0xC5FBC710, lang_hash);
-    lang_hash = FEngHashString("%s_HEADER", CurrentTip->Name);
-    FEngSetLanguageHash(GetPackageName(), 0x0D555245, lang_hash);
-    FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xC9D77CB6), TipTextureHash);
-    FEngSetScript(GetPackageName(), 0x3248E720, 0x5079C8F8, true);
-    DisplayTime = RealTimer;
+
+    if (CurrentTip != nullptr) {
+        uint32 lang_hash = FEngHashString("%s_DESC", CurrentTip->Name);
+        FEngSetLanguageHash(GetPackageName(), 0xC5FBC710, lang_hash);
+        lang_hash = FEngHashString("%s_HEADER", CurrentTip->Name);
+        FEngSetLanguageHash(GetPackageName(), 0x0D555245, lang_hash);
+        FEngSetTextureHash(GetPackageName(), 0xC9D77CB6, TipTextureHash);
+        FEngSetScript(GetPackageName(), 0x3248E720, 0x5079C8F8, true);
+        DisplayTime = RealTimer;
+    }
 }
 
 eGameTips LoadingTips::WhatTipScreenShouldIUseToday(LoadingScreen::LoadingScreenTypes loading_direction) {
+    if (GRaceDatabase::Exists()) {
+        // unused, probably similar to GetARandomTipScreen
+        GRaceDatabase::Get();
+    }
+
     if (TipTestLastCarWithTwoStrikes(loading_direction)) {
-        return static_cast<eGameTips>(0);
+        return GAME_TIP_LAST_CAR_AND_2_STRIKES;
     }
     if (TipTestFirstTimeIntoSafeHouse(loading_direction)) {
-        return static_cast<eGameTips>(1);
+        return GAME_TIP_INTRO_TIP;
     }
     if (TipTestFirstTimeOutOfSafeHouse(loading_direction)) {
-        return static_cast<eGameTips>(2);
+        return GAME_TIP_MAP_INTRO_TIP;
     }
     return GetARandomTipScreen(loading_direction);
 }
 
 eGameTips LoadingTips::GetARandomTipScreen(LoadingScreen::LoadingScreenTypes loading_direction) {
-    eGameTipBins bin = GT_BIN_NONE;
-    eGameTipType type = GT_TYPE_GENERAL;
-    eGameTipFlags flags = GTF_NONE;
-    CareerSettings *career = FEDatabase->GetCareerSettings();
-    if (career->HasCareerStarted()) {
-        bin = static_cast<eGameTipBins>(1 << career->GetCurrentBin());
+    uint32 bin = GT_BIN_NONE;
+    uint32 type = GT_TYPE_GENERAL;
+    uint32 flags = GTF_NONE;
+    if (FEDatabase->GetCareerSettings()->HasCareerStarted()) {
+        bin = (1 << FEDatabase->GetCareerSettings()->GetCurrentBin());
     } else {
         if (loading_direction == LoadingScreen::LS_LOADING_GAME_FROM_FE) {
-            bin = static_cast<eGameTipBins>(GT_BIN_13 | GT_BIN_14 | GT_BIN_15 | GT_BIN_16);
+            bin = (GT_BIN_13 | GT_BIN_14 | GT_BIN_15 | GT_BIN_16);
         }
     }
-    if (GRaceDatabase::Exists() && !GRaceDatabase::Get().GetStartupRace()) {
-        type = static_cast<eGameTipType>(type | GT_TYPE_FREE_ROAM);
+    if (GRaceDatabase::Exists() && (GRaceDatabase::Get().GetStartupRace() == nullptr)) {
+        type = (type | GT_TYPE_FREE_ROAM);
     }
     if (loading_direction == LoadingScreen::LS_LOADING_GAME_FROM_FE) {
-        flags = static_cast<eGameTipFlags>(flags | GTF_TRANSITION_TO_INGAME | GFT_RACETYPE_ALL);
+        flags = (flags | GTF_TRANSITION_TO_INGAME | GFT_RACETYPE_ALL);
     } else {
-        flags = static_cast<eGameTipFlags>(flags | GTF_TRANSITION_TO_FE);
+        flags = (flags | GTF_TRANSITION_TO_FE);
     }
     int valid_tips[NUM_GAME_TIPS - 1];
     int num_tips = 0;
@@ -146,37 +149,29 @@ bool LoadingTips::TipTestLastCarWithTwoStrikes(LoadingScreen::LoadingScreenTypes
     if (GRaceDatabase::Exists() && GRaceDatabase::Get().GetStartupRace() == nullptr) {
         lolley_says_this_means_free_roam = true;
     }
-    if (!FEDatabase->IsCareerMode() || !lolley_says_this_means_free_roam || loading_direction != LoadingScreen::LS_LOADING_GAME_FROM_FE) {
-        return false;
-    }
-    FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
-    if (!stable) {
-        return false;
-    }
-    if (stable->GetNumAvailableCareerCars() != 1) {
-        return false;
-    }
-    UserProfile *prof = FEDatabase->GetUserProfile(0);
-    if (!prof) {
-        return false;
-    }
-    CareerSettings *fe_career = prof->GetCareer();
-    if (!fe_career) {
-        return false;
-    }
-    FECarRecord *fe_car = stable->GetCarRecordByHandle(fe_career->GetCurrentCar());
-    if (!fe_car) {
-        return false;
-    }
-    if (!fe_car->IsValid()) {
-        return false;
-    }
-    FECareerRecord *record = stable->GetCareerRecordByHandle(fe_car->CareerHandle);
-    if (!record) {
-        return false;
-    }
-    if (record->GetTimesBusted() == record->TheImpoundData.MaxBusted - 1) {
-        return true;
+
+    if (FEDatabase->IsCareerMode() && lolley_says_this_means_free_roam && loading_direction == LoadingScreen::LS_LOADING_GAME_FROM_FE) {
+        FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
+        if (stable != nullptr) {
+            int num_cars = stable->GetNumAvailableCareerCars();
+            if (num_cars == 1) {
+                UserProfile *prof = FEDatabase->GetUserProfile(0);
+                if (prof != nullptr) {
+                    CareerSettings *fe_career = prof->GetCareer();
+                    if (fe_career != nullptr) {
+                        FECarRecord *fe_car = stable->GetCarRecordByHandle(fe_career->GetCurrentCar());
+                        if ((fe_car != nullptr) && fe_car->IsValid()) {
+                            FECareerRecord *record = stable->GetCareerRecordByHandle(fe_car->CareerHandle);
+                            if (record != nullptr) {
+                                if (record->GetTimesBusted() == record->TheImpoundData.MaxBusted - 1) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     return false;
 }
@@ -186,32 +181,27 @@ bool LoadingTips::TipTestFirstTimeOutOfSafeHouse(LoadingScreen::LoadingScreenTyp
     if (GRaceDatabase::Exists() && GRaceDatabase::Get().GetStartupRace() == nullptr) {
         lolley_says_this_means_free_roam = true;
     }
-    if (!FEDatabase->IsCareerMode() || !lolley_says_this_means_free_roam || loading_direction != LoadingScreen::LS_LOADING_GAME_FROM_FE) {
-        return false;
-    }
-    CareerSettings *career = FEDatabase->GetCareerSettings();
-    if (!career) {
-        return false;
-    }
-    if (!career->HasDoneCareerIntro()) {
-        return false;
-    }
-#ifndef EA_BUILD_A124
-    if (career->HasDoneMapLoadigTip()) {
-        return false;
-    }
-    career->SetHasDoneMapLoadigTip();
+
+    if (FEDatabase->IsCareerMode() && lolley_says_this_means_free_roam && loading_direction == LoadingScreen::LS_LOADING_GAME_FROM_FE) {
+        CareerSettings *career = FEDatabase->GetCareerSettings();
+        if (career != nullptr && career->HasDoneCareerIntro()) {
+#ifdef EA_BUILD_A124
+            return true;
+#else
+            if (!career->HasDoneMapLoadigTip()) {
+                career->SetHasDoneMapLoadigTip();
+                return true;
+            }
 #endif
-    return true;
+        }
+    }
+    return false;
 }
 
 bool LoadingTips::TipTestFirstTimeIntoSafeHouse(LoadingScreen::LoadingScreenTypes loading_direction) {
-    if (FEDatabase->IsCareerMode()) {
-        if (loading_direction == LoadingScreen::LS_LOADING_FE) {
-            if (!FEDatabase->GetCareerSettings()->HasDoneCareerIntro() && FEDatabase->IsPostRivalMode()) {
-                return true;
-            }
-        }
+    if (FEDatabase->IsCareerMode() && loading_direction == LoadingScreen::LS_LOADING_FE && !FEDatabase->GetCareerSettings()->HasDoneCareerIntro() &&
+        FEDatabase->IsPostRivalMode()) {
+        return true;
     }
     return false;
 }
@@ -225,14 +215,14 @@ void LoadingTips::AllowInput() {
 }
 
 GameTipInfo *LoadingTips::GetGameTip(eGameTips tip) {
-    if (0 < tip && tip < NUM_GAME_TIPS) {
+    if (0 < tip && tip <= NUM_GAME_TIPS_THAT_USE_TIPS_SCREEN) {
         return &GameTipInfoTable[tip];
     }
-    return &GameTipInfoTable[0];
+    return &GameTipInfoTable[16];
 }
 
 void LoadingTips::InitLoadingTipsScreen() {
-    mLoadingTipsScreenPtr = bMalloc(sizeof(LoadingTips), nullptr, 0, 0);
+    mLoadingTipsScreenPtr = bMalloc(sizeof(LoadingTips), "LoadingTips", 0, 0);
 }
 
 void LoadingTips::FinishLoadingTexCallback(uint32 p) {

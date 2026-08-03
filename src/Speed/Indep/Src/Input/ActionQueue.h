@@ -33,8 +33,6 @@ class ActionQueue : public UTL::Collections::Listable<ActionQueue, MAX_ACTIONQ> 
     ~ActionQueue();
 
     const char *GetName() {
-        if (mQueueName == nullptr)
-            return "";
         return mQueueName;
     }
     bool IsRequired() const {

@@ -31,4 +31,6 @@ void SummonChyron(char *title, char *artist, char *album);
 void DismissChyron();
 void InitChyron();
 
+MenuScreen *CreateChyronScreen(ScreenConstructorData *sd);
+
 #endif

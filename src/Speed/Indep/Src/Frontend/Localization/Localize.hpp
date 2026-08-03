@@ -50,7 +50,7 @@ void PackedStringToWideString(uint16 *wide_string, int wide_string_buffer_size, 
 // Range: 0x8015C944 -> 0x8015C980
 void WideStringToPackedString(char *packed_string, int packed_string_buffer_size, const uint16 *wide_string);
 char *GetLanguageName(eLanguages language);
-const char *GetLocalizedPercentSign();
+char *GetLocalizedPercentSign();
 bool DoesStringExist(uint32 label);
 
 #endif

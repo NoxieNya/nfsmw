@@ -67,7 +67,7 @@ void MyCarsManager::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
                 if (elapsed >= 0.5f && pSelectedCar) {
                     RideInfo ride;
                     FEDatabase->GetPlayerCarStable(0)->BuildRideForPlayer(pSelectedCar->Handle, 0, &ride);
-                    CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), static_cast<eCarViewerWhichCar>(0));
+                    CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), eCARVIEWER_PLAYER1_CAR);
                     tCarLoadTimer.UnSet();
                 }
             }
@@ -77,9 +77,9 @@ void MyCarsManager::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
             if (!pSelectedCar) {
                 RideInfo ride;
                 FEPlayerCarDB *carDB = FEDatabase->GetPlayerCarStable(0);
-                RaceSettings *rs = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+                RaceSettings *rs = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
                 carDB->BuildRideForPlayer(rs->SelectedCar[0], 0, &ride);
-                CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), static_cast<eCarViewerWhichCar>(0));
+                CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), eCARVIEWER_PLAYER1_CAR);
             }
             if (FEDatabase->IsCarStableDirty() && IsMemcardEnabled) {
                 MemcardEnter(GetPackageName(), "MainMenu.fng", 0x2000b3, nullptr, nullptr, 0, 0);
@@ -161,7 +161,7 @@ void MyCarsManager::RefreshCarList() {
         if (car->IsValid() && car->MatchesFilter(0xf0004)) {
             CarDatum *datum = new CarDatum(car->GetManuLogoHash(), car->GetNameHash(), car->Handle);
             AddDatum(datum);
-            RaceSettings *rs = FEDatabase->GetQuickRaceSettings(static_cast<GRace::Type>(0xb));
+            RaceSettings *rs = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
             if (rs->SelectedCar[0] == static_cast<int>(car->Handle)) {
                 selectedIdx = idx;
             }
@@ -248,7 +248,7 @@ void MyCarsManager::UpdateCar() {
             if (handle == -1) {
                 cFEng::Get()->QueuePackageMessage(0x913fa282, nullptr, nullptr);
                 pSelectedCar = nullptr;
-                CarViewer::CancelCarLoad(static_cast<eCarViewerWhichCar>(0));
+                CarViewer::CancelCarLoad(eCARVIEWER_PLAYER1_CAR);
             } else {
                 cFEng::Get()->QueuePackageMessage(0xa05a328e, nullptr, nullptr);
                 pSelectedCar = carDB->GetCarRecordByHandle(handle);

@@ -167,11 +167,12 @@ class FEButtonWidget : public FEWidget {
         pTitle = string;
     }
     void SetPos(bVector2 &pos) override {
-        FEWidget::SetPosX(pos.x);
-        FEWidget::SetPosY(pos.y);
+        SetPosX(pos.x);
+        SetPosY(pos.y);
     }
     void GetMaxTitleSize(bVector2 &size) {
-        size = vMaxTitleSize;
+        size.x = vMaxTitleSize.x;
+        size.y = vMaxTitleSize.y;
     }
     float GetMaxTitleWidth() {
         return vMaxTitleSize.x;
@@ -325,7 +326,6 @@ class FEToggleWidget : public FEStatWidget {
     bool Update(uint32 msg) { // Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:300
         bMovedLastUpdate = true;
         BlinkArrows(msg);
-        Draw();
         return true;
     }
     uint32 GetEnableScript() { // Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:302
@@ -416,7 +416,9 @@ class FESliderWidget : public FEToggleWidget {
         Slider.ToggleVisible(on);
     }
     void UpdateSlider(uint32 msg);
-    float GetVertOffset() {}
+    float GetVertOffset() {
+        return fVertOffset;
+    }
     void SetVertOffset(bool vertOffset) {}
 
   private:
@@ -441,7 +443,7 @@ class FEInputWidget : public FEStatWidget {
     void UnsetFocus() override;
     void SetInputFocus();
     void SetInputText(const char *text) { // Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:437
-        bStrNCpy(InputText, text, 0x9b);
+        bStrNCpy(InputText, text, sizeof(InputText) - 1);
     }
     const char *GetInputText() { // Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:438
         return InputText;
@@ -461,7 +463,7 @@ class FEInputWidget : public FEStatWidget {
     }
 
   private:
-    char InputText[320];   // offset 0x54, size 0x9C, Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:451
+    char InputText[156];   // offset 0x54, size 0x9C, Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:451
     char Title[156];       // offset 0xF0, size 0x9C
     uint32 MaxInputLength; // offset 0x18C, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:453
     uint32 EditMode;       // offset 0x190, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/feWidget.hpp:454

@@ -1,21 +1,21 @@
 #include "FEngFrontend.hpp"
 
+#include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/FEng/FEPackage.h"
 #include "Speed/Indep/Src/Input/IOModule.h"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 
-extern unsigned int Button_Action_Hashes_GAMECUBE[][5];
-extern unsigned int Button_Action_Hashes_GAMECUBE_Wheel[][5];
+// TODO: data
+uint32 Button_Action_Hashes_GAMECUBE[17][5];
+uint32 Button_Action_Hashes_GAMECUBE_Wheel[17][5];
 
-unsigned int FindButtonNameHashForFEString(int config, int string_number, JoystickPort player) {
-    unsigned int (*hashes)[5];
+uint32 FindButtonNameHashForFEString(int config, int string_number, JoystickPort player) {
     if (IsJoystickTypeWheel(player)) {
-        hashes = Button_Action_Hashes_GAMECUBE_Wheel;
+        return Button_Action_Hashes_GAMECUBE_Wheel[string_number][config];
     } else {
-        hashes = Button_Action_Hashes_GAMECUBE;
+        return Button_Action_Hashes_GAMECUBE[string_number][config];
     }
-    return hashes[string_number][config];
 }
 
 int FEngMapJoyParamToJoyport(int feng_param) {
@@ -72,23 +72,27 @@ void FEngSNMakeHidden(char *outBuffer, int out_buf_size, u16 *strInput) {
 
 void FEngTickSinglePackage(const char *pkg_name, uint32 ticks) {
     FEPackage *single_package = cFEng::Get()->FindPackage(pkg_name);
-    if (single_package) {
-        single_package->SetTickIncrement(ticks);
-        FEObject *pObject = single_package->GetFirstObject();
-        while (pObject) {
-            single_package->UpdateObject(pObject, ticks);
-            pObject = pObject->GetNext();
-        }
+
+    if (single_package == nullptr) {
+        return;
+    }
+
+    single_package->SetTickIncrement(ticks);
+    FEObject *pObject = single_package->GetFirstObject();
+    while (pObject != nullptr) {
+        single_package->UpdateObject(pObject, ticks);
+        pObject = pObject->GetNext();
     }
 }
 
 uint32 FEngHashString(const char *fmt, ...) {
-    unsigned int result;
-    char buffer[256];
-    va_list args;
-    va_start(args, fmt);
-    bVSPrintf(buffer, fmt, args);
+    va_list argList;
+    va_start(argList, fmt);
+    int nchars;
+    char print_buffer[256];
+    unsigned int hash;
+    bVSPrintf(print_buffer, fmt, argList);
     va_end(args);
-    result = bStringHash(buffer);
-    return result;
+    hash = bStringHash(print_buffer);
+    return hash;
 }

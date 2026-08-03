@@ -1,48 +1,37 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEIconScrollerMenu.hpp"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/SoundHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEButtons.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEAnyTutorialScreen.hpp"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Common/feWidget.hpp"
 #include "Speed/Indep/Src/Misc/Point.hpp"
 #include "Speed/Indep/Src/Misc/Timer.hpp"
 
-static const char *gTUTORIAL_MOVIE_DRAG = "TUT_DRAG";
-static const char *gTUTORIAL_MOVIE_SPEEDTRAP = "TUT_SPEEDTRAP";
-static const char *gTUTORIAL_MOVIE_TOLLBOOTH = "TUT_TOLLBOOTH";
+static const char *gTUTORIAL_MOVIE_DRAG = "drag_tutorial";
+static const char *gTUTORIAL_MOVIE_SPEEDTRAP = "speedtrap_tutorial";
+static const char *gTUTORIAL_MOVIE_TOLLBOOTH = "tollbooth_tutorial";
 
-IconOption::IconOption(unsigned int tex_hash, unsigned int name_hash, unsigned int desc_hash) {
-    YPos = 0.0f;
-    NameHash = name_hash;
-    DescHash = desc_hash;
-    fScaleAtStart = 1.0f;
-    pTutorialMovieName = nullptr;
-    Item = tex_hash;
-    FEngObject = nullptr;
-    XPos = 0.0f;
-    IsGreyOut = false;
-    IsFlashable = true;
-    fScaleToPcnt = 1.0f;
-    fScaleStartSecs = 1.0f;
-    fScaleDurSecs = 1.0f;
-    bAnimComplete = true;
-    bReactImmediately = false;
-    bIsTutorialAvailable = false;
-
+IconOption::IconOption(uint32 tex_hash, uint32 name_hash, uint32 desc_hash)
+    : XPos(0.0f), YPos(0.0f), NameHash(name_hash), DescHash(desc_hash), fScaleAtStart(1.0f), pTutorialMovieName(nullptr), Item(tex_hash),
+      FEngObject(nullptr), IsGreyOut(false), IsFlashable(true), fScaleToPcnt(1.0f), fScaleStartSecs(1.0f), fScaleDurSecs(1.0f), bAnimComplete(true),
+      bReactImmediately(false), bIsTutorialAvailable(false) {
     if (tex_hash == 0xAAAB31E9) {
-        bIsTutorialAvailable = true;
-        pTutorialMovieName = gTUTORIAL_MOVIE_DRAG;
+        SetTutorialMovieName(gTUTORIAL_MOVIE_DRAG);
     } else if (tex_hash == 0x66C9A7B6) {
-        bIsTutorialAvailable = true;
-        pTutorialMovieName = gTUTORIAL_MOVIE_SPEEDTRAP;
+        SetTutorialMovieName(gTUTORIAL_MOVIE_SPEEDTRAP);
     }
 }
 
 void IconOption::SetFEngObject(FEObject *obj) {
-    if (obj) {
+    if (obj != nullptr) {
         FEngObject = obj;
         FEngGetSize(obj, OrigWidth, OrigHeight);
         OriginalColor = FEngGetColor(obj);
@@ -52,22 +41,15 @@ void IconOption::SetFEngObject(FEObject *obj) {
 void IconOption::StartScale(float scale_to, float duration) {
     fScaleToPcnt = scale_to;
     fScaleDurSecs = duration;
-    bAnimComplete = false;
     fScaleStartSecs = RealTimer.GetSeconds();
+    bAnimComplete = false;
 }
 
-IconPanel::IconPanel(const char *pkg_name, const char *master, const char *fe_button, const char *scroll_region, bool wrap) {
-    pPackageName = pkg_name;
-    pButtonName = fe_button;
-    bWrap = wrap;
-    pCurrentNode = nullptr;
-    fIconSpacing = 10.0f;
-    bReactToInput = true;
-    iIndexToAdd = 1;
-    bHorizontal = true;
-    bJustScrolled = true;
-    pMaster = static_cast<FEObject *>(FEngFindObject(pkg_name, FEHash(master)));
-    pScrollRegion = static_cast<FEObject *>(FEngFindObject(pkg_name, FEHash(scroll_region)));
+IconPanel::IconPanel(const char *pkg_name, const char *master, const char *fe_button, const char *scroll_region, bool wrap)
+    : pPackageName(pkg_name), pButtonName(fe_button), bWrap(wrap), pCurrentNode(nullptr), pMaster(nullptr), fIconSpacing(10.0f), bReactToInput(true),
+      iIndexToAdd(1), bHorizontal(true), bJustScrolled(true) {
+    pMaster = FEngFindObject(pkg_name, FEHash(master));
+    pScrollRegion = FEngFindObject(pPackageName, FEHash(scroll_region));
 }
 
 FEImage *IconPanel::AddOption(IconOption *option) {
@@ -76,25 +58,25 @@ FEImage *IconPanel::AddOption(IconOption *option) {
 
     bStrCat(sztemp, pButtonName, "%d");
     FEngSNPrintf(sztemp2, 32, sztemp, iIndexToAdd);
-    FEImage *obj = FEngFindImage(pPackageName, FEHashUpper(sztemp2));
-    if (!obj) {
+    FEImage *obj = FEngFindImage(pPackageName, sztemp2);
+    if (obj == nullptr) {
         return nullptr;
     }
     iIndexToAdd++;
-    if (!option) {
+    if (option == nullptr) {
         return nullptr;
     }
     option->SetFEngObject(obj);
     Options.AddTail(option);
-    if (!pCurrentNode) {
+    if (pCurrentNode == nullptr) {
         pCurrentNode = Options.GetHead();
-        FEngSetCurrentButton(pPackageName, pCurrentNode->FEngObject->NameHash);
+        FEngSetCurrentButton(pPackageName, pCurrentNode->FEngObject);
     }
     return obj;
 }
 
-void IconPanel::Act(unsigned int data, FEObject *obj, unsigned int param1, unsigned int param2) {
-    if (pCurrentNode && obj == pCurrentNode->FEngObject) {
+void IconPanel::Act(uint32 data, FEObject *obj, uint32 param1, uint32 param2) {
+    if ((pCurrentNode != nullptr) && obj == pCurrentNode->FEngObject) {
         pCurrentNode->React(pPackageName, data, obj, param1, param2);
     }
 }
@@ -103,64 +85,59 @@ IconOption *IconPanel::GetOption(int to_find) {
     if (to_find < 1) {
         return nullptr;
     }
+
     int index = 1;
-    {
-        IconOption *opt = Options.GetHead();
-        while (opt != Options.EndOfList()) {
-            if (to_find == index) {
-                return opt;
-            }
-            index++;
-            opt = opt->GetNext();
+    for (IconOption *opt = Options.GetHead(); opt != Options.EndOfList(); opt = opt->GetNext()) {
+        if (to_find == index) {
+            return opt;
         }
+        index++;
     }
     return nullptr;
 }
 
 int IconPanel::GetOptionIndex(IconOption *to_find) {
-    if (!to_find) {
+    if (to_find == nullptr) {
         return -1;
     }
+
     int index = 1;
-    {
-        IconOption *opt = Options.GetHead();
-        while (opt != Options.EndOfList()) {
-            if (opt == to_find) {
-                return index;
-            }
-            index++;
-            opt = opt->GetNext();
+    for (IconOption *opt = Options.GetHead(); opt != Options.EndOfList(); opt = opt->GetNext()) {
+        if (opt == to_find) {
+            return index;
         }
+        index++;
     }
     return -1;
 }
 
 bool IconPanel::SetSelection(IconOption *option) {
-    if (option->IsGreyOut) {
-        return false;
+    if (!option->IsGreyOut) {
+        pCurrentNode->StartScale(0.614f, 0.2f);
+        pCurrentNode = option;
+        FEngSetCurrentButton(pPackageName, option->FEngObject);
+        pCurrentNode->StartScale(0.95f, 0.2f);
+        return true;
     }
-    pCurrentNode->StartScale(0.614f, 0.2f);
-    pCurrentNode = option;
-    FEngSetCurrentButton(pPackageName, option->FEngObject->NameHash);
-    pCurrentNode->StartScale(0.95f, 0.2f);
-    return true;
+    return false;
 }
 
 void IconPanel::SetInitialPos() {
     float num_opts = static_cast<float>(Options.CountElements());
-    float size_x, size_y;
-    FEngGetSize(Options.GetHead()->FEngObject, size_x, size_y);
-    float master_x;
-    float master_y;
-    FEngGetCenter(pScrollRegion, master_x, master_y);
+    float size_x = Options.GetHead()->FEngObject->GetObjData()->Size.x;
+    float size_y = Options.GetHead()->FEngObject->GetObjData()->Size.y;
+
+    float master_x = 0.0f;
+    float master_y = 0.0f;
+    FEngGetCenter(pMaster, master_x, master_y);
     float first_x = master_x - (size_x * num_opts + fIconSpacing * (num_opts - 1.0f)) * 0.5f;
     float first_y = master_y - (size_y * num_opts + fIconSpacing * (num_opts - 1.0f)) * 0.5f;
     float i = 0.0f;
     for (IconOption *opt = Options.GetHead(); opt != Options.EndOfList(); opt = opt->GetNext()) {
-        if (!bHorizontal) {
-            FEngSetTopLeft(opt->FEngObject, master_x - size_y * 0.5f, (size_y + fIconSpacing) * i + first_y);
-        } else {
+        if (bHorizontal) {
             FEngSetTopLeft(opt->FEngObject, (size_x + fIconSpacing) * i + first_x, master_y - size_y * 0.5f);
+        } else {
+            FEngSetTopLeft(opt->FEngObject, master_x - size_y * 0.5f, (size_y + fIconSpacing) * i + first_y);
         }
         i += 1.0f;
     }
@@ -173,25 +150,23 @@ void IconPanel::Scroll(eScrollDir dir) {
     }
     IconOption *new_option = pCurrentNode;
     if (dir == eSD_PREV) {
-        do {
-            if (new_option == Options.GetHead()) {
-                goto check;
-            }
-            new_option = new_option->GetPrev();
-        } while (new_option->IsGreyOut);
+        if (new_option != Options.GetHead()) {
+            do {
+                new_option = new_option->GetPrev();
+            } while (new_option->IsGreyOut && new_option != Options.GetHead());
+        }
     } else if (dir == eSD_NEXT) {
-        do {
-            if (new_option == Options.GetTail()) {
-                goto check;
-            }
-            new_option = new_option->GetNext();
-        } while (new_option->IsGreyOut);
-    } else {
-    check:
-        if (new_option->IsGreyOut) {
-            return;
+        if (new_option != Options.GetTail()) {
+            do {
+                new_option = new_option->GetNext();
+            } while (new_option->IsGreyOut && new_option != Options.GetTail());
         }
     }
+
+    if (new_option->IsGreyOut) {
+        return;
+    }
+
     if (new_option != pCurrentNode) {
         SetSelection(new_option);
         bJustScrolled = true;
@@ -236,6 +211,7 @@ void IconPanel::AnimateList() {
     AnimateSelected(list_width, list_height);
 }
 
+// UNSOLVED
 void IconPanel::AnimateSelected(float &list_width, float &list_height) {
     bJustScrolled = false;
     list_width = 0.0f;
@@ -249,29 +225,23 @@ void IconPanel::AnimateSelected(float &list_width, float &list_height) {
             if (delta_scale < 0.0f) {
                 if (scale <= opt->GetScaleToPcnt()) {
                     FEngSetSize(opt->FEngObject, opt->OrigWidth * opt->GetScaleToPcnt(), opt->OrigHeight * opt->GetScaleToPcnt());
-                    opt->SetScaleAtStart(scale);
-                    opt->SetAnimComplete(true);
-                    goto next;
                 }
             } else if (scale >= opt->GetScaleToPcnt()) {
                 if (delta_scale < 0.0f) {
                     if (scale <= opt->GetScaleToPcnt()) {
                         FEngSetSize(opt->FEngObject, opt->OrigWidth * opt->GetScaleToPcnt(), opt->OrigHeight * opt->GetScaleToPcnt());
-                        opt->SetScaleAtStart(scale);
-                        opt->SetAnimComplete(true);
-                        goto next;
                     }
                 } else {
                     FEngSetSize(opt->FEngObject, opt->OrigWidth * opt->GetScaleToPcnt(), opt->OrigHeight * opt->GetScaleToPcnt());
-                    opt->SetScaleAtStart(scale);
-                    opt->SetAnimComplete(true);
-                    goto next;
                 }
+            } else {
+                FEngSetSize(opt->FEngObject, opt->OrigWidth * scale, opt->OrigHeight * scale);
+                bJustScrolled = true;
             }
-            FEngSetSize(opt->FEngObject, opt->OrigWidth * scale, opt->OrigHeight * scale);
-            bJustScrolled = true;
         }
-    next:
+        opt->SetScaleAtStart(scale);
+        opt->SetAnimComplete(true);
+
         list_width = opt->OrigWidth * scale + list_width;
         list_height = opt->OrigHeight * scale + list_height;
         if (opt != Options.GetTail()) {
@@ -281,53 +251,33 @@ void IconPanel::AnimateSelected(float &list_width, float &list_height) {
     }
 }
 
+// UNSOLVED
 IconScroller::IconScroller(const char *pkg_name, const char *master, const char *fe_button, const char *scroll_region, float width)
     : IconPanel(pkg_name, master, fe_button, scroll_region, false), //
       ScrollBar(pkg_name, "ScrollBar", false, false, true),         //
-      AnimateCubic(0, 0.2f)
+      AnimateCubic(0, 1.0f), HeadBookEnd(nullptr), TailBookEnd(nullptr), AlignmentToSelected(eSA_MIDDLE), iNumBookEnds(4), fCurFadeTime(0.0f),
+      fMaxFadeTime(9.0f), IdleColor(0xFFFFFFFF), FadeColor(0x00FFFFFF), fWidth(width), fHeight(0.0f), fXCenter(0.0f), fYCenter(0.0f),
+      fCurrentAddPos(0.0f), iCurSelectedIndex(1), bFadingIn(false), bFadingOut(false), bInitialized(false), bAllowColorAnim(true),
+      bDelayUpdate(false) {
 
-{
-    HeadBookEnd = nullptr;
-    TailBookEnd = nullptr;
-    AlignmentToSelected = static_cast<eScrollerAlignment>(1);
-    iNumBookEnds = 4;
-    fCurFadeTime = 0.0f;
-    fMaxFadeTime = 9.0f;
-    bAllowColorAnim = true;
-    IdleColor = 0xFFFFFFFF;
-    FadeColor = 0x00FFFFFF;
-    fWidth = 0.0f;
-    fHeight = 0.0f;
-    fXCenter = 0.0f;
-    fYCenter = 0.0f;
-    fPulseState = 0.0f;
-    fCurrentAddPos = 0.0f;
-    AlignmentToSelected = static_cast<eScrollerAlignment>(1);
-    iCurSelectedIndex = 1;
-    fWidth = width;
-    bFadingIn = false;
-    bFadingOut = false;
-    bInitialized = false;
-    bDelayUpdate = false;
     fIconSpacing = -5.0f;
 
-    FEObject *scroll_obj = FEngFindObject(pkg_name, FEHashUpper(scroll_region));
-    if (scroll_obj) {
-        FEngGetCenter(scroll_obj, fXCenter, fYCenter);
-        FEngSetInvisible(scroll_obj);
+    FEObject *master_obj = FEngFindObject(pkg_name, FEHashUpper(scroll_region));
+    if (master_obj != nullptr) {
+        FEngGetCenter(master_obj, fXCenter, fYCenter);
+        FEngSetInvisible(master_obj);
     }
     AddInitialBookEnds();
+    AnimateCubic.SetDuration(0.2f);
+    AnimateCubic.SetFlags(0);
 }
 
 void IconScroller::Update() {
-    if (!Options.IsEmpty() && pCurrentNode && !bDelayUpdate) {
+    if (!Options.IsEmpty() && (pCurrentNode != nullptr) && !bDelayUpdate) {
         if (bJustScrolled) {
             bJustScrolled = false;
-            ScrollBar.Update(1, iIndexToAdd - (iNumBookEnds + 1), iCurSelectedIndex - iNumBookEnds, iCurSelectedIndex - iNumBookEnds);
+            ScrollBar.Update(1, iIndexToAdd - 1 - iNumBookEnds, iCurSelectedIndex - iNumBookEnds, iCurSelectedIndex - iNumBookEnds);
             AnimateCubic.SetValDesired(-pCurrentNode->XPos);
-            if (-pCurrentNode->XPos != AnimateCubic.Val) {
-                AnimateCubic.state = 2;
-            }
             UpdateArrows();
         }
 
@@ -354,10 +304,10 @@ void IconScroller::Update() {
 
 void IconScroller::AddInitialBookEnds() {
     for (int i = 0; i < iNumBookEnds / 2; i++) {
-        FEScrollyBookEnd *bookend = new FEScrollyBookEnd(0x43B6310F);
-        FEImage *img = AddOption(bookend);
-        if (img) {
-            FEngSetTextureHash(img, bookend->Item);
+        FEScrollyBookEnd *option = new ("FEScrollyBookEnd", 0) FEScrollyBookEnd(STRINGHASH_END_OF_SCROLLER);
+        FEImage *img = AddOption(option);
+        if (img != nullptr) {
+            FEngSetTextureHash(img, option->Item);
         }
     }
     HeadBookEnd = Options.GetTail();
@@ -366,38 +316,40 @@ void IconScroller::AddInitialBookEnds() {
 FEImage *IconScroller::AddOption(IconOption *option) {
     char sztemp[32];
     FEngSNPrintf(sztemp, 32, "%s%d", pButtonName, iIndexToAdd);
-    FEImage *obj = FEngFindImage(pPackageName, FEHashUpper(sztemp));
-    if (!obj) {
-        if (option) {
+    FEImage *obj = FEngFindImage(pPackageName, sztemp);
+    if (obj == nullptr) {
+        if (option != nullptr) {
             delete option;
         }
-    } else if (option) {
-        iIndexToAdd++;
-        option->SetFEngObject(obj);
-        option->XPos = fCurrentAddPos;
-        option->OriginalColor = IdleColor;
-        float size_w, size_h;
-        FEngGetSize(obj, option->OrigWidth, option->OrigHeight);
-        FEngGetSize(obj, size_w, size_h);
-        fCurrentAddPos += size_w + fIconSpacing;
-        Options.AddTail(option);
-        if (!pCurrentNode) {
-            if (iIndexToAdd > iNumBookEnds + 1) {
-                pCurrentNode = static_cast<IconOption *>(HeadBookEnd->GetNext());
-                FEngSetCurrentButton(pPackageName, pCurrentNode->FEngObject->NameHash);
-            }
-        }
-        return obj;
+        return nullptr;
     }
-    return nullptr;
+
+    if (option == nullptr) {
+        return nullptr;
+    }
+
+    iIndexToAdd++;
+    option->SetFEngObject(obj);
+    option->XPos = this->fCurrentAddPos;
+    option->OriginalColor = this->IdleColor;
+    FEngGetSize(option->FEngObject, option->OrigWidth, option->OrigHeight);
+    fCurrentAddPos += FEngGetSizeX(option->FEngObject) + fIconSpacing;
+    Options.AddTail(option);
+    if (pCurrentNode == nullptr) {
+        if (iIndexToAdd > iNumBookEnds + 1) {
+            pCurrentNode = static_cast<IconOption *>(HeadBookEnd->GetNext());
+            FEngSetCurrentButton(pPackageName, pCurrentNode->FEngObject);
+        }
+    }
+    return obj;
 }
 
 void IconScroller::SetInitialPos(int index) {
     TailBookEnd = Options.GetTail();
     for (int i = 0; i < iNumBookEnds / 2; i++) {
-        FEScrollyBookEnd *option = new (__FILE__, __LINE__) FEScrollyBookEnd(0x43B6310F);
+        FEScrollyBookEnd *option = new ("FEScrollyBookEnd", 0) FEScrollyBookEnd(STRINGHASH_END_OF_SCROLLER);
         FEImage *img = AddOption(option);
-        if (img) {
+        if (img != nullptr) {
             FEngSetTextureHash(img, option->Item);
         }
     }
@@ -408,19 +360,20 @@ void IconScroller::SetInitialPos(int index) {
     }
 
     IconOption *option = Options.GetNode(index - 1);
-    if (index == 0 || !option) {
-        SetSelection(static_cast<IconOption *>(HeadBookEnd->GetNext()));
-    } else {
-        if (option->Item == 0x43B6310F) {
-            option = static_cast<IconOption *>(TailBookEnd->GetPrev());
+    if (index != 0 && (option != nullptr)) {
+        if (option->Item == STRINGHASH_END_OF_SCROLLER) {
+            SetSelection(TailBookEnd->GetPrev());
+        } else {
+            SetSelection(option);
         }
-        SetSelection(option);
+    } else {
+        SetSelection(HeadBookEnd->GetNext());
     }
 
-    if (!bHorizontal) {
-        AnimateCubic.SetValDesired(-pCurrentNode->YPos);
-    } else {
+    if (bHorizontal) {
         AnimateCubic.SetValDesired(-pCurrentNode->XPos);
+    } else {
+        AnimateCubic.SetValDesired(-pCurrentNode->YPos);
     }
     AnimateCubic.Snap();
 
@@ -433,6 +386,7 @@ void IconScroller::SetInitialPos(int index) {
     bInitialized = true;
 }
 
+// UNSOLVED regswap
 bool IconScroller::SetSelection(IconOption *option) {
     int index = this->GetOptionIndex(option);
 
@@ -460,27 +414,24 @@ void IconScroller::RemoveAll() {
         FEngSetSize(opt->FEngObject, opt->OrigWidth, opt->OrigHeight);
         FEngSetTopLeft(opt->FEngObject, 696969.0f, 696969.0f);
     }
-    while (Options.GetHead() != Options.EndOfList()) {
-        IconOption *node = Options.GetHead();
-        node->Remove();
-        delete node;
-    }
+
+    IconPanel::RemoveAll();
     iIndexToAdd = 1;
+
     fCurrentAddPos = 0.0f;
 }
 
 int IconScroller::GetOptionIndex(IconOption *to_find) {
-    if (!to_find) {
+    if (to_find == nullptr) {
         return -1;
     }
-    IconOption *node = HeadBookEnd->GetNext();
-    int i = 1;
-    while (node != TailBookEnd) {
-        if (node == to_find) {
-            return i;
+
+    int index = 1;
+    for (IconOption *opt = Options.GetHead(); opt != Options.EndOfList(); opt = opt->GetNext()) {
+        if (opt == to_find) {
+            return index - iNumBookEnds / 2;
         }
-        i++;
-        node = node->GetNext();
+        index++;
     }
     return -1;
 }
@@ -489,30 +440,26 @@ void IconScroller::Scroll(eScrollDir dir) {
     if (Options.CountElements() - iNumBookEnds < 1) {
         return;
     }
+
     IconOption *new_option = pCurrentNode;
     if (dir == eSD_PREV) {
-        if (new_option != static_cast<IconOption *>(HeadBookEnd->GetNext())) {
+        if (new_option != HeadBookEnd->GetNext()) {
             do {
                 new_option = new_option->GetPrev();
-                if (!new_option->IsGreyOut) {
-                    goto done;
-                }
-            } while (new_option != static_cast<IconOption *>(HeadBookEnd->GetNext()));
+            } while (new_option->IsGreyOut && new_option != HeadBookEnd->GetNext());
         }
     } else if (dir == eSD_NEXT) {
-        do {
-            if (new_option == static_cast<IconOption *>(TailBookEnd->GetPrev())) {
-                goto check;
-            }
-            new_option = new_option->GetNext();
-        } while (new_option->IsGreyOut);
-        goto done;
+        if (new_option != TailBookEnd->GetPrev()) {
+            do {
+                new_option = new_option->GetNext();
+            } while (new_option->IsGreyOut && new_option != TailBookEnd->GetPrev());
+        }
     }
-check:
+
     if (new_option->IsGreyOut) {
         return;
     }
-done:
+
     if (new_option != pCurrentNode) {
         SetSelection(new_option);
         bJustScrolled = true;
@@ -523,19 +470,20 @@ void IconScroller::ScrollWrapped(eScrollDir dir) {
     if (Options.CountElements() - iNumBookEnds <= 0) {
         return;
     }
+
     IconOption *new_option = pCurrentNode;
     if (dir == eSD_PREV) {
         do {
-            if (new_option == static_cast<IconOption *>(HeadBookEnd->GetNext())) {
-                new_option = static_cast<IconOption *>(TailBookEnd->GetPrev());
+            if (new_option == HeadBookEnd->GetNext()) {
+                new_option = TailBookEnd->GetPrev();
             } else {
                 new_option = new_option->GetPrev();
             }
         } while (new_option->IsGreyOut);
     } else if (dir == eSD_NEXT) {
         do {
-            if (new_option == static_cast<IconOption *>(TailBookEnd->GetPrev())) {
-                new_option = static_cast<IconOption *>(HeadBookEnd->GetNext());
+            if (new_option == TailBookEnd->GetPrev()) {
+                new_option = HeadBookEnd->GetNext();
             } else {
                 new_option = new_option->GetNext();
             }
@@ -556,8 +504,8 @@ void IconScroller::ClipEdges(IconOption *option, float pos) {
 }
 
 float IconScroller::Scale(float x, float center, float scroll_size, float thumb_size) {
-    float neg_far_clip = center - scroll_size * 0.5f;
     float pos_far_clip = center + scroll_size * 0.5f;
+    float neg_far_clip = center - scroll_size * 0.5f;
 
     if (x < neg_far_clip || x > pos_far_clip) {
         return 0.0f;
@@ -572,75 +520,74 @@ float IconScroller::Scale(float x, float center, float scroll_size, float thumb_
 }
 
 void IconScroller::PositionOption(IconOption *option) {
-    if (option) {
-        float xpos = fXCenter + AnimateCubic.Val + option->XPos;
-        FEngSetSize(option->FEngObject, option->OrigWidth, option->OrigHeight);
-        float scale = Scale(xpos, fXCenter, fWidth, option->OrigWidth);
+    if (option == nullptr) {
+        return;
+    }
 
-        if (fXCenter <= xpos) {
-            float aligned_pos = 1.0f - scale;
-            xpos -= option->OrigWidth * aligned_pos * aligned_pos * aligned_pos;
-        } else {
-            float aligned_pos = 1.0f - scale;
-            xpos += option->OrigWidth * aligned_pos * aligned_pos * aligned_pos;
-        }
+    float xpos = fXCenter + (AnimateCubic.Val + option->XPos);
+    FEngSetSize(option->FEngObject, option->OrigWidth, option->OrigHeight);
+    float scale = Scale(xpos, fXCenter, fWidth, option->OrigWidth);
 
-        ClipEdges(option, xpos);
-        FEngSetCenter(option->FEngObject, xpos, fYCenter);
+    if (xpos < fXCenter) {
+        xpos += option->OrigWidth * (1.0f - scale) * (1.0f - scale) * (1.0f - scale);
+    } else {
+        xpos -= option->OrigWidth * (1.0f - scale) * (1.0f - scale) * (1.0f - scale);
+    }
 
-        if (bFadingIn || bFadingOut) {
-            scale *= fCurFadeTime / fMaxFadeTime;
-        }
+    ClipEdges(option, xpos);
+    FEngSetCenter(option->FEngObject, xpos, fYCenter);
 
-        float aligned_pos = 0.0f;
-        if (AlignmentToSelected == eSA_MIDDLE) {
-            aligned_pos = (option->OrigHeight - option->OrigHeight * scale) * 0.5f + FEngGetTopLeftY(option->FEngObject);
-        } else if (AlignmentToSelected == eSA_TOP) {
+    if (bFadingIn || bFadingOut) {
+        scale *= fCurFadeTime / fMaxFadeTime;
+    }
+
+    float aligned_pos = 0.0f;
+    switch (AlignmentToSelected) {
+        case eSA_LEFT:
             aligned_pos = FEngGetTopLeftY(option->FEngObject);
-        } else if (AlignmentToSelected == eSA_BOTTOM) {
+            break;
+        case eSA_MIDDLE:
+            aligned_pos = (option->OrigHeight - option->OrigHeight * scale) * 0.5f + FEngGetTopLeftY(option->FEngObject);
+            break;
+        case eSA_BOTTOM:
             aligned_pos = FEngGetTopLeftY(option->FEngObject) + (option->OrigHeight - option->OrigHeight * scale);
-        }
+            break;
+    }
 
-        FEngSetSize(option->FEngObject, option->OrigWidth * scale, option->OrigHeight * scale);
-        FEngSetTopLeftY(option->FEngObject, aligned_pos);
+    FEngSetSize(option->FEngObject, option->OrigWidth * scale, option->OrigHeight * scale);
+    FEngSetTopLeftY(option->FEngObject, aligned_pos);
 
-        if (bAllowColorAnim) {
-            UpdateFade(option, scale);
-        }
+    if (bAllowColorAnim) {
+        UpdateFade(option, scale);
     }
 }
 
 void IconScroller::UpdateFade(IconOption *option, float scale) {
-    FEObject *object;
-
-    if (option != nullptr && (object = option->FEngObject) != nullptr && object->pData != nullptr) {
-        unsigned int idle_color = IdleColor;
-        unsigned int fade_color = FadeColor;
-        float a1 = static_cast<float>(idle_color >> 24);
-        float r1 = static_cast<float>(idle_color >> 16 & 0xFF);
-        float g1 = static_cast<float>(idle_color >> 8 & 0xFF);
-        float b1 = static_cast<float>(idle_color & 0xFF);
-        float a2 = static_cast<float>(fade_color >> 24);
-        float r2 = static_cast<float>(fade_color >> 16 & 0xFF);
-        float g2 = static_cast<float>(fade_color >> 8 & 0xFF);
-        float b2 = static_cast<float>(fade_color & 0xFF);
-        unsigned char alpha = static_cast<int>(a1 * scale + a2 * (1.0f - scale)) & 0xFF;
+    if (option != nullptr && option->FEngObject != nullptr && option->FEngObject->GetObjData() != nullptr) {
+        float a1 = static_cast<float>(IdleColor >> 24);
+        float r1 = static_cast<float>(IdleColor >> 16 & 0xFF);
+        float g1 = static_cast<float>(IdleColor >> 8 & 0xFF);
+        float b1 = static_cast<float>(IdleColor & 0xFF);
+        float a2 = static_cast<float>(FadeColor >> 24);
+        float r2 = static_cast<float>(FadeColor >> 16 & 0xFF);
+        float g2 = static_cast<float>(FadeColor >> 8 & 0xFF);
+        float b2 = static_cast<float>(FadeColor & 0xFF);
+        uint8 a = static_cast<int>(a1 * scale + a2 * (1.0f - scale)) & 0xFF;
 
         if (option->IsGreyOut) {
-            alpha = 0x96;
+            a = 150;
         } else {
-            alpha = bClamp(alpha, 0, 0xFF);
+            a = bClamp(a, 0, 0xFF);
         }
 
-        float inverse_scale = 1.0f - scale;
-        unsigned char red = static_cast<int>(r1 * scale + r2 * inverse_scale) & 0xFF;
-        unsigned char green = static_cast<int>(g1 * scale + g2 * inverse_scale) & 0xFF;
-        unsigned char blue = static_cast<int>(b1 * scale + b2 * inverse_scale) & 0xFF;
-        red = bClamp(red, 0, 0xFF);
-        green = bClamp(green, 0, 0xFF);
-        blue = bClamp(blue, 0, 0xFF);
-        unsigned int color = alpha * 0x1000000 + red * 0x10000 + green * 0x100 + blue;
-        FEngSetColor(object, color);
+        uint8 r = static_cast<int>(r1 * scale + r2 * (1.0f - scale)) & 0xFF;
+        uint8 g = static_cast<int>(g1 * scale + g2 * (1.0f - scale)) & 0xFF;
+        uint8 b = static_cast<int>(b1 * scale + b2 * (1.0f - scale)) & 0xFF;
+        r = bClamp(r, 0, 0xFF);
+        g = bClamp(g, 0, 0xFF);
+        b = bClamp(b, 0, 0xFF);
+        uint32 color = a * 0x1000000 + r * 0x10000 + g * 0x100 + b;
+        FEngSetColor(option->FEngObject, color);
     }
 }
 
@@ -657,84 +604,61 @@ void IconScroller::UpdateArrows() {
 
 IconScrollerMenu::IconScrollerMenu(ScreenConstructorData *sd)
     : MenuScreen(sd), //
-      Options(GetPackageName(), "OPTION_MASTER", "option_", "ICON_SCROLL_REGION", 350.0f) {
+      Options(GetPackageName(), "OPTION_MASTER", "option_", "ICON_SCROLL_REGION", 350.0f), bWasLeftMouseDown(false), bFadeInIconsImmediately(true),
+      pOptionName(nullptr), pOptionNameShadow(nullptr), pOptionDesc(nullptr), PrevButtonMessage(0), PrevButtonObj(nullptr), PrevParam1(0),
+      PrevParam2(0) {
     const u32 FEObj_ICONTITLE = 0x5E7B09C9;
     const u32 FEObj_ICONTITLESHADOW = 0x0DFB7A2E;
 
-    bWasLeftMouseDown = false;
-    bFadeInIconsImmediately = true;
-    pOptionName = nullptr;
-    pOptionNameShadow = nullptr;
-    pOptionDesc = nullptr;
-    PrevButtonMessage = 0;
-    PrevButtonObj = nullptr;
-    PrevParam1 = 0;
-    PrevParam2 = 0;
     pOptionName = FEngFindString(GetPackageName(), FEObj_ICONTITLE);
     pOptionNameShadow = FEngFindString(GetPackageName(), FEObj_ICONTITLESHADOW);
     pOptionDesc = FEngFindString(GetPackageName(), 0);
+    mPlaySound = false;
 }
 
 void IconScrollerMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    u32 message = msg;
-    FEObject *object = pobj;
-    u32 previous_param1 = param1;
-    u32 previous_param2 = param2;
-
-    switch (message) {
-        case 0xC98356BA:
+    switch (msg) {
+        case FEMSG_SCREEN_TICK:
             Options.Update();
             return;
-        case 0x84378BEF:
+        case FEMSG_EXIT_STARTED:
             Options.StartFadeOut();
             return;
-        case 0x35F8620B:
+        case FEHASH_INITCOMPLETE:
             Options.SetAllowFade(true);
             return;
-        case 0xE1FDE1D1:
+        case FEHASH_EXITCOMPLETE:
             Options.IconPanel::Act(PrevButtonMessage, PrevButtonObj, PrevParam1, PrevParam2);
             return;
-        case 0x911AB364:
-            StorePrevNotification(0x911AB364, object, previous_param1, previous_param2);
+        case __PAD_BACK__:
+            StorePrevNotification(msg, pobj, param1, param2);
             Options.SetReactToInput(false);
             FEngSetLastButton(GetPackageName(), 0);
             return;
-        case 0x0C407210: {
+        case __BUTTON_PRESSED__:
             if (!Options.ReactsToInput()) {
                 return;
             }
 
-            IconPanel *panel = &Options;
-            IconOption *cur_option = Options.GetCurrentOption();
-            if (cur_option->IsGreyOut) {
+            if (Options.GetCurrentOption()->IsGreyOut) {
                 return;
             }
-            if (object != cur_option->FEngObject) {
-                return;
-            }
-
-            const char *pkg_name = GetPackageName();
-            unsigned char current_index = 0;
-            if (cur_option) {
-                current_index = static_cast<unsigned char>(panel->GetOptionIndex(cur_option));
-            }
-            FEngSetLastButton(pkg_name, current_index);
-
-            bool reacts_immediately = false;
-            if (Options.GetCurrentOption()) {
-                reacts_immediately = cur_option->ReactsImmediately();
-            }
-            if (reacts_immediately) {
-                Options.IconPanel::Act(0x0C407210, object, previous_param1, previous_param2);
+            if (pobj != Options.GetCurrentOption()->FEngObject) {
                 return;
             }
 
-            StorePrevNotification(0x0C407210, object, previous_param1, previous_param2);
+            FEngSetLastButton(GetPackageName(), Options.GetCurrentIndex());
+
+            if (Options.CurrentReactsImmediately()) {
+                Options.IconPanel::Act(msg, pobj, param1, param2);
+                return;
+            }
+
+            StorePrevNotification(msg, pobj, param1, param2);
             Options.SetReactToInput(false);
             cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             return;
-        }
-        case 0x9120409E:
+        case __PAD_LEFT__:
             if (!Options.IsHorizontal()) {
                 return;
             }
@@ -746,7 +670,7 @@ void IconScrollerMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
 
             RefreshHeader();
             return;
-        case 0xB5971BF1:
+        case __PAD_RIGHT__:
             if (!Options.IsHorizontal()) {
                 return;
             }
@@ -758,7 +682,7 @@ void IconScrollerMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
 
             RefreshHeader();
             return;
-        case 0x72619778: {
+        case __PAD_UP__: {
             if (Options.IsHorizontal()) {
                 return;
             }
@@ -772,7 +696,7 @@ void IconScrollerMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
             RefreshHeader();
             return;
         }
-        case 0x911C0A4B: {
+        case __PAD_DOWN__: {
             if (Options.IsHorizontal()) {
                 return;
             }
@@ -784,38 +708,43 @@ void IconScrollerMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
             RefreshHeader();
             return;
         }
-        case 0xC519BFC3: {
-            if (!Options.GetCurrentOption()->IsTutorialAvailable()) {
-                return;
-            }
-            FEngSetScript(GetPackageName(), 0x99344537, 0x16A259, true);
-            g_pEAXSound->PlayUISoundFX(UISND_COMMON_SELECT);
-            FEAnyTutorialScreen::LaunchMovie(Options.GetCurrentOption()->GetTutorialMovieName(), GetPackageName());
+        case __PAD_BUTTON4__: {
+            IconOption *cur_option = Options.GetCurrentOption();
+            if (cur_option->IsTutorialAvailable()) {
+                const u32 FEObj_MASTERBLASTER = 0x99344537;
+                const u32 FEObj_HIDE = 0x16A259;
+                FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_HIDE, true);
+                g_pEAXSound->PlayUISoundFX(UISND_COMMON_SELECT);
+                FEAnyTutorialScreen::LaunchMovie(cur_option->GetTutorialMovieName(), GetPackageName());
 
-            UserProfile *profile = FEDatabase->GetMultiplayerProfile(0);
-            CareerSettings *career = profile->GetCareer();
-            unsigned int name_hash = Options.GetCurrentOption()->GetName();
-            if (name_hash == 0xA15E4505) {
-                career->SetHasDoneTollBoothTutorial();
-            } else if (name_hash > 0xA15E4505) {
-                if (name_hash == 0xEE1EDC76) {
-                    career->SetHasDoneSpeedTrapTutorial();
+                UserProfile *prof = FEDatabase->GetMultiplayerProfile(0);
+                CareerSettings *career = prof->GetCareer();
+
+                switch (cur_option->GetName()) {
+                    case 0x6F547E4C:
+                        career->SetHasDoneDragTutorial();
+                        break;
+                    case 0xEE1EDC76:
+                        career->SetHasDoneSpeedTrapTutorial();
+                        break;
+                    case 0xA15E4505:
+                        career->SetHasDoneTollBoothTutorial();
+                        break;
                 }
-            } else if (name_hash == 0x6F547E4C) {
-                career->SetHasDoneDragTutorial();
             }
             return;
         }
-        case 0xC3960EB9:
-            FEngSetScript(GetPackageName(), 0x99344537, 0x1744B3, true);
+        case FEMSG_MOVIE_FINISHED: {
+            const u32 FEObj_MASTERBLASTER = 0x99344537;
+            const u32 FEObj_Init = 0x1744B3;
+            FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_Init, true);
             return;
-        default:
-            return;
+        }
     }
 }
 
 eMenuSoundTriggers IconScrollerMenu::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
-    if ((msg == 0x48122792 || msg == 0x4ac5e165) && !Options.JustScrolled()) {
+    if ((msg == FEHASH_SOUND_LEFT || msg == FEHASH_SOUND_RIGHT) && !Options.JustScrolled()) {
         return UISND_NONE;
     }
     return maybe;
@@ -829,8 +758,6 @@ void IconScrollerMenu::StorePrevNotification(uint32 msg, FEObject *pobj, uint32 
 }
 
 void IconScrollerMenu::RefreshHeader() {
-    const u32 FEObj_TUTORIALGROUP = 0x9C7D33FF;
-
     FEngSetLanguageHash(pOptionName, Options.GetCurrentName());
     FEngSetLanguageHash(pOptionNameShadow, Options.GetCurrentName());
     FEngSetLanguageHash(pOptionDesc, Options.GetCurrentDesc());
@@ -845,6 +772,7 @@ void IconScrollerMenu::RefreshHeader() {
         cFEng::Get()->QueuePackageMessage(FEObj_ENDPADRIGHT, GetPackageName(), nullptr);
     }
 
+    const u32 FEObj_TUTORIALGROUP = 0x9C7D33FF;
     if (Options.GetCurrentOption()->IsTutorialAvailable()) {
         FEngSetScript(GetPackageName(), FEObj_TUTORIALGROUP, 0x1CA7C0, true);
     } else {

@@ -1242,7 +1242,7 @@ int CarCustomizeManager::GetMaxInnerRadius() {
 }
 
 void CarCustomizeManager::GetCarPartList(int car_slot, bTList<SelectablePart> &the_list, unsigned int param) {
-    CarType cartype = static_cast<CarType>(-1);
+    CarType cartype = CARTYPE_NONE;
     if (gCarCustomizeManager.TuningCar) {
         cartype = gCarCustomizeManager.TuningCar->GetType();
     }

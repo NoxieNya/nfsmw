@@ -1,6 +1,8 @@
 #include "Speed/Indep/Src/Frontend/HUD/FEPkg_Hud.hpp"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/HUD/FeBustedMeter.hpp"
 #include "Speed/Indep/Src/Frontend/HUD/FeCostToState.hpp"
 #include "Speed/Indep/Src/Frontend/HUD/FeCountdown.hpp"
@@ -63,6 +65,8 @@
 #include "Speed/Indep/Src/World/TrackInfo.hpp"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 #include "Speed/Indep/Src/Misc/Joystick.hpp"
+#include "Speed/Indep/bWare/Inc/bWare.hpp"
+#include <cstdio>
 
 extern bool bIsRestartingRace;
 extern int SkipFE;
@@ -70,20 +74,18 @@ extern const char *SkipFEPlayerCar;
 
 template void UTL::Vector<IHud *, 16>::push_back(IHud *const &);
 
-HudResourceManager TheHudResourceManager;
-
-int HudResourceManager::mCustIndex;
-int HudResourceManager::mPhase;
-int HudResourceManager::mTachLinesHash;
-ResourceFile *HudResourceManager::pMiniMapTexture;
-const char *HudResourceManager::mPackageName;
+int HudResourceManager::mPhase = 0;
+int HudResourceManager::mCustIndex = -1;
+int HudResourceManager::mTachLinesHash = 0;
+ResourceFile *HudResourceManager::pMiniMapTexture = nullptr;
+const char *HudResourceManager::mPackageName = nullptr;
 char HudResourceManager::mCustHudTexPackName[32];
-unsigned int HudResourceManager::mCustomizeHUDTexTextureResources[5];
+uint32 HudResourceManager::mCustomizeHUDTexTextureResources[5];
 
-extern const char *HudSingleRaceTexturePackFilename;
-extern const char *HudDragTexturePackFilename;
-extern const char *HudSplitScreenTexturePackFilename;
-extern const char *HudDragSplitScreenTexturePackFilename;
+const char *HudDragTexturePackFilename = "GLOBAL\\HUDTEXDRAG.BIN";
+const char *HudSingleRaceTexturePackFilename = "GLOBAL\\HUDTEXRACE.BIN";
+const char *HudDragSplitScreenTexturePackFilename = "GLOBAL\\HUDTEXSPLIT.BIN";
+const char *HudSplitScreenTexturePackFilename = "GLOBAL\\HUDTEXDRAGSPLIT.BIN";
 
 HudResourceManager::HudResourceManager() {
     mHudResourcesState = HRM_NOT_LOADED;
@@ -91,34 +93,35 @@ HudResourceManager::HudResourceManager() {
 }
 
 const char *HudResourceManager::GetHudTexPackFilename(ePlayerHudType ht) {
+    const char *hud_tex_file;
     if (ht == PHT_DRAG) {
-        return HudDragTexturePackFilename;
+        hud_tex_file = HudDragTexturePackFilename;
+    } else if (ht == PHT_SPLIT1 || ht == PHT_SPLIT2) {
+        hud_tex_file = HudSplitScreenTexturePackFilename;
+    } else if (ht == PHT_DRAG_SPLIT1 || ht == PHT_DRAG_SPLIT2) {
+        hud_tex_file = HudDragSplitScreenTexturePackFilename;
+    } else {
+        hud_tex_file = HudSingleRaceTexturePackFilename;
     }
-    if (static_cast<unsigned int>(ht - 3) < 2) {
-        return HudSplitScreenTexturePackFilename;
-    }
-    if (static_cast<unsigned int>(ht - 5) >= 2) {
-        return HudSingleRaceTexturePackFilename;
-    }
-    return HudDragSplitScreenTexturePackFilename;
+    return hud_tex_file;
 }
 
 CarPart *HudResourceManager::GetCarPart(ePlayerHudType ht, CAR_SLOT_ID carSlotId) {
-    FECarRecord *car = nullptr;
     FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
+    FECarRecord *car = nullptr;
 
     if (GRaceStatus::Get().GetRaceContext() == GRace::kRaceContext_Career) {
         car = stable->GetCarRecordByHandle(FEDatabase->GetCareerSettings()->GetCurrentCar());
     } else {
         GRaceParameters *raceParams = GRaceStatus::Get().GetRaceParameters();
-        if (raceParams && !raceParams->GetIsPursuitRace()) {
+        if ((raceParams != nullptr) && !raceParams->GetIsPursuitRace()) {
             car = stable->GetCarRecordByHandle(FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes)->GetSelectedCar(0));
         }
     }
 
-    if (car) {
+    if (car != nullptr) {
         FECustomizationRecord *record = stable->GetCustomizationRecordByHandle(car->Customization);
-        if (record) {
+        if (record != nullptr) {
             return record->GetInstalledPart(car->GetType(), carSlotId);
         }
     }
@@ -130,10 +133,10 @@ int HudResourceManager::GetCustomHudColour(ePlayerHudType ht, CAR_SLOT_ID carSlo
 
     if (ht == PHT_STANDARD) {
         CarPart *part = GetCarPart(PHT_STANDARD, carSlotId);
-        if (part) {
-            unsigned char r = part->GetAppliedAttributeIParam(bStringHash("RED"), 0);
-            unsigned char g = part->GetAppliedAttributeIParam(bStringHash("GREEN"), 0);
-            unsigned char b = part->GetAppliedAttributeIParam(bStringHash("BLUE"), 0);
+        if (part != nullptr) {
+            uint8 r = part->GetAppliedAttributeIParam(bStringHash("RED"), 0);
+            uint8 g = part->GetAppliedAttributeIParam(bStringHash("GREEN"), 0);
+            uint8 b = part->GetAppliedAttributeIParam(bStringHash("BLUE"), 0);
             colour = 0xFF000000 | (r << 16) | (g << 8) | b;
         }
     }
@@ -141,12 +144,12 @@ int HudResourceManager::GetCustomHudColour(ePlayerHudType ht, CAR_SLOT_ID carSlo
     return colour;
 }
 
-bool HudResourceManager::GetCustomHudTexPackFilename(ePlayerHudType ht, char *hudTexturePackName) {
+bool HudResourceManager::GetCustomHudTexPackFilename(ePlayerHudType ht, char *const hudTexturePackName) {
     mCustIndex = 0;
 
     if (ht == PHT_STANDARD) {
-        CarPart *part = GetCarPart(PHT_STANDARD, static_cast<CAR_SLOT_ID>(0x84));
-        if (part) {
+        CarPart *part = GetCarPart(PHT_STANDARD, CARSLOTID_CUSTOM_HUD);
+        if (part != nullptr) {
             mCustIndex = part->GetAppliedAttributeIParam(FEngHashString("HUDINDEX"), 0);
         }
         bSPrintf(hudTexturePackName, "GLOBAL\\HUDS_Custom_%2.2d.bin", mCustIndex);
@@ -174,22 +177,22 @@ const char *HudResourceManager::GetHudFengName(ePlayerHudType ht) {
     }
 }
 
-bool HudResourceManager::ChooseMinimapTextureName(ePlayerHudType hudType, char *texture_name, unsigned int texture_name_size,
-                                                  char *minimap_texture_name, unsigned int minimap_texture_name_size) {
+bool HudResourceManager::ChooseMinimapTextureName(ePlayerHudType hudType, char *texture_name, uint32 texture_name_size, char *minimap_texture_name,
+                                                  uint32 minimap_texture_name_size) {
     if (hudType != PHT_DRAG) {
         if (GRaceStatus::Exists()) {
+            extern cFrontendDatabase *FEDatabase;
             if (GRaceStatus::Get().GetPlayMode() == GRaceStatus::kPlayMode_Roaming) {
-                unsigned char bin = FEDatabase->GetCareerSettings()->GetCurrentBin();
-                if (bin >= 13) {
+                if (FEDatabase->GetCareerSettings()->GetCurrentBin() >= 13) {
                     bSNPrintf(texture_name, texture_name_size, "MINI_MAP_UNLOCK_1");
-                } else if (bin >= 9) {
+                } else if (FEDatabase->GetCareerSettings()->GetCurrentBin() >= 9) {
                     bSNPrintf(texture_name, texture_name_size, "MINI_MAP_UNLOCK_2");
                 } else {
                     bSNPrintf(texture_name, texture_name_size, "MINI_MAP");
                 }
             } else {
                 GRaceParameters *raceParams = GRaceStatus::Get().GetRaceParameters();
-                if (raceParams) {
+                if (raceParams != nullptr) {
                     if (raceParams->GetIsPursuitRace()) {
                         if (raceParams->GetRegion() == GRace::kRaceRegion_College) {
                             bSNPrintf(texture_name, texture_name_size, "MINI_MAP_UNLOCK_1");
@@ -228,17 +231,15 @@ void HudResourceManager::ChooseLoadableTextures(ePlayerHudType hudType, int &tex
         if (GRaceStatus::Exists() && GRaceStatus::Get().GetRaceContext() == GRace::kRaceContext_Career) {
             vehicleHandle = FEDatabase->GetCareerSettings()->GetCurrentCar();
         } else {
-            vehicleHandle = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes)->GetSelectedCar(0);
+            vehicleHandle = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes)->SelectedCar[0];
         }
 
         stable = FEDatabase->GetPlayerCarStable(0);
-        FECarRecord *car = stable->GetCarRecordByHandle(vehicleHandle);
-        vehicleKey = car->VehicleKey;
+        vehicleKey = stable->GetCarRecordByHandle(vehicleHandle)->VehicleKey;
     }
 
     Attrib::Gen::pvehicle atr(vehicleKey, 0, nullptr);
-    const Attrib::RefSpec &engineRef = atr.engine(0);
-    Attrib::Gen::engine atr_engine(engineRef, 0, nullptr);
+    Attrib::Gen::engine atr_engine(atr.engine(0), 0, nullptr);
 
     float MaxRPM = atr_engine.MAX_RPM();
     float RedLineRPM = atr_engine.RED_LINE();
@@ -248,9 +249,9 @@ void HudResourceManager::ChooseLoadableTextures(ePlayerHudType hudType, int &tex
 
     char textureHashString[32];
     if (isDrag) {
-        bSPrintf(textureHashString, "DRAG_RPM_%d_LINES", static_cast<int>(maxRpmTextureNum));
+        sprintf(textureHashString, "DRAG_RPM_%d_LINES", static_cast<int>(maxRpmTextureNum));
     } else {
-        bSPrintf(textureHashString, "%d_LINES_%2.2d", static_cast<int>(maxRpmTextureNum), mCustIndex);
+        sprintf(textureHashString, "%d_LINES_%2.2d", static_cast<int>(maxRpmTextureNum), mCustIndex);
     }
     textureHash = bStringHash(textureHashString);
 
@@ -332,9 +333,11 @@ void HudResourceManager::LoadingCompleteCallback() {
         if (ChooseMinimapTextureName(LoadingResourcesForHudType, texture_name, 0x20, minimap_texture_name, 0x40)) {
             gChoppedMiniMapManager->SetMapHeader(texture_name);
             pMiniMapTexture = LoadResourceFile(minimap_texture_name, RESOURCE_FILE_TRACK, 0);
-            unsigned int textures_to_load[16];
+            int num_textures_to_load = 1;
+            uint32 textures_to_load[16];
             textures_to_load[0] = bStringHash(texture_name);
-            eLoadStreamingTexture(textures_to_load, 1, LoadingCompleteCallbackBridge, reinterpret_cast<unsigned int>(this), 0);
+            eLoadStreamingTexture(textures_to_load, num_textures_to_load, LoadingCompleteCallbackBridge, reinterpret_cast<uint32>(this),
+                                  BMEMORY_MAIN_POOL);
         } else {
             LoadingCompleteCallback();
         }
@@ -343,14 +346,15 @@ void HudResourceManager::LoadingCompleteCallback() {
             float redlineRotation;
             ChooseLoadableTextures(LoadingResourcesForHudType, mTachLinesHash, redlineRotation);
             FEngSetMultiImageRot(reinterpret_cast<FEMultiImage *>(FEngFindObject(mPackageName, 0xcdfce1b0)), redlineRotation);
-            eLoadStreamingTexturePack(mCustHudTexPackName, reinterpret_cast<void (*)(void *)>(LoadedCustomHudTexturePackCallbackBridge),
-                                      reinterpret_cast<void *>(this), 0);
+            eLoadStreamingTexturePack(mCustHudTexPackName, LoadedCustomHudTexturePackCallbackBridge, reinterpret_cast<uint32>(this),
+                                      BMEMORY_MAIN_POOL);
         } else {
             float redlineRotation;
             ChooseLoadableTextures(LoadingResourcesForHudType, mTachLinesHash, redlineRotation);
             FEngSetMultiImageRot(reinterpret_cast<FEMultiImage *>(FEngFindObject(mPackageName, 0xcdfce1b0)), redlineRotation);
-            FEngSetTextureHash(mPackageName, 0x309878bc, static_cast<unsigned int>(mTachLinesHash));
-            eLoadStreamingTexture(static_cast<unsigned int>(mTachLinesHash), LoadingCompleteCallbackBridge, reinterpret_cast<unsigned int>(this), 0);
+            FEngSetTextureHash(mPackageName, 0x309878bc, static_cast<uint32>(mTachLinesHash));
+            eLoadStreamingTexture(static_cast<uint32>(mTachLinesHash), LoadingCompleteCallbackBridge, reinterpret_cast<uint32>(this),
+                                  BMEMORY_MAIN_POOL);
         }
     } else if (mPhase == 3) {
         TheHudResourceManager.mHudResourcesState = HRM_LOADED;
@@ -366,7 +370,8 @@ void HudResourceManager::LoadedCustomHudTexturePackCallback() {
     mCustomizeHUDTexTextureResources[2] = FEngHashString("CUSTOMHUD_SPEEDO_%2.2d", hud_num);
     mCustomizeHUDTexTextureResources[3] = FEngHashString("CUSTOMHUD_RPMNEEDLE_%2.2d", hud_num);
     mCustomizeHUDTexTextureResources[4] = FEngHashString("CUSTOMHUD_SPEEDNEEDLE_%2.2d", hud_num);
-    eLoadStreamingTexture(mCustomizeHUDTexTextureResources, 5, LoadedCustomHudTexturesCallbackBridge, reinterpret_cast<unsigned int>(this), 0);
+    eLoadStreamingTexture(mCustomizeHUDTexTextureResources, 5, LoadedCustomHudTexturesCallbackBridge, reinterpret_cast<uint32>(this),
+                          BMEMORY_MAIN_POOL);
 }
 
 void HudResourceManager::LoadedCustomHudTexturesCallback() {
@@ -419,27 +424,28 @@ void HudResourceManager::UnloadRequiredResources(ePlayerHudType ht) {
     eUnloadAllStreamingTextures(HudSplitScreenTexturePackFilename);
     eUnloadAllStreamingTextures(HudDragSplitScreenTexturePackFilename);
 
-    if (pHudTextures) {
+    if (pHudTextures != nullptr) {
         UnloadResourceFile(pHudTextures);
         pHudTextures = nullptr;
     }
-    if (pMiniMapTexture) {
+    if (pMiniMapTexture != nullptr) {
         UnloadResourceFile(pMiniMapTexture);
         pMiniMapTexture = nullptr;
     }
 
-    if (gChoppedMiniMapManager) {
+    if (gChoppedMiniMapManager != nullptr) {
         gChoppedMiniMapManager->RemoveUncompressedMaps();
     }
 
     if (!bStrCmp(mCustHudTexPackName, "")) {
         if (mTachLinesHash) {
-            eUnloadStreamingTexture(static_cast<unsigned int>(mTachLinesHash));
+            eUnloadStreamingTexture(mTachLinesHash);
             mTachLinesHash = 0;
         }
     } else {
         eUnloadStreamingTexture(mCustomizeHUDTexTextureResources, 5);
-        for (unsigned int i = 0; i <= 4; i++) {
+        // TODO: this 5 probably comes from somewhere
+        for (int i = 0; i < 5u; i++) {
             mCustomizeHUDTexTextureResources[i] = 0;
         }
         eUnloadStreamingTexturePack(mCustHudTexPackName);
@@ -468,98 +474,71 @@ bool HudResourceManager::AreResourcesLoaded(ePlayerHudType ht) {
 }
 
 FEngHud::FEngHud(ePlayerHudType ht, const char *pkg_name, IPlayer *player, int player_number)
-    : UTL::COM::Object(0x14),      //
-      IHud(this),                  //
-      mPlayerHudType(ht),          //
-      PlayerNumber(player_number), //
-      mActionQ(true),              //
-      mCurrentWidescreenSetting(false) {
+    : UTL::COM::Object(20), IHud(this), mPlayerHudType(ht), PlayerNumber(player_number), mActionQ(true), mCurrentWidescreenSetting(false),
+      mInPursuit(false), mHasTurbo(false), pSpeedometer(nullptr), pTachometer(nullptr), pTachometerDrag(nullptr), pShiftUpdater(nullptr),
+      pCostToState(nullptr), pReputation(nullptr), pHeatMeter(nullptr), pTurboMeter(nullptr), pEngineTemp(nullptr), pNitrous(nullptr),
+      pSpeedBreakerMeter(nullptr), pRaceOverMessage(nullptr), pGenericMessage(nullptr), pRaceInformation(nullptr), pLeaderBoard(nullptr),
+      pPursuitBoard(nullptr), pMilestoneBoard(nullptr), pBustedMeter(nullptr), pTimeExtension(nullptr), pWrongWIndi(nullptr), pOnlineSupport(nullptr),
+      p321Go(nullptr), pRadarDetector(nullptr), pMinimap(nullptr), pGetAwayMeter(nullptr), pMenuZoneTrigger(nullptr), pInfractions(nullptr) {
     pPlayer = player;
-    mInPursuit = false;
-    mHasTurbo = false;
-    pSpeedometer = nullptr;
-    pTachometer = nullptr;
-    pTachometerDrag = nullptr;
-    pShiftUpdater = nullptr;
-    pCostToState = nullptr;
-    pReputation = nullptr;
-    pHeatMeter = nullptr;
-    pTurboMeter = nullptr;
-    pEngineTemp = nullptr;
-    pNitrous = nullptr;
-    pSpeedBreakerMeter = nullptr;
-    pRaceOverMessage = nullptr;
-    pGenericMessage = nullptr;
-    pRaceInformation = nullptr;
-    pLeaderBoard = nullptr;
-    pPursuitBoard = nullptr;
-    pMilestoneBoard = nullptr;
-    pBustedMeter = nullptr;
-    pTimeExtension = nullptr;
-    pWrongWIndi = nullptr;
-    pOnlineSupport = nullptr;
-    p321Go = nullptr;
-    pRadarDetector = nullptr;
-    pMinimap = nullptr;
-    pGetAwayMeter = nullptr;
-    pMenuZoneTrigger = nullptr;
-    pInfractions = nullptr;
     pPackageName = pkg_name;
 
     if (mPlayerHudType != PHT_SPLIT2 && mPlayerHudType != PHT_DRAG_SPLIT2) {
         TheHudResourceManager.LoadRequiredResources(mPlayerHudType, pkg_name);
     }
 
-    cFEng::Get()->PushNoControlPackage(pkg_name, static_cast<FE_PACKAGE_PRIORITY>(0x66));
+    cFEng::Get()->PushNoControlPackage(pkg_name, FE_PACKAGE_PRIORITY_THIRD_CLOSEST);
     FEngSetAllObjectsInPackageVisibility(pkg_name, false);
 
-    pSpeedometer = new Speedometer(this, pPackageName, player_number);
-    pRaceInformation = new RaceInformation(this, pkg_name, player_number);
-    pLeaderBoard = new LeaderBoard(this, pkg_name, player_number);
-    pNitrous = new NitrousGauge(this, pkg_name, player_number);
-    pRaceOverMessage = new RaceOverMessage(this, pkg_name, player_number);
-    pGenericMessage = new GenericMessage(this, pkg_name, player_number);
-    pTurboMeter = new TurboMeter(this, pkg_name, player_number);
-    pWrongWIndi = new WrongWIndi(this, pkg_name, player_number);
-    p321Go = new Countdown(this, pkg_name, player_number);
+    pSpeedometer = new ("Hud_Speedometer", 0) Speedometer(this, pPackageName, player_number);
+    pRaceInformation = new ("Hud_RaceInformation", 0) RaceInformation(this, pkg_name, player_number);
+    pLeaderBoard = new ("Hud_LeaderBoard", 0) LeaderBoard(this, pkg_name, player_number);
+    pNitrous = new ("Hud_NitrousGauge", 0) NitrousGauge(this, pkg_name, player_number);
+    pRaceOverMessage = new ("Hud_RaceOverMessage", 0) RaceOverMessage(this, pkg_name, player_number);
+    pGenericMessage = new ("Hud_GenericMessage", 0) GenericMessage(this, pkg_name, player_number);
+    pTurboMeter = new ("Hud_TurboMeter", 0) TurboMeter(this, pkg_name, player_number);
+    pWrongWIndi = new ("Hud_WrongWIndi", 0) WrongWIndi(this, pkg_name, player_number);
+    p321Go = new ("Hud_Coundown", 0) Countdown(this, pkg_name, player_number);
 
     if (mPlayerHudType == PHT_DRAG || mPlayerHudType == PHT_DRAG_SPLIT1 || mPlayerHudType == PHT_DRAG_SPLIT2) {
-        pEngineTemp = new EngineTempGauge(this, pkg_name, player_number);
-        pTachometerDrag = new DragTachometer(this, pPackageName, player_number);
-        pShiftUpdater = new ShiftUpdater(this, pPackageName, player_number);
+        pEngineTemp = new ("Hud_EngineTempGauge", 0) EngineTempGauge(this, pkg_name, player_number);
+        pTachometerDrag = new ("Hud_DragTachometer", 0) DragTachometer(this, pPackageName, player_number);
+        pShiftUpdater = new ("Hud_ShiftUpdater", 0) ShiftUpdater(this, pPackageName, player_number);
     } else {
-        pTimeExtension = new TimeExtension(this, pkg_name, player_number);
-        pTachometer = new Tachometer(this, pPackageName, player_number);
+        pTimeExtension = new ("Hud_TimeExtension", 0) TimeExtension(this, pkg_name, player_number);
+        pTachometer = new ("Hud_Tachometer", 0) Tachometer(this, pPackageName, player_number);
 
         if (mPlayerHudType == PHT_STANDARD) {
-            if (GRaceStatus::Exists() && GRaceStatus::Get().GetPlayMode() == 2) {
-                pReputation = new Reputation(this, pkg_name, player_number);
+            if (GRaceStatus::Exists() && GRaceStatus::Get().GetRaceContext() == GRace::kRaceContext_Career) {
+                pReputation = new ("Hud_Reputation", 0) Reputation(this, pkg_name, player_number);
             }
-            pHeatMeter = new HeatMeter(this, pkg_name, player_number);
-            pCostToState = new CostToState(this, pkg_name, player_number);
-            pPursuitBoard = new PursuitBoard(this, pkg_name, player_number);
-            pMilestoneBoard = new MilestoneBoard(this, pkg_name, player_number);
-            pBustedMeter = new BustedMeter(this, pkg_name, player_number);
-            pMenuZoneTrigger = new MenuZoneTrigger(this, pkg_name, player_number);
-            pInfractions = new Infractions(this, pkg_name, player_number);
-            pRadarDetector = new RadarDetector(this, pkg_name, player_number);
+            pHeatMeter = new ("Hud_HeatMeter", 0) HeatMeter(this, pkg_name, player_number);
+            pCostToState = new ("Hud_CostToState", 0) CostToState(this, pkg_name, player_number);
+            pPursuitBoard = new ("Hud_PursuitBoard", 0) PursuitBoard(this, pkg_name, player_number);
+            pMilestoneBoard = new ("Hud_MilestoneBoard", 0) MilestoneBoard(this, pkg_name, player_number);
+            pBustedMeter = new ("Hud_BustedMeter", 0) BustedMeter(this, pkg_name, player_number);
+            pMenuZoneTrigger = new ("Hud_MenuZoneTrigger", 0) MenuZoneTrigger(this, pkg_name, player_number);
+            pInfractions = new ("Hud_Infractions", 0) Infractions(this, pkg_name, player_number);
+            pRadarDetector = new ("Hud_Infractions", 0) RadarDetector(this, pkg_name, player_number);
         }
 
         if (mPlayerHudType == PHT_STANDARD || mPlayerHudType == PHT_SPLIT1) {
-            pMinimap = new Minimap(pkg_name, player_number);
+            pMinimap = new ("Hud_Minimap", 0) Minimap(pkg_name, player_number);
         }
     }
 
     if (mPlayerHudType == PHT_STANDARD || mPlayerHudType == PHT_DRAG) {
-        pSpeedBreakerMeter = new SpeedBreakerMeter(this, pkg_name, player_number);
-        pGetAwayMeter = new GetAwayMeter(this, pkg_name, player_number);
+        pSpeedBreakerMeter = new ("Hud_SpeedBreakerMeter", 0) SpeedBreakerMeter(this, pkg_name, player_number);
+        pGetAwayMeter = new ("Hud_GetAwayMeter", 0) GetAwayMeter(this, pkg_name, player_number);
     }
 
     if (TheOnlineManager.IsOnlineRace()) {
-        pOnlineSupport = new OnlineHUDSupport(pkg_name);
+        pOnlineSupport = new ("Hud_OnlineHUDSupport", 0) OnlineHUDSupport(pkg_name);
     } else {
-        FEngSetInvisible(static_cast<FEObject *>(FEngFindString(pkg_name, static_cast<int>(0xC18C12FD))));
-        FEngSetInvisible(static_cast<FEObject *>(FEngFindString(pkg_name, static_cast<int>(0xC18C12FE))));
+        const u32 FEObj_OnlineDATA01 = 0xC18C12FD;
+        const u32 FEObj_OnlineDATA02 = 0xC18C12FE;
+        FEngSetInvisible(static_cast<FEObject *>(FEngFindString(pkg_name, FEObj_OnlineDATA01)));
+        FEngSetInvisible(static_cast<FEObject *>(FEngFindString(pkg_name, FEObj_OnlineDATA02)));
     }
 
     CurrentHudFeatures = 0;
@@ -613,8 +592,10 @@ FEngHud::~FEngHud() {
     pOnlineSupport = nullptr;
     delete p321Go;
     p321Go = nullptr;
-    delete pRadarDetector;
-    pRadarDetector = nullptr;
+    if (pRadarDetector != nullptr) {
+        delete pRadarDetector;
+        pRadarDetector = nullptr;
+    }
     delete pMinimap;
     pMinimap = nullptr;
     delete pGetAwayMeter;
@@ -640,8 +621,8 @@ void FEngHud::Update(IPlayer *player, float dT) {
     }
 
     if (mActionQ.IsEnabled()) {
-        bool loading = TheGameFlowManager.IsLoading();
-        if (!loading && !bIsRestartingRace && !UTL::Collections::Singleton<INIS>::Get() && FadeScreen::IsFadeScreenOn()) {
+        if (!TheGameFlowManager.IsLoading() && !bIsRestartingRace && (UTL::Collections::Singleton<INIS>::Get() == nullptr) &&
+            FadeScreen::IsFadeScreenOn()) {
             new EFadeScreenOff(0x14035fb);
         }
     }
@@ -649,85 +630,85 @@ void FEngHud::Update(IPlayer *player, float dT) {
     SetWideScreenMode();
 
     if (hudFeatures != 0) {
-        if (pSpeedometer && pSpeedometer->IsElementVisible()) {
+        if ((pSpeedometer != nullptr) && pSpeedometer->IsElementVisible()) {
             pSpeedometer->Update(player);
         }
-        if (pTachometer && pTachometer->IsElementVisible()) {
+        if ((pTachometer != nullptr) && pTachometer->IsElementVisible()) {
             pTachometer->Update(player);
         }
-        if (pTachometerDrag && pTachometerDrag->IsElementVisible()) {
+        if ((pTachometerDrag != nullptr) && pTachometerDrag->IsElementVisible()) {
             pTachometerDrag->Update(player);
         }
-        if (pShiftUpdater && pShiftUpdater->IsElementVisible()) {
+        if ((pShiftUpdater != nullptr) && pShiftUpdater->IsElementVisible()) {
             pShiftUpdater->Update(player);
         }
-        if (pMinimap && pMinimap->IsElementVisible()) {
+        if ((pMinimap != nullptr) && pMinimap->IsElementVisible()) {
             pMinimap->Update(player);
         }
-        if (pRaceInformation && pRaceInformation->IsElementVisible()) {
+        if ((pRaceInformation != nullptr) && pRaceInformation->IsElementVisible()) {
             pRaceInformation->Update(player);
         }
-        if (pLeaderBoard && pLeaderBoard->IsElementVisible()) {
+        if ((pLeaderBoard != nullptr) && pLeaderBoard->IsElementVisible()) {
             pLeaderBoard->Update(player);
         }
-        if (pPursuitBoard && pPursuitBoard->IsElementVisible()) {
+        if ((pPursuitBoard != nullptr) && pPursuitBoard->IsElementVisible()) {
             pPursuitBoard->Update(player);
         }
-        if (pMilestoneBoard && pMilestoneBoard->IsElementVisible()) {
+        if ((pMilestoneBoard != nullptr) && pMilestoneBoard->IsElementVisible()) {
             pMilestoneBoard->Update(player);
         }
-        if (pBustedMeter && pBustedMeter->IsElementVisible()) {
+        if ((pBustedMeter != nullptr) && pBustedMeter->IsElementVisible()) {
             pBustedMeter->Update(player);
         }
-        if (pTimeExtension && pTimeExtension->IsElementVisible()) {
+        if ((pTimeExtension != nullptr) && pTimeExtension->IsElementVisible()) {
             pTimeExtension->Update(player);
         }
-        if (pCostToState && pCostToState->IsElementVisible()) {
+        if ((pCostToState != nullptr) && pCostToState->IsElementVisible()) {
             pCostToState->Update(player);
         }
-        if (pReputation && pReputation->IsElementVisible()) {
+        if ((pReputation != nullptr) && pReputation->IsElementVisible()) {
             pReputation->Update(player);
         }
-        if (pHeatMeter && pHeatMeter->IsElementVisible()) {
+        if ((pHeatMeter != nullptr) && pHeatMeter->IsElementVisible()) {
             pHeatMeter->Update(player);
         }
-        if (pNitrous && pNitrous->IsElementVisible()) {
+        if ((pNitrous != nullptr) && pNitrous->IsElementVisible()) {
             pNitrous->Update(player);
         }
-        if (pSpeedBreakerMeter && pSpeedBreakerMeter->IsElementVisible()) {
+        if ((pSpeedBreakerMeter != nullptr) && pSpeedBreakerMeter->IsElementVisible()) {
             pSpeedBreakerMeter->Update(player);
         }
-        if (pGetAwayMeter && pGetAwayMeter->IsElementVisible()) {
+        if ((pGetAwayMeter != nullptr) && pGetAwayMeter->IsElementVisible()) {
             pGetAwayMeter->Update(player);
         }
-        if (pRaceOverMessage && pRaceOverMessage->IsElementVisible()) {
+        if ((pRaceOverMessage != nullptr) && pRaceOverMessage->IsElementVisible()) {
             pRaceOverMessage->Update(player);
         }
-        if (pGenericMessage && pGenericMessage->IsElementVisible()) {
+        if ((pGenericMessage != nullptr) && pGenericMessage->IsElementVisible()) {
             pGenericMessage->Update(player);
         }
-        if (pTurboMeter && pTurboMeter->IsElementVisible()) {
+        if ((pTurboMeter != nullptr) && pTurboMeter->IsElementVisible()) {
             pTurboMeter->Update(player);
         }
-        if (pEngineTemp && pEngineTemp->IsElementVisible()) {
+        if ((pEngineTemp != nullptr) && pEngineTemp->IsElementVisible()) {
             pEngineTemp->Update(player);
         }
-        if (p321Go && p321Go->IsElementVisible()) {
+        if ((p321Go != nullptr) && p321Go->IsElementVisible()) {
             p321Go->Update(player);
         }
-        if (pRadarDetector && pRadarDetector->IsElementVisible()) {
+        if ((pRadarDetector != nullptr) && pRadarDetector->IsElementVisible()) {
             pRadarDetector->Update(player);
         }
-        if (pMenuZoneTrigger && pMenuZoneTrigger->IsElementVisible()) {
+        if ((pMenuZoneTrigger != nullptr) && pMenuZoneTrigger->IsElementVisible()) {
             pMenuZoneTrigger->Update(player);
         }
-        if (pWrongWIndi && pWrongWIndi->IsElementVisible()) {
+        if ((pWrongWIndi != nullptr) && pWrongWIndi->IsElementVisible()) {
             pWrongWIndi->Update(player);
         }
-        if (pOnlineSupport) {
+        if (pOnlineSupport != nullptr) {
             pOnlineSupport->Update(player);
         }
-        if (pInfractions && pInfractions->IsElementVisible()) {
+        if ((pInfractions != nullptr) && pInfractions->IsElementVisible()) {
             pInfractions->Update(player);
         }
 
@@ -741,10 +722,14 @@ void FEngHud::Update(IPlayer *player, float dT) {
 
 void FEngHud::FadeAll(bool fadeIn) {
     if (fadeIn) {
-        cFEng::Get()->QueuePackageMessage(0xBCC00F05, pPackageName, nullptr);
+        const u32 FEObj_FADEIN = 0xBCC00F05;
+
+        cFEng::Get()->QueuePackageMessage(FEObj_FADEIN, pPackageName, nullptr);
         cFEng::Get()->QueuePackageMessage(FEHashUpper("DEACTIVATE"), pPackageName, nullptr);
     } else {
-        cFEng::Get()->QueuePackageMessage(0x54C20A66, pPackageName, nullptr);
+        const u32 FEObj_FADEOUT = 0x54C20A66;
+
+        cFEng::Get()->QueuePackageMessage(FEObj_FADEOUT, pPackageName, nullptr);
         cFEng::Get()->QueuePackageMessage(FEHashUpper("ACTIVATE"), pPackageName, nullptr);
     }
 }
@@ -764,7 +749,7 @@ void FEngHud::JoyDisable() {
 }
 
 void FEngHud::JoyEnable() {
-    int port = pPlayer->GetControllerPort();
+    JoystickPort port = static_cast<JoystickPort>(pPlayer->GetControllerPort());
     if (!mActionQ.IsEnabled()) {
         mActionQ.SetPort(port);
         mActionQ.Enable(true);
@@ -773,15 +758,12 @@ void FEngHud::JoyEnable() {
 }
 
 void FEngHud::JoyHandle(IPlayer *player) {
-    if (!player || !player->GetSettings()) {
+    if ((player == nullptr) || (player->GetSettings() == nullptr)) {
         mActionQ.SetPort(-1);
         mActionQ.SetConfig(0, "FEngHud");
-        return;
-    }
-
-    {
+    } else {
         bool wheel_connected = false;
-        if (player->GetSteeringDevice()) {
+        if (player->GetSteeringDevice() != nullptr) {
             if (player->GetSteeringDevice()->IsConnected()) {
                 wheel_connected = true;
             }
@@ -790,88 +772,79 @@ void FEngHud::JoyHandle(IPlayer *player) {
         mActionQ.SetPort(player->GetControllerPort());
         mActionQ.SetConfig(player->GetSettings()->GetControllerAttribs(CA_HUD, wheel_connected), "FEngHud");
 
-        if (mActionQ.IsEmpty())
-            goto drain;
-        if (MemoryCard::GetInstance()->IsAutoSaving())
-            goto drain;
-        if (MemoryCard::GetInstance()->AutoSaveRequested())
-            goto drain;
-
-        {
+        if (!mActionQ.IsEmpty() && !MemoryCard::GetInstance()->IsAutoSaving() && !MemoryCard::GetInstance()->AutoSaveRequested()) {
             ActionRef aRef = mActionQ.GetAction();
 
-            if (!CurrentHudFeatures)
-                goto drain;
+            if (CurrentHudFeatures) {
+                switch (aRef.ID()) {
+                    case HUDACTION_PAUSEREQUEST:
+                        new EPause(player->GetSettingsIndex(), 0, 0);
+                        break;
 
-            switch (aRef.ID()) {
-                case HUDACTION_PAUSEREQUEST:
-                    new EPause(player->GetSettingsIndex(), 0, 0);
-                    break;
+                    case HUDACTION_ENGAGE_EVENT:
+                        if (!FEDatabase->IsLANMode() && !FEDatabase->IsOnlineMode()) {
+                            ISimable *isimable = player->GetSimable();
+                            IVehicleAI *vehicleai;
+                            IMenuZoneTrigger *izone;
+                            ePursuitStatus pursuitStatus;
+                            IPursuit *ipursuit;
 
-                case HUDACTION_ENGAGE_EVENT:
-                    if (!FEDatabase->IsLANMode() && !FEDatabase->IsOnlineMode()) {
-                        ISimable *isimable = player->GetSimable();
-                        IVehicleAI *vehicleai;
-                        IMenuZoneTrigger *izone;
-                        ePursuitStatus pursuitStatus;
-                        IPursuit *ipursuit;
-
-                        if (isimable->QueryInterface(&vehicleai)) {
-                            ipursuit = vehicleai->GetPursuit();
-                            if (ipursuit) {
-                                pursuitStatus = ipursuit->GetPursuitStatus();
-                                if (pursuitStatus == PS_COOL_DOWN) {
-                                    if (QueryInterface(&izone)) {
-                                        if (izone->IsPlayerInsideTrigger()) {
-                                            if (izone->IsType("safehouse")) {
-                                                ipursuit->EndPursuitEnteringSafehouse();
-                                                break;
+                            if (isimable->QueryInterface(&vehicleai)) {
+                                ipursuit = vehicleai->GetPursuit();
+                                if (ipursuit != nullptr) {
+                                    pursuitStatus = ipursuit->GetPursuitStatus();
+                                    if (pursuitStatus == PS_COOL_DOWN) {
+                                        if (QueryInterface(&izone)) {
+                                            if (izone->IsPlayerInsideTrigger()) {
+                                                if (izone->IsType("safehouse")) {
+                                                    ipursuit->EndPursuitEnteringSafehouse();
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        if (GRaceStatus::Get().GetPlayMode() == GRaceStatus::kPlayMode_Racing &&
-                            !GRaceStatus::Get().GetRaceParameters()->GetIsPursuitRace()) {
-                            new EShowResults(FERESULTTYPE_RACE, true);
-                        } else if (mInPursuit) {
-                            new EShowResults(FERESULTTYPE_PURSUIT, true);
-                        } else {
-                            if (QueryInterface(&izone)) {
-                                if (izone->IsPlayerInsideTrigger()) {
-                                    izone->ExitTrigger();
-                                    izone->RequestEventInfoDialog(mActionQ.GetPort());
+                            if (GRaceStatus::Get().GetPlayMode() == GRaceStatus::kPlayMode_Racing &&
+                                !GRaceStatus::Get().GetRaceParameters()->GetIsPursuitRace()) {
+                                new EShowResults(FERESULTTYPE_RACE, true);
+                            } else if (mInPursuit) {
+                                new EShowResults(FERESULTTYPE_PURSUIT, true);
+                            } else {
+                                if (QueryInterface(&izone)) {
+                                    if (izone->IsPlayerInsideTrigger()) {
+                                        izone->RequestEventInfoDialog(mActionQ.GetPort());
+                                        izone->RequestZoneInfoDialog(mActionQ.GetPort());
+                                    }
                                 }
                             }
                         }
-                    }
-                    break;
+                        break;
 
-                case HUDACTION_PAD_LEFT:
-                    if (GRaceStatus::Get().GetPlayMode() == GRaceStatus::kPlayMode_Roaming) {
-                        new EWorldMapOn();
-                    }
-                    break;
-
-                case HUDACTION_PAD_DOWN:
-                    if (GRaceStatus::Get().GetPlayMode() == GRaceStatus::kPlayMode_Roaming) {
-                        if (!FEDatabase->IsDDay()) {
-                            new ERaceSheetOn(0);
+                    case HUDACTION_PAD_LEFT:
+                        if (GRaceStatus::Get().GetPlayMode() == GRaceStatus::kPlayMode_Roaming) {
+                            new EWorldMapOn();
                         }
-                    }
-                    break;
+                        break;
 
-                case HUDACTION_PAD_RIGHT:
-                    if (GRaceStatus::Get().GetPlayMode() == GRaceStatus::kPlayMode_Roaming) {
-                        new EShowSMS(-1);
-                    }
-                    break;
+                    case HUDACTION_PAD_DOWN:
+                        if (GRaceStatus::Get().GetPlayMode() == GRaceStatus::kPlayMode_Roaming) {
+                            if (!FEDatabase->IsDDay()) {
+                                new ERaceSheetOn(0);
+                            }
+                        }
+                        break;
+
+                    case HUDACTION_PAD_RIGHT:
+                        if (GRaceStatus::Get().GetPlayMode() == GRaceStatus::kPlayMode_Roaming) {
+                            new EShowSMS(-1);
+                        }
+                        break;
+                }
             }
         }
 
-    drain:
         while (!mActionQ.IsEmpty()) {
             mActionQ.PopAction();
         }
@@ -883,11 +856,11 @@ HudFeaturesType FEngHud::DetermineHudFeatures(IPlayer *player) {
 
     eView *view = eGetView(player->GetRenderPort(), false);
     CameraMover *cammover = nullptr;
-    if (view) {
+    if (view != nullptr) {
         cammover = view->GetCameraMover();
     }
 
-    if (!cammover) {
+    if (cammover == nullptr) {
         return 0;
     }
     if (cammover->GetType() != CM_DRIVE_CUBIC) {
@@ -921,7 +894,7 @@ HudFeaturesType FEngHud::DetermineHudFeatures(IPlayer *player) {
     if (!TheHudResourceManager.AreResourcesLoaded(mPlayerHudType)) {
         return 0;
     }
-    if (UTL::Collections::Singleton<INIS>::Get()) {
+    if (UTL::Collections::Singleton<INIS>::Get() != nullptr) {
         return 0;
     }
     if (mCurrentWidescreenSetting != FEDatabase->GetVideoSettings()->WideScreen) {
@@ -935,7 +908,7 @@ HudFeaturesType FEngHud::DetermineHudFeatures(IPlayer *player) {
     }
 
     bool EnableMinimap = (TrackInfo::GetLoadedTrackInfo()->TrackNumber == 2000);
-    if (!GRaceStatus::Get().GetRaceParameters()) {
+    if (GRaceStatus::Get().GetRaceParameters() == nullptr) {
         if (FEDatabase->GetGameplaySettings()->ExploringMiniMapMode == 2) {
             EnableMinimap = false;
         }
@@ -945,7 +918,7 @@ HudFeaturesType FEngHud::DetermineHudFeatures(IPlayer *player) {
         }
     }
 
-    if (EnableMinimap) {
+    if (EnableMinimap && !TheOnlineManager.IsOnlineRace()) {
         hud_features |= 0x10000;
         hud_features |= 0x4000;
     }
@@ -975,8 +948,12 @@ HudFeaturesType FEngHud::DetermineHudFeatures(IPlayer *player) {
         hud_features |= 0x40000;
     }
 
+    if (TheOnlineManager.IsOnlineRace()) {
+        hud_features |= 0x40800;
+    }
+
     bool pursuitRace = false;
-    if (GRaceStatus::Get().GetRaceParameters()) {
+    if (GRaceStatus::Get().GetRaceParameters() != nullptr) {
         pursuitRace = GRaceStatus::Get().GetRaceParameters()->GetIsPursuitRace();
     }
 
@@ -1002,7 +979,7 @@ HudFeaturesType FEngHud::DetermineHudFeatures(IPlayer *player) {
 
     if (player->GetSettings()->ScoreOn) {
         if (GRaceStatus::Get().GetRaceContext() == GRace::kRaceContext_Career ||
-            (GRaceStatus::Get().GetRaceParameters() && GRaceStatus::Get().GetRaceParameters()->GetIsPursuitRace())) {
+            ((GRaceStatus::Get().GetRaceParameters() != nullptr) && GRaceStatus::Get().GetRaceParameters()->GetIsPursuitRace())) {
             hud_features |= 0x1000;
         }
     }
@@ -1028,6 +1005,10 @@ HudFeaturesType FEngHud::DetermineHudFeatures(IPlayer *player) {
     hud_features |= 0x200000000ULL;
     hud_features |= 0x800000;
     hud_features |= 0x200000;
+
+    if (TheOnlineManager.IsOnlineRace()) {
+        hud_features |= 0x331e80400ULL;
+    }
 
     return hud_features;
 }
@@ -1124,22 +1105,20 @@ void FEngHud::SetHudFeatures(HudFeaturesType hud_features) {
 void FEngHud::SetWideScreenMode() {
     if (mCurrentWidescreenSetting != FEDatabase->GetVideoSettings()->WideScreen) {
         mCurrentWidescreenSetting = FEDatabase->GetVideoSettings()->WideScreen;
-        if (mCurrentWidescreenSetting != 0) {
-            {
-                const unsigned long FEObj_WIDESCREENMODE = 0x62ED04EC;
+        if (static_cast<int>(mCurrentWidescreenSetting) != 0) {
+            const u32 FEObj_WIDESCREENMODE = 0x62ED04EC;
 
-                cFEng::Get()->QueuePackageMessage(FEObj_WIDESCREENMODE, pPackageName, nullptr);
-            }
-            if (pMinimap) {
+            cFEng::Get()->QueuePackageMessage(FEObj_WIDESCREENMODE, pPackageName, nullptr);
+
+            if (pMinimap != nullptr) {
                 static_cast<Minimap *>(pMinimap)->AdjustForWidescreen(true);
             }
         } else {
-            {
-                const unsigned long FEObj_NORMAL_MODE = 0x53EC068C;
+            const u32 FEObj_NORMAL_MODE = 0x53EC068C;
 
-                cFEng::Get()->QueuePackageMessage(FEObj_NORMAL_MODE, pPackageName, nullptr);
-            }
-            if (pMinimap) {
+            cFEng::Get()->QueuePackageMessage(FEObj_NORMAL_MODE, pPackageName, nullptr);
+
+            if (pMinimap != nullptr) {
                 static_cast<Minimap *>(pMinimap)->AdjustForWidescreen(false);
             }
         }
@@ -1147,15 +1126,14 @@ void FEngHud::SetWideScreenMode() {
 }
 
 void HideEverySingleHud() {
-    const UTL::Collections::Listable<IHud, 2>::List &list = UTL::Collections::Listable<IHud, 2>::GetList();
-    IHud *const *end = list.end();
-    for (IHud *const *iter = list.begin(); iter != end; iter++) {
+    for (IHud *const *iter = UTL::Collections::Listable<IHud, 2>::GetList().begin(); iter != UTL::Collections::Listable<IHud, 2>::GetList().end();
+         iter++) {
         (*iter)->HideAll();
     }
 }
 
 void FEngHud::RefreshMiniMapItems() {
-    if (pMinimap) {
+    if (pMinimap != nullptr) {
         static_cast<Minimap *>(pMinimap)->RefreshMapItems();
     }
 }
@@ -1164,19 +1142,18 @@ bool FEngHud::ShouldRearViewMirrorBeVisible(EVIEW_ID viewId) {
     eView *view = eGetView(viewId, false);
     IPlayer *player = IPlayer::First(PLAYER_LOCAL);
 
-    if (player) {
-        IHud *hud = player->GetHud();
-        if (hud && !player->GetHud()->IsHudVisible()) {
+    if (player != nullptr) {
+        if ((player->GetHud() != nullptr) && !player->GetHud()->IsHudVisible()) {
             return false;
         }
     }
 
     CameraMover *camMover = nullptr;
-    if (view) {
+    if (view != nullptr) {
         camMover = view->GetCameraMover();
     }
 
-    if (camMover && camMover->GetType() == CM_DRIVE_CUBIC) {
+    if ((camMover != nullptr) && camMover->GetType() == CM_DRIVE_CUBIC) {
         if (camMover->GetLookbackAngle()) {
             return false;
         }
@@ -1186,7 +1163,7 @@ bool FEngHud::ShouldRearViewMirrorBeVisible(EVIEW_ID viewId) {
         return false;
     }
 
-    if (!FEDatabase) {
+    if (FEDatabase == nullptr) {
         return false;
     }
 
@@ -1205,14 +1182,14 @@ bool FEngHud::ShouldRearViewMirrorBeVisible(EVIEW_ID viewId) {
     return true;
 }
 
-float FEngHud::ChooseMaxRpmTextureNumber(float rpm) {
-    if (rpm < 7000.0f) {
+float FEngHud::ChooseMaxRpmTextureNumber(float maxRpm) {
+    if (maxRpm < 7000.0f) {
         return 7000.0f;
     }
-    if (rpm < 8000.0f) {
+    if (maxRpm < 8000.0f) {
         return 8000.0f;
     }
-    if (rpm < 9000.0f) {
+    if (maxRpm < 9000.0f) {
         return 9000.0f;
     }
     return 10000.0f;

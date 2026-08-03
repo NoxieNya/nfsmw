@@ -7,7 +7,7 @@
 class MovieScreen : public MenuScreen {
   public:
     MovieScreen(ScreenConstructorData *);
-    ~MovieScreen() override;
+    ~MovieScreen() override {};
     void NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) override;
 
   private:
