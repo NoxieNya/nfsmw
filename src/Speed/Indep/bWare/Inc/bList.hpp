@@ -116,8 +116,18 @@ class bList {
         return this->HeadNode.GetPrev();
     }
 
-    bNode *GetNextCircular(bNode *node); // TODO
-    bNode *GetPrevCircular(bNode *node); // TODO
+    bNode *GetNextCircular(bNode *node) {
+        if (node->GetNext() == EndOfList()) {
+            return GetHead();
+        }
+        return node->Next;
+    }
+    bNode *GetPrevCircular(bNode *node) {
+        if (node->GetPrev() == EndOfList()) {
+            return GetTail();
+        }
+        return node->Prev;
+    }
 
     bNode *AddHead(bNode *node) {
         return node->AddAfter(&this->HeadNode);

@@ -1,6 +1,8 @@
 #include "uiOptionsScreen.hpp"
 
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
@@ -10,6 +12,7 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/options/uiOptionsMain.hpp"
 #include "Speed/Indep/Src/Gameplay/GRaceStatus.h"
 #include "Speed/Indep/Src/Generated/Events/EUnPause.hpp"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "Speed/Indep/Src/Misc/Config.h"
 #include "Speed/Indep/Src/Misc/GameFlow.hpp"
 #include "Speed/Indep/Src/Sim/Simulation.h"
@@ -63,12 +66,13 @@ void UIOptionsScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
 
     // UNSOLVED: switch jumps
     switch (msg) {
-        case 0x911AB364:
+        case __PAD_BACK__:
             if (OptionsDidNotChange()) {
                 cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             } else {
-                DialogInterface::ShowTwoButtons(GetPackageName(), mCalledFromPauseMenu ? "InGameDialog.fng" : "Dialog.fng", dialog_alert, 0x70E01038,
-                                                0x417B25E4, 0x775DBA97, 0x34DC1BCF, 0x34DC1BCF, first_dialog_button2, GetLocalizedString(0xE9CB802F));
+                DialogInterface::ShowTwoButtons(GetPackageName(), mCalledFromPauseMenu ? "InGameDialog.fng" : "Dialog.fng", dialog_alert,
+                                                LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, 0x775DBA97, dialog_message_no, dialog_message_no,
+                                                first_dialog_button2, GetLocalizedString(0xE9CB802F));
             }
             break;
         case 0x775DBA97:
@@ -76,20 +80,22 @@ void UIOptionsScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
             MemoryCard::GetInstance()->SetCardRemovedWithAutoSaveEnabled(false);
             cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             break;
-        case 0xC519BFC4: {
-            DialogInterface::ShowTwoButtons(GetPackageName(), mCalledFromPauseMenu ? "InGameDialog.fng" : "Dialog.fng", dialog_alert, 0x70E01038,
-                                            0x417B25E4, 0xD05FC3A3, 0x34DC1BCF, 0x34DC1BCF, first_dialog_button2, GetLocalizedString(0x8AEF5AE8));
+        case __PAD_BUTTON5__: {
+            DialogInterface::ShowTwoButtons(GetPackageName(), mCalledFromPauseMenu ? "InGameDialog.fng" : "Dialog.fng", dialog_alert,
+                                            LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, dialog_message_yes, dialog_message_no, dialog_message_no,
+                                            first_dialog_button2, GetLocalizedString(0x8AEF5AE8));
             break;
         }
-        case 0xD9FEEC59:
-        case 0x5073EF13:
+        case __PAD_RTRIGGER__:
+        case __PAD_LTRIGGER__:
             if (FEDatabase->GetOptionsSettings()->CurrentCategory == OC_PLAYER) {
-                cFEng::Get()->QueueSoundMessage(msg == 0x5073EF13 ? 0x6B283007 : 0xF4B32D4D, GetPackageName());
+                cFEng::Get()->QueueSoundMessage(msg == __PAD_LTRIGGER__ ? 0x6B283007 : 0xF4B32D4D, GetPackageName());
                 if (!OptionsDidNotChange()) {
                     char buf[128];
                     FEngSNPrintf(buf, 128, GetLocalizedString(0xBA463431), GetPlayerToEditForOptions() + 1);
                     DialogInterface::ShowTwoButtons(GetPackageName(), mCalledFromPauseMenu ? "InGameDialog.fng" : "Dialog.fng", dialog_alert,
-                                                    0x70E01038, 0x417B25E4, 0x9A5AD46D, 0xA2A07AC4, 0x34DC1BCF, first_dialog_button2, buf);
+                                                    LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, 0x9A5AD46D, 0xA2A07AC4, dialog_message_no,
+                                                    first_dialog_button2, buf);
                 } else {
                     cFEng::Get()->QueueGameMessage(0x9A5AD46D, nullptr, 0xFF);
                 }
@@ -101,7 +107,7 @@ void UIOptionsScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
         case 0x9A5AD46D:
             TogglePlayer(false);
             break;
-        case 0xD05FC3A3:
+        case dialog_message_yes:
             if (!FEDatabase->GetOptionsSettings()->TheGameplaySettings.AutoSaveOn &&
                 FEDatabase->GetOptionsSettings()->CurrentCategory == OC_GAMEPLAY) {
                 MemcardEnter(GetPackageName(), GetPackageName(), 0xA1, nullptr, nullptr, 0, 0);
@@ -109,7 +115,7 @@ void UIOptionsScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
 
             RestoreDefaults();
             break;
-        case 0xE1FDE1D1: {
+        case FEHASH_EXITCOMPLETE: {
             FEDatabase->SetOptionsDirty(FEDatabase->IsOptionsDirty() || !OptionsDidNotChange());
 
             if (mCalledFromPauseMenu) {
@@ -125,7 +131,7 @@ void UIOptionsScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
             }
             break;
         }
-        case 0xB5AF2461:
+        case __PAD_START__:
             new EUnPause();
             break;
         case 0x7E998E5E:
@@ -139,8 +145,8 @@ void UIOptionsScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
                 }
             }
             break;
-        case 0x72619778:
-        case 0x406415E3:
+        case __PAD_UP__:
+        case __PAD_ACCEPT__:
             break;
     }
 }
@@ -187,7 +193,7 @@ void UIOptionsScreen::Setup() {
 }
 
 void UIOptionsScreen::SetupAudio() {
-    const u32 FEObj_Headertext = 0x42ADB44C;
+    const u32 FEObj_Headertext = FEHASH_HEADERTEXT;
 
     FEngSetTextureHash(GetPackageName(), 0x8007B4C, 0xF37AF144);
 
@@ -214,7 +220,7 @@ void UIOptionsScreen::SetupAudio() {
 }
 
 void UIOptionsScreen::SetupVideo() {
-    const u32 FEObj_Headertext = 0x42ADB44C;
+    const u32 FEObj_Headertext = FEHASH_HEADERTEXT;
 
     FEngSetTextureHash(GetPackageName(), 0x8007B4C, 0x8A006328);
 
@@ -229,11 +235,11 @@ void UIOptionsScreen::SetupVideo() {
     OriginalVideoSettings = new ("VideoSettings", 0) VideoSettings();
     *OriginalVideoSettings = *FEDatabase->GetVideoSettings();
 
-    FEngSetScript(GetPackageName(), 0xAD6B204F, 0x5079C8F8, true);
+    FEngSetScript(GetPackageName(), 0xAD6B204F, FEHASH_APPEAR, true);
 }
 
 void UIOptionsScreen::SetupGameplay() {
-    const u32 FEObj_Headertext = 0x42ADB44C;
+    const u32 FEObj_Headertext = FEHASH_HEADERTEXT;
 
     FEngSetTextureHash(GetPackageName(), 0x8007B4C, 0x4DF98FB2);
 
@@ -273,7 +279,7 @@ void UIOptionsScreen::SetupGameplay() {
 }
 
 void UIOptionsScreen::SetupPlayer() {
-    const u32 FEObj_Headertext = 0x42ADB44C;
+    const u32 FEObj_Headertext = FEHASH_HEADERTEXT;
 
     FEngSetTextureHash(GetPackageName(), 0x8007B4C, 0xD708EFEF);
 
@@ -283,7 +289,7 @@ void UIOptionsScreen::SetupPlayer() {
         FEngSetLanguageHash(GetPackageName(), FEObj_Headertext, 0xC055165F);
     }
 
-    FEngSetScript(GetPackageName(), 0x8A41F5B9, 0x5079C8F8, true);
+    FEngSetScript(GetPackageName(), 0x8A41F5B9, FEHASH_APPEAR, true);
 
     FEngSetLanguageHash(GetPackageName(), 0x53BF826D, GetPlayerToEditForOptions() == 0 ? 0x7B070984 : 0x7B070985);
 
@@ -306,7 +312,7 @@ void UIOptionsScreen::SetupPlayer() {
 }
 
 void UIOptionsScreen::SetupOnline() {
-    const u32 FEObj_Headertext = 0x42ADB44C;
+    const u32 FEObj_Headertext = FEHASH_HEADERTEXT;
 
     if (mCalledFromPauseMenu) {
         FEngSetLanguageHash(GetPackageName(), FEObj_Headertext, 0x966C856D);

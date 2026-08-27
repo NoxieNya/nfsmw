@@ -1,10 +1,12 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/customize/DebugCarCustomize.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/Database/VehicleDB.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/customize/CustomizeManager.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/customize/FECustomize.hpp"
+#include "Speed/Indep/Src/Generated/FEngHash/FEHash_UI_DebugCarCustomize.hpp"
 #include "Speed/Indep/Src/World/CarInfo.hpp"
 #include "Speed/Indep/bWare/Inc/Strings.hpp"
 
@@ -198,25 +200,25 @@ end:;
 
 void DebugCarCustomizeScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0xc519bfc2:
+        case __PAD_BUTTON3__:
             iFastScroll = 10;
             return;
-        case 0xe086d2e6:
+        case __PAD_BUTTON3_RELEASED__:
             iFastScroll = 1;
             return;
-        case 0xc519bfbf:
+        case __PAD_BUTTON0__:
             if (InstallableParts.IsEmpty())
                 return;
             gCarCustomizeManager.ResetToStockCarParts();
             NewPreviewPart();
             return;
-        case 0xc519bfc0:
+        case __PAD_BUTTON1__:
             DumpPresetRide();
             return;
-        case 0x9120409e: {
+        case __PAD_LEFT__: {
             unsigned int hash = pobj->NameHash;
             switch (hash) {
-                case 0x36db742: {
+                case __OPT_1__: {
                     FECarRecord *car = FEDatabase->GetPlayerCarStable(0)->GetCarRecordByHandle(pDebugCar->mHandle);
                     if (!wasCarCustomized) {
                         car->Customization = 0xFF;
@@ -235,7 +237,7 @@ void DebugCarCustomizeScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 p
                     LoadCurrentCar();
                     break;
                 }
-                case 0x36db743:
+                case __OPT_2__:
                     for (int i = 0; i < iFastScroll; i++) {
                         DebugCarOption *prev = CurrentLookupSlotID->GetPrev();
                         if (prev == reinterpret_cast<DebugCarOption *>(&LookupCarSlotIDs)) {
@@ -244,7 +246,7 @@ void DebugCarCustomizeScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 p
                         CurrentLookupSlotID = prev;
                     }
                     break;
-                case 0x36db746:
+                case __OPT_5__:
                     if (InstallableParts.IsEmpty())
                         goto done;
                     for (int i = 0; i < iFastScroll; i++) {
@@ -262,10 +264,10 @@ void DebugCarCustomizeScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 p
             RebuildPartsList();
             break;
         }
-        case 0xb5971bf1: {
+        case __PAD_RIGHT__: {
             unsigned int hash = pobj->NameHash;
             switch (hash) {
-                case 0x36db742: {
+                case __OPT_1__: {
                     FECarRecord *car = FEDatabase->GetPlayerCarStable(0)->GetCarRecordByHandle(pDebugCar->mHandle);
                     if (!wasCarCustomized) {
                         car->Customization = 0xFF;
@@ -284,7 +286,7 @@ void DebugCarCustomizeScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 p
                     LoadCurrentCar();
                     break;
                 }
-                case 0x36db743:
+                case __OPT_2__:
                     for (int i = 0; i < iFastScroll; i++) {
                         DebugCarOption *next = CurrentLookupSlotID->GetNext();
                         if (next == reinterpret_cast<DebugCarOption *>(&LookupCarSlotIDs)) {
@@ -293,7 +295,7 @@ void DebugCarCustomizeScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 p
                         CurrentLookupSlotID = next;
                     }
                     break;
-                case 0x36db746:
+                case __OPT_5__:
                     if (InstallableParts.IsEmpty())
                         goto done;
                     for (int i = 0; i < iFastScroll; i++) {
@@ -311,10 +313,10 @@ void DebugCarCustomizeScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 p
             RebuildPartsList();
             break;
         }
-        case 0x406415e3:
+        case __PAD_ACCEPT__:
             InstallPreviewingPart();
             return;
-        case 0x911ab364:
+        case __PAD_BACK__:
             gCarCustomizeManager.RelinquishControl();
             cFEng::Get()->QueuePackageSwitch("MainMenu.fng", 0, 0, false);
             return;

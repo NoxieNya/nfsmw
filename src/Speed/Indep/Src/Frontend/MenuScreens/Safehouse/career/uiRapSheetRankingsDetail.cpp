@@ -76,13 +76,13 @@ uiRapSheetRankingsDetail::uiRapSheetRankingsDetail(ScreenConstructorData *sd)
 void uiRapSheetRankingsDetail::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     ArrayScrollerMenu::NotificationMessage(msg, pobj, param1, param2);
     switch (msg) {
-        case 0xC519BFC4:
+        case __PAD_BUTTON5__:
             career_view = !career_view;
             Setup();
             break;
-        case 0x911C0A4B:
-        case 0x35F8620B:
-        case 0x72619778:
+        case __PAD_DOWN__:
+        case FEHASH_INITCOMPLETE:
+        case __PAD_UP__:
             UpdateHighlight();
             break;
         case FEHASH_EXITCOMPLETE:

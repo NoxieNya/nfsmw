@@ -57,8 +57,8 @@ void HeatMeter::Update(IPlayer *player) {
                     FEngSetScript(mpDataHeatMultiplier, 0x41E1FEDC, true);
                 }
             } else {
-                if (!FEngIsScriptSet(mpDataHeatMultiplier, 0x1744B3)) {
-                    FEngSetScript(mpDataHeatMultiplier, 0x1744B3, true);
+                if (!FEngIsScriptSet(mpDataHeatMultiplier, FEHASH_INIT)) {
+                    FEngSetScript(mpDataHeatMultiplier, FEHASH_INIT, true);
                 }
             }
             FEPrintf(GetPackageName(), 0x7F91DA62, "x%d", heatIntegerPart);
@@ -78,8 +78,8 @@ void HeatMeter::Update(IPlayer *player) {
                 }
             }
         } else {
-            if (!FEngIsScriptSet(mpDataHeatMeterIcon, 0x1744B3)) {
-                FEngSetScript(mpDataHeatMeterIcon, 0x1744B3, true);
+            if (!FEngIsScriptSet(mpDataHeatMeterIcon, FEHASH_INIT)) {
+                FEngSetScript(mpDataHeatMeterIcon, FEHASH_INIT, true);
             }
         }
     }

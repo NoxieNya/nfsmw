@@ -39,7 +39,7 @@ uiRepSheetRivalBio::uiRepSheetRivalBio(ScreenConstructorData *sd)
 
 void uiRepSheetRivalBio::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0xc519bfbf:
+        case __PAD_BUTTON0__:
             if (!FEDatabase->IsPostRivalMode()) {
                 char buf[64];
                 if (iCurrentViewBin == 1) {
@@ -61,14 +61,14 @@ void uiRepSheetRivalBio::NotificationMessage(u32 msg, FEObject *obj, u32 param1,
                 cFEng::Get()->QueuePackageSwitch("Showcase.fng", reinterpret_cast<int>(pCar), 0, false);
             }
             break;
-        case 0xc519bfc3:
+        case __PAD_BUTTON4__:
             if (!FEDatabase->IsPostRivalMode()) {
                 char buf[64];
                 bSNPrintf(buf, 64, "blacklist_%02d", iCurrentViewBin);
                 FEAnyMovieScreen::LaunchMovie(GetPackageName(), buf);
             }
             break;
-        case 0x406415e3:
+        case __PAD_ACCEPT__:
             if (FEDatabase->IsPostRivalMode()) {
                 if (uiRepSheetRivalFlow::Get()->GetStage() == -1) {
                     uiRepSheetRivalFlow::Get()->StartFlow(5);
@@ -77,7 +77,7 @@ void uiRepSheetRivalBio::NotificationMessage(u32 msg, FEObject *obj, u32 param1,
                 }
             }
             break;
-        case 0x911ab364:
+        case __PAD_BACK__:
             if (!FEDatabase->IsPostRivalMode()) {
                 if (bIsInGame) {
                     cFEng::Get()->QueuePackageSwitch("InGameReputationOverview.fng", 1, 0, false);

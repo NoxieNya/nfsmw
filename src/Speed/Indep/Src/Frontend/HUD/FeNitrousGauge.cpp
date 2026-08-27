@@ -34,8 +34,8 @@ void NitrousGauge::Update(IPlayer *player) {
 
 void NitrousGauge::SetNos(float nos) {
     if (nos <= 0) {
-        if (!FEngIsScriptSet(mpDataNosMeterIcon, 0x1744B3)) {
-            FEngSetScript(mpDataNosMeterIcon, 0x1744B3, true);
+        if (!FEngIsScriptSet(mpDataNosMeterIcon, FEHASH_INIT)) {
+            FEngSetScript(mpDataNosMeterIcon, FEHASH_INIT, true);
         }
     } else if (nos < mNos) {
         if (!FEngIsScriptSet(mpDataNosMeterIcon, 0x77031C70)) {

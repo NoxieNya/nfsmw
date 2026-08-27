@@ -117,7 +117,7 @@ void FEngTextInputObject::RedrawString(bool pIncludeCursor) {
 void FEngTextInputObject::Notify(uint32 msg) {
     if (msg == FEMSG_SCREEN_TICK) {
         RedrawString(true);
-    } else if (msg == 0x0c407210) {
+    } else if (msg == __BUTTON_PRESSED__) {
         ReturnPressed();
     }
 }

@@ -16,17 +16,17 @@ enum eDialogTitle {
 };
 
 enum eUsefulDialogMessages {
-    dialog_message_ok = 886840300,
-    dialog_message_yes = -799030365,
-    dialog_message_no = 886840271,
-    dialog_message_cancel = 531323288,
-    dialog_message_cancelled = -1259476115,
-    DIALOG_MESSAGE_NOTHING = -1,
+    dialog_message_ok = 0x34DC1BEC,
+    dialog_message_yes = 0xD05FC3A3,
+    dialog_message_no = 0x34DC1BCF,
+    dialog_message_cancel = 0x1FAB5998,
+    dialog_message_cancelled = 0xB4EDEB6D,
+    DIALOG_MESSAGE_NOTHING = 0xFFFFFFFF,
 };
 
 enum eUsefulDialogTextHashes {
-    text_hash_ok = 1098589697,
-    text_hash_cancel = 438914477,
+    text_hash_ok = 0x417B2601,
+    text_hash_cancel = 0x1A294DAD,
 };
 
 enum eDialogFirstButtons {

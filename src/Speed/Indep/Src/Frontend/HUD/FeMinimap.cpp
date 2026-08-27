@@ -405,8 +405,8 @@ void Minimap::UpdateCopElements(IVehicle *ivehicle) {
                             FEngSetScript(mHeliLineOfSiteArt, FEHashUpper("TRACKING"), true);
                         }
                     } else {
-                        if (!FEngIsScriptSet(mHeliLineOfSiteArt, 0x1744B3)) {
-                            FEngSetScript(mHeliLineOfSiteArt, 0x1744B3, true);
+                        if (!FEngIsScriptSet(mHeliLineOfSiteArt, FEHASH_INIT)) {
+                            FEngSetScript(mHeliLineOfSiteArt, FEHASH_INIT, true);
                         }
                     }
                 }

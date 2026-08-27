@@ -1,5 +1,6 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeCountdown.hpp"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
@@ -32,7 +33,7 @@ void Countdown::Update(IPlayer *player) {
             mCountdown = static_cast<eRaceCountdownNumber>(mCountdown - 1);
 
             if (mCountdown == RACE_COUNTDOWN_NUMBER_NONE) {
-                FEngSetScript(pMessageGroup, 0x16a259, true);
+                FEngSetScript(pMessageGroup, FEHASH_HIDE, true);
                 mSecondTimer.UnSet();
                 return;
             }
@@ -76,7 +77,7 @@ void Countdown::Update(IPlayer *player) {
             mSecondTimer = WorldTimer;
         }
     } else {
-        FEngSetScript(pMessageGroup, 0x16a259, true);
+        FEngSetScript(pMessageGroup, FEHASH_HIDE, true);
         mSecondTimer.UnSet();
     }
 }

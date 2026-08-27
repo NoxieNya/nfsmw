@@ -28,7 +28,7 @@ FEAnyMovieScreen::FEAnyMovieScreen(ScreenConstructorData *sd) : MenuScreen(sd), 
     mSubtitler.BeginningMovie(MovieFilename, GetPackageName());
     DismissChyron();
 
-    new EFadeScreenOff(0x14035FB);
+    new EFadeScreenOff(FEHASH_15_IN);
 
     GarageMainScreen *garageMainScreen = GarageMainScreen::GetInstance();
     if (garageMainScreen != nullptr && garageMainScreen->IsVisable()) {

@@ -75,7 +75,7 @@ FEAnyTutorialScreen::FEAnyTutorialScreen(ScreenConstructorData *sd) : MenuScreen
 
     mSubtitler.BeginningMovie(MovieFilename, GetPackageName());
 
-    new EFadeScreenOff(0x14035FB);
+    new EFadeScreenOff(FEHASH_15_IN);
 }
 
 MenuScreen *FEAnyTutorialScreen::Create(ScreenConstructorData *sd) {

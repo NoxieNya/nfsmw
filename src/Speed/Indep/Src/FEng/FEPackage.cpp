@@ -13,7 +13,7 @@
 u32 FEPackage::uHoldDirtyFlags = 0xFFFFFFFF; // size: 0x4, address: 0x8041D158, Decl: speed/indep/src/feng/FEPackage.cpp:26
 
 bool PackageInitStateCB::Callback(FEObject *pObj) {
-    pObj->SetCurrentScript(pObj->FindScript(0x1744b3));
+    pObj->SetCurrentScript(pObj->FindScript(FEHASH_INIT));
     pObj->pCurrentScript->CurTime = 0;
     pObj->Flags |= FEngDirtyFlagsMask;
     return true;

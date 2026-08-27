@@ -1,6 +1,7 @@
 #include "uiRepSheetBounty.hpp"
 
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
@@ -12,13 +13,14 @@
 #include "Speed/Indep/Src/Frontend/RaceStarter.hpp"
 #include "Speed/Indep/Src/Gameplay/GManager.h"
 #include "Speed/Indep/Src/Generated/Events/ERaceSheetOff.hpp"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "Speed/Indep/Tools/AttribSys/Runtime/AttribSys.h"
 
 Attrib::Key theMarker;
 const char *gTUTORIAL_MOVIE_BOUNTY = "bounty_tutorial";
 
 void BountyDatum::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
-    if (msg == 0xc407210) {
+    if (msg == __BUTTON_PRESSED__) {
         theMarker = GManager::Get().GetBountySpawnMarker(index);
     }
 }
@@ -63,7 +65,7 @@ void uiRepSheetBounty::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u
     ArrayScrollerMenu::NotificationMessage(msg, obj, param1, param2);
 
     switch (msg) {
-        case 0xc407210: {
+        case __BUTTON_PRESSED__: {
             BountyDatum *d = static_cast<BountyDatum *>(GetCurrentDatum());
             if (GetNumDatum() < 1) {
                 return;
@@ -79,21 +81,21 @@ void uiRepSheetBounty::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u
             if (bIsInGame) {
                 dialog = "InGameDialog.fng";
             }
-            DialogInterface ::ShowTwoButtons(GetPackageName(), dialog, dialog_alert, 0x70e01038, 0x417b25e4, 0xd05fc3a3, 0x34dc1bcf, 0x34dc1bcf,
-                                             first_dialog_button2, 0xcd195d0b);
+            DialogInterface ::ShowTwoButtons(GetPackageName(), dialog, dialog_alert, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, dialog_message_yes,
+                                             dialog_message_no, dialog_message_no, first_dialog_button2, 0xcd195d0b);
             return;
         }
-        case 0xc519bfc3:
+        case __PAD_BUTTON4__:
             if (!bIsInGame) {
                 tutorialPlaying = true;
 
                 const u32 FEObj_MASTERBLASTER = 0x99344537;
-                const u32 FEObj_HIDE = 0x16a259;
+                const u32 FEObj_HIDE = FEObj_HIDE;
                 FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_HIDE, true);
                 FEAnyTutorialScreen::LaunchMovie(gTUTORIAL_MOVIE_BOUNTY, GetPackageName());
             }
             return;
-        case 0xd05fc3a3: {
+        case dialog_message_yes: {
             CareerSettings *career = FEDatabase->GetCareerSettings();
             if (!career->HasDoneBountyTutorial()) {
                 if (bIsInGame) {
@@ -109,7 +111,7 @@ void uiRepSheetBounty::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u
                 }
 
                 const u32 FEObj_MASTERBLASTER = 0x99344537;
-                const u32 FEObj_HIDE = 0x16a259;
+                const u32 FEObj_HIDE = FEObj_HIDE;
                 FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_HIDE, true);
                 FEngSetInvisible(GetPackageName(), FEngHashString("TRACK_MAP"));
                 career->SetHasDoneBountyTutorial();
@@ -123,7 +125,7 @@ void uiRepSheetBounty::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u
                 tutorialPlaying = false;
 
                 const u32 FEObj_MASTERBLASTER = 0x99344537;
-                const u32 FEObj_Init = 0x1744b3;
+                const u32 FEObj_Init = FEHASH_INIT;
                 FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_Init, true);
                 return;
             }
@@ -138,24 +140,24 @@ void uiRepSheetBounty::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u
             GManager::Get().QueueFreeRoamPursuit(0.0f);
             RaceStarter::StartCareerFreeRoam();
             return;
-        case 0x911ab364:
+        case __PAD_BACK__:
             if (bIsInGame) {
                 cFEng::Get()->QueuePackageSwitch("InGameReputationOverview.fng", 1, 0, false);
             } else {
                 cFEng::Get()->QueuePackageSwitch("SafeHouseReputationOverview.fng", 0, 0, false);
             }
             return;
-        case 0xc98356ba:
+        case FEMSG_SCREEN_TICK:
             if (TrackMapStreamer != nullptr) {
                 TrackMapStreamer->UpdateAnimation();
             }
             return;
-        case 0x72619778:
-        case 0x911c0a4b:
-        case 0x9120409e:
-        case 0xb5971bf1:
+        case __PAD_UP__:
+        case __PAD_DOWN__:
+        case __PAD_LEFT__:
+        case __PAD_RIGHT__:
             break;
-        case 0x34dc1bcf:
+        case dialog_message_no:
             return;
         default:
             return;

@@ -2,6 +2,8 @@
 
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/FEng/FEList.h"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
@@ -49,8 +51,8 @@ void StatsPanel::Reset() {
 
 void StatsPanel::Draw(uint32 numPlayers) {
     if (numPlayers > 1 && RacerName != nullptr && bStrCmp(RacerName, "") != 0) {
-        if (!FEngIsScriptSet(ParentPkg, 0x8A41F5B9, 0x5079C8F8)) {
-            FEngSetScript(ParentPkg, 0x8A41F5B9, 0x5079C8F8, true);
+        if (!FEngIsScriptSet(ParentPkg, 0x8A41F5B9, FEHASH_APPEAR)) {
+            FEngSetScript(ParentPkg, 0x8A41F5B9, FEHASH_APPEAR, true);
         }
 
         FEngSetButtonTexture(FEngFindImage(ParentPkg, 0x5BC), 0x5BC);
@@ -171,8 +173,8 @@ void PostRaceResultsScreen::Setup() {
             break;
     }
 
-    if (!FEDatabase->IsOnlineMode() && !FEDatabase->IsLANMode() && !FEngIsScriptSet(GetPackageName(), 0x445A862B, 0x5079C8F8)) {
-        FEngSetScript(GetPackageName(), 0x445A862B, 0x5079C8F8, true);
+    if (!FEDatabase->IsOnlineMode() && !FEDatabase->IsLANMode() && !FEngIsScriptSet(GetPackageName(), 0x445A862B, FEHASH_APPEAR)) {
+        FEngSetScript(GetPackageName(), 0x445A862B, FEHASH_APPEAR, true);
     }
 }
 
@@ -679,7 +681,7 @@ void PostRaceResultsScreen::SetupLapStats(int racerIndex, GRacerInfo *racer_info
 // UNSOLVED (dwarf)
 void PostRaceResultsScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 Param1, u32 Param2) {
     switch (msg) {
-        case 0x35F8620B: {
+        case FEHASH_INITCOMPLETE: {
             if (!FEDatabase->IsLANMode()) {
                 if (!FEDatabase->IsOnlineMode()) {
                     return;
@@ -687,10 +689,10 @@ void PostRaceResultsScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 
             }
 
             FEngSetScript(GetPackageName(), 0x812A09D4, 0x0016A259, true);
-            FEngSetScript(GetPackageName(), 0x05D85A9F, 0x5079C8F8, true);
+            FEngSetScript(GetPackageName(), 0x05D85A9F, FEHASH_APPEAR, true);
             return;
         }
-        case 0x5073EF13:
+        case __PAD_LTRIGGER__:
             if (mPostRaceScreenMode == POSTRACESCREENMODE_RESULTS) {
                 return;
             }
@@ -702,7 +704,7 @@ void PostRaceResultsScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 
 
             Setup();
             return;
-        case 0xD9FEEC59:
+        case __PAD_RTRIGGER__:
             if (mPostRaceScreenMode == POSTRACESCREENMODE_RESULTS) {
                 return;
             }
@@ -714,7 +716,7 @@ void PostRaceResultsScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 
 
             Setup();
             return;
-        case 0xC519BFC3:
+        case __PAD_BUTTON4__:
             if (mRaceType == GRace::kRaceType_Tollbooth) {
                 if (mPostRaceScreenMode == POSTRACESCREENMODE_LAPSTATS) {
                     mPostRaceScreenMode = POSTRACESCREENMODE_STATS;
@@ -730,7 +732,7 @@ void PostRaceResultsScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 
 
             Setup();
             return;
-        case 0xC519BFC4: {
+        case __PAD_BUTTON5__: {
             if (FEDatabase->IsLANMode()) {
                 return;
             }
@@ -753,9 +755,9 @@ void PostRaceResultsScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 
             new ERestartRace();
             return;
         case 0xB4623F67:
-            cFEng::Get()->QueuePackageMessage(0xC6341FF6, GetPackageName(), nullptr);
+            cFEng::Get()->QueuePackageMessage(FEHASH_ENABLE_INPUT, GetPackageName(), nullptr);
             return;
-        case 0x406415E3: {
+        case __PAD_ACCEPT__: {
             if (FEngIsScriptSet(GetPackageName(), 0x57EFB2FB, 0x0016A259)) {
                 return;
             }
@@ -781,7 +783,7 @@ void PostRaceResultsScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 
                 FEngSetScript(GetPackageName(), 0x47FF4E7C, 0x001335F0, true);
             }
             return;
-        case 0xE1FDE1D1: {
+        case FEHASH_EXITCOMPLETE: {
             if (FEDatabase->IsLANMode()) {
                 return;
             }
@@ -931,50 +933,50 @@ void PursuitResultsArraySlot::Update(ArrayDatum *datum, bool isSelected) {
     if (datum != nullptr) {
         PursuitResultsDatum *result = static_cast<PursuitResultsDatum *>(datum);
 
-        FEngSetScript(mItemChecked, 0x16A259, true);
-        FEngSetScript(mItemEmpty, 0x16A259, true);
-        FEngSetScript(mLine, 0x1744B3, true);
+        FEngSetScript(mItemChecked, FEHASH_HIDE, true);
+        FEngSetScript(mItemEmpty, FEHASH_HIDE, true);
+        FEngSetScript(mLine, FEHASH_INIT, true);
 
         if (mItemName != nullptr) {
-            FEngSetScript(mItemName, 0x1744B3, true);
+            FEngSetScript(mItemName, FEHASH_INIT, true);
             FEngSetLanguageHash(mItemName, result->GetName());
         }
 
         if (result->GetType() == PursuitResultsDatum::PursuitResultsDatumType_Number) {
             FEPrintf(mItemNumber, "%$d", result->GetNumber());
-            FEngSetScript(mItemNumber, 0x1744B3, true);
+            FEngSetScript(mItemNumber, FEHASH_INIT, true);
             if (result->GetChecked()) {
-                FEngSetScript(mItemChecked, 0x1CA7C0, true);
+                FEngSetScript(mItemChecked, FEHASH_SHOW, true);
             } else if (result->GetGreyed()) {
                 FEngSetScript(mItemChecked, 0x163C76, true);
             } else {
-                FEngSetScript(mItemChecked, 0x16A259, true);
+                FEngSetScript(mItemChecked, FEHASH_HIDE, true);
             }
         } else if (result->GetType() == PursuitResultsDatum::PursuitResultsDatumType_Time) {
             char timeString[32];
             Timer timeTimer(result->GetNumber());
             timeTimer.PrintToString(timeString, 0);
             FEPrintf(mItemNumber, "%s", timeString);
-            FEngSetScript(mItemNumber, 0x1744B3, true);
+            FEngSetScript(mItemNumber, FEHASH_INIT, true);
             if (result->GetChecked()) {
-                FEngSetScript(mItemChecked, 0x1CA7C0, true);
+                FEngSetScript(mItemChecked, FEHASH_SHOW, true);
             } else if (result->GetGreyed()) {
                 FEngSetScript(mItemChecked, 0x163C76, true);
             } else {
-                FEngSetScript(mItemChecked, 0x16A259, true);
+                FEngSetScript(mItemChecked, FEHASH_HIDE, true);
             }
         } else if (result->GetType() == PursuitResultsDatum::PursuitResultsDatumType_Milestone_Number) {
             bool showCurrVal;
             char outputStr[32];
             FEDatabase->SetMilestoneDescriptionString(outputStr, -1, result->GetNumber(), result->GetGoal(), false);
             FEPrintf(mItemNumber, "%s", outputStr);
-            FEngSetScript(mItemNumber, 0x1744B3, true);
+            FEngSetScript(mItemNumber, FEHASH_INIT, true);
             if (result->GetChecked()) {
-                FEngSetScript(mItemChecked, 0x1CA7C0, true);
+                FEngSetScript(mItemChecked, FEHASH_SHOW, true);
             } else if (result->GetGreyed()) {
                 FEngSetScript(mItemChecked, 0x163C76, true);
             } else {
-                FEngSetScript(mItemChecked, 0x16A259, true);
+                FEngSetScript(mItemChecked, FEHASH_HIDE, true);
             }
         } else if (result->GetType() == PursuitResultsDatum::PursuitResultsDatumType_Milestone_Time ||
                    result->GetType() == PursuitResultsDatum::PursuitResultsDatumType_Milestone_Time_PursuitRemaining) {
@@ -983,16 +985,16 @@ void PursuitResultsArraySlot::Update(ArrayDatum *datum, bool isSelected) {
             char outputStr[32];
             FEDatabase->SetMilestoneDescriptionString(outputStr, -1, result->GetNumber(), result->GetGoal(), true);
             FEPrintf(mItemNumber, "%s", outputStr);
-            FEngSetScript(mItemNumber, 0x1744B3, true);
+            FEngSetScript(mItemNumber, FEHASH_INIT, true);
             if (result->GetChecked()) {
-                FEngSetScript(mItemChecked, 0x1CA7C0, true);
+                FEngSetScript(mItemChecked, FEHASH_SHOW, true);
             } else if (result->GetGreyed()) {
                 FEngSetScript(mItemChecked, 0x163C76, true);
             } else {
-                FEngSetScript(mItemChecked, 0x16A259, true);
+                FEngSetScript(mItemChecked, FEHASH_HIDE, true);
             }
         } else if (result->GetType() == PursuitResultsDatum::PursuitResultsDatumType_Check) {
-            FEngSetScript(mItemNumber, 0x16A259, true);
+            FEngSetScript(mItemNumber, FEHASH_HIDE, true);
             if (result->GetChecked()) {
                 FEngSetScript(mItemChecked, 0x163C76, true);
             } else {
@@ -1194,7 +1196,7 @@ void PostRacePursuitScreen::SetupPursuit() {
 void PostRacePursuitScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 Param1, u32 Param2) {
     ArrayScrollerMenu::NotificationMessage(msg, pObject, Param1, Param2);
     switch (msg) {
-        case 0x406415E3:
+        case __PAD_ACCEPT__:
             if (TheGameFlowManager.IsInFrontend()) {
                 if (FEDatabase->IsQuickRaceMode()) {
                     cFEng::Get()->QueuePackageSwitch("ChallengeSeries.fng", 0, 0, false);
@@ -1216,7 +1218,7 @@ void PostRacePursuitScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 
                 new EUnPause();
             }
             break;
-        case 0xC519BFC3:
+        case __PAD_BUTTON4__:
             if (TheGameFlowManager.IsInFrontend()) {
                 if (mPostPursuitScreenMode == POSTPURSUITSCREENMODE_INFRACTIONS) {
                     mPostPursuitScreenMode = POSTPURSUITSCREENMODE_PURSUIT;
@@ -1246,7 +1248,7 @@ PostRaceMilestonesScreen::~PostRaceMilestonesScreen() {}
 
 void PostRaceMilestonesScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x35f8620b:
+        case FEHASH_INITCOMPLETE:
             StartBountyAnimations(false);
             break;
         case 0xd3c3de7:
@@ -1267,12 +1269,12 @@ void PostRaceMilestonesScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 
             }
             StartMilestoneAnimations();
             break;
-        case 0xc98356ba:
-            if (FEngIsScriptSet(mpDataBigIcon, 0x5079c8f8) && !FEngIsScriptRunning(mpDataBigIcon, 0x5079c8f8)) {
+        case FEMSG_SCREEN_TICK:
+            if (FEngIsScriptSet(mpDataBigIcon, FEHASH_APPEAR) && !FEngIsScriptRunning(mpDataBigIcon, FEHASH_APPEAR)) {
                 FEngSetScript(mpDataBigIcon, mCurrMilestoneScriptHash, true);
             }
             break;
-        case 0x406415e3:
+        case __PAD_ACCEPT__:
             cFEng::Get()->QueuePackagePop(1);
             new EShowResults(FERESULTTYPE_PURSUIT, false);
             break;
@@ -1347,13 +1349,13 @@ void PostRaceMilestonesScreen::StartAnimations(bool isMilestone, int typeKey, fl
     }
     FEPrintf(GetPackageName(), 0xe1045a4f, "%s: %$0.0f", GetTranslatedString(0x29b1b96a), bountyEarned);
     FEPrintf(GetPackageName(), 0x324f7792, "%s: %$0.0f", GetTranslatedString(0x5ccf949a), mBountyEarned);
-    FEngSetScript(mpDataBigIcon, 0x5079c8f8, true);
+    FEngSetScript(mpDataBigIcon, FEHASH_APPEAR, true);
 }
 
 void PostRaceMilestonesScreen::StartMilestoneDoneAnimations() {
-    FEngSetScript(mpDataBigIcon, 0x16a259, true);
-    FEngSetScript(GetPackageName(), 0xe526d0d2, 0x33113ac, true);
-    FEngSetScript(GetPackageName(), 0xe1045a4f, 0x33113ac, true);
+    FEngSetScript(mpDataBigIcon, FEHASH_HIDE, true);
+    FEngSetScript(GetPackageName(), 0xe526d0d2, FEHASH_LEAVE, true);
+    FEngSetScript(GetPackageName(), 0xe1045a4f, FEHASH_LEAVE, true);
     FEngSetScript(GetPackageName(), 0x962b9c62, FEHashUpper("POS2"), true);
     FEngSetScript(GetPackageName(), 0xec85c7e4, FEHashUpper("POS2"), true);
 }

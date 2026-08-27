@@ -13,19 +13,18 @@
 #include "Speed/Indep/Src/FEng/FEGroup.h"
 #include "Speed/Indep/Src/FEng/FEListBox.h"
 #include "Speed/Indep/Src/FEng/FECodeListBox.h"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Misc/Profiler.hpp"
-#include <cstddef>
-#include <new>
 
 extern "C" int printf(const char *, ...);
 
 static const u32 FEAutoRepeatFrames = 6;       // size: 0x4, Decl: speed/indep/src/feng/FEngine.cpp:26
 static const u32 FEAutoRepeatFirstFrames = 16; // size: 0x4, Decl: speed/indep/src/feng/FEngine.cpp:27
 
-static const u32 Msg_Global_DisableInputs = 0x5D4CE32D; // size: 0x4, Decl: speed/indep/src/feng/FEngine.cpp:29
-static const u32 Msg_Global_EnableInputs = 0x59BED120;  // size: 0x4, Decl: speed/indep/src/feng/FEngine.cpp:30
+static const u32 Msg_Global_DisableInputs = __DISABLE_ALL_INPUTS__; // size: 0x4, Decl: speed/indep/src/feng/FEngine.cpp:29
+static const u32 Msg_Global_EnableInputs = __ENABLE_ALL_INPUTS__;   // size: 0x4, Decl: speed/indep/src/feng/FEngine.cpp:30
 
 // total size: 0x4
 // Decl: speed/indep/src/feng/FEngine.cpp:33
@@ -344,20 +343,38 @@ void FEngine::Update(const i32 tDeltaTicks, uint32 lock) {
 
 // size: 0x4C, address: 0x8041D0A0, Decl: speed/indep/src/feng/FEngine.cpp:873
 static u32 PadButtonHash[19] = {
-    0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x406415E3u, 0x911AB364u, 0xB5AF2461u, 0x5073EF13u, 0xD9FEEC59u, 0xC519BFBFu,
-    0xC519BFC0u, 0xC519BFC1u, 0xC519BFC2u, 0xC519BFC3u, 0xC519BFC4u, 0xC519BFC5u, 0xC519BFC6u, 0xC519BFC7u, 0xC519BFC8u,
+    0x00000000,       0x00000000,       0x00000000,      0x00000000,      __PAD_ACCEPT__,  __PAD_BACK__,    __PAD_START__,
+    __PAD_LTRIGGER__, __PAD_RTRIGGER__, __PAD_BUTTON0__, __PAD_BUTTON1__, __PAD_BUTTON2__, __PAD_BUTTON3__, __PAD_BUTTON4__,
+    __PAD_BUTTON5__,  __PAD_BUTTON6__,  __PAD_BUTTON7__, __PAD_BUTTON8__, __PAD_BUTTON9__,
 };
 
 // size: 0x8, address: 0x8041D0EC, Decl: speed/indep/src/feng/FEngine.cpp:881
 static u32 PadButtonHeldHash[2] = {
-    0x447315AFu,
-    0x20AD4EB5u,
+    __PAD_LTRIGGER_HELD__,
+    __PAD_RTRIGGER_HELD__,
 };
 
 // size: 0x4C, address: 0x8041D0F4, Decl: speed/indep/src/feng/FEngine.cpp:886
 static u32 PadReleasedHash[19] = {
-    0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0xC12E9E27u, 0xC2F8FCC8u, 0xEBFCDA65u, 0x091DCD57u, 0x7A39195Du, 0xD4671F83u,
-    0xD871B0A4u, 0xDC7C41C5u, 0xE086D2E6u, 0xE4916407u, 0xE89BF528u, 0xECA68649u, 0xF0B1176Au, 0xF4BBA88Bu, 0xF8C639ACu,
+    0x00000000,
+    0x00000000,
+    0x00000000,
+    0x00000000,
+    __PAD_ACCEPT_RELEASED__,
+    __PAD_BACK_RELEASED__,
+    __PAD_START_RELEASED__,
+    __PAD_LTRIGGER_RELEASED__,
+    __PAD_RTRIGGER_RELEASED__,
+    __PAD_BUTTON0_RELEASED__,
+    __PAD_BUTTON1_RELEASED__,
+    __PAD_BUTTON2_RELEASED__,
+    __PAD_BUTTON3_RELEASED__,
+    __PAD_BUTTON4_RELEASED__,
+    __PAD_BUTTON5_RELEASED__,
+    __PAD_BUTTON6_RELEASED__,
+    __PAD_BUTTON7_RELEASED__,
+    __PAD_BUTTON8_RELEASED__,
+    __PAD_BUTTON9_RELEASED__,
 };
 
 // UNSOLVED
@@ -466,12 +483,12 @@ void FEngine::ProcessPadsForPackage(FEPackage *pPackage) {
             if ((Pressed & 0x10) == 0)
                 goto check_released;
             HeldButtons[4] = pCurButton;
-            if ((pCurButton != nullptr) && pCurButton->FindResponse(0x0C407210u) != nullptr) {
-                QueueMessage(0x0C407210u, nullptr, pPackage, pPackage->GetCurrentButton(), FromPadPressed[4]);
-                QueueMessage(0x0C407210u, pPackage->GetCurrentButton(), pPackage, reinterpret_cast<FEObject *>(0xFFFFFFFB), FromPadPressed[4]);
-            } else if (pPackage->FindResponse(0x406415E3u) != nullptr) {
-                QueueMessage(0x406415E3u, nullptr, pPackage, reinterpret_cast<FEObject *>(0xFFFFFFFD), FromPadPressed[4]);
-                QueueMessage(0x406415E3u, nullptr, pPackage, reinterpret_cast<FEObject *>(0xFFFFFFFB), FromPadPressed[4]);
+            if ((pCurButton != nullptr) && pCurButton->FindResponse(__BUTTON_PRESSED__) != nullptr) {
+                QueueMessage(__BUTTON_PRESSED__, nullptr, pPackage, pPackage->GetCurrentButton(), FromPadPressed[4]);
+                QueueMessage(__BUTTON_PRESSED__, pPackage->GetCurrentButton(), pPackage, reinterpret_cast<FEObject *>(0xFFFFFFFB), FromPadPressed[4]);
+            } else if (pPackage->FindResponse(__PAD_ACCEPT__) != nullptr) {
+                QueueMessage(__PAD_ACCEPT__, nullptr, pPackage, reinterpret_cast<FEObject *>(0xFFFFFFFD), FromPadPressed[4]);
+                QueueMessage(__PAD_ACCEPT__, nullptr, pPackage, reinterpret_cast<FEObject *>(0xFFFFFFFB), FromPadPressed[4]);
             }
             goto check_released;
 
@@ -1327,7 +1344,7 @@ void FEngine::ProcessPackageCommands() {
                 u32 PassedMask = pNode->pPackage->GetControlMask() & pNode->uControlMask;
                 pNode->pPackage->SetControlMask(pNode->pPackage->GetControlMask() & ~PassedMask);
                 pChild->SetControlMask(pChild->GetControlMask() | PassedMask);
-                QueueMessage(0x334c5493u, nullptr, pChild, reinterpret_cast<FEObject *>(0xFFFFFFFCu), pNode->uControlMask);
+                QueueMessage(0x334c5493, nullptr, pChild, reinterpret_cast<FEObject *>(0xFFFFFFFCu), pNode->uControlMask);
             }
         }
 

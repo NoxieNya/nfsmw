@@ -34,7 +34,7 @@ InGameAnyMovieScreen::InGameAnyMovieScreen(ScreenConstructorData *sd) : MenuScre
     const u32 FEObj_movie = 0x348ff9f;
     FEngSetMovieName(GetPackageName(), FEObj_movie, MovieFilename);
     mSubtitler.BeginningMovie(MovieFilename, GetPackageName());
-    new EFadeScreenOff(0x14035fb);
+    new EFadeScreenOff(FEHASH_15_IN);
 }
 
 InGameAnyMovieScreen::~InGameAnyMovieScreen() {

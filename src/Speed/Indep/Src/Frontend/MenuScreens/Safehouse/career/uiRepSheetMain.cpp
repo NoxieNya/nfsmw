@@ -1,6 +1,8 @@
 #include "uiRepSheetMain.hpp"
 
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
@@ -17,7 +19,7 @@ static int selection = 0;
 int iCurrentViewBin = 0;
 
 void RepSheetIcon::React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) {
-    if (data != 0xc407210)
+    if (data != __BUTTON_PRESSED__)
         return;
     selection = id;
 }
@@ -28,7 +30,7 @@ uiRepSheetMain::uiRepSheetMain(ScreenConstructorData *sd)
     if (bIsInGame) {
         Options.SetIdleColor(0xffffae40);
         Options.SetFadeColor(0x00ffae40);
-        new EFadeScreenOff(0x14035fb);
+        new EFadeScreenOff(FEHASH_15_IN);
     } else {
         RideInfo ride;
         FEPlayerCarDB *stable = FEDatabase->GetPlayerCarStable(0);
@@ -55,15 +57,15 @@ void uiRepSheetMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
     IconScrollerMenu::NotificationMessage(msg, pobj, param1, param2);
 
     switch (msg) {
-        case 0x911c0a4b:
+        case __PAD_DOWN__:
             ScrollRival(eSD_NEXT);
             break;
-        case 0x72619778:
+        case __PAD_UP__:
             ScrollRival(eSD_PREV);
             break;
-        case 0xe1fde1d1:
+        case FEHASH_EXITCOMPLETE:
             switch (PrevButtonMessage) {
-                case 0xc407210:
+                case __BUTTON_PRESSED__:
                     if (selection == 0) {
                         if (!bIsInGame) {
                             cFEng::Get()->QueuePackageSwitch("SafeHouseRaceSheet.fng", 0, 0, false);
@@ -91,7 +93,7 @@ void uiRepSheetMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
                     }
                     break;
 
-                case 0x911ab364:
+                case __PAD_BACK__:
                     if (bIsInGame) {
                         new ERaceSheetOff();
                         break;
@@ -100,7 +102,7 @@ void uiRepSheetMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
                     break;
             }
             break;
-        case 0xc519bfc3:
+        case __PAD_BUTTON4__:
             if (bBossBeaten) {
                 break;
             }
@@ -134,9 +136,9 @@ void uiRepSheetMain::Setup() {
     IconScrollerMenu::RefreshHeader();
 
     if (bIsInGame) {
-        FEngSetLanguageHash(GetPackageName(), 0xb71b576d, 0x2e3919e9);
+        FEngSetLanguageHash(GetPackageName(), __TITLE_GROUP__, 0x2e3919e9);
     } else {
-        FEngSetLanguageHash(GetPackageName(), 0xb71b576d, 0xcace5999);
+        FEngSetLanguageHash(GetPackageName(), __TITLE_GROUP__, 0xcace5999);
     }
 
     pRivalImg = FEngFindImage(GetPackageName(), 0xc1f62308);
@@ -215,17 +217,17 @@ void uiRepSheetMain::UpdateInfo() {
     if (completed_races >= required_races) {
         FEngSetScript(GetPackageName(), 0x4c3b1536, 0xe6361f46, true);
     } else {
-        FEngSetScript(GetPackageName(), 0x4c3b1536, 0x16a259, true);
+        FEngSetScript(GetPackageName(), 0x4c3b1536, FEHASH_HIDE, true);
     }
     if (completed_challenges >= required_challenges) {
         FEngSetScript(GetPackageName(), 0x4c3b1537, 0xe6361f46, true);
     } else {
-        FEngSetScript(GetPackageName(), 0x4c3b1537, 0x16a259, true);
+        FEngSetScript(GetPackageName(), 0x4c3b1537, FEHASH_HIDE, true);
     }
     if (completed_bounty >= required_bounty) {
         FEngSetScript(GetPackageName(), 0x4c3b1538, 0xe6361f46, true);
     } else {
-        FEngSetScript(GetPackageName(), 0x4c3b1538, 0x16a259, true);
+        FEngSetScript(GetPackageName(), 0x4c3b1538, FEHASH_HIDE, true);
     }
 
     char buf[32];

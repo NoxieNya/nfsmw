@@ -1,10 +1,12 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/quickrace/uiQRMainMenu.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEIconScrollerMenu.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 
-int QRMode;
+int QRMode = 0;
 
 static void _SetQRMode(int mode) {
     QRMode = mode;
@@ -15,7 +17,7 @@ class QuickPlay : public IconOption {
     QuickPlay(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
 
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0xc407210) {
+        if (data == __BUTTON_PRESSED__) {
             _SetQRMode(0);
         }
     }
@@ -26,18 +28,18 @@ class CustomRace : public IconOption {
     CustomRace(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
 
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0xc407210) {
+        if (data == __BUTTON_PRESSED__) {
             _SetQRMode(1);
         }
     }
 };
 
-class SplitScreenOption : public IconOption {
+class SplitScreen : public IconOption {
   public:
-    SplitScreenOption(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
+    SplitScreen(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
 
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0xc407210) {
+        if (data == __BUTTON_PRESSED__) {
             _SetQRMode(2);
         }
     }
@@ -60,45 +62,41 @@ void UIQRMainMenu::RefreshHeader() {
 
 void UIQRMainMenu::Setup() {
     if (GetMikeMannBuild()) {
-        IconOption *cr = new CustomRace(0x2a49b5e2, 0x25bbd4c3, 0);
-        AddOption(cr);
+        AddOption(new ("CustomRace", 0) CustomRace(0x2a49b5e2, 0x25bbd4c3, 0));
     } else {
-        IconOption *qp = new QuickPlay(0xe6313967, 0xb5e8f82f, 0);
-        AddOption(qp);
-        IconOption *cr = new CustomRace(0x2a49b5e2, 0x25bbd4c3, 0);
-        AddOption(cr);
-        IconOption *ss = new SplitScreenOption(0xf365b5f5, 0x841d518a, 0);
-        AddOption(ss);
+        AddOption(new ("QuickPlay", 0) QuickPlay(0xe6313967, 0xb5e8f82f, 0));
+        AddOption(new ("CustomRace", 0) CustomRace(0x2a49b5e2, 0x25bbd4c3, 0));
+        AddOption(new ("SplitScreen", 0) SplitScreen(0xf365b5f5, 0x841d518a, 0));
     }
-    int lastBtn = FEngGetLastButton(GetPackageName());
-    SetInitialOption(lastBtn);
+    SetInitialOption(FEngGetLastButton(GetPackageName()));
     FEDatabase->RefreshCurrentRide();
 }
 
 void UIQRMainMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     IconScrollerMenu::NotificationMessage(msg, pobj, param1, param2);
-    if (msg == 0xe1fde1d1) {
-        switch (PrevButtonMessage) {
-            case 0xc407210:
-                FEDatabase->iNumPlayers = 1;
-                switch (QRMode) {
-                    case 0:
-                        cFEng::Get()->QueuePackageSwitch("Quick_Race_Brief.fng", 0, 0, false);
-                        break;
-                    case 1:
-                        FEDatabase->SetGameMode(eFE_GAME_MODE_MODE_SELECT);
-                        cFEng::Get()->QueuePackageSwitch("MainMenu_Sub.fng", 0, 0, false);
-                        break;
-                    case 2:
-                        FEDatabase->iNumPlayers = 2;
-                        FEDatabase->SetGameMode(eFE_GAME_MODE_MODE_SELECT);
-                        cFEng::Get()->QueuePackageSwitch("MainMenu_Sub.fng", 0, 0, false);
-                        break;
-                }
-                break;
-            case 0x911ab364:
-                cFEng::Get()->QueuePackageSwitch("MainMenu.fng", 0, 0, false);
-                break;
-        }
+    switch (msg) {
+        case FEHASH_EXITCOMPLETE:
+            switch (PrevButtonMessage) {
+                case __BUTTON_PRESSED__:
+                    FEDatabase->iNumPlayers = 1;
+                    switch (QRMode) {
+                        case 0:
+                            cFEng::Get()->QueuePackageSwitch("Quick_Race_Brief.fng", 0, 0, false);
+                            break;
+                        case 2:
+                            FEDatabase->SetGameMode(eFE_GAME_MODE_MODE_SELECT);
+                            FEDatabase->iNumPlayers = 2;
+                            cFEng::Get()->QueuePackageSwitch("MainMenu_Sub.fng", 0, 0, false);
+                            break;
+                        case 1:
+                            FEDatabase->SetGameMode(eFE_GAME_MODE_MODE_SELECT);
+                            cFEng::Get()->QueuePackageSwitch("MainMenu_Sub.fng", 0, 0, false);
+                            break;
+                    }
+                    break;
+                case __PAD_BACK__:
+                    cFEng::Get()->QueuePackageSwitch("MainMenu.fng", 0, 0, false);
+                    break;
+            }
     }
 }

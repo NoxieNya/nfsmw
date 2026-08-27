@@ -2,6 +2,7 @@
 #define __CARCUSTOMIZE_HPP__
 
 #include "Speed/Indep/Src/Frontend/FECarViewer.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/customize/FECustomize.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
@@ -38,16 +39,16 @@ class CustomizeMeter {
     void SetVisibility(bool b);
 
   private:
-    float Min;                // offset 0x0, size 0x4
-    float Max;                // offset 0x4, size 0x4
-    float Current;            // offset 0x8, size 0x4
-    float Preview;            // offset 0xC, size 0x4
-    float PreviousPreview;    // offset 0x10, size 0x4
-    int NumStages;            // offset 0x14, size 0x4
-    FEImage *pMultiplier;     // offset 0x18, size 0x4
-    FEImage *pMultiplierZoom; // offset 0x1C, size 0x4
-    FEImage *pBases[10];      // offset 0x20, size 0x28
-    FEObject *pMeterGroup;    // offset 0x48, size 0x4
+    float Min;                           // offset 0x0, size 0x4
+    float Max;                           // offset 0x4, size 0x4
+    float Current;                       // offset 0x8, size 0x4
+    float Preview;                       // offset 0xC, size 0x4
+    float PreviousPreview;               // offset 0x10, size 0x4
+    int NumStages;                       // offset 0x14, size 0x4
+    FEImage *pMultiplier;                // offset 0x18, size 0x4
+    FEImage *pMultiplierZoom;            // offset 0x1C, size 0x4
+    FEImage *pBases[NUM_STAGE_SEGMENTS]; // offset 0x20, size 0x28
+    FEObject *pMeterGroup;               // offset 0x48, size 0x4
 };
 
 // total size: 0x60
@@ -96,15 +97,15 @@ class CustomizeShoppingCart : public UIWidgetMenu {
     static void ShowShoppingCart(const char *parent_pkg);
     static void ExitShoppingCart();
     FEShoppingCartItem *GetCurrentItem() {
-        return nullptr;
+        return static_cast<FEShoppingCartItem *>(pCurrentOption);
     }
     void ToggleChecked();
     bool CanCheckout();
 
   private:
-    void SetMarkerBloomScript(unsigned int group, unsigned int bloom, ShoppingCartItem *item);
+    void SetMarkerBloomScript(uint32 group, uint32 bloom, ShoppingCartItem *item);
     void SetMarkerData(int num, ShoppingCartItem *item, int num_markers);
-    int GetNumMarkersSpending(unsigned int slot_id);
+    int GetNumMarkersSpending(uint32 slot_id);
     void SetMarkerAmounts();
     void RefreshHeader();
     void AddItem(ShoppingCartItem *item);
@@ -132,7 +133,7 @@ class CustomizeMainOption : public IconOption {
     ~CustomizeMainOption() override {}
 
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0xc407210) {
+        if (data == __BUTTON_PRESSED__) {
             cFEng::Get()->QueuePackageSwitch(ToPkg, Category, 0, false);
         }
     }

@@ -45,7 +45,7 @@ class pm_ResumeRace : public IconOption {
     }
     ~pm_ResumeRace() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             PauseMenu::SetSelectionHash(0xFDAE152F);
             FEngSetScript(pkg_name, 0x47FF4E7C, 0xDE6EFF34, true);
         }
@@ -59,7 +59,7 @@ class pm_ResumeFreeRoam : public IconOption {
     }
     ~pm_ResumeFreeRoam() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             PauseMenu::SetSelectionHash(0xFDAE152F);
             FEngSetScript(pkg_name, 0x47FF4E7C, 0xDE6EFF34, true);
         }
@@ -73,7 +73,7 @@ class pm_RestartRace : public IconOption {
     }
     ~pm_RestartRace() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             PauseMenu::SetSelectionHash(0xFBDF2EE3);
             DialogInterface::ShowTwoButtons(pkg_name, "InGameDialog.fng", dialog_alert, 0x417B2601, 0x1A294DAD, 0xE1A57D51, 0xB4623F67, 0xB4623F67,
                                             first_dialog_button2, 0x4D3399A8);
@@ -88,7 +88,7 @@ class pm_SwitchToOptions : public IconOption {
     }
     ~pm_SwitchToOptions() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             PauseMenu::SetSelectionHash(0x33195CF0);
             FEngSetScript(pkg_name, 0x47FF4E7C, 0xDE6EFF34, true);
         }
@@ -103,7 +103,7 @@ class pm_SwitchToTuning : public IconOption {
     }
     ~pm_SwitchToTuning() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             PauseMenu::SetSelectionHash(0x78F1C035);
             if (Locked) {
                 DialogInterface::ShowOneButton(pkg_name, "InGameDialog.fng", dialog_alert, 0x417B2601, 0xB4623F67, 0xB4623F67, 0xA7EE8554);
@@ -121,7 +121,7 @@ class pm_QuitMainMenu : public IconOption {
     }
     ~pm_QuitMainMenu() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             PauseMenu::SetSelectionHash(0xE5C9C609);
             DialogInterface::ShowTwoButtons(pkg_name, "InGameDialog.fng", dialog_alert, 0x417B2601, 0x1A294DAD, 0xC9BFD1C3, 0xB4623F67, 0xB4623F67,
                                             first_dialog_button2, 0xA2E9B449);
@@ -136,7 +136,7 @@ class pm_QuitQuickRace : public IconOption {
     }
     ~pm_QuitQuickRace() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             PauseMenu::SetSelectionHash(0xE5C9C609);
             DialogInterface::ShowTwoButtons(pkg_name, "InGameDialog.fng", dialog_alert, 0x417B2601, 0x1A294DAD, 0x30F32A49, 0xB4623F67, 0xB4623F67,
                                             first_dialog_button2, 0x1DB1CDE5);
@@ -151,7 +151,7 @@ class pm_QuitRaceToFreeRoam : public IconOption {
     }
     ~pm_QuitRaceToFreeRoam() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             PauseMenu::SetSelectionHash(0xCDD2635A);
             DialogInterface::ShowTwoButtons(pkg_name, "InGameDialog.fng", dialog_alert, 0x417B2601, 0x1A294DAD, 0x451E768E, 0xB4623F67, 0xB4623F67,
                                             first_dialog_button2, 0x9887EB98);
@@ -166,7 +166,7 @@ class pm_QuitRaceToFE : public IconOption {
     }
     ~pm_QuitRaceToFE() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             unsigned int quitMessageHash = 0;
             PauseMenu::SetSelectionHash(0xE5C9C609);
             GRace::Context ctx = GRaceStatus::Get().GetRaceContext();

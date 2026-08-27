@@ -1,5 +1,6 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/career/uiMarkerSelect.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Careers/UnlockSystem.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
@@ -75,14 +76,14 @@ void FEMarkerSelection::SetUnlockIcon(eUnlockableEntity ent, unsigned int messag
 
 void FEMarkerSelection::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0xe1fde1d1:
+        case FEHASH_EXITCOMPLETE:
             TheFEMarkerManager.ClearMarkersForLaterSelection();
             uiRepSheetRivalFlow::Get()->Next();
             break;
-        case 0x35f8620b:
+        case FEHASH_INITCOMPLETE:
             FEngSetCurrentButton(GetPackageName(), 0xcda0a66b);
             break;
-        case 0x0c407210: {
+        case __BUTTON_PRESSED__: {
             if (GetNumSelected() < 2) {
                 int idx = GetSelectedButtonIndex();
                 if (TheMarkers[idx].Selected)

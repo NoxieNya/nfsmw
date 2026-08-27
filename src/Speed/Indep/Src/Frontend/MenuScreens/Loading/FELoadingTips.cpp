@@ -41,11 +41,11 @@ LoadingTips::~LoadingTips() {
 
 void LoadingTips::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x406415E3:
-        case 0x0C407210:
+        case __PAD_ACCEPT__:
+        case __BUTTON_PRESSED__:
             break;
 
-        case 0xC98356BA:
+        case FEMSG_SCREEN_TICK:
             if (!mDoneLoading) {
                 return;
             }
@@ -86,7 +86,7 @@ void LoadingTips::ShowTipInfo() {
         lang_hash = FEngHashString("%s_HEADER", CurrentTip->Name);
         FEngSetLanguageHash(GetPackageName(), 0x0D555245, lang_hash);
         FEngSetTextureHash(GetPackageName(), 0xC9D77CB6, TipTextureHash);
-        FEngSetScript(GetPackageName(), 0x3248E720, 0x5079C8F8, true);
+        FEngSetScript(GetPackageName(), 0x3248E720, FEHASH_APPEAR, true);
         DisplayTime = RealTimer;
     }
 }

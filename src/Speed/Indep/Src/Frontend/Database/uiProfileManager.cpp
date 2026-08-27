@@ -10,31 +10,31 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/MemCard/uiMemcardInterface.hpp"
 
 inline void PMSave::React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) {
-    if (data == 0x0C407210) {
+    if (data == __BUTTON_PRESSED__) {
         MemcardEnter(pkg_name, pkg_name, 0x2251, nullptr, nullptr, 0, 0);
     }
 }
 
 inline void PMLoad::React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) {
-    if (data == 0x0C407210) {
+    if (data == __BUTTON_PRESSED__) {
         MemcardEnter(pkg_name, pkg_name, 0x411, nullptr, nullptr, 0x3A2BE557, 0x8867412D);
     }
 }
 
 inline void PMDelete::React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) {
-    if (data == 0x0C407210) {
+    if (data == __BUTTON_PRESSED__) {
         MemcardEnter(pkg_name, pkg_name, 0x31, nullptr, nullptr, 0, 0);
     }
 }
 
 inline void PMCreateNew::React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) {
-    if (data == 0x0C407210) {
+    if (data == __BUTTON_PRESSED__) {
         MemcardEnter(pkg_name, pkg_name, 0x61, nullptr, nullptr, 0, 0);
     }
 }
 
 inline void PMPopDelete::React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) {
-    if (data == 0x0C407210) {
+    if (data == __BUTTON_PRESSED__) {
         MemcardEnter(pkg_name, pkg_name, 0x61, nullptr, nullptr, 0, 0);
     }
 }
@@ -46,7 +46,7 @@ MenuScreen *CreateUIProfileManager(ScreenConstructorData *sd) {
 UIProfileManager::UIProfileManager(ScreenConstructorData *sd) : IconScrollerMenu(sd) {
     Setup();
 
-    const u32 FEObj_TitleMaster = 0x42ADB44C;
+    const u32 FEObj_TitleMaster = FEHASH_HEADERTEXT;
     FEPrintf(GetPackageName(), FEObj_TitleMaster, GetLocalizedString(0xBCB18F38));
 }
 
@@ -112,7 +112,7 @@ MenuScreen *CreateUIDeleteProfile(ScreenConstructorData *sd) {
 UIDeleteProfile::UIDeleteProfile(ScreenConstructorData *sd) : IconScrollerMenu(sd) {
     Setup();
 
-    const u32 FEObj_TitleMaster = 0x42ADB44C;
+    const u32 FEObj_TitleMaster = FEHASH_HEADERTEXT;
     FEPrintf(GetPackageName(), FEObj_TitleMaster, GetLocalizedString(0xE6F55DF0));
 }
 

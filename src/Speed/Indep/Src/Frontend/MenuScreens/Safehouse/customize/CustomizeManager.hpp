@@ -52,7 +52,7 @@ class CarCustomizeManager {
     }
 
     int GetNumCartItems() { // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:237
-        return NumPartsInCart;
+        return ShoppingCart.CountElements();
     }
 
     ShoppingCartItem *GetCartItem(int index) { // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:236
@@ -63,7 +63,10 @@ class CarCustomizeManager {
 
     void Checkout(); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:249
 
-    void EmptyCart() {} // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:250
+    void EmptyCart() { // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:250
+        ShoppingCart.DeleteAllElements();
+        ResetPreview();
+    }
 
     bool DoesCartHaveActiveParts();
 

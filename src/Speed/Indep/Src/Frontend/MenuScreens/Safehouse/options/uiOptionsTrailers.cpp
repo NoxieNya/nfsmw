@@ -11,24 +11,24 @@ UIOptionsTrailers::UIOptionsTrailers(ScreenConstructorData *sd) : IconScrollerMe
 }
 
 void UIOptionsTrailers::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    if (msg != 0x0c407210) {
+    if (msg != __BUTTON_PRESSED__) {
         IconScrollerMenu::NotificationMessage(msg, pobj, param1, param2);
     }
 
     switch (msg) {
-        case 0x911ab364:
-            StorePrevNotification(0x911ab364, pobj, param1, param2);
+        case __PAD_BACK__:
+            StorePrevNotification(__PAD_BACK__, pobj, param1, param2);
             cFEng::Get()->QueuePackageMessage(0x587c018b, GetPackageName(), nullptr);
             break;
-        case 0x0c407210:
+        case __BUTTON_PRESSED__:
             cFEng::Get()->QueuePackageMessage(0x8cb81f09, nullptr, nullptr);
-            Options.GetCurrentOption()->React(GetPackageName(), 0x0c407210, pobj, param1, param2);
+            Options.GetCurrentOption()->React(GetPackageName(), __BUTTON_PRESSED__, pobj, param1, param2);
             break;
-        case 0xd05fc3a3:
-            Options.GetCurrentOption()->React(GetPackageName(), 0xd05fc3a3, pobj, param1, param2);
+        case dialog_message_yes:
+            Options.GetCurrentOption()->React(GetPackageName(), dialog_message_yes, pobj, param1, param2);
             break;
         case FEHASH_EXITCOMPLETE:
-            if (PrevButtonMessage == 0x911ab364) {
+            if (PrevButtonMessage == __PAD_BACK__) {
                 FEDatabase->ClearGameMode(eFE_GAME_TRAILERS);
                 FEDatabase->GetOptionsSettings()->CurrentCategory = static_cast<eOptionsCategory>(-1);
                 cFEng::Get()->QueuePackageSwitch("MainMenu_Sub.fng", 0, 0, false);
@@ -38,7 +38,7 @@ void UIOptionsTrailers::NotificationMessage(u32 msg, FEObject *pobj, u32 param1,
 }
 
 void UIOptionsTrailers::Setup() {
-    const u32 FEObj_TITLEGROUP = 0xb71b576d;
+    const u32 FEObj_TITLEGROUP = __TITLE_GROUP__;
 
     SetInitialOption(FEngGetLastButton(GetPackageName()));
     GarageMainScreen::GetInstance()->CancelCameraPush();

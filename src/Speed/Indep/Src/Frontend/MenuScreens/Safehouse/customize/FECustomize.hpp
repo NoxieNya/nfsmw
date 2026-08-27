@@ -18,72 +18,72 @@ enum eCustomizeScreenMessages {
 };
 
 enum eCustomizeCategory {
-    CC_TO_CAT_MASK = 65535,
-    CC_FROM_CAT_MASK = -65536,
-    CC_SCREEN_ID_MAIN = 2048,
-    CC_SCREEN_ID_PARTS = 256,
-    CC_SCREEN_ID_PERFORMANCE = 512,
-    CC_SCREEN_ID_VISUAL = 768,
-    CC_SCREEN_ID_VINYL_TYPES = 1024,
-    CC_SCREEN_ID_DECAL_LOCATION = 1280,
-    CC_SCREEN_ID_DECAL_POSITION = 1536,
-    CC_SCREEN_ID_RIM_BRANDS = 1792,
-    CC_ID_MASK = 65280,
+    CC_TO_CAT_MASK = 0x0000FFFF,
+    CC_FROM_CAT_MASK = 0xFFFF0000,
+    CC_SCREEN_ID_MAIN = 0x800,
+    CC_SCREEN_ID_PARTS = 0x100,
+    CC_SCREEN_ID_PERFORMANCE = 0x200,
+    CC_SCREEN_ID_VISUAL = 0x300,
+    CC_SCREEN_ID_VINYL_TYPES = 0x400,
+    CC_SCREEN_ID_DECAL_LOCATION = 0x500,
+    CC_SCREEN_ID_DECAL_POSITION = 0x600,
+    CC_SCREEN_ID_RIM_BRANDS = 0x700,
+    CC_ID_MASK = 0xFF00,
     CC_NO_CATEGORY = 0,
-    CC_PARTS = 2049,
-    CC_PERFORMANCE = 2050,
-    CC_VISUAL = 2051,
-    CC_BODY_KIT = 257,
-    CC_SPOILERS = 258,
-    CC_RIM_BRANDS = 259,
-    CC_HOODS = 260,
-    CC_ROOF_SCOOPS = 261,
-    CC_ENGINE = 513,
-    CC_TRANSMISSION = 514,
-    CC_SUSPENSION = 515,
-    CC_NITROUS = 516,
-    CC_TIRES = 517,
-    CC_BRAKES = 518,
-    CC_FORCED_INDUCTION = 519,
-    CC_PAINT = 769,
-    CC_VINYL_TYPES = 770,
-    CC_RIM_PAINT = 771,
-    CC_WINDOW_TINT = 772,
-    CC_DECAL_LOCATION = 773,
-    CC_NUMBERS = 774,
-    CC_CUSTOM_HUD = 775,
-    CC_VINYL_GROUP_STOCK = 1025,
-    CC_VINYL_GROUP_FLAME = 1026,
-    CC_VINYL_GROUP_TRIBAL = 1027,
-    CC_VINYL_GROUP_STRIPE = 1028,
-    CC_VINYL_GROUP_RACING_FLAG = 1029,
-    CC_VINYL_GROUP_NATIONAL_FLAG = 1030,
-    CC_VINYL_GROUP_BODY = 1031,
-    CC_VINYL_GROUP_UNIQUE = 1032,
-    CC_VINYL_GROUP_CONTEST = 1033,
-    CC_RIM_BRAND_STOCK = 1793,
-    CC_RIM_BRAND_5_ZIGEN = 1794,
-    CC_RIM_BRAND_ADR = 1795,
-    CC_RIM_BRAND_BBS = 1796,
-    CC_RIM_BRAND_ENKEI = 1797,
-    CC_RIM_BRAND_KONIG = 1798,
-    CC_RIM_BRAND_LOWENHART = 1799,
-    CC_RIM_BRAND_RACING_HART = 1800,
-    CC_RIM_BRAND_OZ = 1801,
-    CC_RIM_BRAND_VOLK = 1802,
-    CC_RIM_BRAND_ROJA = 1803,
-    CC_DECAL_WINDSHIELD = 1281,
-    CC_DECAL_REAR_WINDOW = 1282,
-    CC_DECAL_LEFT_DOOR = 1283,
-    CC_DECAL_RIGHT_DOOR = 1284,
-    CC_DECAL_LEFT_QP = 1285,
-    CC_DECAL_RIGHT_QP = 1286,
-    CC_DECAL_SLOT_1 = 1537,
-    CC_DECAL_SLOT_2 = 1538,
-    CC_DECAL_SLOT_3 = 1539,
-    CC_DECAL_SLOT_4 = 1540,
-    CC_DECAL_SLOT_5 = 1541,
-    CC_DECAL_SLOT_6 = 1542,
+    CC_PARTS = 0x801,
+    CC_PERFORMANCE = 0x802,
+    CC_VISUAL = 0x803,
+    CC_BODY_KIT = 0x101,
+    CC_SPOILERS = 0x102,
+    CC_RIM_BRANDS = 0x103,
+    CC_HOODS = 0x104,
+    CC_ROOF_SCOOPS = 0x105,
+    CC_ENGINE = 0x201,
+    CC_TRANSMISSION = 0x202,
+    CC_SUSPENSION = 0x203,
+    CC_NITROUS = 0x204,
+    CC_TIRES = 0x205,
+    CC_BRAKES = 0x206,
+    CC_FORCED_INDUCTION = 0x207,
+    CC_PAINT = 0x301,
+    CC_VINYL_TYPES = 0x302,
+    CC_RIM_PAINT = 0x303,
+    CC_WINDOW_TINT = 0x304,
+    CC_DECAL_LOCATION = 0x305,
+    CC_NUMBERS = 0x306,
+    CC_CUSTOM_HUD = 0x307,
+    CC_VINYL_GROUP_STOCK = 0x401,
+    CC_VINYL_GROUP_FLAME = 0x402,
+    CC_VINYL_GROUP_TRIBAL = 0x403,
+    CC_VINYL_GROUP_STRIPE = 0x404,
+    CC_VINYL_GROUP_RACING_FLAG = 0x405,
+    CC_VINYL_GROUP_NATIONAL_FLAG = 0x406,
+    CC_VINYL_GROUP_BODY = 0x407,
+    CC_VINYL_GROUP_UNIQUE = 0x408,
+    CC_VINYL_GROUP_CONTEST = 0x409,
+    CC_RIM_BRAND_STOCK = 0x701,
+    CC_RIM_BRAND_5_ZIGEN = 0x702,
+    CC_RIM_BRAND_ADR = 0x703,
+    CC_RIM_BRAND_BBS = 0x704,
+    CC_RIM_BRAND_ENKEI = 0x705,
+    CC_RIM_BRAND_KONIG = 0x706,
+    CC_RIM_BRAND_LOWENHART = 0x707,
+    CC_RIM_BRAND_RACING_HART = 0x708,
+    CC_RIM_BRAND_OZ = 0x709,
+    CC_RIM_BRAND_VOLK = 0x70A,
+    CC_RIM_BRAND_ROJA = 0x70B,
+    CC_DECAL_WINDSHIELD = 0x501,
+    CC_DECAL_REAR_WINDOW = 0x502,
+    CC_DECAL_LEFT_DOOR = 0x503,
+    CC_DECAL_RIGHT_DOOR = 0x504,
+    CC_DECAL_LEFT_QP = 0x505,
+    CC_DECAL_RIGHT_QP = 0x506,
+    CC_DECAL_SLOT_1 = 0x601,
+    CC_DECAL_SLOT_2 = 0x602,
+    CC_DECAL_SLOT_3 = 0x603,
+    CC_DECAL_SLOT_4 = 0x604,
+    CC_DECAL_SLOT_5 = 0x605,
+    CC_DECAL_SLOT_6 = 0x606,
 };
 
 enum ePerformancePkgLevels {
@@ -126,14 +126,14 @@ enum eCustomizeCartTotals {
 class SelectablePart : public bTNode<SelectablePart> {
   public:
     SelectablePart(SelectablePart *part)
-        : ThePart(part->ThePart),               //
-          CarSlotID(part->CarSlotID),           //
-          UpgradeLevel(part->UpgradeLevel),     //
-          PhysicsType(part->PhysicsType),       //
-          PerformancePkg(part->PerformancePkg), //
-          PartState(part->PartState),           //
-          Price(part->Price),                   //
-          JunkmanPart(part->JunkmanPart) {}
+        : ThePart(part->GetPart()),                 //
+          CarSlotID(part->GetSlotID()),             //
+          UpgradeLevel(part->GetUpgradeLevel()),    //
+          PhysicsType(part->GetPhysicsType()),      //
+          PerformancePkg(part->IsPerformancePkg()), //
+          PartState(part->GetPartState()),          //
+          Price(part->GetPrice()),                  //
+          JunkmanPart(part->IsJunkmanPart()) {}
 
     SelectablePart(CarPart *part, int slot_id, uint32 lvl, Physics::Upgrades::Type phys_type, bool is_perf, eCustomizePartState state, int price,
                    bool junkman)
@@ -232,6 +232,9 @@ class SelectablePart : public bTNode<SelectablePart> {
     bool JunkmanPart;                    // offset 0x24, size 0x4
 };
 
+// TODO where go?
+extern const float gTradeInFactor; // size: 0x4
+
 // total size: 0x18
 class ShoppingCartItem : public bTNode<ShoppingCartItem> {
   public:
@@ -255,7 +258,7 @@ class ShoppingCartItem : public bTNode<ShoppingCartItem> {
         return ToBuy->GetPrice();
     }
     int GetTradeInPrice() {
-        return (TradeIn != nullptr) ? TradeIn->GetPrice() : 0;
+        return (TradeIn != nullptr) ? TradeIn->GetPrice() * gTradeInFactor : 0;
     }
     void ToggleActive() {
         bActive = !bActive;

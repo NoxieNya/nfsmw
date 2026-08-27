@@ -23,13 +23,6 @@ class SelectableCar : public bTNode<SelectableCar> {
 // total size: 0x14
 class SelectableTrack : public bTNode<SelectableTrack> {
   public:
-    // static void *operator new(size_t s) {
-    //     return ::operator new[](s);
-    // }
-    // static void operator delete(void *p) {
-    //     ::operator delete[](p);
-    // }
-
     SelectableTrack(GRaceParameters *rp, bool locked, int bin_num) : pRaceParams(rp), bLocked(locked), bin(bin_num) {}
 
     ~SelectableTrack() {}

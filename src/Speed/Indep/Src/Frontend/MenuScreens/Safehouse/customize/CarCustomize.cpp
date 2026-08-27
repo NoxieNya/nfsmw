@@ -4,7 +4,9 @@
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
+#include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 #include "Speed/Indep/Src/Frontend/MemoryCard/MemoryCard.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feDialogBox.hpp"
@@ -18,9 +20,12 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/quickrace/uiShowcase.hpp"
 #include "Speed/Indep/Src/Frontend/RaceStarter.hpp"
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/frontend.h"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "Speed/Indep/Src/Physics/PhysicsUpgrades.hpp"
 #include "Speed/Indep/Src/World/CarInfo.hpp"
+#include "Speed/Indep/bWare/Inc/Strings.hpp"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
+#include "types.h"
 
 extern const float gTradeInFactor = 0.25f; // size: 0x4
 
@@ -95,7 +100,7 @@ uint32 TranslateCustomizeCatToMarker(eCustomizeCategory cat) {
 }
 
 uint32 GetMarkerNameFromCategory(eCustomizeCategory cat) {
-    switch (static_cast<unsigned int>(cat)) {
+    switch (cat) {
         case CC_PARTS:
             return 0xd3a2fbe1;
         case CC_PERFORMANCE:
@@ -175,26 +180,26 @@ uint32 GetMarkerNameFromCategory(eCustomizeCategory cat) {
 uint32 GetNumMarkersFromCategory(eCustomizeCategory cat) {
     switch (cat) {
         case CC_PARTS: {
-            int total = GetNumMarkersFromCategory(CC_BODY_KIT);
-            total += GetNumMarkersFromCategory(CC_SPOILERS);
-            total += GetNumMarkersFromCategory(CC_RIM_BRANDS);
-            total += GetNumMarkersFromCategory(CC_HOODS);
-            total += GetNumMarkersFromCategory(CC_ROOF_SCOOPS);
-            return total + GetNumMarkersFromCategory(CC_CUSTOM_HUD);
+            int num = GetNumMarkersFromCategory(CC_BODY_KIT);
+            num += GetNumMarkersFromCategory(CC_SPOILERS);
+            num += GetNumMarkersFromCategory(CC_RIM_BRANDS);
+            num += GetNumMarkersFromCategory(CC_HOODS);
+            num += GetNumMarkersFromCategory(CC_ROOF_SCOOPS);
+            return num + GetNumMarkersFromCategory(CC_CUSTOM_HUD);
         }
         case CC_PERFORMANCE: {
-            int total = GetNumMarkersFromCategory(CC_ENGINE);
-            total += GetNumMarkersFromCategory(CC_TRANSMISSION);
-            total += GetNumMarkersFromCategory(CC_SUSPENSION);
-            total += GetNumMarkersFromCategory(CC_NITROUS);
-            total += GetNumMarkersFromCategory(CC_TIRES);
-            total += GetNumMarkersFromCategory(CC_BRAKES);
-            return total + GetNumMarkersFromCategory(CC_FORCED_INDUCTION);
+            int num = GetNumMarkersFromCategory(CC_ENGINE);
+            num += GetNumMarkersFromCategory(CC_TRANSMISSION);
+            num += GetNumMarkersFromCategory(CC_SUSPENSION);
+            num += GetNumMarkersFromCategory(CC_NITROUS);
+            num += GetNumMarkersFromCategory(CC_TIRES);
+            num += GetNumMarkersFromCategory(CC_BRAKES);
+            return num + GetNumMarkersFromCategory(CC_FORCED_INDUCTION);
         }
         case CC_VISUAL: {
-            int total = GetNumMarkersFromCategory(CC_PAINT);
-            total += GetNumMarkersFromCategory(CC_VINYL_TYPES);
-            return total + GetNumMarkersFromCategory(CC_DECAL_LOCATION);
+            int num = GetNumMarkersFromCategory(CC_PAINT);
+            num += GetNumMarkersFromCategory(CC_VINYL_TYPES);
+            return num + GetNumMarkersFromCategory(CC_DECAL_LOCATION);
         }
         default:
             return TheFEMarkerManager.GetNumMarkers(static_cast<FEMarkerManager::ePossibleMarker>(TranslateCustomizeCatToMarker(cat)), 0);
@@ -211,7 +216,7 @@ CustomizeMeter::CustomizeMeter()
       pMultiplier(nullptr),  //
       pMeterGroup(nullptr)   //
 {
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < NUM_STAGE_SEGMENTS; i++) {
         pBases[i] = nullptr;
     }
 }
@@ -221,12 +226,13 @@ void CustomizeMeter::Init(const char *pkg_name, const char *name, float min, flo
     Max = max;
     SetCurrent(current);
     SetPreview(preview);
-    pMultiplier = FEngFindImage(pkg_name, 0x5ffee1d8);
-    pMultiplierZoom = FEngFindImage(pkg_name, 0xe637955c);
+    const u32 FEObj_HeatX = 0x5ffee1d8;
+    const u32 FEObj_HeatXZOOM = 0xe637955c;
+    pMultiplier = FEngFindImage(pkg_name, FEObj_HeatX);
+    pMultiplierZoom = FEngFindImage(pkg_name, FEObj_HeatXZOOM);
     pMeterGroup = FEngFindObject(pkg_name, 0xf2492598);
-    for (int i = 0; i < 10; i++) {
-        unsigned int hash = FEngHashString("METER_BASE_%d", i + 1);
-        pBases[i] = FEngFindImage(pkg_name, hash);
+    for (int i = 0; i < NUM_STAGE_SEGMENTS; i++) {
+        pBases[i] = FEngFindImage(pkg_name, FEngHashString("HEAT_BASE_LED_%d", i + 1));
     }
 }
 
@@ -239,44 +245,46 @@ void CustomizeMeter::SetPreview(float preview) {
     Preview = bMin(bMax(preview, Min), Max);
 }
 
+// UNSOLVED
 void CustomizeMeter::Draw() {
     float stage_size = 1.0f;
-    float multiplier = 5.0f;
+    float multiplier = stage_size;
     float stage_bottom = Min;
     while (Preview - stage_bottom >= stage_size) {
-        stage_bottom = stage_bottom + stage_size;
-        multiplier = multiplier + stage_size;
+        multiplier += stage_size;
+        stage_bottom += stage_size;
     }
-    float heat_level = bMin(multiplier, 5.0f);
-    unsigned int hash = FEngHashString("HEAT_X%.0f", heat_level);
-    FEngSetTextureHash(pMultiplier, hash);
-    hash = FEngHashString("HEAT_X%.0f", heat_level);
-    FEngSetTextureHash(pMultiplierZoom, hash);
+    multiplier = bMin(multiplier, 5.0f);
+    // TODO: no need to double hash
+    FEngSetTextureHash(pMultiplier, FEngHashString("HEAT_X%.0f", multiplier));
+    FEngSetTextureHash(pMultiplierZoom, FEngHashString("HEAT_X%.0f", multiplier));
+
+    const u32 FEObj_ZOOM = 0x209c24;
     if (Preview != PreviousPreview) {
-        FEngSetScript(pMultiplierZoom, 0x209c24, true);
+        FEngSetScript(pMultiplierZoom, FEObj_ZOOM, true);
     }
-    float segment_bottom = stage_bottom + stage_size;
-    float segment_size = 0.1f;
-    if (stage_bottom <= segment_bottom) {
-        int cur_icon = 10;
+
+    float segment_size = stage_size * 0.1f;
+    float segment_bottom = stage_bottom;
+    int cur_icon = 10;
+    float current_segment = segment_bottom + stage_size;
+    if (current_segment >= stage_bottom) {
         do {
-            float current_segment = segment_bottom - stage_size * segment_size;
-            segment_bottom = current_segment;
-            int icon_idx = cur_icon - 1;
-            unsigned int script;
-            if (current_segment + 0.0005f < Current) {
-                script = 0x63c;
-                if (Preview <= current_segment + 0.0005f) {
-                    script = 0x13ff6c;
-                }
+            current_segment -= segment_size;
+            cur_icon--;
+            uint32 script;
+            if (current_segment + 0.0005f >= this->Current) {
+                const u32 FEObj_OFF = 0xccfa;
+                script = FEObj_OFF;
+            } else if (current_segment + 0.0005f >= this->Preview) {
+                const u32 FEObj_COOL = 0x13ff6c;
+                script = 0x13ff6c;
             } else {
-                script = 0xccfa;
+                const u32 FEObj_ON = 0x63c;
+                script = FEObj_ON;
             }
-            FEngSetScript(pBases[cur_icon - 1], script, true);
-            if (stage_bottom > current_segment || icon_idx <= -1)
-                break;
-            cur_icon = icon_idx;
-        } while (true);
+            FEngSetScript(pBases[cur_icon], script, true);
+        } while (current_segment >= stage_bottom && cur_icon >= 0);
     }
 }
 
@@ -307,19 +315,13 @@ void FEShoppingCartItem::Draw() {
         FEngSetTextureHash(pCheckIcon, 0xe719881c);
     }
     DrawPartName();
-    if (TheItem->GetTradeInPart() && gCarCustomizeManager.IsCareerMode() && !CustomizeIsInBackRoom()) {
-        int tradeIn = TheItem->GetTradeInPart()->GetPrice();
-        if (tradeIn == 0) {
-            tradeIn = 0;
-        } else {
-            tradeIn = static_cast<int>(static_cast<float>(tradeIn) * gTradeInFactor);
-        }
-        FEPrintf(pTradeInPrice, "%d", tradeIn);
+    if ((TheItem->GetTradeInPart() != nullptr) && gCarCustomizeManager.IsCareerMode() && !gCarCustomizeManager.IsInBackRoom()) {
+        FEPrintf(pTradeInPrice, "%$d", TheItem->GetTradeInPrice());
     } else {
         FEPrintf(pTradeInPrice, "");
     }
-    if (gCarCustomizeManager.IsCareerMode() && !CustomizeIsInBackRoom()) {
-        FEPrintf(GetDataObject(), "%d", TheItem->GetBuyingPart()->GetPrice());
+    if (gCarCustomizeManager.IsCareerMode() && !gCarCustomizeManager.IsInBackRoom()) {
+        FEPrintf(GetDataObject(), "%$d", TheItem->GetPartPrice());
     } else {
         FEPrintf(GetDataObject(), "");
     }
@@ -327,475 +329,454 @@ void FEShoppingCartItem::Draw() {
 
 void FEShoppingCartItem::Position() {
     FEngSetTopLeft(pCheckIcon, GetTopLeftX(), GetTopLeftY() - 10.0f);
-    FEngSetTopLeft(GetBacking(), GetTopLeftX() + 30.0f, GetTopLeftY());
-    float tx, ty;
-    FEngGetTopLeft(pTradeInPrice, tx, ty);
-    FEngSetTopLeft(pTradeInPrice, tx, GetTopLeftY());
-    float bx, by;
-    FEngGetBottomRight(pTradeInPrice, bx, by);
-    FEngSetBottomRight(pTradeInPrice, GetWidth() + 150.0f, by);
-    FEngGetTopLeft(GetDataObject(), tx, ty);
-    FEngSetTopLeft(GetDataObject(), tx, GetTopLeftY());
-    FEngGetBottomRight(GetDataObject(), bx, by);
-    FEngSetBottomRight(GetDataObject(), GetWidth() + 40.0f, by);
-    if (pCheckIcon) {
-        FEngSetTopLeft(pCheckIcon, GetTopLeftX() - GetBackingOffsetX(), GetTopLeftY() - GetBackingOffsetY());
+    FEngSetTopLeft(GetTitleObject(), GetTopLeftX() + 30.0f, GetTopLeftY());
+    FEngSetTopLeftY(pTradeInPrice, GetTopLeftY());
+    FEngSetBottomRightX(pTradeInPrice, GetDataPosX() + 150.0f);
+    FEngSetTopLeftY(GetDataObject(), GetTopLeftY());
+    FEngSetBottomRightX(GetDataObject(), GetDataPosX() + 40.0f);
+    if (GetBacking() != nullptr) {
+        FEngSetTopLeft(GetBacking(), GetTopLeftX() - GetBackingOffsetX(), GetTopLeftY() - GetBackingOffsetY());
     }
 }
 
 void FEShoppingCartItem::SetFocus(const char *parent_pkg) {
     FEngSetCurrentButton(parent_pkg, GetTitleObject());
-    FEngSetScript(GetTitleObject(), 0x249db7b7, true);
-    FEngSetScript(GetDataObject(), 0x249db7b7, true);
-    FEngSetScript(pTradeInPrice, 0x249db7b7, true);
-    if (GetBacking()) {
+    FEngSetScript(GetTitleObject(), FEHASH_HIGHLIGHT, true);
+    FEngSetScript(GetDataObject(), FEHASH_HIGHLIGHT, true);
+    FEngSetScript(pTradeInPrice, FEHASH_HIGHLIGHT, true);
+    if (GetBacking() != nullptr) {
         FEngSetVisible(GetBacking());
-        FEngSetScript(GetBacking(), 0x249db7b7, true);
+        FEngSetScript(GetBacking(), FEHASH_HIGHLIGHT, true);
     }
 }
 
 void FEShoppingCartItem::UnsetFocus() {
-    unsigned int script = 0x7ab5521a;
+    uint32 script = FEHASH_UNHIGHLIGHT;
+    const uint32 FEObj_GREY = FEHASH_GREY;
     if (!TheItem->IsActive()) {
-        script = 0x163c76;
+        script = FEObj_GREY;
     }
     FEngSetScript(GetTitleObject(), script, true);
     FEngSetScript(GetDataObject(), script, true);
     FEngSetScript(pTradeInPrice, script, true);
-    if (GetBacking()) {
+    if (GetBacking() != nullptr) {
         FEngSetInvisible(GetBacking());
-        FEngSetScript(GetBacking(), 0x7ab5521a, true);
+        FEngSetScript(GetBacking(), FEHASH_UNHIGHLIGHT, true);
     }
 }
 
 void FEShoppingCartItem::SetCheckScripts() {
     if (TheItem->IsActive()) {
-        FEngSetScript(pCheckIcon, 0xe6361f46, true);
+        const uint32 FEObj_CHECKED = FEHASH_CHECKED;
+        FEngSetScript(pCheckIcon, FEObj_CHECKED, true);
     } else {
-        FEngSetScript(pCheckIcon, 0x77cdc4e9, true);
+        const uint32 FEObj_UNCHECKED = FEHASH_UNCHECKED;
+        FEngSetScript(pCheckIcon, FEObj_UNCHECKED, true);
     }
 }
 
 void FEShoppingCartItem::SetActiveScripts() {
     if (!TheItem->IsActive()) {
-        FEngSetScript(pCheckIcon, 0x163c76, true);
+        const uint32 FEObj_GREY = FEHASH_GREY;
+        FEngSetScript(pCheckIcon, FEObj_GREY, true);
     }
 }
 
 void FEShoppingCartItem::DrawPartName() {
-    SelectablePart *buyPart = TheItem->GetBuyingPart();
-    if (buyPart->IsPerformancePkg()) {
-        unsigned int level = buyPart->GetUpgradeLevel();
-        Physics::Upgrades::Type phys_type = static_cast<Physics::Upgrades::Type>(static_cast<int>(buyPart->GetPhysicsType()));
-        if (static_cast<int>(level) == 7) {
-            if (GetCurrentLanguage() == 1) {
+    if (TheItem->GetBuyingPart()->IsPerformancePkg()) {
+        Physics::Upgrades::Type phys_type = TheItem->GetBuyingPart()->GetPhysicsType();
+        if (TheItem->GetBuyingPart()->GetUpgradeLevel() == PPL_LEVEL_JUNKMAN) {
+            if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
                 FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetPerfPkgCatHash(phys_type)), GetLocalizedString(0xedd14807));
             } else {
                 FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetPerfPkgCatHash(phys_type)), GetLocalizedString(0xedd14807));
             }
         } else {
-            int numPkgs = gCarCustomizeManager.GetNumPackages(phys_type);
-            int displayLevel = static_cast<int>(level) - (numPkgs - 6);
-            if (GetCurrentLanguage() == 1) {
+            int level = TheItem->GetBuyingPart()->GetUpgradeLevel() - (gCarCustomizeManager.GetNumPackages(phys_type) - 6);
+            if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
                 FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetPerfPkgCatHash(phys_type)),
-                         GetLocalizedString(GetPerfPkgLevelHash(displayLevel)));
+                         GetLocalizedString(GetPerfPkgLevelHash(level)));
             } else {
                 FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetPerfPkgCatHash(phys_type)),
-                         GetLocalizedString(GetPerfPkgLevelHash(displayLevel)));
+                         GetLocalizedString(GetPerfPkgLevelHash(level)));
             }
         }
-        return;
-    }
-
-    switch (buyPart->GetSlotID()) {
-        case 0x4e: {
-            if (GetCurrentLanguage() == 1) {
-                FEPrintf(GetTitleObject(), "%s : %s %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), GetLocalizedString(0xb3100a3e),
-                         GetLocalizedString(buyPart->GetPart()->GetAppliedAttributeUParam(bStringHash("SPEECHCOLOUR"), 0)));
-            } else {
-                FEPrintf(GetTitleObject(), "%s: %s %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), GetLocalizedString(0xb3100a3e),
-                         GetLocalizedString(buyPart->GetPart()->GetAppliedAttributeUParam(bStringHash("SPEECHCOLOUR"), 0)));
-            }
-            return;
-        }
-
-        case 0x4c: {
-            unsigned int paint_type = buyPart->GetPart()->GetAppliedAttributeUParam(0xebb03e66, 0);
-            unsigned int colorHash = 0x452b5481;
-            if (paint_type == 0x2daab07) {
-                colorHash = 0xb6763cde;
-            } else if (paint_type > 0x2daab07) {
-                if (paint_type != 0x3437a52) {
-                    if (paint_type == 0x3797533) {
-                        colorHash = 0xb715070a;
-                    }
-                }
-            } else if (paint_type == 0xda27) {
-                colorHash = 0xb3100a3e;
-            }
-            const char *fmt;
-            if (GetCurrentLanguage() == 1) {
-                fmt = "%s : %s %s";
-            } else {
-                fmt = "%s: %s %s";
-            }
-            FEPrintf(GetTitleObject(), fmt, GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), GetLocalizedString(colorHash),
-                     GetLocalizedString(buyPart->GetPart()->GetAppliedAttributeUParam(bStringHash("SPEECHCOLOUR"), 0)));
-            return;
-        }
-
-        case 0x71: {
-            ShoppingCartItem *leftItem = gCarCustomizeManager.IsPartTypeInCart(0x71);
-            ShoppingCartItem *rightItem = gCarCustomizeManager.IsPartTypeInCart(0x72);
-            if (!leftItem)
-                return;
-            if (!rightItem)
-                return;
-            CarPart *left_part = leftItem->GetBuyingPart()->GetPart();
-            CarPart *right_part = rightItem->GetBuyingPart()->GetPart();
-            if (!left_part) {
-                goto missing_parts;
-            }
-            if (!right_part) {
-                goto missing_parts;
-            }
-            const char *fmt;
-            if (GetCurrentLanguage() == 1) {
-                fmt = "%s : %s%s";
-            } else {
-                fmt = "%s: %s%s";
-            }
-            FEPrintf(GetTitleObject(), fmt, GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), left_part->GetName(), right_part->GetName());
-            return;
-        missing_parts: {
-            if (GetCurrentLanguage() == 1) {
-                FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), GetLocalizedString(0xbe434a38));
-            } else {
-                FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), GetLocalizedString(0xbe434a38));
-            }
-            return;
-        }
-        }
-
-        case 0x53:
-        case 0x5b:
-        case 0x63:
-        case 0x64:
-        case 0x65:
-        case 0x66:
-        case 0x67:
-        case 0x68:
-        case 0x6b:
-        case 0x6c:
-        case 0x6d:
-        case 0x6e:
-        case 0x6f:
-        case 0x70:
-        case 0x73:
-        case 0x7b: {
-            if (!buyPart->GetPart()) {
-                const char *fmt;
-                if (GetCurrentLanguage() == 1) {
-                    fmt = "%s : %s - %s";
+    } else {
+        SelectablePart *part = TheItem->GetBuyingPart();
+        switch (part->GetSlotID()) {
+            case CARSLOTID_PAINT_RIM:
+                if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                    FEPrintf(GetTitleObject(), "%s : %s %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), GetLocalizedString(0xb3100a3e),
+                             GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("SPEECHCOLOUR"), 0)));
                 } else {
-                    fmt = "%s: %s - %s";
+                    FEPrintf(GetTitleObject(), "%s: %s %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), GetLocalizedString(0xb3100a3e),
+                             GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("SPEECHCOLOUR"), 0)));
                 }
-                FEPrintf(GetTitleObject(), fmt, GetLocalizedString(0x955980bc), GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                         GetLocalizedString(0x7177dc17));
-                return;
-            }
-            buyPart->GetPart()->GetAppliedAttributeUParam(0xebb03e66, 0);
-            buyPart->GetPart()->GetAppliedAttributeUParam(bStringHash("NAME"), 0);
-            unsigned int subCatHash = 0;
-            switch (buyPart->GetSlotID()) {
-                case 0x63:
-                case 0x6b:
-                    subCatHash = 0x7d212cfa;
-                    break;
-                case 0x64:
-                case 0x6c:
-                    subCatHash = 0x7d212cfb;
-                    break;
-                case 0x65:
-                case 0x6d:
-                    subCatHash = 0x7d212cfc;
-                    break;
-                case 0x66:
-                case 0x6e:
-                    subCatHash = 0x7d212cfd;
-                    break;
-                case 0x67:
-                case 0x6f:
-                    subCatHash = 0x7d212cfe;
-                    break;
-                case 0x68:
-                case 0x70:
-                    subCatHash = 0x7d212cff;
-                    break;
-            }
-            if (subCatHash) {
-                const char *fmt;
-                if (GetCurrentLanguage() == 1) {
-                    fmt = "%s : %s %s %s";
-                } else {
-                    fmt = "%s: %s %s %s";
-                }
-                FEPrintf(GetTitleObject(), fmt, GetLocalizedString(0x955980bc), GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                         GetLocalizedString(subCatHash), buyPart->GetPart()->GetName());
-                return;
-            }
-            const char *fmt;
-            if (GetCurrentLanguage() == 1) {
-                fmt = "%s : %s %s";
-            } else {
-                fmt = "%s: %s %s";
-            }
-            FEPrintf(GetTitleObject(), fmt, GetLocalizedString(0x955980bc), GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                     buyPart->GetPart()->GetName());
-            return;
-        }
+                break;
 
-        case 0x17: {
-            CarPart *part = buyPart->GetPart();
-            const char *lang_str = "LANGUAGEHASH";
-            if (part->HasAppliedAttribute(bStringHash(lang_str))) {
-                if (GetCurrentLanguage() == 1) {
-                    FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                             GetLocalizedString(part->GetAppliedAttributeUParam(bStringHash(lang_str), 0)));
+            case CARSLOTID_BASE_PAINT: {
+                uint32 paint_type = 0x452b5481;
+                switch (part->GetPart()->GetBrandNameHash()) {
+                    case 0x2daab07:
+                        paint_type = 0xb6763cde;
+                        break;
+                    case 0x3797533:
+                        paint_type = 0xb715070a;
+                        break;
+                    case 0xda27:
+                        paint_type = 0xb3100a3e;
+                        break;
+                    case 0x3437a52:
+                        break;
+                }
+                if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                    FEPrintf(GetTitleObject(), "%s : %s %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), GetLocalizedString(paint_type),
+                             GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("SPEECHCOLOUR"), 0)));
                 } else {
-                    FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                             GetLocalizedString(part->GetAppliedAttributeUParam(bStringHash(lang_str), 0)));
+                    FEPrintf(GetTitleObject(), "%s: %s %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), GetLocalizedString(paint_type),
+                             GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("SPEECHCOLOUR"), 0)));
                 }
-                return;
+                break;
             }
-            if (GetCurrentLanguage() == 1) {
-                FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), part->GetName());
-            } else {
-                FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), part->GetName());
-            }
-            return;
-        }
 
-        case 0x42: {
-            CarPart *car_part = buyPart->GetPart();
-            CarPart *stock = gCarCustomizeManager.GetStockCarPart(0x42);
-            if (car_part != stock) {
-                char buf[64];
-                bSNPrintf(buf, 64, "%s", car_part->GetName());
-                int len = bStrLen(buf);
-                if (len < 1)
-                    return;
-                int trimStart = len - 6;
-                for (; trimStart <= len; len--) {
-                    buf[len] = 0;
-                }
-                const char *fmt;
-                if (GetCurrentLanguage() == 1) {
-                    fmt = "%s : %s %$d\"";
-                } else {
-                    fmt = "%s: %s %$d\"";
-                }
-                FEPrintf(GetTitleObject(), fmt, GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), buf,
-                         static_cast<signed char>(car_part->GetAppliedAttributeIParam(0xeb0101e2, 0)));
-                return;
-            }
-            if (GetCurrentLanguage() == 1) {
-                FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), GetLocalizedString(0x60a662f5));
-            } else {
-                FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), GetLocalizedString(0x60a662f5));
-            }
-            return;
-        }
-
-        case 0x2c:
-        case 0x3e:
-        case 0x3f: {
-            CarPart *part = buyPart->GetPart();
-            if (part->HasAppliedAttribute(bStringHash("CARBONFIBRE"))) {
-                if (part->GetAppliedAttributeIParam(bStringHash("CARBONFIBRE"), 0) != 0) {
-                    const char *fmt;
-                    if (GetCurrentLanguage() == 1) {
-                        fmt = "%s : %s %s";
+            case CARSLOTID_DECAL_RIGHT_DOOR_LNUMBER: {
+                ShoppingCartItem *left_num_item = gCarCustomizeManager.IsPartTypeInCart(CARSLOTID_DECAL_RIGHT_DOOR_LNUMBER);
+                ShoppingCartItem *right_num_item = gCarCustomizeManager.IsPartTypeInCart(CARSLOTID_DECAL_RIGHT_DOOR_RNUMBER);
+                if ((left_num_item != nullptr) && (right_num_item != nullptr)) {
+                    CarPart *left_part = left_num_item->GetBuyingPart()->GetPart();
+                    CarPart *right_part = right_num_item->GetBuyingPart()->GetPart();
+                    if ((left_part != nullptr) && (right_part != nullptr)) {
+                        if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                            FEPrintf(GetTitleObject(), "%s : %s%s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), left_part->GetName(),
+                                     right_part->GetName());
+                        } else {
+                            FEPrintf(GetTitleObject(), "%s: %s%s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), left_part->GetName(),
+                                     right_part->GetName());
+                        }
                     } else {
-                        fmt = "%s: %s %s";
+                        if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                            FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                     GetLocalizedString(0xbe434a38));
+                        } else {
+                            FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                     GetLocalizedString(0xbe434a38));
+                        }
                     }
-                    FEPrintf(GetTitleObject(), fmt, GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), GetLocalizedString(0x5415b874),
-                             GetLocalizedString(part->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
-                    return;
                 }
+                break;
             }
-            const char *lang_str = "LANGUAGEHASH";
-            if (part->HasAppliedAttribute(bStringHash(lang_str))) {
-                if (GetCurrentLanguage() == 1) {
-                    FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                             GetLocalizedString(part->GetAppliedAttributeUParam(bStringHash(lang_str), 0)));
-                } else {
-                    FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                             GetLocalizedString(part->GetAppliedAttributeUParam(bStringHash(lang_str), 0)));
-                }
-                return;
-            }
-            if (GetCurrentLanguage() == 1) {
-                FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), part->GetName());
-            } else {
-                FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), part->GetName());
-            }
-            return;
-        }
 
-        case 0x4d: {
-            CarPart *part = buyPart->GetPart();
-            if (!part) {
-                if (GetCurrentLanguage() == 1) {
-                    FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                             GetLocalizedString(0x60a662f5));
-                } else {
-                    FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), GetLocalizedString(0x60a662f5));
-                }
-                return;
-            }
-            const char *lang_str = "LANGUAGEHASH";
-            if (part->HasAppliedAttribute(bStringHash(lang_str))) {
-                if (GetCurrentLanguage() == 1) {
-                    FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                             GetLocalizedString(part->GetAppliedAttributeUParam(bStringHash(lang_str), 0)));
-                } else {
-                    FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                             GetLocalizedString(part->GetAppliedAttributeUParam(bStringHash(lang_str), 0)));
-                }
-                return;
-            }
-            if (GetCurrentLanguage() == 1) {
-                FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), part->GetName());
-            } else {
-                FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), part->GetName());
-            }
-            return;
-        }
+            case CARSLOTID_DECAL_FRONT_WINDOW_TEX0:
+            case CARSLOTID_DECAL_REAR_WINDOW_TEX0:
+            case CARSLOTID_DECAL_LEFT_DOOR_TEX0:
+            case CARSLOTID_DECAL_LEFT_DOOR_TEX1:
+            case CARSLOTID_DECAL_LEFT_DOOR_TEX2:
+            case CARSLOTID_DECAL_LEFT_DOOR_TEX3:
+            case CARSLOTID_DECAL_LEFT_DOOR_TEX4:
+            case CARSLOTID_DECAL_LEFT_DOOR_TEX5:
+            case CARSLOTID_DECAL_RIGHT_DOOR_TEX0:
+            case CARSLOTID_DECAL_RIGHT_DOOR_TEX1:
+            case CARSLOTID_DECAL_RIGHT_DOOR_TEX2:
+            case CARSLOTID_DECAL_RIGHT_DOOR_TEX3:
+            case CARSLOTID_DECAL_RIGHT_DOOR_TEX4:
+            case CARSLOTID_DECAL_RIGHT_DOOR_TEX5:
+            case CARSLOTID_DECAL_LEFT_QUARTER_TEX0:
+            case CARSLOTID_DECAL_RIGHT_QUARTER_TEX0:
+                if (part->GetPart() == nullptr) {
+                    if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                        FEPrintf(GetTitleObject(), "%s : %s - %s", GetLocalizedString(0x955980bc),
+                                 GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), GetLocalizedString(0x7177dc17));
+                    } else {
+                        FEPrintf(GetTitleObject(), "%s: %s - %s", GetLocalizedString(0x955980bc),
+                                 GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), GetLocalizedString(0x7177dc17));
+                    }
 
-        default: {
-            CarPart *part = buyPart->GetPart();
-            const char *lang_str = "LANGUAGEHASH";
-            if (part->HasAppliedAttribute(bStringHash(lang_str))) {
-                if (GetCurrentLanguage() == 1) {
-                    FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                             GetLocalizedString(part->GetAppliedAttributeUParam(bStringHash(lang_str), 0)));
                 } else {
-                    FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())),
-                             GetLocalizedString(part->GetAppliedAttributeUParam(bStringHash(lang_str), 0)));
+                    uint32 name_hash = part->GetPart()->GetBrandNameHash();
+                    bool black = part->GetPart()->GetAppliedAttributeUParam(bStringHash("NAME"), 0) != 0;
+                    uint32 slot_hash = 0;
+                    switch (part->GetSlotID()) {
+                        case CARSLOTID_DECAL_LEFT_DOOR_TEX0:
+                        case CARSLOTID_DECAL_RIGHT_DOOR_TEX0:
+                            slot_hash = 0x7d212cfa;
+                            break;
+                        case CARSLOTID_DECAL_LEFT_DOOR_TEX1:
+                        case CARSLOTID_DECAL_RIGHT_DOOR_TEX1:
+                            slot_hash = 0x7d212cfb;
+                            break;
+                        case CARSLOTID_DECAL_LEFT_DOOR_TEX2:
+                        case CARSLOTID_DECAL_RIGHT_DOOR_TEX2:
+                            slot_hash = 0x7d212cfc;
+                            break;
+                        case CARSLOTID_DECAL_LEFT_DOOR_TEX3:
+                        case CARSLOTID_DECAL_RIGHT_DOOR_TEX3:
+                            slot_hash = 0x7d212cfd;
+                            break;
+                        case CARSLOTID_DECAL_LEFT_DOOR_TEX4:
+                        case CARSLOTID_DECAL_RIGHT_DOOR_TEX4:
+                            slot_hash = 0x7d212cfe;
+                            break;
+                        case CARSLOTID_DECAL_LEFT_DOOR_TEX5:
+                        case CARSLOTID_DECAL_RIGHT_DOOR_TEX5:
+                            slot_hash = 0x7d212cff;
+                            break;
+                    }
+                    if (slot_hash != 0) {
+                        if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                            FEPrintf(GetTitleObject(), "%s : %s %s %s", GetLocalizedString(0x955980bc),
+                                     GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), GetLocalizedString(slot_hash),
+                                     part->GetPart()->GetName());
+                        } else {
+                            FEPrintf(GetTitleObject(), "%s: %s %s %s", GetLocalizedString(0x955980bc),
+                                     GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), GetLocalizedString(slot_hash),
+                                     part->GetPart()->GetName());
+                        }
+                    } else {
+                        if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                            FEPrintf(GetTitleObject(), "%s : %s %s", GetLocalizedString(0x955980bc),
+                                     GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), part->GetPart()->GetName());
+                        } else {
+                            FEPrintf(GetTitleObject(), "%s: %s %s", GetLocalizedString(0x955980bc),
+                                     GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), part->GetPart()->GetName());
+                        }
+                    }
                 }
-                return;
-            }
-            if (GetCurrentLanguage() == 1) {
-                FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), part->GetName());
-            } else {
-                FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(buyPart->GetSlotID())), part->GetName());
-            }
-            return;
+                break;
+
+            case CARSLOTID_BODY:
+                if (part->GetPart()->HasAppliedAttribute(bStringHash("LANGUAGEHASH"))) {
+                    if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                        FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                 GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
+                    } else {
+                        FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                 GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
+                    }
+                } else {
+                    if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                        FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), part->GetPart()->GetName());
+                    } else {
+                        FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), part->GetPart()->GetName());
+                    }
+                }
+                break;
+
+            case CARSLOTID_FRONT_WHEEL:
+                if (part->GetPart() != gCarCustomizeManager.GetStockCarPart(CARSLOTID_FRONT_WHEEL)) {
+                    char sztemp[64];
+                    bSNPrintf(sztemp, sizeof(sztemp), "%s", part->GetPart()->GetName());
+                    int len = bStrLen(sztemp);
+                    if (len > 0) {
+                        for (int i = len; i >= len - 6; i--) {
+                            sztemp[i] = 0;
+                        }
+                        if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                            FEPrintf(GetTitleObject(), "%s : %s %$d\"", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), sztemp,
+                                     static_cast<signed char>(part->GetPart()->GetInnerRadius()));
+                        } else {
+                            FEPrintf(GetTitleObject(), "%s: %s %$d\"", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), sztemp,
+                                     static_cast<signed char>(part->GetPart()->GetInnerRadius()));
+                        }
+                    }
+                } else {
+                    if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                        FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                 GetLocalizedString(0x60a662f5));
+                    } else {
+                        FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                 GetLocalizedString(0x60a662f5));
+                    }
+                }
+                break;
+
+            case CARSLOTID_SPOILER:
+            case CARSLOTID_ROOF:
+            case CARSLOTID_HOOD:
+                if (part->GetPart()->HasAppliedAttribute(bStringHash("CARBONFIBRE"))) {
+                    if (part->GetPart()->GetAppliedAttributeIParam(bStringHash("CARBONFIBRE"), 0) != 0) {
+                        if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                            FEPrintf(GetTitleObject(), "%s : %s %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                     GetLocalizedString(0x5415b874),
+                                     GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
+                        } else {
+                            FEPrintf(GetTitleObject(), "%s: %s %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                     GetLocalizedString(0x5415b874),
+                                     GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
+                        }
+                    }
+                } else if (part->GetPart()->HasAppliedAttribute(bStringHash("LANGUAGEHASH"))) {
+                    if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                        FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                 GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
+                    } else {
+                        FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                 GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
+                    }
+                } else {
+                    if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                        FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), part->GetPart()->GetName());
+                    } else {
+                        FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), part->GetPart()->GetName());
+                    }
+                }
+                break;
+
+            case CARSLOTID_VINYL_LAYER0:
+                if (part->GetPart() != nullptr) {
+                    if (part->GetPart()->HasAppliedAttribute(bStringHash("LANGUAGEHASH"))) {
+                        if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                            FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                     GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
+                        } else {
+                            FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                     GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
+                        }
+                    } else {
+                        if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                            FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                     part->GetPart()->GetName());
+                        } else {
+                            FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                     part->GetPart()->GetName());
+                        }
+                    }
+                } else {
+                    if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                        FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                 GetLocalizedString(0x60a662f5));
+                    } else {
+                        FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                 GetLocalizedString(0x60a662f5));
+                    }
+                }
+                break;
+
+            default:
+                if (part->GetPart()->HasAppliedAttribute(bStringHash("LANGUAGEHASH"))) {
+                    if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                        FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                 GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
+                    } else {
+                        FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())),
+                                 GetLocalizedString(part->GetPart()->GetAppliedAttributeUParam(bStringHash("LANGUAGEHASH"), 0)));
+                    }
+
+                } else {
+                    if (GetCurrentLanguage() == eLANGUAGE_FRENCH) {
+                        FEPrintf(GetTitleObject(), "%s : %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), part->GetPart()->GetName());
+                    } else {
+                        FEPrintf(GetTitleObject(), "%s: %s", GetLocalizedString(GetCarPartCatHash(part->GetSlotID())), part->GetPart()->GetName());
+                    }
+                }
+                break;
         }
     }
 }
 
 uint32 FEShoppingCartItem::GetPerfPkgCatHash(Physics::Upgrades::Type phys_type) {
-    uint32 hash = 0;
+    uint32 type_hash = 0;
     switch (phys_type) {
         case Physics::Upgrades::PUT_TIRES:
-            hash = 0x5aa9137;
+            type_hash = 0x5aa9137;
             break;
         case Physics::Upgrades::PUT_BRAKES:
-            hash = 0x91997ee8;
+            type_hash = 0x91997ee8;
             break;
         case Physics::Upgrades::PUT_CHASSIS:
-            hash = 0x6e101aa7;
+            type_hash = 0x6e101aa7;
             break;
         case Physics::Upgrades::PUT_TRANSMISSION:
-            hash = 0x29aa74ba;
+            type_hash = 0x29aa74ba;
             break;
         case Physics::Upgrades::PUT_ENGINE:
-            hash = 0x9853d9a6;
+            type_hash = 0x9853d9a6;
             break;
         case Physics::Upgrades::PUT_INDUCTION:
             if (gCarCustomizeManager.IsTurbo()) {
-                hash = 0x5b1255c;
+                type_hash = 0x5b1255c;
             } else {
-                hash = 0xbb6812bb;
+                type_hash = 0xbb6812bb;
             }
             break;
         case Physics::Upgrades::PUT_NOS:
-            hash = 0x4ce19aa4;
+            type_hash = 0x4ce19aa4;
             break;
         default:
             break;
     }
-    return hash;
+    return type_hash;
 }
 
 uint32 FEShoppingCartItem::GetPerfPkgLevelHash(int level) {
+    uint32 pkg_hash = 0x69c270c3;
     switch (level) {
-        case 0:
-            return 0x69c270c3;
-        case 1:
-            return 0x69c270c4;
-        case 2:
-            return 0x69c270c5;
-        case 3:
-            return 0x69c270c6;
-        case 4:
-            return 0x69c270c7;
-        case 5:
-            return 0x69c270c8;
-        case 6:
-            return 0x69c270c9;
-        default:
-            return 0x69c270c3;
+        case PPL_LEVEL_1:
+            pkg_hash = 0x69c270c4;
+            break;
+        case PPL_LEVEL_2:
+            pkg_hash = 0x69c270c5;
+            break;
+        case PPL_LEVEL_3:
+            pkg_hash = 0x69c270c6;
+            break;
+        case PPL_LEVEL_4:
+            pkg_hash = 0x69c270c7;
+            break;
+        case PPL_LEVEL_5:
+            pkg_hash = 0x69c270c8;
+            break;
+        case PPL_LEVEL_6:
+            pkg_hash = 0x69c270c9;
+            break;
     }
+    return pkg_hash;
 }
 
 uint32 FEShoppingCartItem::GetCarPartCatHash(uint32 slot_id) {
     switch (slot_id) {
-        case 0x17:
+        case CARSLOTID_BODY:
             return 0x6134c218;
-        case 0x2c:
+        case CARSLOTID_SPOILER:
             return 0x94e73021;
-        case 0x3e:
+        case CARSLOTID_ROOF:
             return 0x61e8f83c;
-        case 0x3f:
+        case CARSLOTID_HOOD:
             return 0x4d4a88d;
-        case 0x42:
+        case CARSLOTID_FRONT_WHEEL:
             return 0xf868eb0b;
-        case 0x4c:
+        case CARSLOTID_BASE_PAINT:
             return 0x55da70c;
-        case 0x84:
+        case CARSLOTID_CUSTOM_HUD:
             return 0x78980a6b;
-        case 0x83:
+        case CARSLOTID_WINDOW_TINT:
             return 0xd32729a6;
-        case 0x4e:
+        case CARSLOTID_PAINT_RIM:
             return 0xe126ff53;
-        case 0x53:
+        case CARSLOTID_DECAL_FRONT_WINDOW_TEX0:
             return 0x301dedd3;
-        case 0x5b:
+        case CARSLOTID_DECAL_REAR_WINDOW_TEX0:
             return 0x48e6ca49;
-        case 0x63:
-        case 0x64:
-        case 0x65:
-        case 0x66:
-        case 0x67:
-        case 0x68:
+        case CARSLOTID_DECAL_LEFT_DOOR_TEX0:
+        case CARSLOTID_DECAL_LEFT_DOOR_TEX1:
+        case CARSLOTID_DECAL_LEFT_DOOR_TEX2:
+        case CARSLOTID_DECAL_LEFT_DOOR_TEX3:
+        case CARSLOTID_DECAL_LEFT_DOOR_TEX4:
+        case CARSLOTID_DECAL_LEFT_DOOR_TEX5:
             return 0x34367c86;
-        case 0x6b:
-        case 0x6c:
-        case 0x6d:
-        case 0x6e:
-        case 0x6f:
-        case 0x70:
+        case CARSLOTID_DECAL_RIGHT_DOOR_TEX0:
+        case CARSLOTID_DECAL_RIGHT_DOOR_TEX1:
+        case CARSLOTID_DECAL_RIGHT_DOOR_TEX2:
+        case CARSLOTID_DECAL_RIGHT_DOOR_TEX3:
+        case CARSLOTID_DECAL_RIGHT_DOOR_TEX4:
+        case CARSLOTID_DECAL_RIGHT_DOOR_TEX5:
             return 0xddf80259;
-        case 0x73:
+        case CARSLOTID_DECAL_LEFT_QUARTER_TEX0:
             return 0x8a7697d6;
-        case 0x7b:
+        case CARSLOTID_DECAL_RIGHT_QUARTER_TEX0:
             return 0xb1f9b0c9;
-        case 0x71:
+        case CARSLOTID_DECAL_RIGHT_DOOR_LNUMBER:
             return 0x6857e5ac;
-        case 0x4d:
+        case CARSLOTID_VINYL_LAYER0:
             return 0xbfa52c55;
         default:
             return 0;
@@ -815,50 +796,46 @@ CustomizeShoppingCart::CustomizeShoppingCart(ScreenConstructorData *sd) : UIWidg
 void CustomizeShoppingCart::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     UIWidgetMenu::NotificationMessage(msg, pobj, param1, param2);
     switch (msg) {
-        case 0xc519bfc3:
+        case __PAD_BUTTON4__:
             ToggleChecked();
             RefreshHeader();
             break;
-        case 0x406415e3:
+        case __PAD_ACCEPT__:
             if (!gCarCustomizeManager.DoesCartHaveActiveParts()) {
                 gCarCustomizeManager.EmptyCart();
-                gCarCustomizeManager.ResetPreview();
-                gCarCustomizeManager.ResetPreview();
+                gCarCustomizeManager.ResetPreview(); // TODO: not needed, EmptyCart already resets preview
                 cFEng::Get()->QueueGameMessage(0xcf91aacd, pParentPkg, 0xFF);
                 cFEng::Get()->QueuePackagePop(1);
-                break;
-            }
-            if (CanCheckout()) {
-                unsigned int dialog_hash;
-                if (gCarCustomizeManager.IsCareerMode()) {
-                    if (CustomizeIsInBackRoom()) {
-                        dialog_hash = 0x4810898;
-                    } else {
-                        dialog_hash = 0x8ebaa44b;
-                    }
-                } else {
-                    dialog_hash = 0x71d9e710;
-                }
-                DialogInterface::ShowTwoButtons(GetPackageName(), "", dialog_alert, 0x70e01038, 0x417b25e4, 0xd05fc3a3, 0x34dc1bcf, 0x34dc1bcf,
-                                                first_dialog_button2, dialog_hash);
             } else {
-                DialogInterface::ShowOk(GetPackageName(), "", dialog_alert, 0xa984a42);
+                if (CanCheckout()) {
+                    uint32 blurb_hash = 0x71d9e710;
+                    if (gCarCustomizeManager.IsCareerMode()) {
+                        blurb_hash = 0x8ebaa44b;
+                        if (gCarCustomizeManager.IsInBackRoom()) {
+                            blurb_hash = 0x4810898;
+                        }
+                    }
+                    DialogInterface::ShowTwoButtons(GetPackageName(), "", dialog_alert, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, dialog_message_yes,
+                                                    dialog_message_no, dialog_message_no, first_dialog_button2, blurb_hash);
+                } else {
+                    DialogInterface::ShowOk(GetPackageName(), "", dialog_alert, 0xa984a42);
+                }
             }
             break;
-        case 0xd05fc3a3:
+        case dialog_message_yes:
             gCarCustomizeManager.Checkout();
             cFEng::Get()->QueueGameMessage(0xcf91aacd, pParentPkg, 0xFF);
             cFEng::Get()->QueuePackagePop(1);
             break;
-        case 0xc519bfc4:
+        case __PAD_BUTTON5__:
             UncheckAllItems();
             RefreshHeader();
             break;
-        case 0x72619778:
-        case 0x911c0a4b:
+        case __PAD_UP__:
+        case __PAD_DOWN__:
             RefreshHeader();
             break;
-        case 0x911ab364:
+        case __PAD_BACK__:
             ClearUncheckedItems();
             cFEng::Get()->QueueGameMessage(0x5a928018, pParentPkg, 0xFF);
             cFEng::Get()->QueuePackagePop(1);
@@ -866,8 +843,8 @@ void CustomizeShoppingCart::NotificationMessage(u32 msg, FEObject *pobj, u32 par
     }
 }
 
-void CustomizeShoppingCart::ShowShoppingCart(const char *pkg) {
-    pParentPkg = pkg;
+void CustomizeShoppingCart::ShowShoppingCart(const char *parent_pkg) {
+    pParentPkg = parent_pkg;
     cFEng::Get()->QueuePackagePush(g_pCustomizeShoppingCartPkg, 0, 0, false);
 }
 
@@ -879,44 +856,52 @@ void CustomizeShoppingCart::ExitShoppingCart() {
     cFEng::Get()->QueuePackageSwitch(g_pCustomizeMainPkg, 0, 0, false);
 }
 
-bool CustomizeShoppingCart::IsSlotIDNumberDecal(int slot_id) {
-    if (slot_id == CARSLOTID_DECAL_RIGHT_DOOR_TEX6 || slot_id == CARSLOTID_DECAL_RIGHT_DOOR_TEX7 || slot_id == CARSLOTID_DECAL_LEFT_DOOR_TEX6 ||
-        slot_id == CARSLOTID_DECAL_LEFT_DOOR_TEX7) {
+bool CustomizeShoppingCart::IsSlotIDNumberDecal(int slotID) {
+    if (slotID == CARSLOTID_DECAL_RIGHT_DOOR_TEX6 || slotID == CARSLOTID_DECAL_RIGHT_DOOR_TEX7 || slotID == CARSLOTID_DECAL_LEFT_DOOR_TEX6 ||
+        slotID == CARSLOTID_DECAL_LEFT_DOOR_TEX7) {
         return true;
     }
     return false;
 }
 
 void CustomizeShoppingCart::ToggleAllNumberDecals() {
-    int count = gCarCustomizeManager.GetNumCartItems();
-    for (int i = 0; i < count; i++) {
-        ShoppingCartItem *item = static_cast<ShoppingCartItem *>(gCarCustomizeManager.GetCartItem(i));
-        if (item && item->GetBuyingPart()) {
-            if (IsSlotIDNumberDecal(item->GetBuyingPart()->GetSlotID())) {
-                item->ToggleActive();
+    int numOptions = gCarCustomizeManager.GetNumCartItems();
+    for (int i = 0; i < numOptions; i++) {
+        ShoppingCartItem *si = gCarCustomizeManager.GetCartItem(i);
+        if (si != nullptr) {
+            SelectablePart *sp = si->GetBuyingPart();
+            if (sp != nullptr) {
+                int slotID = sp->GetSlotID();
+                if (IsSlotIDNumberDecal(slotID)) {
+                    si->ToggleActive();
+                }
             }
         }
     }
 }
 
 void CustomizeShoppingCart::ToggleChecked() {
-    if (pCurrentOption) {
-        ShoppingCartItem *item = static_cast<FEShoppingCartItem *>(pCurrentOption)->GetItem();
-        if (item) {
+    if (GetCurrentItem() != nullptr) {
+        ShoppingCartItem *item = GetCurrentItem()->GetItem();
+        if (item != nullptr) {
             item->ToggleActive();
-            if (item->GetBuyingPart() && IsSlotIDNumberDecal(item->GetBuyingPart()->GetSlotID())) {
-                ToggleAllNumberDecals();
-                item->ToggleActive();
+            SelectablePart *spart = item->GetBuyingPart();
+            if (spart != nullptr) {
+                int slotID = spart->GetSlotID();
+                if (IsSlotIDNumberDecal(slotID)) {
+                    ToggleAllNumberDecals();
+                    item->ToggleActive();
+                }
             }
         }
-        static_cast<FEShoppingCartItem *>(pCurrentOption)->SetCheckScripts();
-        pCurrentOption->Draw();
+        GetCurrentItem()->SetCheckScripts();
+        GetCurrentItem()->Draw();
     }
 }
 
 bool CustomizeShoppingCart::CanCheckout() {
     if (gCarCustomizeManager.IsCareerMode()) {
-        if (CustomizeIsInBackRoom()) {
+        if (gCarCustomizeManager.IsInBackRoom()) {
             return true;
         }
         return gCarCustomizeManager.GetCartTotal(CCT_TOTAL) <= FEDatabase->GetCareerSettings()->GetCash();
@@ -924,307 +909,303 @@ bool CustomizeShoppingCart::CanCheckout() {
     return true;
 }
 
-void CustomizeShoppingCart::SetMarkerData(int idx, ShoppingCartItem *item, int spending) {
-    const char *pkg = GetPackageName();
-    unsigned int hash = FEngHashString("MARKER_GROUP_%d", idx);
-    unsigned int script = 0x6ebbfb68;
-    if (spending == 0) {
-        script = 0x163c76;
-    }
-    FEngSetScript(pkg, hash, script, true);
+void CustomizeShoppingCart::SetMarkerData(int num, ShoppingCartItem *item, int num_markers) {
+    const u32 FEObj_GREY = FEHASH_GREY;
+    const u32 FEObj_NORMAL = FEHASH_NORMAL;
 
-    hash = FEngHashString("MARKER_NUM_%d", idx);
-    FEPrintf(GetPackageName(), hash, "%$d", spending);
+    FEngSetScript(GetPackageName(), FEngHashString("MARKER_GROUP_%d", num), num_markers == 0 ? FEObj_GREY : FEObj_NORMAL, true);
 
-    hash = FEngHashString("MARKER_BLOOM_%d", idx);
-    FEPrintf(GetPackageName(), hash, "%$d", spending);
+    FEPrintf(GetPackageName(), FEngHashString("MARKER_NUM_%d", num), "%$d", num_markers);
+
+    FEPrintf(GetPackageName(), FEngHashString("MARKER_BLOOM_%d", num), "%$d", num_markers);
 }
 
-int CustomizeShoppingCart::GetNumMarkersSpending(unsigned int marker) {
-    ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(marker);
-    int result = 0;
-    if (item && item->IsActive()) {
-        result = 1;
-    }
-    return result;
+int CustomizeShoppingCart::GetNumMarkersSpending(uint32 slot_id) {
+    ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(slot_id);
+    return static_cast<int>(item != nullptr && item->IsActive());
 }
 
+// UNSOLVED
 void CustomizeShoppingCart::SetMarkerAmounts() {
-    if (CustomizeIsInPerformance()) {
-        static Physics::Upgrades::Type phys_type[7] = {
-            Physics::Upgrades::PUT_TRANSMISSION, Physics::Upgrades::PUT_TIRES,  Physics::Upgrades::PUT_INDUCTION, Physics::Upgrades::PUT_BRAKES,
-            Physics::Upgrades::PUT_CHASSIS,      Physics::Upgrades::PUT_ENGINE, Physics::Upgrades::PUT_NOS,
+    const u32 FEObj_GREY = FEHASH_GREY;
+    const u32 FEObj_NORMAL = FEHASH_NORMAL;
+    if (gCarCustomizeManager.IsInPerformance()) {
+        static int phys_type[Physics::Upgrades::PUT_MAX] = {
+            Physics::Upgrades::PUT_BRAKES,  Physics::Upgrades::PUT_ENGINE, Physics::Upgrades::PUT_NOS,          Physics::Upgrades::PUT_INDUCTION,
+            Physics::Upgrades::PUT_CHASSIS, Physics::Upgrades::PUT_TIRES,  Physics::Upgrades::PUT_TRANSMISSION,
         };
-        static int markers[7] = {
+        static int markers[Physics::Upgrades::PUT_MAX] = {
             FEMarkerManager::MARKER_BRAKES,  FEMarkerManager::MARKER_ENGINE, FEMarkerManager::MARKER_NOS,          FEMarkerManager::MARKER_INDUCTION,
             FEMarkerManager::MARKER_CHASSIS, FEMarkerManager::MARKER_TIRES,  FEMarkerManager::MARKER_TRANSMISSION,
         };
-        int i = 0;
-        do {
+        int num_thingies = Physics::Upgrades::PUT_MAX;
+        for (int i = 0; i < num_thingies; i++) {
             ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(phys_type[i]);
             int num = TheFEMarkerManager.GetNumMarkers(static_cast<FEMarkerManager::ePossibleMarker>(markers[i]), 0);
-            if (item && item->IsActive()) {
+            if (item != nullptr && item->IsActive()) {
                 num--;
             }
-            i++;
-            SetMarkerData(i, item, num);
-        } while (i < 7);
-    } else if (CustomizeIsInParts()) {
-        static unsigned int slot_id[5] = {0x17, 0x3F, 0x2C, 0x42, 0x3E};
+            SetMarkerData(i + 1, item, num);
+        }
+    } else if (gCarCustomizeManager.IsInParts()) {
+        static int slot_id[5] = {CARSLOTID_BODY, CARSLOTID_HOOD, CARSLOTID_SPOILER, CARSLOTID_FRONT_WHEEL, CARSLOTID_ROOF};
         static int markers[5] = {
             FEMarkerManager::MARKER_BODY, FEMarkerManager::MARKER_HOOD,       FEMarkerManager::MARKER_SPOILER,
             FEMarkerManager::MARKER_RIMS, FEMarkerManager::MARKER_ROOF_SCOOP,
         };
-        int i = 0;
-        do {
+        int num_thingies = 5;
+        for (int i = 0; i < num_thingies; i++) {
             ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(slot_id[i]);
             int num = TheFEMarkerManager.GetNumMarkers(static_cast<FEMarkerManager::ePossibleMarker>(markers[i]), 0);
-            if (item && item->IsActive()) {
+            if (item != nullptr && item->IsActive()) {
                 num--;
             }
-            i++;
-            SetMarkerData(i, item, num);
-        } while (i < 5);
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x47df0e22));
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x47df0e23));
+            SetMarkerData(i + 1, item, num);
+        }
+        FEngSetInvisible(GetPackageName(), 0x47df0e22);
+        FEngSetInvisible(GetPackageName(), 0x47df0e23);
     } else {
-        ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(static_cast<unsigned int>(0x4d));
+        ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(CARSLOTID_VINYL_LAYER0);
         int num = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_VINYL, 0);
-        if (item && item->IsActive()) {
+        if (item != nullptr && item->IsActive()) {
             num--;
         }
         SetMarkerData(1, item, num);
 
-        int spending = GetNumMarkersSpending(0x53);
-        spending += GetNumMarkersSpending(0x5b);
-        spending += GetNumMarkersSpending(99);
-        spending += GetNumMarkersSpending(100);
-        spending += GetNumMarkersSpending(0x65);
-        spending += GetNumMarkersSpending(0x66);
-        spending += GetNumMarkersSpending(0x67);
-        spending += GetNumMarkersSpending(0x68);
-        spending += GetNumMarkersSpending(0x6b);
-        spending += GetNumMarkersSpending(0x6c);
-        spending += GetNumMarkersSpending(0x6d);
-        spending += GetNumMarkersSpending(0x6e);
-        spending += GetNumMarkersSpending(0x6f);
-        spending += GetNumMarkersSpending(0x70);
-        spending += GetNumMarkersSpending(0x73);
-        spending += GetNumMarkersSpending(0x7b);
-        int numDecals = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_DECAL, 0);
-        SetMarkerData(2, item, numDecals - spending);
+        num = GetNumMarkersSpending(CARSLOTID_DECAL_FRONT_WINDOW_TEX0);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_REAR_WINDOW_TEX0);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_LEFT_DOOR_TEX0);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_LEFT_DOOR_TEX1);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_LEFT_DOOR_TEX2);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_LEFT_DOOR_TEX3);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_LEFT_DOOR_TEX4);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_LEFT_DOOR_TEX5);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_RIGHT_DOOR_TEX0);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_RIGHT_DOOR_TEX1);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_RIGHT_DOOR_TEX2);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_RIGHT_DOOR_TEX3);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_RIGHT_DOOR_TEX4);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_RIGHT_DOOR_TEX5);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_LEFT_QUARTER_TEX0);
+        num += GetNumMarkersSpending(CARSLOTID_DECAL_RIGHT_QUARTER_TEX0);
+        num = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_DECAL, 0) - num;
+        SetMarkerData(2, item, num);
 
-        item = gCarCustomizeManager.IsPartTypeInCart(static_cast<unsigned int>(0x4c));
+        item = gCarCustomizeManager.IsPartTypeInCart(CARSLOTID_BASE_PAINT);
         num = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_PAINT, 0);
-        if (item && item->IsActive()) {
+        if (item != nullptr && item->IsActive()) {
             num--;
         }
         SetMarkerData(3, item, num);
 
-        item = gCarCustomizeManager.IsPartTypeInCart(static_cast<unsigned int>(0x84));
+        item = gCarCustomizeManager.IsPartTypeInCart(CARSLOTID_CUSTOM_HUD);
         num = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_CUSTOM_HUD, 0);
-        if (item && item->IsActive()) {
+        if (item != nullptr && item->IsActive()) {
             num--;
         }
         SetMarkerData(4, item, num);
 
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x47df0e21));
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x47df0e22));
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x47df0e23));
+        FEngSetInvisible(GetPackageName(), 0x47df0e21);
+        FEngSetInvisible(GetPackageName(), 0x47df0e22);
+        FEngSetInvisible(GetPackageName(), 0x47df0e23);
     }
 }
 
 void CustomizeShoppingCart::RefreshHeader() {
-    if (pCurrentOption) {
-        FEngSetVisible(FEngFindObject(GetPackageName(), 0x842b0e89));
-        ShoppingCartItem *item = static_cast<FEShoppingCartItem *>(pCurrentOption)->GetItem();
-        if (item->IsActive()) {
-            FEngSetLanguageHash(GetPackageName(), 0xd57c95e1, 0x5dabcbc0);
+    if (this->GetCurrentItem() != nullptr) {
+        FEngSetVisible(GetPackageName(), 0x842b0e89);
+        uint32 check_text = 0xd57c95e1;
+        if (this->GetCurrentItem()->GetItem()->IsActive()) {
+            FEngSetLanguageHash(GetPackageName(), check_text, 0x5dabcbc0);
         } else {
-            FEngSetLanguageHash(GetPackageName(), 0xd57c95e1, 0x28feadd);
+            FEngSetLanguageHash(GetPackageName(), check_text, 0x28feadd);
         }
     } else {
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x842b0e89));
+        FEngSetInvisible(GetPackageName(), 0x842b0e89);
     }
     HeatMeter.SetCurrent(gCarCustomizeManager.GetActualHeat());
     HeatMeter.SetPreview(gCarCustomizeManager.GetCartHeat());
     HeatMeter.Draw();
     if (gCarCustomizeManager.IsCareerMode()) {
-        if (CustomizeIsInBackRoom()) {
+        if (gCarCustomizeManager.IsInBackRoom()) {
             SetMarkerAmounts();
-            int total;
-            FEMarkerManager::ePossibleMarker availableMarker;
-            if (CustomizeIsInParts()) {
+            int num_markers;
+            if (gCarCustomizeManager.IsInParts()) {
                 FEngSetLanguageHash(GetPackageName(), 0x8cdcb8ed, 0xa03a752f);
                 FEngSetLanguageHash(GetPackageName(), 0xd3d3b1f4, 0x4ac68298);
-                total = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_BODY, 0);
-                total += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_HOOD, 0);
-                total += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_SPOILER, 0);
-                total += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_RIMS, 0);
-                availableMarker = FEMarkerManager::MARKER_ROOF_SCOOP;
-            } else if (CustomizeIsInPerformance()) {
+                num_markers = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_BODY, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_HOOD, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_SPOILER, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_RIMS, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_ROOF_SCOOP, 0);
+            } else if (gCarCustomizeManager.IsInPerformance()) {
                 FEngSetLanguageHash(GetPackageName(), 0x8cdcb8ed, 0x358db897);
                 FEngSetLanguageHash(GetPackageName(), 0xd3d3b1f4, 0x68342700);
-                total = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_BRAKES, 0);
-                total += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_ENGINE, 0);
-                total += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_NOS, 0);
-                total += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_INDUCTION, 0);
-                total += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_CHASSIS, 0);
-                total += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_TIRES, 0);
-                availableMarker = FEMarkerManager::MARKER_TRANSMISSION;
+                num_markers = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_BRAKES, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_ENGINE, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_NOS, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_INDUCTION, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_CHASSIS, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_TIRES, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_TRANSMISSION, 0);
             } else {
                 FEngSetLanguageHash(GetPackageName(), 0x8cdcb8ed, 0x93296e59);
                 FEngSetLanguageHash(GetPackageName(), 0xd3d3b1f4, 0x78f1c602);
-                total = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_VINYL, 0);
-                total += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_DECAL, 0);
-                total += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_PAINT, 0);
-                availableMarker = FEMarkerManager::MARKER_CUSTOM_HUD;
+                num_markers = TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_VINYL, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_DECAL, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_PAINT, 0);
+                num_markers += TheFEMarkerManager.GetNumMarkers(FEMarkerManager::MARKER_CUSTOM_HUD, 0);
             }
-            int available = TheFEMarkerManager.GetNumMarkers(availableMarker, 0);
-            FEPrintf(GetPackageName(), 0xd1497a06, "%d", gCarCustomizeManager.GetCartTotal(static_cast<eCustomizeCartTotals>(0)));
-            int cartCost = gCarCustomizeManager.GetCartTotal(static_cast<eCustomizeCartTotals>(0));
-            FEPrintf(GetPackageName(), 0x18661565, "%d", (total + available) - cartCost);
+            FEPrintf(GetPackageName(), 0xd1497a06, "%$d", gCarCustomizeManager.GetCartTotal(CCT_PART_PRICES));
+            FEPrintf(GetPackageName(), 0x18661565, "%$d", num_markers - gCarCustomizeManager.GetCartTotal(CCT_PART_PRICES));
         } else {
-            FEPrintf(GetPackageName(), 0xd1497a06, "%d", gCarCustomizeManager.GetCartTotal(static_cast<eCustomizeCartTotals>(0)));
-            FEPrintf(GetPackageName(), 0x34f7c0e8, "%d", gCarCustomizeManager.GetCartTotal(static_cast<eCustomizeCartTotals>(1)));
-            int totalCost = gCarCustomizeManager.GetCartTotal(static_cast<eCustomizeCartTotals>(2));
-            FEPrintf(GetPackageName(), 0x18661565, "%d", totalCost);
-            FEPrintf(GetPackageName(), 0x8531e22e, "%d", FEDatabase->GetCareerSettings()->GetCash() - totalCost);
+            FEPrintf(GetPackageName(), 0xd1497a06, "%$d", gCarCustomizeManager.GetCartTotal(CCT_PART_PRICES));
+            FEPrintf(GetPackageName(), 0x34f7c0e8, "%$d", gCarCustomizeManager.GetCartTotal(CCT_TRADE_IN));
+            int total = gCarCustomizeManager.GetCartTotal(CCT_TOTAL);
+            FEPrintf(GetPackageName(), 0x18661565, "%$d", total);
+            int remaining = FEDatabase->GetCareerSettings()->GetCash() - total;
+            FEPrintf(GetPackageName(), 0x8531e22e, "%$d", remaining);
         }
     } else {
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x9ea22e0b));
+        FEngSetInvisible(GetPackageName(), 0x9ea22e0b);
     }
 }
 
 void CustomizeShoppingCart::AddItem(ShoppingCartItem *item) {
-    FEShoppingCartItem *widget = new FEShoppingCartItem(item);
-    widget->SetTitleObject(GetCurrentFEString("PART_NAME_"));
-    widget->SetDataObject(GetCurrentFEString("PRICE_"));
-    widget->SetBacking(GetCurrentFEObject(pBackingName));
-    widget->SetCheckIcon(GetCurrentFEImage("CHECK_ICON_"));
-    widget->SetTradeInString(GetCurrentFEString("TRADE_IN_"));
-    widget->SetTopLeft(vLastWidgetPos);
-    widget->SetMaxTitleSize(vMaxTitleSize);
-    widget->SetMaxDataSize(vMaxDataSize);
-    widget->SetDataPos(vDataPos);
-    Options.AddTail(widget);
+    FEShoppingCartItem *option = new ("FEShoppingCartItem", 0) FEShoppingCartItem(item);
+    option->SetTitleObject(GetCurrentFEString("PART_NAME_"));
+    option->SetDataObject(GetCurrentFEString("PRICE_"));
+    option->SetBacking(GetCurrentFEObject(pBackingName));
+    option->SetCheckIcon(GetCurrentFEImage("CHECK_ICON_"));
+    option->SetTradeInString(GetCurrentFEString("TRADE_IN_"));
+    option->SetTopLeft(vLastWidgetPos);
+    option->SetMaxTitleSize(vMaxTitleSize);
+    option->SetMaxDataSize(vMaxDataSize);
+    option->SetDataPos(vDataPos);
+    Options.AddTail(option);
     iIndexToAdd++;
     IncrementStartPos();
-    widget->Show();
-    widget->Draw();
-    widget->Position();
-
-    float data_x, data_y;
-    float data_w, data_h;
-    FEngGetTopLeft(reinterpret_cast<FEObject *>(widget->GetDataObject()), data_x, data_y);
-    FEngGetSize(reinterpret_cast<FEObject *>(widget->GetDataObject()), data_w, data_h);
-    widget->SetWidth(bAbs(widget->GetTopLeftX() - (data_x + data_w)));
+    option->Show();
+    option->Draw();
+    option->Position();
+    float data_left = FEngGetTopLeftX(option->GetDataObject());
+    float data_right = data_left + FEngGetSizeX(option->GetDataObject());
+    option->SetWidth(bAbs(option->GetTopLeftX() - data_right));
 }
 
+// UNSOLVED
 void CustomizeShoppingCart::ClearUncheckedItems() {
-    for (ShoppingCartItem *item = gCarCustomizeManager.GetFirstCartItem(); item != gCarCustomizeManager.GetLastCartItem(); item = item->GetNext()) {
+    ShoppingCartItem *item = gCarCustomizeManager.GetFirstCartItem();
+    while (item != gCarCustomizeManager.GetLastCartItem()->GetNext()) {
         if (!item->IsActive()) {
-            ShoppingCartItem *temp = item;
-            if (item->GetBuyingPart()->GetSlotID() == 0x4d) {
-                for (ShoppingCartItem *color_item = gCarCustomizeManager.GetFirstCartItem(); color_item != gCarCustomizeManager.GetLastCartItem();
-                     color_item = color_item->GetNext()) {
-                    if (CARSLOTID_VINYL_COLOUR0_0 <= color_item->GetBuyingPart()->GetSlotID() &&
-                        color_item->GetBuyingPart()->GetSlotID() <= CARSLOTID_VINYL_COLOUR0_3) {
+            if (item->GetBuyingPart()->GetSlotID() == CARSLOTID_VINYL_LAYER0) {
+                ShoppingCartItem *color_item = gCarCustomizeManager.GetFirstCartItem();
+                while (color_item != gCarCustomizeManager.GetLastCartItem()->GetNext()) {
+                    switch (color_item->GetBuyingPart()->GetSlotID()) {
+                        case CARSLOTID_VINYL_COLOUR0_0:
+                        case CARSLOTID_VINYL_COLOUR0_1:
+                        case CARSLOTID_VINYL_COLOUR0_2:
+                        case CARSLOTID_VINYL_COLOUR0_3: {
+                            ShoppingCartItem *color_temp = color_item->GetNext();
+                            gCarCustomizeManager.RemoveFromCart(color_item);
+                            color_item = color_temp;
+                            break;
+                        }
 
-                        gCarCustomizeManager.RemoveFromCart(color_item);
+                        default:
+                            color_item = color_item->GetNext();
+                            break;
                     }
                 }
-                gCarCustomizeManager.RemoveFromCart(item);
             }
-            gCarCustomizeManager.ResetPreview();
+            ShoppingCartItem *temp = item->GetNext();
+            gCarCustomizeManager.RemoveFromCart(item);
+            item = temp;
+        } else {
+            item = item->GetNext();
         }
     }
+    gCarCustomizeManager.ResetPreview();
 }
 
 void CustomizeShoppingCart::UncheckAllItems() {
     ShoppingCartItem *cart_item = gCarCustomizeManager.GetFirstCartItem();
     while (cart_item != gCarCustomizeManager.GetLastCartItem()->GetNext()) {
-        if (cart_item->bActive) {
+        if (cart_item->IsActive()) {
             cart_item->ToggleActive();
         }
         cart_item = cart_item->GetNext();
     }
-    FEShoppingCartItem *w = static_cast<FEShoppingCartItem *>(Options.GetHead());
-    while (w != Options.EndOfList()) {
-        w->SetCheckScripts();
-        w->Draw();
-        w = static_cast<FEShoppingCartItem *>(w->GetNext());
+    for (FEShoppingCartItem *item = static_cast<FEShoppingCartItem *>(Options.GetHead()); item != Options.EndOfList();
+         item = static_cast<FEShoppingCartItem *>(item->GetNext())) {
+        item->SetCheckScripts();
+        item->Draw();
     }
 }
 
 void CustomizeShoppingCart::SetMarkerImages() {
-    if (CustomizeIsInPerformance()) {
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957471), 0x4887f351);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957472), 0x4f424e0f);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957473), 0x6fea04c8);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957474), 0x8e284227);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957475), 0x190eb6);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957476), 0x7373f1ef);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957477), 0xd142d3e3);
-    } else if (CustomizeIsInParts()) {
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957471), 0xaf393dba);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957472), 0xf375276e);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957473), 0xc51a4f62);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957474), 0xc19491cc);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957475), 0x25a4375e);
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x47df0e22));
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x47df0e23));
+    if (gCarCustomizeManager.IsInPerformance()) {
+        FEngSetTextureHash(GetPackageName(), 0xeb957471, 0x4887f351);
+        FEngSetTextureHash(GetPackageName(), 0xeb957472, 0x4f424e0f);
+        FEngSetTextureHash(GetPackageName(), 0xeb957473, 0x6fea04c8);
+        FEngSetTextureHash(GetPackageName(), 0xeb957474, 0x8e284227);
+        FEngSetTextureHash(GetPackageName(), 0xeb957475, 0x190eb6);
+        FEngSetTextureHash(GetPackageName(), 0xeb957476, 0x7373f1ef);
+        FEngSetTextureHash(GetPackageName(), 0xeb957477, 0xd142d3e3);
+    } else if (gCarCustomizeManager.IsInParts()) {
+        FEngSetTextureHash(GetPackageName(), 0xeb957471, 0xaf393dba);
+        FEngSetTextureHash(GetPackageName(), 0xeb957472, 0xf375276e);
+        FEngSetTextureHash(GetPackageName(), 0xeb957473, 0xc51a4f62);
+        FEngSetTextureHash(GetPackageName(), 0xeb957474, 0xc19491cc);
+        FEngSetTextureHash(GetPackageName(), 0xeb957475, 0x25a4375e);
+        FEngSetInvisible(GetPackageName(), 0x47df0e22);
+        FEngSetInvisible(GetPackageName(), 0x47df0e23);
     } else {
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957471), 0xd35f04c0);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957472), 0xa9135927);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957473), 0xdb89e17);
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xeb957474), 0x8ba602fc);
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x47df0e21));
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x47df0e22));
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x47df0e23));
+        FEngSetTextureHash(GetPackageName(), 0xeb957471, 0xd35f04c0);
+        FEngSetTextureHash(GetPackageName(), 0xeb957472, 0xa9135927);
+        FEngSetTextureHash(GetPackageName(), 0xeb957473, 0xdb89e17);
+        FEngSetTextureHash(GetPackageName(), 0xeb957474, 0x8ba602fc);
+        FEngSetInvisible(GetPackageName(), 0x47df0e21);
+        FEngSetInvisible(GetPackageName(), 0x47df0e22);
+        FEngSetInvisible(GetPackageName(), 0x47df0e23);
     }
 }
 
 void CustomizeShoppingCart::Setup() {
-    const char *pkg = GetPackageName();
-    CustomizeMeter *meter = &HeatMeter;
-    const char *meter_name = "HEAT_METER";
-    float actual = gCarCustomizeManager.GetActualHeat();
-    float cart = gCarCustomizeManager.GetCartHeat();
-    meter->Init(pkg, meter_name, 1.0f, 5.0f, actual, cart);
+    HeatMeter.Init(GetPackageName(), "HEAT_METER", 1.0f, 5.0f, gCarCustomizeManager.GetActualHeat(), gCarCustomizeManager.GetCartHeat());
 
     ShoppingCartItem *item = gCarCustomizeManager.GetFirstCartItem();
-    while (item != gCarCustomizeManager.GetLastCartItem()->GetNext()) {
+    for (ShoppingCartItem *item = gCarCustomizeManager.GetFirstCartItem(); item != gCarCustomizeManager.GetLastCartItem()->GetNext();
+         item = item->GetNext()) {
         switch (item->GetBuyingPart()->GetSlotID()) {
-            case 0x4f:
-            case 0x50:
-            case 0x51:
-            case 0x52:
-            case 0x69:
-            case 0x6a:
-            case 0x72:
-            case 0x85:
-            case 0x86:
-            case 0x87:
+            case CARSLOTID_VINYL_COLOUR0_0:
+            case CARSLOTID_VINYL_COLOUR0_1:
+            case CARSLOTID_VINYL_COLOUR0_2:
+            case CARSLOTID_VINYL_COLOUR0_3:
+            case CARSLOTID_DECAL_LEFT_DOOR_LNUMBER:
+            case CARSLOTID_DECAL_LEFT_DOOR_RNUMBER:
+            // case CARSLOTID_DECAL_RIGHT_DOOR_LNUMBER: // *NOT* LNUMBER
+            case CARSLOTID_DECAL_RIGHT_DOOR_RNUMBER:
+            case CARSLOTID_HUD_BACKING_COLOUR:
+            case CARSLOTID_HUD_NEEDLE_COLOUR:
+            case CARSLOTID_HUD_CHARACTER_COLOUR:
                 break;
             default:
                 AddItem(item);
                 break;
         }
-        item = item->GetNext();
     }
 
-    if (CustomizeIsInBackRoom()) {
+    if (gCarCustomizeManager.IsInBackRoom()) {
         SetMarkerImages();
     }
 
     SetInitialOption(0);
 
-    FEShoppingCartItem *widget = static_cast<FEShoppingCartItem *>(Options.GetHead());
-    while (widget != static_cast<FEShoppingCartItem *>(Options.EndOfList())) {
-        widget->SetCheckScripts();
-        widget->SetActiveScripts();
-        widget = static_cast<FEShoppingCartItem *>(widget->GetNext());
+    for (FEShoppingCartItem *item = static_cast<FEShoppingCartItem *>(Options.GetHead());
+         item != static_cast<FEShoppingCartItem *>(Options.EndOfList()); item = static_cast<FEShoppingCartItem *>(item->GetNext())) {
+        item->SetCheckScripts();
+        item->SetActiveScripts();
     }
 
     RefreshHeader();
@@ -1237,63 +1218,57 @@ CustomizeCategoryScreen::CustomizeCategoryScreen(ScreenConstructorData *sd)
       HeatMeter() {
     Category = sd->Arg & 0xFFFF;
     FromCategory = static_cast<int>(static_cast<short>(sd->Arg >> 16));
-    if (Category != 0 || !CustomizeIsInBackRoom()) {
+    if (Category != 0 || !gCarCustomizeManager.IsInBackRoom()) {
         GarageMainScreen::GetInstance()->SetCustomizationCategory(Category);
     }
-    const char *meter_name = "HEAT_METER";
-    const char *pkg = GetPackageName();
-    float actual = gCarCustomizeManager.GetActualHeat();
-    CustomizeMeter *meter = &HeatMeter;
-    float cart = gCarCustomizeManager.GetCartHeat();
-    meter->Init(pkg, meter_name, 1.0f, 5.0f, actual, cart);
+
+    HeatMeter.Init(GetPackageName(), "HEAT_METER", 1.0f, 5.0f, gCarCustomizeManager.GetActualHeat(), gCarCustomizeManager.GetCartHeat());
 }
 
 CustomizeCategoryScreen::~CustomizeCategoryScreen() {}
 
 void CustomizeCategoryScreen::RefreshHeader() {
     IconScrollerMenu::RefreshHeader();
-    int status = static_cast<CustomizeMainOption *>(Options.GetCurrentOption())->UnlockStatus;
-    if (status == 2) {
-        FEngSetVisible(FEngFindObject(GetPackageName(), 0xcffb7033));
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xcffb7033), 0xf0574bb2);
-        FEngSetScript(GetPackageName(), 0xcffb7033, 0x5079c8f8, true);
-    } else if (status == 3) {
-        FEngSetVisible(FEngFindObject(GetPackageName(), 0xcffb7033));
-        FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xcffb7033), 0xcffb7033);
-        FEngSetScript(GetPackageName(), 0xcffb7033, 0x5079c8f8, true);
+    const u32 FEObj_APPEAR = FEHASH_APPEAR;
+    uint32 unlock_status = static_cast<CustomizeMainOption *>(Options.GetCurrentOption())->UnlockStatus;
+    if (unlock_status == 2) {
+        FEngSetVisible(GetPackageName(), 0xcffb7033);
+        FEngSetTextureHash(GetPackageName(), 0xcffb7033, 0xf0574bb2);
+        FEngSetScript(GetPackageName(), 0xcffb7033, FEObj_APPEAR, true);
+    } else if (unlock_status == 3) {
+        FEngSetVisible(GetPackageName(), 0xcffb7033);
+        FEngSetTextureHash(GetPackageName(), 0xcffb7033, 0xcffb7033);
+        FEngSetScript(GetPackageName(), 0xcffb7033, FEObj_APPEAR, true);
     } else {
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0xcffb7033));
+        FEngSetInvisible(GetPackageName(), 0xcffb7033);
     }
-    CarCustomizeManager &mgr = gCarCustomizeManager;
-    if (mgr.IsCareerMode()) {
-        CustomizeMeter *meter = &HeatMeter;
-        meter->SetCurrent(mgr.GetActualHeat());
-        meter->SetPreview(mgr.GetCartHeat());
-        meter->Draw();
-        if (CustomizeIsInBackRoom()) {
+    if (gCarCustomizeManager.IsCareerMode()) {
+        HeatMeter.SetCurrent(gCarCustomizeManager.GetActualHeat());
+        HeatMeter.SetPreview(gCarCustomizeManager.GetCartHeat());
+        HeatMeter.Draw();
+        if (gCarCustomizeManager.IsInBackRoom()) {
             FEngSetLanguageHash(GetPackageName(), 0x63ca8308, GetMarkerNameFromCategory(static_cast<eCustomizeCategory>(Category)));
-            const char *fmt = "%d";
-            FEPrintf(GetPackageName(), 0x83e3cd39, fmt, GetNumMarkersFromCategory(static_cast<eCustomizeCategory>(Category)));
-            FEPrintf(GetPackageName(), 0x23d918fe, fmt, TheFEMarkerManager.GetNumCustomizeMarkers());
+            FEPrintf(GetPackageName(), 0x83e3cd39, "%$d", GetNumMarkersFromCategory(static_cast<eCustomizeCategory>(Category)));
+            FEPrintf(GetPackageName(), 0x23d918fe, "%$d", TheFEMarkerManager.GetNumCustomizeMarkers());
         } else {
-            FEPrintf(GetPackageName(), 0x7a6d2f71, "%d", mgr.GetCartTotal(CCT_TOTAL));
-            FEPrintf(GetPackageName(), 0xc60adcfd, "%d", FEDatabase->GetCareerSettings()->GetCash());
+            FEPrintf(GetPackageName(), 0x7a6d2f71, "%$d", gCarCustomizeManager.GetCartTotal(CCT_TOTAL));
+            FEPrintf(GetPackageName(), 0xc60adcfd, "%$d", FEDatabase->GetCareerSettings()->GetCash());
         }
     } else {
         HeatMeter.SetVisibility(false);
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x8d1559a4));
+        FEngSetInvisible(GetPackageName(), 0x8d1559a4);
     }
 }
 
 int CustomizeCategoryScreen::AddCustomOption(const char *to_pkg, unsigned int tex_hash, unsigned int name_hash, unsigned int to_cat) {
     if (gCarCustomizeManager.IsCareerMode()) {
-        if (CustomizeIsInBackRoom()) {
+        if (gCarCustomizeManager.IsInBackRoom()) {
             if (gCarCustomizeManager.IsCategoryLocked(to_cat, true)) {
                 return -1;
             }
         }
     }
-    CustomizeMainOption *opt = new CustomizeMainOption(to_pkg, tex_hash, name_hash, to_cat, Category);
+    CustomizeMainOption *opt = new ("CustomizeMainOption", 0) CustomizeMainOption(to_pkg, tex_hash, name_hash, to_cat, Category);
     AddOption(opt);
     if (gCarCustomizeManager.IsCategoryLocked(to_cat, false)) {
         opt->UnlockStatus = CPS_LOCKED;
@@ -1306,50 +1281,53 @@ int CustomizeCategoryScreen::AddCustomOption(const char *to_pkg, unsigned int te
 void CustomizeCategoryScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     IconScrollerMenu::NotificationMessage(msg, pobj, param1, param2);
     switch (msg) {
-        case 0xb5af2461:
+        case __PAD_START__:
             CustomizeShoppingCart::ShowShoppingCart(GetPackageName());
             break;
-        case 0xe1fde1d1:
+        case FEHASH_EXITCOMPLETE:
             if (!bBackingOut) {
                 break;
             }
             cFEng::Get()->QueuePackageSwitch(BackToPkg, FromCategory | (Category << 16), 0, false);
             break;
-        case 0x911ab364: {
+        case __PAD_BACK__: {
             bool leave = true;
-            if (Category <= 0x803) {
-                if (Category >= 0x801) {
+            switch (Category) {
+                case CC_PARTS:
+                case CC_PERFORMANCE:
+                case CC_VISUAL:
                     if (gCarCustomizeManager.DoesCartHaveActiveParts()) {
                         cFEng::Get()->QueueGameMessage(0x1720b124, GetPackageName(), 0xFF);
                         leave = false;
                         Options.SetReactToInput(true);
                     } else {
                         gCarCustomizeManager.EmptyCart();
-                        gCarCustomizeManager.ResetPreview();
                     }
-                }
+                    break;
             }
             if (leave) {
                 bBackingOut = true;
-                cFEng::Get()->QueuePackageMessage(0x587c018b, GetPackageName(), nullptr);
+                const u32 FEObj_leavescreen = 0x587c018b;
+                cFEng::Get()->QueuePackageMessage(FEObj_leavescreen, GetPackageName(), nullptr);
             }
             break;
         }
-        case 0xc519bfbf: {
+        case __PAD_BUTTON0__: {
             CustomizeMainOption *opt = static_cast<CustomizeMainOption *>(Options.GetCurrentOption());
-            Showcase::FromPackage = GetPackageName();
             Showcase::FromArgs = Category | (opt->Category << 16);
+            Showcase::FromPackage = GetPackageName();
             cFEng::Get()->QueuePackageSwitch("Showcase.fng", reinterpret_cast<int>(gCarCustomizeManager.GetTuningCar()), 0, false);
             break;
         }
-        case 0xb4edeb6d:
+        case dialog_message_cancelled:
             Options.SetReactToInput(true);
             break;
-        case 0x7a318ee0:
+        case 0x7a318ee0: {
             gCarCustomizeManager.EmptyCart();
-            gCarCustomizeManager.ResetPreview();
-            cFEng::Get()->QueuePackageMessage(0x587c018b, GetPackageName(), nullptr);
+            const u32 FEObj_leavescreen = 0x587c018b;
+            cFEng::Get()->QueuePackageMessage(FEObj_leavescreen, GetPackageName(), nullptr);
             break;
+        }
         case 0x1720b124:
             CustomizeShoppingCart::ShowShoppingCart(GetPackageName());
             break;
@@ -1373,56 +1351,62 @@ CustomizeSub::CustomizeSub(ScreenConstructorData *sd)
 }
 
 void CustomizeSub::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    unsigned int to_cat = static_cast<unsigned short>(static_cast<CustomizeMainOption *>(Options.GetCurrentOption())->Category);
+    uint32 to_cat = static_cast<CustomizeMainOption *>(Options.GetCurrentOption())->Category & 0xFFFF;
 
-    if (Category != 0x803 || to_cat != 0x303 || msg != 0xc407210) {
+    if (Category != CC_VISUAL || to_cat != CC_RIM_PAINT || msg != __BUTTON_PRESSED__) {
         CustomizeCategoryScreen::NotificationMessage(msg, pobj, param1, param2);
     }
 
     switch (msg) {
         case 0x5a928018: {
             CustomizeMainOption *opt = FindInCartOption();
-            if (!opt)
-                return;
-            int slot_id = 0;
-            switch (opt->Category) {
-                case 0x103:
-                    slot_id = 0x42;
-                    break;
-                case 0x302:
-                    slot_id = 0x4d;
-                    break;
+            if (opt != nullptr) {
+                int slot_id = 0;
+                switch (opt->Category) {
+                    case CC_RIM_BRANDS:
+                        slot_id = CARSLOTID_FRONT_WHEEL;
+                        break;
+                    case CC_VINYL_TYPES:
+                        slot_id = CARSLOTID_VINYL_LAYER0;
+                        break;
+                }
+                if (slot_id == 0)
+                    return;
+                if (gCarCustomizeManager.IsPartTypeInCart(slot_id) != nullptr)
+                    return;
+                InCartPartOptionIndex = 0;
+                RefreshHeader();
             }
-            if (slot_id == 0)
-                return;
-            if (gCarCustomizeManager.IsPartTypeInCart(slot_id))
-                return;
-            InCartPartOptionIndex = 0;
-            RefreshHeader();
             break;
         }
-        case 0xc407210: {
-            if (to_cat <= 0x506) {
-                if (to_cat >= 0x501) {
+        case __BUTTON_PRESSED__: {
+            switch (to_cat) {
+                case CC_DECAL_WINDSHIELD:
+                case CC_DECAL_REAR_WINDOW:
+                case CC_DECAL_LEFT_DOOR:
+                case CC_DECAL_RIGHT_DOOR:
+                case CC_DECAL_LEFT_QP:
+                case CC_DECAL_RIGHT_QP:
                     CustomizeDecals::CurrentDecalLocation = to_cat;
-                }
+                    break;
             }
 
-            SetStockPartOption *copt = static_cast<SetStockPartOption *>(Options.GetCurrentOption());
+            CustomizeMainOption *copt = static_cast<CustomizeMainOption *>(Options.GetCurrentOption());
             copt->IsStockOption();
             bool stockOption = copt->IsStockOption();
 
-            if (stockOption && (copt->ThePart->GetPartState() & CPS_PLAYER_STATE_MASK) == CPS_INSTALLED && InCartPartOptionIndex != 0) {
+            if (stockOption && static_cast<SetStockPartOption *>(copt)->ThePart->IsInstalled() && InCartPartOptionIndex != 0) {
                 int slot_id = 0;
                 switch (static_cast<unsigned short>(copt->Category)) {
-                    case 0x701:
-                        slot_id = 0x42;
+                    case CC_RIM_BRAND_STOCK:
+                        slot_id = CARSLOTID_FRONT_WHEEL;
                         break;
-                    case 0x401:
-                        slot_id = 0x4d;
+                    case CC_VINYL_GROUP_STOCK:
+                        slot_id = CARSLOTID_VINYL_LAYER0;
                         for (int i = 0; i <= 2; i++) {
-                            ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(i + 0x4f);
-                            if (item) {
+                            int color_slot = CARSLOTID_VINYL_COLOUR_FIRST + i;
+                            ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(color_slot);
+                            if (item != nullptr) {
                                 gCarCustomizeManager.RemoveFromCart(item);
                             }
                         }
@@ -1430,7 +1414,7 @@ void CustomizeSub::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
                 }
                 if (slot_id != 0) {
                     ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(slot_id);
-                    if (item) {
+                    if (item != nullptr) {
                         gCarCustomizeManager.RemoveFromCart(item);
                         InCartPartOptionIndex = 0;
                         RefreshHeader();
@@ -1438,89 +1422,87 @@ void CustomizeSub::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
                 }
             }
 
-            if (bStrICmp(GetPackageName(), g_pCustomizeSubTopPkg) != 0 && bStrICmp(GetPackageName(), g_pCustomizeSubPkg) != 0) {
-                return;
-            }
-
-            bool ok_to_leave = false;
-            switch (Category) {
-                case 0x803:
-                    if (to_cat == 0x303) {
-                        CarPart *stock_rim = gCarCustomizeManager.GetStockCarPart(0x42);
-                        CarPart *installed = gCarCustomizeManager.GetInstalledCarPart(0x42);
-                        if (stock_rim == installed) {
-                            DialogInterface::ShowOneButton(GetPackageName(), "", dialog_alert, 0x417b2601u, 0xb4edeb6du, 0xbdb19a9fu);
-                        } else {
-                            CustomizeMainOption *opt2 = static_cast<CustomizeMainOption *>(Options.GetCurrentOption());
-                            cFEng::Get()->QueuePackageSwitch(opt2->ToPkg, opt2->Category, 0, false);
-                            ok_to_leave = true;
-                        }
-                    }
-                    break;
-                case 0x103:
-                    if (Options.GetCurrentIndex() == 1) {
-                        ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(0x42);
-                        if (item) {
-                            unsigned int brandHash = item->GetBuyingPart()->GetPart()->GetAppliedAttributeUParam(0xebb03e66, 0);
-                            InCartPartOptionIndex = GetRimBrandIndex(brandHash);
-                        }
-                        CarPart *installed2 = gCarCustomizeManager.GetInstalledCarPart(0x42);
-                        if (installed2) {
-                            unsigned int brandHash = installed2->GetAppliedAttributeUParam(0xebb03e66, 0);
-                            InstalledPartOptionIndex = GetRimBrandIndex(brandHash);
-                        }
-                        Options.SetReactToInput(true);
-                        RefreshHeader();
-                    } else {
-                        ok_to_leave = true;
-                    }
-                    break;
-                case 0x302:
-                    if (Options.GetCurrentIndex() == 1) {
-                        ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(0x4d);
-                        if (item) {
-                            CarPart *car_part = item->GetBuyingPart()->GetPart();
-                            if (car_part) {
-                                InCartPartOptionIndex = GetVinylGroupIndex(car_part->GetGroupNumber() & 0x1f);
+            if (bStrICmp(GetPackageName(), g_pCustomizeSubTopPkg) == 0 || bStrICmp(GetPackageName(), g_pCustomizeSubPkg) == 0) {
+                bool ok_to_leave = false;
+                switch (Category) {
+                    case CC_VISUAL:
+                        if (to_cat == CC_RIM_PAINT) {
+                            CarPart *stock_rim = gCarCustomizeManager.GetStockCarPart(CARSLOTID_FRONT_WHEEL);
+                            CarPart *installed = gCarCustomizeManager.GetInstalledCarPart(CARSLOTID_FRONT_WHEEL);
+                            if (stock_rim == installed) {
+                                DialogInterface::ShowOneButton(GetPackageName(), "", dialog_alert, 0x417b2601, dialog_message_cancelled, 0xbdb19a9f);
                             } else {
-                                InCartPartOptionIndex = 1;
+                                CustomizeMainOption *opt = static_cast<CustomizeMainOption *>(Options.GetCurrentOption());
+                                cFEng::Get()->QueuePackageSwitch(opt->ToPkg, opt->Category, 0, false);
+                                ok_to_leave = true;
                             }
                         }
-                        CarPart *installed3 = gCarCustomizeManager.GetInstalledCarPart(0x4d);
-                        if (installed3) {
-                            InstalledPartOptionIndex = GetVinylGroupIndex(installed3->GetGroupNumber() & 0x1f);
+                        break;
+                    case CC_RIM_BRANDS:
+                        if (Options.GetCurrentIndex() == 1) {
+                            ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(CARSLOTID_FRONT_WHEEL);
+                            if (item != nullptr) {
+                                CarPart *car_part = item->GetBuyingPart()->GetPart();
+                                InCartPartOptionIndex = GetRimBrandIndex(car_part->GetBrandNameHash());
+                            }
+                            CarPart *car_part = gCarCustomizeManager.GetInstalledCarPart(CARSLOTID_FRONT_WHEEL);
+                            if (car_part != nullptr) {
+                                InstalledPartOptionIndex = GetRimBrandIndex(car_part->GetBrandNameHash());
+                            }
+                            Options.SetReactToInput(true);
+                            RefreshHeader();
                         } else {
-                            InstalledPartOptionIndex = 1;
+                            ok_to_leave = true;
                         }
-                        Options.SetReactToInput(true);
-                        RefreshHeader();
-                    } else {
+                        break;
+                    case CC_VINYL_TYPES:
+                        if (Options.GetCurrentIndex() == 1) {
+                            ShoppingCartItem *item = gCarCustomizeManager.IsPartTypeInCart(CARSLOTID_VINYL_LAYER0);
+                            if (item != nullptr) {
+                                CarPart *car_part = item->GetBuyingPart()->GetPart();
+                                if (car_part != nullptr) {
+                                    InCartPartOptionIndex = GetVinylGroupIndex(car_part->GetGroupNumber() & 0x1f);
+                                } else {
+                                    InCartPartOptionIndex = 1;
+                                }
+                            }
+                            CarPart *car_part = gCarCustomizeManager.GetInstalledCarPart(CARSLOTID_VINYL_LAYER0);
+                            if (car_part != nullptr) {
+                                InstalledPartOptionIndex = GetVinylGroupIndex(car_part->GetGroupNumber() & 0x1f);
+                            } else {
+                                InstalledPartOptionIndex = 1;
+                            }
+                            Options.SetReactToInput(true);
+                            RefreshHeader();
+                        } else {
+                            ok_to_leave = true;
+                        }
+                        break;
+                    default:
                         ok_to_leave = true;
-                    }
-                    break;
-                default:
-                    ok_to_leave = true;
-                    break;
+                        break;
+                }
+                if (ok_to_leave) {
+                    const u32 FEObj_leavescreen = 0x587c018b;
+                    cFEng::Get()->QueuePackageMessage(FEObj_leavescreen, GetPackageName(), nullptr);
+                }
             }
-            if (!ok_to_leave)
-                return;
-            cFEng::Get()->QueuePackageMessage(0x587c018b, GetPackageName(), nullptr);
             break;
         }
-        case 0xc519bfc3:
+        case __PAD_BUTTON4__:
             if (gCarCustomizeManager.IsCareerMode())
                 return;
-            if (Category != 0x802)
-                return;
-            DialogInterface::ShowTwoButtons(GetPackageName(), "", dialog_confirmation, 0x70e01038u, 0x417b25e4u, 0x6820e23eu, 0xb4edeb6du,
-                                            first_dialog_button1, 0x892cb612u);
-            RefreshHeader();
+            if (Category == CC_PERFORMANCE) {
+                DialogInterface::ShowTwoButtons(GetPackageName(), "", dialog_confirmation, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, 0x6820e23e,
+                                                dialog_message_cancelled, first_dialog_button1, 0x892cb612);
+                RefreshHeader();
+            }
             break;
         case 0x6820e23e:
             gCarCustomizeManager.MaxOutPerformance();
             RefreshHeader();
             break;
-        case 0xb4edeb6d:
+        case dialog_message_cancelled: // TODO: should probably get from hash
             Options.SetReactToInput(true);
             RefreshHeader();
             break;
@@ -1532,40 +1514,38 @@ void CustomizeSub::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
 
 void CustomizeSub::RefreshHeader() {
     CustomizeCategoryScreen::RefreshHeader();
-    const char *title_str = GetLocalizedString(TitleHash);
-    char buf[64];
-    bSNPrintf(buf, 64, "%s", title_str);
-    int lang = GetCurrentLanguage();
-    if (lang != 2 && lang != 13) {
-        int i = 0;
-        while (buf[i] != 0) {
-            char c = buf[i];
-            if (static_cast<unsigned int>(c - 'A') < 26u) {
-                c = c | 0x20;
-            }
-            buf[i] = c;
-            i++;
+    char sztemp[64];
+    bSNPrintf(sztemp, sizeof(sztemp), "%s", GetLocalizedString(TitleHash));
+    eLanguages cLang = GetCurrentLanguage();
+    if (cLang != eLANGUAGE_GERMAN && cLang != eLANGUAGE_FINNISH) {
+        int n = 0;
+        while (sztemp[n] != 0) {
+            sztemp[n] = bToLower(sztemp[n]);
+            n++;
         }
     }
-    FEPrintf(GetPackageName(), 0xb71b576d, "%s", buf);
-    if (Category == 0x103 || Category == 0x302) {
-        int sel = Options.GetCurrentIndex();
-        if (sel == InCartPartOptionIndex) {
-            FEngSetVisible(FEngFindObject(GetPackageName(), 0xd0582feb));
-            FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xd0582feb), 0x1a777e25);
-        } else if (sel == InstalledPartOptionIndex) {
-            FEngSetVisible(FEngFindObject(GetPackageName(), 0xd0582feb));
-            FEngSetTextureHash(FEngFindImage(GetPackageName(), 0xd0582feb), 0x696ae039);
+    const u32 FEObj_TITLEGROUP = __TITLE_GROUP__;
+    FEPrintf(GetPackageName(), FEObj_TITLEGROUP, "%s", sztemp);
+    if (Category == CC_RIM_BRANDS || Category == CC_VINYL_TYPES) {
+        int index = Options.GetCurrentIndex();
+        if (index == InCartPartOptionIndex) {
+            FEngSetVisible(GetPackageName(), 0xd0582feb);
+            FEngSetTextureHash(GetPackageName(), 0xd0582feb, 0x1a777e25);
+        } else if (index == InstalledPartOptionIndex) {
+            FEngSetVisible(GetPackageName(), 0xd0582feb);
+            FEngSetTextureHash(GetPackageName(), 0xd0582feb, 0x696ae039);
         } else {
-            FEngSetInvisible(FEngFindObject(GetPackageName(), 0xd0582feb));
+            FEngSetInvisible(GetPackageName(), 0xd0582feb);
         }
     } else {
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0xd0582feb));
+        FEngSetInvisible(GetPackageName(), 0xd0582feb);
     }
-    if (!gCarCustomizeManager.IsCareerMode() && Category == 0x802) {
-        FEngSetVisible(FEngFindObject(GetPackageName(), 0x5aec8d91));
+
+    uint32 maxHash = 0x5aec8d91;
+    if (!gCarCustomizeManager.IsCareerMode() && Category == CC_PERFORMANCE) {
+        FEngSetVisible(GetPackageName(), maxHash);
     } else {
-        FEngSetInvisible(FEngFindObject(GetPackageName(), 0x5aec8d91));
+        FEngSetInvisible(GetPackageName(), maxHash);
     }
 }
 
@@ -1935,7 +1915,7 @@ void CustomizeMain::SwitchRooms() {
 }
 
 void CustomizeMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    if (!gCarCustomizeManager.IsCareerMode() || msg != 0x911ab364) {
+    if (!gCarCustomizeManager.IsCareerMode() || msg != __PAD_BACK__) {
         CustomizeCategoryScreen::NotificationMessage(msg, pobj, param1, param2);
     }
     switch (msg) {
@@ -1948,7 +1928,7 @@ void CustomizeMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
             }
             break;
         }
-        case 0x911ab364:
+        case __PAD_BACK__:
             if (gCarCustomizeManager.IsCareerMode()) {
                 if (!CustomizeIsInBackRoom()) {
                     cFEng::Get()->QueuePackageMessage(0x6d5d86a1, GetPackageName(), nullptr);
@@ -1977,7 +1957,7 @@ void CustomizeMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
             }
             invalidMarkers = 0;
             break;
-        case 0xc519bfc4:
+        case __PAD_BUTTON5__:
             if (!gCarCustomizeManager.IsCareerMode() || gCarCustomizeManager.GetNumCustomizeMarkers() != 0) {
                 if (gCarCustomizeManager.IsCareerMode() && !CustomizeIsInBackRoom() && !gCarCustomizeManager.IsHeroCar()) {
                     invalidMarkers = 0;
@@ -2073,7 +2053,7 @@ void CustomizeMain::SetTitle(bool isInBackroom) {
             n++;
         }
     }
-    FEPrintf(GetPackageName(), 0xb71b576d, "%s", local_48);
+    FEPrintf(GetPackageName(), __TITLE_GROUP__, "%s", local_48);
 }
 
 void CustomizeMain::Setup() {
@@ -2130,7 +2110,7 @@ void CustomizationScreenHelper::DrawTitle() {
             i++;
         }
     }
-    FEPrintf(pPackageName, 0xb71b576d, "%s", buf);
+    FEPrintf(pPackageName, __TITLE_GROUP__, "%s", buf);
 }
 
 void CustomizationScreenHelper::SetCareerStatusIcon(eCustomizePartState state) {
@@ -2168,10 +2148,10 @@ void CustomizationScreenHelper::SetCashVisibility(bool visible) {
 }
 
 void CustomizationScreenHelper::SetUnlockOverlayState(bool show, unsigned int blurb_hash) {
-    unsigned int script = 0x5079c8f8;
+    unsigned int script = FEHASH_APPEAR;
     bUnlockOverlayShowing = show;
     if (!show) {
-        script = 0x33113ac;
+        script = FEHASH_LEAVE;
     } else {
         FEngSetLanguageHash(pPackageName, 0xa6298e25, blurb_hash);
     }
@@ -2277,16 +2257,16 @@ CustomizationScreen::~CustomizationScreen() {
 }
 
 void CustomizationScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    if (msg == 0x35f8620b) {
+    if (msg == FEHASH_INITCOMPLETE) {
         DisplayHelper.SetInitComplete(true);
         RefreshHeader();
     }
-    if (msg == 0x9120409e || msg == 0xb5971bf1) {
+    if (msg == __PAD_LEFT__ || msg == __PAD_RIGHT__) {
         ScrollTime = RealTimer;
     }
     IconScrollerMenu::NotificationMessage(msg, pobj, param1, param2);
     switch (msg) {
-        case 0xc98356ba:
+        case FEMSG_SCREEN_TICK:
             if (!bNeedsRefresh) {
                 return;
             }
@@ -2302,7 +2282,7 @@ void CustomizationScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param
         case 0x5e6ea975:
             Options.StartFadeIn();
             break;
-        case 0x406415e3: {
+        case __PAD_ACCEPT__: {
             SelectablePart *selected = GetSelectedPart();
             if (selected) {
                 if (selected->IsLocked()) {
@@ -2347,7 +2327,7 @@ void CustomizationScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param
         case 0xcf91aacd:
             CustomizeShoppingCart::ExitShoppingCart();
             break;
-        case 0xc519bfbf: {
+        case __PAD_BUTTON0__: {
             unsigned int cat = Category;
             if (cat > 0x200 && cat < 0x208) {
                 return;
@@ -2365,7 +2345,7 @@ void CustomizationScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param
             cFEng::Get()->QueuePackageSwitch("Showcase.fng", 0, 0, false);
             break;
         }
-        case 0xb5af2461:
+        case __PAD_START__:
             CustomizeShoppingCart::ShowShoppingCart(GetPackageName());
             break;
     }
@@ -2485,11 +2465,11 @@ CustomizeParts::~CustomizeParts() {
 }
 
 void CustomizeParts::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    if (msg != 0x406415e3) {
+    if (msg != __PAD_ACCEPT__) {
         CustomizationScreen::NotificationMessage(msg, pobj, param1, param2);
     }
     switch (msg) {
-        case 0x406415e3:
+        case __PAD_ACCEPT__:
             if (Category == 0x307) {
                 if (!TexturePackLoaded) {
                     return;
@@ -2512,13 +2492,13 @@ void CustomizeParts::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
                 }
                 unsigned int tunable = sel->GetPart()->GetAppliedAttributeUParam(0x6212682b, 0);
                 if (tunable == 0) {
-                    CustomizationScreen::NotificationMessage(0x406415e3, pobj, param1, param2);
+                    CustomizationScreen::NotificationMessage(__PAD_ACCEPT__, pobj, param1, param2);
                     return;
                 }
                 gCarCustomizeManager.SetTempColoredPart(new SelectablePart(sel));
                 cFEng::Get()->QueuePackageSwitch(g_pCustomizePaintPkg, Category | (FromCategory << 16), 0, false);
             } else {
-                CustomizationScreen::NotificationMessage(0x406415e3, pobj, param1, param2);
+                CustomizationScreen::NotificationMessage(__PAD_ACCEPT__, pobj, param1, param2);
                 return;
             }
             break;
@@ -2543,7 +2523,7 @@ void CustomizeParts::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
             RefreshHeader();
             break;
         }
-        case 0x911ab364:
+        case __PAD_BACK__:
             if (Category == 0x307) {
                 if (!TexturePackLoaded) {
                     return;
@@ -2802,7 +2782,7 @@ void CustomizeParts::TextureLoadedCallback() {
 }
 
 void CustomizeParts::ShowHudObjects() {
-    FEngSetScript(GetPackageName(), 0xDEE8632B, 0x5079C8F8, true);
+    FEngSetScript(GetPackageName(), 0xDEE8632B, FEHASH_APPEAR, true);
     FEngSetVisible(FEngFindObject(GetPackageName(), 0xDEE8632B));
 }
 
@@ -3106,7 +3086,7 @@ CustomizeHUDColor::~CustomizeHUDColor() {
 }
 
 void CustomizeHUDColor::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    if (msg == 0x9120409e || msg == 0xb5971bf1) {
+    if (msg == __PAD_LEFT__ || msg == __PAD_RIGHT__) {
         HUDLayerOption *layer = static_cast<HUDLayerOption *>(Options.GetCurrentOption());
         layer->SelectedPart = SelectedColor->ThePart;
     }
@@ -3114,15 +3094,15 @@ void CustomizeHUDColor::NotificationMessage(u32 msg, FEObject *pobj, u32 param1,
         CustomizationScreen::NotificationMessage(msg, pobj, param1, param2);
     }
     switch (msg) {
-        case 0x9120409e:
-        case 0xb5971bf1:
+        case __PAD_LEFT__:
+        case __PAD_RIGHT__:
             BuildColorOptions();
             RefreshHeader();
             break;
-        case 0x72619778:
+        case __PAD_UP__:
             ScrollColors(eSD_PREV);
             break;
-        case 0x911c0a4b:
+        case __PAD_DOWN__:
             ScrollColors(eSD_NEXT);
             break;
         case 0x91dfdf84: {
@@ -3148,7 +3128,7 @@ void CustomizeHUDColor::NotificationMessage(u32 msg, FEObject *pobj, u32 param1,
             cFEng::Get()->QueuePackageSwitch(g_pCustomizeHudPkg, Category | (FromCategory << 16), 0, false);
             break;
         }
-        case 0x911ab364:
+        case __PAD_BACK__:
             gCarCustomizeManager.ClearTempColoredPart();
             cFEng::Get()->QueuePackageSwitch(g_pCustomizeHudPkg, Category | (FromCategory << 16), 0, false);
             break;
@@ -3390,13 +3370,13 @@ CustomizeRims::CustomizeRims(ScreenConstructorData *sd)
 void CustomizeRims::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     CustomizationScreen::NotificationMessage(msg, pobj, param1, param2);
     switch (msg) {
-        case 0xc519bfbf:
+        case __PAD_BUTTON0__:
             Showcase::FromFilter = InnerRadius;
             break;
-        case 0x5073ef13:
+        case __PAD_LTRIGGER__:
             ScrollRimSizes(eSD_PREV);
             break;
-        case 0xd9feec59:
+        case __PAD_RTRIGGER__:
             ScrollRimSizes(eSD_NEXT);
             break;
         case FEMSG_BACK_OUT: {
@@ -3407,9 +3387,9 @@ void CustomizeRims::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
             }
             break;
         }
-        case 0x406415e3:
+        case __PAD_ACCEPT__:
             break;
-        case 0x911ab364:
+        case __PAD_BACK__:
             cFEng::Get()->QueuePackageSwitch(g_pCustomizeSubTopPkg, GetFromCategory() | (GetCategory() << 16), 0, false);
             break;
     }
@@ -3444,7 +3424,7 @@ void CustomizeRims::Setup() {
     InnerRadius = gCarCustomizeManager.GetMinInnerRadius();
     MinRadius = InnerRadius;
     MaxRadius = gCarCustomizeManager.GetMaxInnerRadius();
-    CarPart *activePart = gCarCustomizeManager.GetActivePartFromSlot(0x42);
+    CarPart *activePart = gCarCustomizeManager.GetActivePartFromSlot(CARSLOTID_FRONT_WHEEL);
     if (Showcase::FromFilter != -1) {
         InnerRadius = Showcase::FromFilter;
         Showcase::FromFilter = -1;
@@ -3562,7 +3542,7 @@ CustomizePaint::CustomizePaint(ScreenConstructorData *sd)
     for (int i = 0; i <= 2; i++) {
         VinylColors[i] = nullptr;
     }
-    ThePaints.SetMouseDownMsg(0x406415e3);
+    ThePaints.SetMouseDownMsg(__PAD_ACCEPT__);
     Setup();
 }
 
@@ -3584,23 +3564,23 @@ eMenuSoundTriggers CustomizePaint::NotifySoundMessage(u32 msg, eMenuSoundTrigger
 
 void CustomizePaint::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x406415e3:
+        case __PAD_ACCEPT__:
             if (Category == 0x301 || Category == 0x303) {
-                CustomizationScreen::NotificationMessage(0x406415e3, pobj, param1, param2);
+                CustomizationScreen::NotificationMessage(__PAD_ACCEPT__, pobj, param1, param2);
             }
             break;
         default:
             CustomizationScreen::NotificationMessage(msg, pobj, param1, param2);
             break;
-        case 0x9120409e:
-        case 0xb5971bf1:
+        case __PAD_LEFT__:
+        case __PAD_RIGHT__:
             break;
     }
 
     ThePaints.NotificationMessage(msg, pobj, param1, param2);
 
     switch (msg) {
-        case 0xc519bfbf:
+        case __PAD_BUTTON0__:
             Showcase::FromFilter = TheFilter;
             Showcase::FromIndex = ThePaints.GetCurrentDatumNum();
 #ifndef EA_BUILD_A124
@@ -3609,13 +3589,13 @@ void CustomizePaint::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
             }
 #endif
             break;
-        case 0x5073ef13:
+        case __PAD_LTRIGGER__:
             ScrollFilters(eSD_PREV);
             break;
-        case 0xd9feec59:
+        case __PAD_RTRIGGER__:
             ScrollFilters(eSD_NEXT);
             break;
-        case 0x406415e3:
+        case __PAD_ACCEPT__:
             if (Category == 0x301 || Category == 0x303) {
                 return;
             }
@@ -3649,7 +3629,7 @@ void CustomizePaint::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
                 cFEng::Get()->QueuePackageSwitch(g_pCustomizePartsPkg, cat, 0, false);
             }
             break;
-        case 0x911ab364:
+        case __PAD_BACK__:
             if (Category == 0x301 || Category == 0x303) {
                 unsigned int cat = Category | (FromCategory << 16);
                 cFEng::Get()->QueuePackageSwitch(g_pCustomizeSubPkg, cat, 0, false);
@@ -3679,10 +3659,10 @@ void CustomizePaint::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
             RefreshHeader();
             break;
         }
-        case 0x9120409e:
-        case 0xb5971bf1:
-        case 0x911c0a4b:
-        case 0x72619778:
+        case __PAD_LEFT__:
+        case __PAD_RIGHT__:
+        case __PAD_DOWN__:
+        case __PAD_UP__:
             RefreshHeader();
             break;
         case 0xcf91aacd:
@@ -4065,11 +4045,11 @@ CustomizeDecals::CustomizeDecals(ScreenConstructorData *sd)
 void CustomizeDecals::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     CustomizationScreen::NotificationMessage(msg, pobj, param1, param2);
     switch (msg) {
-        case 0xc519bfbf:
+        case __PAD_BUTTON0__:
             Showcase::FromFilter = bIsBlack;
             break;
-        case 0x5073ef13:
-        case 0xd9feec59:
+        case __PAD_LTRIGGER__:
+        case __PAD_RTRIGGER__:
             bIsBlack ^= 1;
             {
                 CustomizePartOption *opt = GetSelectedOption();
@@ -4093,10 +4073,10 @@ void CustomizeDecals::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
             }
             break;
         }
-        case 0x911ab364:
+        case __PAD_BACK__:
             cFEng::Get()->QueuePackageSwitch(g_pCustomizeSubTopPkg, FromCategory | Category << 16, 0, false);
             break;
-        case 0xc519bfc3:
+        case __PAD_BUTTON4__:
             return;
     }
 }
@@ -4320,11 +4300,11 @@ CustomizeNumbers::CustomizeNumbers(ScreenConstructorData *sd)
 
 void CustomizeNumbers::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x35f8620b:
+        case FEHASH_INITCOMPLETE:
             DisplayHelper.SetInitComplete(true);
             FEngSetCurrentButton(GetPackageName(), 0x2a08ba92);
             break;
-        case 0xc519bfbf:
+        case __PAD_BUTTON0__:
             Showcase::FromFilter = RightDisplayValue;
             Showcase::FromIndex = LeftDisplayValue;
             Showcase::FromArgs = GetCategory() | (GetFromCategory() << 16);
@@ -4332,22 +4312,22 @@ void CustomizeNumbers::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
             bShowcaseOn = 1;
             cFEng::Get()->QueuePackageSwitch("Showcase.fng", reinterpret_cast<uint32>(gCarCustomizeManager.GetTuningCar()), 0, false);
             break;
-        case 0xb5af2461:
+        case __PAD_START__:
             CustomizeShoppingCart::ShowShoppingCart(GetPackageName());
             break;
-        case 0x9120409e:
-        case 0xb5971bf1: {
+        case __PAD_LEFT__:
+        case __PAD_RIGHT__: {
             bLeft = !bLeft;
             FEngSetCurrentButton(GetPackageName(), bLeft ? 0x2a08ba92 : 0x1a88dc05);
             break;
         }
-        case 0x72619778:
+        case __PAD_UP__:
             ScrollNumbers(eSD_NEXT);
             break;
-        case 0x911c0a4b:
+        case __PAD_DOWN__:
             ScrollNumbers(eSD_PREV);
             break;
-        case 0x406415e3:
+        case __PAD_ACCEPT__:
             if (LeftDisplayValue == -1 || RightDisplayValue == -1)
                 return;
             if (!TheLeftNumber || !TheRightNumber)
@@ -4363,7 +4343,7 @@ void CustomizeNumbers::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
                 return;
             }
             break;
-        case 0xc519bfc3: {
+        case __PAD_BUTTON4__: {
             CarPart *installed = gCarCustomizeManager.GetInstalledCarPart(0x71);
             if (installed) {
                 UnsetShoppingCart();
@@ -4467,7 +4447,7 @@ void CustomizeNumbers::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
             RefreshHeader();
             break;
         }
-        case 0x911ab364:
+        case __PAD_BACK__:
             bShowcaseOn = 0;
             cFEng::Get()->QueuePackageSwitch(g_pCustomizeSubPkg, FromCategory | (Category << 16), 0, false);
             break;
@@ -4728,7 +4708,7 @@ eMenuSoundTriggers CustomizePerformance::NotifySoundMessage(u32 msg, eMenuSoundT
 void CustomizePerformance::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     CustomizationScreen::NotificationMessage(msg, pobj, param1, param2);
     switch (msg) {
-        case 0xe1fde1d1:
+        case FEHASH_EXITCOMPLETE:
             cFEng::Get()->QueuePackageSwitch(g_pCustomizeSubPkg, FromCategory | (Category << 16), 0, false);
             break;
         case 0x5a928018: {
@@ -4741,7 +4721,7 @@ void CustomizePerformance::NotificationMessage(u32 msg, FEObject *pobj, u32 para
             RefreshHeader();
             break;
         }
-        case 0x911ab364:
+        case __PAD_BACK__:
             cFEng::Get()->QueuePackageMessage(0x587c018b, GetPackageName(), nullptr);
             break;
     }
@@ -4750,21 +4730,21 @@ void CustomizePerformance::NotificationMessage(u32 msg, FEObject *pobj, u32 para
 unsigned int CustomizePerformance::GetPerfPkgDesc(Physics::Upgrades::Type type, int level, int num_packages, bool has_turbo) {
     if (level == 0) {
         switch (type) {
-            case static_cast<Physics::Upgrades::Type>(0):
+            case Physics::Upgrades::PUT_TIRES:
                 return 0xe5c1020c;
-            case static_cast<Physics::Upgrades::Type>(1):
+            case Physics::Upgrades::PUT_BRAKES:
                 return 0x927db4fd;
-            case static_cast<Physics::Upgrades::Type>(2):
+            case Physics::Upgrades::PUT_CHASSIS:
                 return 0x8c96b853;
-            case static_cast<Physics::Upgrades::Type>(3):
+            case Physics::Upgrades::PUT_TRANSMISSION:
                 return 0x2f525e4f;
-            case static_cast<Physics::Upgrades::Type>(4):
+            case Physics::Upgrades::PUT_ENGINE:
                 return 0xe74dedbb;
-            case static_cast<Physics::Upgrades::Type>(5):
+            case Physics::Upgrades::PUT_INDUCTION:
                 if (has_turbo)
                     return 0x5317eb31;
                 return 0x704a6d50;
-            case static_cast<Physics::Upgrades::Type>(6):
+            case Physics::Upgrades::PUT_NOS:
                 return 0x9a0ef8f9;
             default:
                 return 0;
@@ -4772,19 +4752,19 @@ unsigned int CustomizePerformance::GetPerfPkgDesc(Physics::Upgrades::Type type, 
     }
     const char *fmt;
     switch (type) {
-        case static_cast<Physics::Upgrades::Type>(0):
+        case Physics::Upgrades::PUT_TIRES:
             fmt = "PD_TIRES_%d_%d";
             break;
-        case static_cast<Physics::Upgrades::Type>(1):
+        case Physics::Upgrades::PUT_BRAKES:
             fmt = "PD_BRAKES_%d_%d";
             break;
-        case static_cast<Physics::Upgrades::Type>(2):
+        case Physics::Upgrades::PUT_CHASSIS:
             fmt = "PD_CHASSIS_%d_%d";
             break;
-        case static_cast<Physics::Upgrades::Type>(3):
+        case Physics::Upgrades::PUT_TRANSMISSION:
             fmt = "PD_TRANSMISSION_%d_%d";
             break;
-        case static_cast<Physics::Upgrades::Type>(4):
+        case Physics::Upgrades::PUT_ENGINE:
             if (gCarCustomizeManager.IsCastrolCar() && level == 4 && num_packages == 3) {
                 return FEngHashString("PD_ENGINE_%d_%d_CASTROL", 4, 3);
             }
@@ -4793,14 +4773,14 @@ unsigned int CustomizePerformance::GetPerfPkgDesc(Physics::Upgrades::Type type, 
             }
             fmt = "PD_ENGINE_%d_%d";
             break;
-        case static_cast<Physics::Upgrades::Type>(5):
+        case Physics::Upgrades::PUT_INDUCTION:
             if (!has_turbo) {
                 fmt = "PD_SUPERCHARGER_%d_%d";
             } else {
                 fmt = "PD_TURBO_%d_%d";
             }
             break;
-        case static_cast<Physics::Upgrades::Type>(6):
+        case Physics::Upgrades::PUT_NOS:
             fmt = "PD_NITROUS_%d_%d";
             break;
         default:

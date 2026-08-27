@@ -1,5 +1,8 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/customize/MyCarsManager.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/Database/VehicleDB.hpp"
@@ -9,13 +12,14 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/FEPkg_GarageMain.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/customize/FECustomize.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/quickrace/uiShowcase.hpp"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "Speed/Indep/Src/Misc/Config.h"
 #include "Speed/Indep/Src/Physics/PhysicsInfo.hpp"
 #include "Speed/Indep/Src/World/CarInfo.hpp"
 #include "Speed/Indep/Src/Frontend/FECarViewer.hpp"
 
 void CarDatum::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
-    if (msg == 0xc407210 || msg == 0x406415e3) {
+    if (msg == __BUTTON_PRESSED__ || msg == __PAD_ACCEPT__) {
         if (Handle == 0xFFFFFFFF) {
             FEDatabase->SetGameMode(static_cast<eFEGameModes>(FEDatabase->GetGameMode() | 0x20));
             cFEng::Get()->QueuePackageSwitch("Car_Select.fng", 0, 0, false);
@@ -56,30 +60,30 @@ void MyCarsManager::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
     ArrayScrollerMenu::NotificationMessage(msg, obj, param1, param2);
 
     switch (msg) {
-        case 0x34dc1bcf:
+        case dialog_message_no:
             break;
-        case 0x35f8620b:
+        case FEHASH_INITCOMPLETE:
             FEDatabase->BackupCarStable();
             break;
-        case 0xc98356ba: {
+        case FEMSG_SCREEN_TICK: {
             if (tCarLoadTimer.IsSet()) {
                 float elapsed = static_cast<float>(RealTimer.GetPackedTime() - tCarLoadTimer.GetPackedTime()) / 4000.0f;
                 if (elapsed >= 0.5f && pSelectedCar) {
                     RideInfo ride;
                     FEDatabase->GetPlayerCarStable(0)->BuildRideForPlayer(pSelectedCar->Handle, 0, &ride);
-                    CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), eCARVIEWER_PLAYER1_CAR);
+                    CarViewer::SetRideInfo(&ride, SET_RIDE_INFO_REASON_LOAD_CAR, eCARVIEWER_PLAYER1_CAR);
                     tCarLoadTimer.UnSet();
                 }
             }
             break;
         }
-        case 0x911ab364: {
+        case __PAD_BACK__: {
             if (!pSelectedCar) {
                 RideInfo ride;
                 FEPlayerCarDB *carDB = FEDatabase->GetPlayerCarStable(0);
                 RaceSettings *rs = FEDatabase->GetQuickRaceSettings(GRace::kRaceType_NumTypes);
                 carDB->BuildRideForPlayer(rs->SelectedCar[0], 0, &ride);
-                CarViewer::SetRideInfo(&ride, static_cast<eSetRideInfoReasons>(1), eCARVIEWER_PLAYER1_CAR);
+                CarViewer::SetRideInfo(&ride, SET_RIDE_INFO_REASON_LOAD_CAR, eCARVIEWER_PLAYER1_CAR);
             }
             if (FEDatabase->IsCarStableDirty() && IsMemcardEnabled) {
                 MemcardEnter(GetPackageName(), "MainMenu.fng", 0x2000b3, nullptr, nullptr, 0, 0);
@@ -88,15 +92,15 @@ void MyCarsManager::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
             }
             break;
         }
-        case 0xc519bfc4: {
+        case __PAD_BUTTON5__: {
             FECarRecord *car = FEDatabase->GetPlayerCarStable(0)->GetCarRecordByHandle(static_cast<CarDatum *>(GetCurrentDatum())->Handle);
             if (car->IsValid()) {
-                DialogInterface::ShowTwoButtons(GetPackageName(), "", dialog_alert, 0x70e01038, 0x417b25e4, 0xd05fc3a3, 0x34dc1bcf, 0x34dc1bcf,
-                                                first_dialog_button2, 0x4f68196e);
+                DialogInterface::ShowTwoButtons(GetPackageName(), "", dialog_alert, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, dialog_message_yes,
+                                                dialog_message_no, dialog_message_no, first_dialog_button2, 0x4f68196e);
             }
             break;
         }
-        case 0xd05fc3a3: {
+        case dialog_message_yes: {
             unsigned int handle = static_cast<CarDatum *>(GetCurrentDatum())->Handle;
             FEPlayerCarDB *carDB = FEDatabase->GetPlayerCarStable(0);
             FEDatabase->NotifyDeleteCar(handle);
@@ -110,13 +114,13 @@ void MyCarsManager::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
             RefreshHeader();
             break;
         }
-        case 0xc519bfbf:
+        case __PAD_BUTTON0__:
             if (pSelectedCar) {
                 cFEng::Get()->QueuePackageMessage(0x587c018b, GetPackageName(), nullptr);
                 bGoToShowcase = true;
             }
             break;
-        case 0xe1fde1d1:
+        case FEHASH_EXITCOMPLETE:
             if (bGoToShowcase) {
                 Showcase::FromArgs = 0;
                 Showcase::FromPackage = GetPackageName();

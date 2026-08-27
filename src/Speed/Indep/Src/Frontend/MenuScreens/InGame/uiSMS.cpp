@@ -1,16 +1,20 @@
 #include "uiSMS.hpp"
 
 #include "Speed/Indep/Src/FEng/FEGroup.h"
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feDialogBox.hpp"
 #include "Speed/Indep/Src/Frontend/MemoryCard/MemoryCard.hpp"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 
 SMSMessage *the_msg = nullptr;
 
 void SMSDatum::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
-    if (msg != 0x0C407210) {
+    if (msg != __BUTTON_PRESSED__) {
         return;
     }
     the_msg = my_msg;
@@ -53,7 +57,7 @@ uiSMS::uiSMS(ScreenConstructorData *sd) : ArrayScrollerMenu(sd, 1, 6, true) {
         } else {
             the_msg = nullptr;
         }
-        FEngSetScript(GetPackageName(), 0x2CF801C2, 0x5079C8F8, true);
+        FEngSetScript(GetPackageName(), 0x2CF801C2, FEHASH_APPEAR, true);
     } else {
         bAutoPlay = true;
     }
@@ -111,23 +115,23 @@ void uiSMS::Setup() {
         if (new_voice) {
             FEngSetScript(GetPackageName(), 0x19161CCC, 0x249DB7B7, true);
         } else {
-            FEngSetScript(GetPackageName(), 0x19161CCC, 0x16A259, true);
+            FEngSetScript(GetPackageName(), 0x19161CCC, FEHASH_HIDE, true);
         }
         if (new_text) {
-            FEngSetScript(GetPackageName(), 0x0D6FD6F9, 0x1CA7C0, true);
+            FEngSetScript(GetPackageName(), 0x0D6FD6F9, FEHASH_SHOW, true);
         } else {
-            FEngSetScript(GetPackageName(), 0x0D6FD6F9, 0x16A259, true);
+            FEngSetScript(GetPackageName(), 0x0D6FD6F9, FEHASH_HIDE, true);
         }
     } else {
         if (new_voice) {
-            FEngSetScript(GetPackageName(), 0x19161CCC, 0x1CA7C0, true);
+            FEngSetScript(GetPackageName(), 0x19161CCC, FEHASH_SHOW, true);
         } else {
-            FEngSetScript(GetPackageName(), 0x19161CCC, 0x16A259, true);
+            FEngSetScript(GetPackageName(), 0x19161CCC, FEHASH_HIDE, true);
         }
         if (new_text) {
             FEngSetScript(GetPackageName(), 0x0D6FD6F9, 0x249DB7B7, true);
         } else {
-            FEngSetScript(GetPackageName(), 0x0D6FD6F9, 0x16A259, true);
+            FEngSetScript(GetPackageName(), 0x0D6FD6F9, FEHASH_HIDE, true);
         }
     }
     index = 0;
@@ -195,7 +199,7 @@ void uiSMS::RefreshHeader() {
         FEngSetScript(GetPackageName(), 0x8F2FAD70, 0x249DB7B7, true);
     }
     if (GetNumDatum() < 1) {
-        FEngSetScript(GetPackageName(), 0x07890734, 0x16A259, true);
+        FEngSetScript(GetPackageName(), 0x07890734, FEHASH_HIDE, true);
     }
 }
 
@@ -203,7 +207,7 @@ void uiSMS::RefreshHeader() {
 void uiSMS::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     ArrayScrollerMenu::NotificationMessage(msg, obj, param1, param2);
     switch (msg) {
-        case 0xc98356ba:
+        case FEMSG_SCREEN_TICK:
             if (cFEng::Get()->IsPackagePushed("InGame_MC_Main_GC.fng")) {
                 bWaitingForMemcard = true;
             } else {
@@ -221,7 +225,7 @@ void uiSMS::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) 
             }
             bInitCompleted = false;
             break;
-        case 0x35f8620b:
+        case FEHASH_INITCOMPLETE:
             bInitCompleted = true;
             break;
         case 0x775ce5df:
@@ -232,15 +236,15 @@ void uiSMS::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) 
             }
             Setup();
             break;
-        case 0x0c407210:
+        case __BUTTON_PRESSED__:
             if (GetCurrentDatum() == nullptr) {
                 goto fallthrough_msg;
             }
-            button_pressed = 0x0c407210;
+            button_pressed = __BUTTON_PRESSED__;
             FEngSetScript(GetPackageName(), 0x47ff4e7c, bStringHash("READ"), true);
             break;
-        case 0x72619778:
-        case 0x911c0a4b: {
+        case __PAD_UP__:
+        case __PAD_DOWN__: {
             SMSDatum *datum = static_cast<SMSDatum *>(GetCurrentDatum());
             if (datum == nullptr) {
                 break;
@@ -252,23 +256,23 @@ void uiSMS::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) 
             }
             break;
         }
-        case 0x9120409e:
+        case __PAD_LEFT__:
             ScrollBoxes(eSD_PREV);
             break;
-        case 0xb5971bf1:
+        case __PAD_RIGHT__:
             ScrollBoxes(eSD_NEXT);
             break;
-        case 0xc519bfc4:
+        case __PAD_BUTTON5__:
             if (the_msg == nullptr) {
                 goto fallthrough_msg;
             }
             if (!the_msg->IsValid()) {
                 goto fallthrough_msg;
             }
-            DialogInterface::ShowTwoButtons(GetPackageName(), "InGameDialog.fng", dialog_alert, 0x70e01038, 0x417b25e4, 0xd05fc3a3, 0x34dc1bcf,
-                                            0x34dc1bcf, first_dialog_button2, 0x8c3c2171);
+            DialogInterface::ShowTwoButtons(GetPackageName(), "InGameDialog.fng", dialog_alert, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO,
+                                            dialog_message_yes, dialog_message_no, dialog_message_no, first_dialog_button2, 0x8c3c2171);
             break;
-        case 0xd05fc3a3: {
+        case dialog_message_yes: {
             cFEng::Get()->QueuePackageMessage(0x8cb81f09, GetPackageName(), nullptr);
             SMSDatum *datum = static_cast<SMSDatum *>(GetCurrentDatum());
             if (datum == nullptr) {
@@ -278,13 +282,13 @@ void uiSMS::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) 
             Setup();
             break;
         }
-        case 0x34dc1bcf:
+        case dialog_message_no:
         case 0x1fab5998:
         fallthrough_msg:
             cFEng::Get()->QueuePackageMessage(0x8cb81f09, GetPackageName(), nullptr);
             break;
-        case 0xe1fde1d1:
-            if (button_pressed != 0x0c407210) {
+        case FEHASH_EXITCOMPLETE:
+            if (button_pressed != __BUTTON_PRESSED__) {
                 break;
             }
             if (GetCurrentDatum() == nullptr) {
@@ -292,15 +296,15 @@ void uiSMS::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) 
             }
             cFEng::Get()->QueuePackagePush("SMS_Message.fng", reinterpret_cast<int>(the_msg), 0, false);
             break;
-        case 0x911ab364:
-            button_pressed = 0x911ab364;
+        case __PAD_BACK__:
+            button_pressed = __PAD_BACK__;
             cFEng::Get()->QueuePackagePop(0);
             break;
     }
 }
 
 eMenuSoundTriggers uiSMS::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
-    if (msg == 0x9120409e || msg == 0xb5971bf1 || msg == 0x48122792 || msg == 0x4ac5e165) {
+    if (msg == __PAD_LEFT__ || msg == __PAD_RIGHT__ || msg == 0x48122792 || msg == 0x4ac5e165) {
         return maybe;
     }
     return ArrayScrollerMenu::NotifySoundMessage(msg, maybe);

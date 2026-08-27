@@ -83,7 +83,7 @@ void feDialogScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32
                 const u32 FEObj_messageblurb = 0x1e2640fa;
                 FEPrintf(GetPackageName(), FEObj_messageblurb, Config.BlurbString, static_cast<int>(Config.fCountdown) - elapsed);
                 if (static_cast<float>(elapsed) >= Config.fCountdown) {
-                    NotificationMessage(0x911ab364, nullptr, 0, 0);
+                    NotificationMessage(__PAD_BACK__, nullptr, 0, 0);
                 }
             }
             break;
@@ -115,7 +115,7 @@ void feDialogScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32
             ControllerPort = param1;
             break;
 
-        case 0x0c407210:
+        case __BUTTON_PRESSED__:
             switch (obj->NameHash) {
                 case FEHASH_BUTTON1:
                     if (Config.NumButtons != 0) {
@@ -217,9 +217,9 @@ void feDialogScreen::BuildFromConfig() {
         case dialog_alert:
         case dialog_fatalerror:
             if (TheGameFlowManager.IsInGame()) {
-                FEngSetLanguageHash(GetPackageName(), 0x42adb44c, 0x2bd146d3);
+                FEngSetLanguageHash(GetPackageName(), FEHASH_HEADERTEXT, 0x2bd146d3);
             } else {
-                FEngSetLanguageHash(GetPackageName(), 0x42adb44c, 0x6fd91524);
+                FEngSetLanguageHash(GetPackageName(), FEHASH_HEADERTEXT, 0x6fd91524);
             }
             FEngSetTextureHash(GetPackageName(), 0xd4f4069, 0x6948e2b3);
             FEngSetTextureHash(GetPackageName(), 0xfac88427, 0x6948e2b3);
@@ -227,12 +227,12 @@ void feDialogScreen::BuildFromConfig() {
         case dialog_none:
         case dialog_info:
         case dialog_countdown:
-            FEngSetLanguageHash(GetPackageName(), 0x42adb44c, 0xdbe419d4);
+            FEngSetLanguageHash(GetPackageName(), FEHASH_HEADERTEXT, 0xdbe419d4);
             FEngSetTextureHash(GetPackageName(), 0xd4f4069, 0x1a7afe27);
             FEngSetTextureHash(GetPackageName(), 0xfac88427, 0x1a7afe27);
             break;
         case dialog_confirmation:
-            FEngSetLanguageHash(GetPackageName(), 0x42adb44c, 0x60249a74);
+            FEngSetLanguageHash(GetPackageName(), FEHASH_HEADERTEXT, 0x60249a74);
             FEngSetTextureHash(GetPackageName(), 0xd4f4069, 0x39949433);
             FEngSetTextureHash(GetPackageName(), 0xfac88427, 0x39949433);
             break;
@@ -306,7 +306,7 @@ dialog_handle DialogInterface::ShowOk(const char *from_pkg, const char *dlg_pkg,
     conf.Title = title;
     conf.Button1TextHash = 0x417b2601;
     conf.Button1PressedMessage = 0x34dc1bec;
-    conf.DialogCancelledMessage = 0xb4edeb6d;
+    conf.DialogCancelledMessage = dialog_message_cancelled;
     conf.FirstButton = 0;
     conf.ParentPackage = from_pkg;
     conf.DialogPackage = dlg_pkg;

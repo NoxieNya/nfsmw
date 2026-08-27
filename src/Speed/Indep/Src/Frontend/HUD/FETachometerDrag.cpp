@@ -39,7 +39,7 @@ void DragTachometer::Update(IPlayer *player) {
         if (mRpm >= mRedline) {
             FEngSetScript(TachNeedle, 0x61D30442, true);
         } else {
-            FEngSetScript(TachNeedle, 0x1744B3, true);
+            FEngSetScript(TachNeedle, FEHASH_INIT, true);
         }
     } else
 #endif

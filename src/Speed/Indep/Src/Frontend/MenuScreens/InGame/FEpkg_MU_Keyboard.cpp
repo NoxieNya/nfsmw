@@ -2,6 +2,8 @@
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFont.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
@@ -46,19 +48,19 @@ void FEKeyboard::Dispose(bool bBack) {
 
 void FEKeyboard::NotificationMessage(u32 msg, FEObject *pObject, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x9120409E:
+        case __PAD_LEFT__:
             g_pEAXSound->PlayUISoundFX(UISND_COMMON_LEFT);
             return;
-        case 0xB5971BF1:
+        case __PAD_RIGHT__:
             g_pEAXSound->PlayUISoundFX(UISND_COMMON_RIGHT);
             return;
-        case 0x72619778:
+        case __PAD_UP__:
             g_pEAXSound->PlayUISoundFX(UISND_COMMON_UP);
             return;
-        case 0x911C0A4B:
+        case __PAD_DOWN__:
             g_pEAXSound->PlayUISoundFX(UISND_COMMON_DOWN);
             return;
-        case 0xC407210:
+        case __BUTTON_PRESSED__:
             if (pObject != nullptr) {
                 int nButton = IsKeyButton(pObject);
                 if (nButton > -1 && GetLetterMap(nButton) != 0) {
@@ -69,14 +71,14 @@ void FEKeyboard::NotificationMessage(u32 msg, FEObject *pObject, u32 param1, u32
                 g_pEAXSound->PlayUISoundFX(UISND_COMMON_WRONG);
             }
             return;
-        case 0xE1FDE1D1:
+        case FEHASH_EXITCOMPLETE:
             if (bStrCmp(mString, "") == 0 && mnMode == MODE_FILENAME) {
                 return;
             }
             g_pEAXSound->PlayUISoundFX(UISND_UGNEW_ENTER);
             Dispose(false);
             return;
-        case 0xC1A6F000:
+        case 0xC1A6F000: // __SPACE_BAR__
             if (mnMode == MODE_PROFILE_ENTRY) {
                 g_pEAXSound->PlayUISoundFX(UISND_COMMON_WRONG);
                 return;
@@ -84,7 +86,7 @@ void FEKeyboard::NotificationMessage(u32 msg, FEObject *pObject, u32 param1, u32
             AppendSpace();
             g_pEAXSound->PlayUISoundFX(UISND_UGNEW_KBTYPE);
             return;
-        case 0xDB3D597C:
+        case 0xDB3D597C: //__BACKSPACE__
             g_pEAXSound->PlayUISoundFX(UISND_UGNEW_DELETE);
             AppendBackspace();
             return;
@@ -96,7 +98,7 @@ void FEKeyboard::NotificationMessage(u32 msg, FEObject *pObject, u32 param1, u32
             ToggleCapsLock();
             g_pEAXSound->PlayUISoundFX(UISND_UGNEW_DELETE);
             return;
-        case 0xB5AF2461:
+        case __PAD_START__:
             if (bStrCmp(mString, "") == 0) {
                 cFEng::Get()->QueuePackageMessage(0x8CB81F09, GetPackageName(), nullptr);
                 return;
@@ -104,19 +106,19 @@ void FEKeyboard::NotificationMessage(u32 msg, FEObject *pObject, u32 param1, u32
             g_pEAXSound->PlayUISoundFX(UISND_UGNEW_ENTER);
             Dispose(false);
             return;
-        case 0x5073EF13:
+        case __PAD_LTRIGGER__:
             MoveCursor(-1);
             return;
-        case 0xD9FEEC59:
+        case __PAD_RTRIGGER__:
             MoveCursor(1);
             return;
-        case 0xC519BFC4:
+        case __PAD_BUTTON5__:
             if (GetCurrentLanguage() == eLANGUAGE_KOREAN) {
                 return;
             }
             ToggleSpecialCharacters();
             return;
-        case 0x911AB364:
+        case __PAD_BACK__:
             if (mnDeclineHash == -1U) {
                 return;
             }
@@ -196,14 +198,14 @@ void FEKeyboard::Initialize() {
 
     if (mnMode != MODE_ALL_KEYS || GetCurrentLanguage() == eLANGUAGE_KOREAN) {
         FEngSetInvisible(GetPackageName(), 0x2C99C4E2);
-        FEngSetScript(GetPackageName(), 0xDCBC8286, 0x1CA7C0, true);
+        FEngSetScript(GetPackageName(), 0xDCBC8286, FEHASH_SHOW, true);
     }
 
     if (mnMode == MODE_PROFILE_ENTRY) {
         FEngSetScript(GetPackageName(), FEHashUpper("KEY 61 DISABLE"), FEHashUpper("SHOW"), true);
     }
 
-    FEngSetLanguageHash(GetPackageName(), 0x42ADB44C, 0x7F042BCD);
+    FEngSetLanguageHash(GetPackageName(), FEHASH_HEADERTEXT, 0x7F042BCD);
 
     mpInputString->SetString(mDisplayString);
 
@@ -220,8 +222,8 @@ int FEKeyboard::GetCase() {
 }
 
 void FEKeyboard::UpdateVisuals() {
-    const u32 SHOW_SCRIPT = 0x16A259;
-    const u32 HIDE_SCRIPT = 0x1CA7C0;
+    const u32 SHOW_SCRIPT = FEHASH_SHOW;
+    const u32 HIDE_SCRIPT = FEHASH_HIDE;
 
     for (int i = 0; i < 45; i++) {
         char ch = GetLetterMap(i);
@@ -245,7 +247,7 @@ void FEKeyboard::UpdateVisuals() {
             }
         }
 
-        FEngSetScript(mpKeyDisable[i], disabled ? HIDE_SCRIPT : SHOW_SCRIPT, true);
+        FEngSetScript(mpKeyDisable[i], disabled ? SHOW_SCRIPT : HIDE_SCRIPT, true);
     }
 
     if (GetCase()) {

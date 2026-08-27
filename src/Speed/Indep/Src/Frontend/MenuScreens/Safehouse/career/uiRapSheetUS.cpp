@@ -25,7 +25,7 @@ uiRapSheetUS::uiRapSheetUS(ScreenConstructorData *sd) : ArrayScrollerMenu(sd, 1,
 void uiRapSheetUS::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     ArrayScrollerMenu::NotificationMessage(msg, pobj, param1, param2);
     switch (msg) {
-        case 0xC519BFC4:
+        case __PAD_BUTTON5__:
             ToggleView();
             break;
         case FEHASH_EXITCOMPLETE:

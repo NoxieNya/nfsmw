@@ -4,6 +4,7 @@
 #include "Speed/Indep/Src/FEng/FEPackage.h"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
 #include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/SoundHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
@@ -195,13 +196,13 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
         case 0x00B06E92:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x8c);
             break;
-        case 0x01CD9276:
+        case FEHASH_SOUND_RAPSHEET_PD:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x72);
             break;
         case 0x0217C99F:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x92);
             break;
-        case 0x08464444:
+        case FEHASH_SOUND_RAPSHEET_MOVE_BAR_DOWN:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x72);
             break;
         case 0x0A888DDC:
@@ -210,7 +211,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
         case 0x0BDDC0D2:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x8e);
             break;
-        case 0x145B13C0:
+        case FEHASH_SOUND_MAIN_MENU:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x58);
             break;
         case 0x14C293B4:
@@ -219,7 +220,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
         case 0x14C85C88:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x7e);
             break;
-        case 0x1ABBE49B:
+        case FEHASH_SOUND_RAPSHEET_LOGIN:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x67);
             break;
         case 0x1B325F9D:
@@ -291,7 +292,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
         case 0x480C9A58:
             soundToPlay = static_cast<eMenuSoundTriggers>(5);
             break;
-        case 0x480DF13F:
+        case FEHASH_SOUND_DOWN:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x67);
             break;
         case 0x4810A91B:
@@ -457,7 +458,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
             soundToPlay = static_cast<eMenuSoundTriggers>(0x6B);
             break;
         case 0xA6362B4B:
-            soundToPlay = static_cast<eMenuSoundTriggers>(0x8b);
+            soundToPlay = UISND_QUICK_GAMBLE_BLIP;
             break;
         case 0xAB7A5FC7:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x69);
@@ -477,7 +478,7 @@ void MenuScreen::BaseNotifySound(u32 msg, FEObject * /* obj */, u32 /* controlle
         case 0xB1BF9795:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x67);
             break;
-        case 0xB205316C:
+        case FEHASH_SOUND_UP:
             soundToPlay = static_cast<eMenuSoundTriggers>(0x67);
             break;
         case 0xB25C8563:

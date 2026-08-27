@@ -22,7 +22,7 @@ void uiCareerManager::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
             GarageMainScreen::GetInstance()->UpdateCurrentCameraView(false);
             break;
         case FEHASH_EXITCOMPLETE:
-            if (PrevButtonMessage == 0x911AB364) {
+            if (PrevButtonMessage == __PAD_BACK__) {
                 if (FEDatabase->GetCareerSettings()->IsGameOver()) {
                     cFEng::Get()->QueuePackageSwitch(GetPackageName(), 0, 0, false);
                 } else {
@@ -68,7 +68,7 @@ void uiCareerManager::Setup() {
     FEngSetLanguageHash(GetPackageName(), FEObj_TITLESHADOW, hash);
 
     if (FEDatabase->bProfileLoaded) {
-        FEngSetScript(GetPackageName(), 0xC87422F7, 0x1CA7C0, true);
+        FEngSetScript(GetPackageName(), 0xC87422F7, FEHASH_SHOW, true);
         FEPrintf(GetPackageName(), 0xEB406FEC, "%s", FEDatabase->GetMultiplayerProfile(0)->GetProfileName());
     }
 

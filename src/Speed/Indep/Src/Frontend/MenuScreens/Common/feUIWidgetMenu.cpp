@@ -500,10 +500,10 @@ void UIWidgetMenu::UpdateCursorPos() {
             if (pos != 0 && pos <= iMaxWidgetsOnScreen) {
                 FEngSetScript(pCursor, FEngHashString("POS%d", pos), true);
             } else {
-                FEngSetScript(pCursor, 0x16a259, true);
+                FEngSetScript(pCursor, FEHASH_HIDE, true);
             }
         } else {
-            FEngSetScript(pCursor, 0x16a259, true);
+            FEngSetScript(pCursor, FEHASH_HIDE, true);
         }
     }
 }

@@ -1,4 +1,5 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeInfractions.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Gameplay/GInfractionManager.h"
@@ -19,26 +20,26 @@ Infractions::Infractions(UTL::COM::Object *pOutter, const char *pkg_name, int pl
 void Infractions::Update(IPlayer *player) {
     bool infractionStringShowing = false;
     for (int i = 0; i <= 3; i++) {
-        if (!FEngIsScriptSet(mpDataInfractionStrings[i], 0x16a259)) {
+        if (!FEngIsScriptSet(mpDataInfractionStrings[i], FEHASH_HIDE)) {
             infractionStringShowing = true;
             break;
         }
     }
     if (!infractionStringShowing) {
-        if (FEngIsScriptSet(mpDataGenericIcon, 0x5079c8f8) || FEngIsScriptSet(mpDataGenericIcon, 0x3826a28)) {
-            FEngSetScript(mpDataGenericIcon, 0x33113ac, true);
+        if (FEngIsScriptSet(mpDataGenericIcon, FEHASH_APPEAR) || FEngIsScriptSet(mpDataGenericIcon, 0x3826a28)) {
+            FEngSetScript(mpDataGenericIcon, FEHASH_LEAVE, true);
         }
     }
 }
 
 void Infractions::RequestInfraction(const char *infractionString) {
     for (int i = 0; i < 4; i++) {
-        if (FEngIsScriptSet(mpDataInfractionStrings[i], 0x16a259)) {
-            FEngSetScript(mpDataInfractionStrings[i], 0x5079c8f8, true);
+        if (FEngIsScriptSet(mpDataInfractionStrings[i], FEHASH_HIDE)) {
+            FEngSetScript(mpDataInfractionStrings[i], FEHASH_APPEAR, true);
             FEPrintf(GetPackageName(), mpDataInfractionStrings[i], "%s", infractionString);
             break;
         }
     }
-    FEngSetScript(mpDataGenericIcon, 0x5079c8f8, true);
+    FEngSetScript(mpDataGenericIcon, FEHASH_APPEAR, true);
     FEPrintf(mpDataTotalInfractions, "%d", GInfractionManager::Get().GetNumInfractions());
 }

@@ -37,19 +37,19 @@ eMenuSoundTriggers PauseMenu::NotifySoundMessage(u32 msg, eMenuSoundTriggers may
 }
 
 void PauseMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    if (msg != 0x911AB364 || !mCalledFromPostRace) {
+    if (msg != __PAD_BACK__ || !mCalledFromPostRace) {
         IconScrollerMenu::NotificationMessage(msg, pobj, param1, param2);
     }
 
     // UNSOLVED
     switch (msg) {
-        case 0x911AB364:
+        case __PAD_BACK__:
             if (!mCalledFromPostRace) {
                 FEngSetScript(GetPackageName(), 0x47FF4E7C, 0xDE6EFF34, true);
-                StorePrevNotification(0x911AB364, pobj, param1, param2);
+                StorePrevNotification(__PAD_BACK__, pobj, param1, param2);
             }
             break;
-        case 0xB5AF2461:
+        case __PAD_START__:
             if (!mCalledFromPostRace) {
                 SetSelectionHash(0xFDAE152F);
                 FEngSetScript(GetPackageName(), 0x47FF4E7C, 0xDE6EFF34, true);
@@ -65,10 +65,10 @@ void PauseMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 par
             break;
         case 0xB4623F67:
             Options.StartFadeIn();
-            cFEng::Get()->QueuePackageMessage(0xC6341FF6, GetPackageName(), nullptr);
+            cFEng::Get()->QueuePackageMessage(FEHASH_ENABLE_INPUT, GetPackageName(), nullptr);
             break;
-        case 0xE1FDE1D1:
-            if (PrevButtonMessage != 0x911AB364) {
+        case FEHASH_EXITCOMPLETE:
+            if (PrevButtonMessage != __PAD_BACK__) {
                 switch (mSelectionHash) {
                     case 0xFBDF2EE3:
                         if (GRaceStatus::Exists() && (GRaceStatus::Get().GetRaceParameters() != nullptr) &&
