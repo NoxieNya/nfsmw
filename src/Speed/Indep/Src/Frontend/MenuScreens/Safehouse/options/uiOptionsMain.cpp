@@ -2,6 +2,8 @@
 
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/MemCard/uiMemcardInterface.hpp"
@@ -29,12 +31,12 @@ void UIOptionsMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
     IconScrollerMenu::NotificationMessage(msg, pobj, param1, param2);
 
     switch (msg) {
-        case 0xB5AF2461:
+        case __PAD_START__:
             FEDatabase->ClearGameMode(eFE_GAME_MODE_OPTIONS);
-            StorePrevNotification(0xB5AF2461, pobj, param1, param2);
+            StorePrevNotification(__PAD_START__, pobj, param1, param2);
             FEngSetScript(GetPackageName(), 0x47FF4E7C, 0xDE6EFF34, true);
             break;
-        case 0x911AB364:
+        case __PAD_BACK__:
             FEDatabase->ClearGameMode(eFE_GAME_MODE_OPTIONS);
             StorePrevNotification(msg, pobj, param1, param2);
             if (mCalledFromPauseMenu) {
@@ -46,19 +48,19 @@ void UIOptionsMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
                 cFEng::Get()->QueuePackageMessage(FEObj_leavescreen, GetPackageName(), nullptr);
             }
             break;
-        case 0x0C407210:
+        case __BUTTON_PRESSED__:
             if (FEngIsScriptRunning(GetPackageName(), 0x47FF4E7C, 0xDE6EFF34)) {
                 break;
             }
-            StorePrevNotification(0x0C407210, pobj, param1, param2);
+            StorePrevNotification(__BUTTON_PRESSED__, pobj, param1, param2);
             FEngSetScript(GetPackageName(), 0x47FF4E7C, 0xDE6EFF34, true);
             break;
-        case 0xE1FDE1D1:
-            if (PrevButtonMessage == 0xB5AF2461) {
+        case FEHASH_EXITCOMPLETE:
+            if (PrevButtonMessage == __PAD_START__) {
                 new EUnPause();
                 break;
             }
-            if (PrevButtonMessage == 0x911AB364) {
+            if (PrevButtonMessage == __PAD_BACK__) {
                 if (mCalledFromPauseMenu) {
                     cFEng::Get()->QueuePackageSwitch("Pause_Main.fng", 0, 0, false);
                     break;
@@ -70,7 +72,7 @@ void UIOptionsMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
                 }
                 break;
             }
-            if (PrevButtonMessage == 0x0C407210) {
+            if (PrevButtonMessage == __BUTTON_PRESSED__) {
                 switch (FEDatabase->GetOptionsSettings()->CurrentCategory) {
                     case OC_AUDIO:
                     case OC_VIDEO:
@@ -126,7 +128,7 @@ void UIOptionsMain::Setup() {
     this->SetInitialOption(FEngGetLastButton(GetPackageName()));
 
     if (!mCalledFromPauseMenu) {
-        const u32 FEObj_TITLEGROUP = 0xB71B576D;
+        const u32 FEObj_TITLEGROUP = __TITLE_GROUP__;
         FEngSetLanguageHash(GetPackageName(), FEObj_TITLEGROUP, 0x4ECA678C);
     } else {
         FEngSetLanguageHash(GetPackageName(), 0x863404B5, 0x1D7BB6C9);

@@ -50,16 +50,24 @@ class QRCarSelectBustedManager {
         bPlayerJustGotBusted = true;
     }
 
-    static void SetIsCross() {}
+    static void SetIsCross() {
+        bIsCross = true;
+    }
 
     bool IsImpoundInfoVisible();
 
     bool ShowImpoundedTexture();
-    bool ShowNewStrikeAnimation() {}
-    bool ShowImpoundedAnimation() {}
+    bool ShowNewStrikeAnimation() {
+        return Flags == BUSTED_ANIM_SHOW_STRIKE;
+    }
+    bool ShowImpoundedAnimation() {
+        return Flags == BUSTED_ANIM_SHOW_IMPOUNDED;
+    }
 
   private:
-    const char *GetPackageName() {}
+    const char *GetPackageName() {
+        return ParentPkg;
+    }
     void RefreshHeader(); // Decl: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.hpp:54
     void PayInfractions();
     void UseInfractionMarker();
@@ -128,7 +136,7 @@ class UIQRCarSelect : public MenuScreen {
     FEString *pCarName;                        // offset 0x44, size 0x4
     FEString *pCarNameShadow;                  // offset 0x48, size 0x4
     FEString *pFilter;                         // offset 0x4C, size 0x4
-    uint32 ListHandles[6];                     // offset 0x50, size 0x18
+    uint32 ListHandles[NUM_LISTS];             // offset 0x50, size 0x18
     uint32 originalCar;                        // offset 0x68, size 0x4
     QRCarSelectBustedManager TheBustedManager; // offset 0x6C, size 0x1C
     CustomizeMeter TheHeatMeter;               // offset 0x88, size 0x50

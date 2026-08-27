@@ -61,8 +61,8 @@ void MovieScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 pa
                 BootFlowManager::Get()->ChangeToNextBootFlowScreen(0xff);
             }
             break;
-        case 0xb5af2461:
-        case 0x406415e3: {
+        case __PAD_START__:
+        case __PAD_ACCEPT__: {
             bool bypassable = bByPassable;
 
             if (bypassable) {

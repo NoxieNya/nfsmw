@@ -716,7 +716,7 @@ class cFrontendDatabase {
         return FEGameMode & eFE_GAME_MODE_ONLINE;
     }
     bool IsOnlineCustomizeMode() {
-        return FEGameMode & (eFE_GAME_MODE_ONLINE | eFE_GAME_MODE_CUSTOMIZE);
+        return (FEGameMode & (eFE_GAME_MODE_ONLINE | eFE_GAME_MODE_CUSTOMIZE)) == (eFE_GAME_MODE_ONLINE | eFE_GAME_MODE_CUSTOMIZE);
     }
     bool IsCustomizeMode() {
         return FEGameMode & eFE_GAME_MODE_CUSTOMIZE;
@@ -775,11 +775,13 @@ class cFrontendDatabase {
 #endif
     FEKeyboardSettings *GetFEKeyboardSettings() {}
     FEPlayerCarDB *GetPlayerCarStable(int player) {
-        if (player >= 0 && player <= 1)
+        if (player == 0 || player == 1)
             return &CurrentUserProfiles[player]->PlayersCarStable;
         return nullptr;
     }
-    FECarRecord *GetPlayerCarRecordByHandle(int player, int handle) {}
+    FECarRecord *GetPlayerCarRecordByHandle(int player, int handle) {
+        return GetPlayerCarStable(player)->GetCarRecordByHandle(handle);
+    }
     void BuildCurrentRideForPlayer(int player, class RideInfo *ride);
     void RepaintSecondStable();
     UserProfile *GetUserProfile(int player) {

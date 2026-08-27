@@ -62,8 +62,8 @@ void LeaderBoard::Update(IPlayer *player) {
                     FEngSetScript(mDataRacerText[i], 0x033113AC, true);
                 } else {
                     if (FEngIsScriptSet(mDataRacerText[i], 0x033113AC) && !FEngIsScriptRunning(mDataRacerText[i], 0x033113AC) &&
-                        !FEngIsScriptSet(mDataRacerText[i], 0x5079C8F8)) {
-                        FEngSetScript(mDataRacerText[i], 0x5079C8F8, true);
+                        !FEngIsScriptSet(mDataRacerText[i], FEHASH_APPEAR)) {
+                        FEngSetScript(mDataRacerText[i], FEHASH_APPEAR, true);
                         toggleRacerTimesNow = true;
                     }
                 }

@@ -40,7 +40,7 @@ uiRepSheetRival::~uiRepSheetRival() {
 }
 
 eMenuSoundTriggers uiRepSheetRival::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
-    if (bMidRivalFlow && msg == 0x911ab364) {
+    if (bMidRivalFlow && msg == __PAD_BACK__) {
         return UISND_NONE;
     }
     return maybe;
@@ -48,7 +48,7 @@ eMenuSoundTriggers uiRepSheetRival::NotifySoundMessage(u32 msg, eMenuSoundTrigge
 
 void uiRepSheetRival::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x406415e3:
+        case __PAD_ACCEPT__:
             if (bMidRivalFlow) {
                 new ERaceSheetOff();
                 MFlowReadyForOutro().Post(0x20d60dbf);
@@ -67,7 +67,7 @@ void uiRepSheetRival::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u3
                 }
             }
             break;
-        case 0x911ab364:
+        case __PAD_BACK__:
             if (!bMidRivalFlow) {
                 if (bOneOff) {
                     new EUnPause();

@@ -1,6 +1,7 @@
 #include "uiRepSheetRaceEvents.hpp"
 
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
@@ -14,6 +15,7 @@
 #include "Speed/Indep/Src/Gameplay/GRaceStatus.h"
 #include "Speed/Indep/Src/Gameplay/GManager.h"
 #include "Speed/Indep/Src/Generated/Events/ERaceSheetOff.hpp"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "Speed/Indep/Src/Misc/Timer.hpp"
 #include "Speed/Indep/Tools/Inc/ConversionUtil.hpp"
 
@@ -21,7 +23,7 @@ extern int iCurrentViewBin; // TODO remove
 GRaceParameters *theRace = nullptr;
 
 void RaceDatum::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
-    if (msg == 0xc407210) {
+    if (msg == __BUTTON_PRESSED__) {
         if (!IsLocked()) {
             theRace = race;
         }
@@ -68,20 +70,20 @@ void UISafehouseRaceSheet::NotificationMessage(u32 msg, FEObject *obj, u32 param
     ArrayScrollerMenu::NotificationMessage(msg, obj, param1, param2);
     // UNSOLVED
     switch (msg) {
-        case 0xc98356ba:
+        case FEMSG_SCREEN_TICK:
             TrackMapStreamer.UpdateAnimation();
             break;
-        case 0x72619778:
-        case 0x9120409e:
-        case 0x911c0a4b:
-        case 0xb5971bf1:
+        case __PAD_UP__:
+        case __PAD_LEFT__:
+        case __PAD_DOWN__:
+        case __PAD_RIGHT__:
             RefreshHeader();
             break;
-        case 0x5073ef13:
-        case 0xd9feec59:
+        case __PAD_LTRIGGER__:
+        case __PAD_RTRIGGER__:
             ToggleList();
             break;
-        case 0x0c407210: {
+        case __BUTTON_PRESSED__: {
             if (theRace == nullptr) {
                 break;
             }
@@ -93,11 +95,11 @@ void UISafehouseRaceSheet::NotificationMessage(u32 msg, FEObject *obj, u32 param
             if (bIsInGame) {
                 dialog = "InGameDialog.fng";
             }
-            DialogInterface::ShowTwoButtons(GetPackageName(), dialog, dialog_alert, 0x70E01038, 0x417B25E4, 0xD05FC3A3, 0x34DC1BCF, 0x34DC1BCF,
-                                            first_dialog_button2, 0x77CF03C5);
+            DialogInterface::ShowTwoButtons(GetPackageName(), dialog, dialog_alert, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, dialog_message_yes,
+                                            dialog_message_no, dialog_message_no, first_dialog_button2, LANGUAGE_REP_SHEET_RACE_CONFIRM);
             break;
         }
-        case 0xd05fc3a3:
+        case dialog_message_yes:
             if (bIsInGame) {
                 new ERaceSheetOff();
                 GManager::Get().StartRaceFromInGame(theRace->GetEventHash());
@@ -108,14 +110,14 @@ void UISafehouseRaceSheet::NotificationMessage(u32 msg, FEObject *obj, u32 param
                 RaceStarter::StartRace();
             }
             break;
-        case 0x911ab364:
+        case __PAD_BACK__:
             if (bIsInGame) {
                 cFEng::Get()->QueuePackageSwitch("InGameReputationOverview.fng", 1, 0, false);
             } else {
                 cFEng::Get()->QueuePackageSwitch("SafeHouseReputationOverview.fng", 0, 0, false);
             }
             break;
-        case 0x34dc1bcf:
+        case dialog_message_no:
             break;
     }
 }

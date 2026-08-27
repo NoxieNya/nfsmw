@@ -1,5 +1,7 @@
 #include "uiOptionsController.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
@@ -8,6 +10,7 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/options/uiOptionWidgets.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/options/uiOptionsMain.hpp"
 #include "Speed/Indep/Src/Generated/Events/EUnPause.hpp"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "Speed/Indep/Src/Input/IOModule.h"
 #include "Speed/Indep/Src/Misc/Joystick.hpp"
 #include "Speed/Indep/Src/Sim/Simulation.h"
@@ -57,7 +60,7 @@ bool UIOptionsController::OptionsDidNotChange() {
 }
 
 void UIOptionsController::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    if (msg == 0x9120409E || msg == 0xB5971BF1) {
+    if (msg == __PAD_LEFT__ || msg == __PAD_RIGHT__) {
         int joyPort = FEngMapJoyParamToJoyport(param1);
         FEDatabase->SetPlayersJoystickPort(GetPlayerToEditForOptions(), joyPort);
     }
@@ -65,7 +68,7 @@ void UIOptionsController::NotificationMessage(u32 msg, FEObject *pobj, u32 param
     UIWidgetMenu::NotificationMessage(msg, pobj, param1, param2);
 
     switch (msg) {
-        case 0xE1FDE1D1: {
+        case FEHASH_EXITCOMPLETE: {
             FEDatabase->SetOptionsDirty(FEDatabase->IsOptionsDirty() || !OptionsDidNotChange());
 
             if (mCalledFromPauseMenu) {
@@ -79,25 +82,26 @@ void UIOptionsController::NotificationMessage(u32 msg, FEObject *pobj, u32 param
             }
             break;
         }
-        case 0x911AB364:
+        case __PAD_BACK__:
             if (OptionsDidNotChange()) {
                 cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             } else {
-                DialogInterface::ShowTwoButtons(GetPackageName(), "", dialog_alert, 0x70E01038, 0x417B25E4, 0x775DBA97, 0x34DC1BCF, 0x34DC1BCF,
-                                                first_dialog_button2, GetLocalizedString(0xE9CB802F));
+                DialogInterface::ShowTwoButtons(GetPackageName(), "", dialog_alert, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, 0x775DBA97,
+                                                dialog_message_no, dialog_message_no, first_dialog_button2, GetLocalizedString(0xE9CB802F));
             }
             break;
         case 0x775DBA97:
             RestoreOriginals();
             cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             break;
-        case 0xD9FEEC59:
-        case 0x5073EF13:
+        case __PAD_RTRIGGER__:
+        case __PAD_LTRIGGER__:
             if (!OptionsDidNotChange()) {
                 char buf[128];
                 FEngSNPrintf(buf, 128, GetLocalizedString(0xBA463431), GetPlayerToEditForOptions() + 1);
-                DialogInterface::ShowTwoButtons(GetPackageName(), mCalledFromPauseMenu ? "InGameDialog.fng" : "Dialog.fng", dialog_alert, 0x70E01038,
-                                                0x417B25E4, 0x9A5AD46D, 0xA2A07AC4, 0x34DC1BCF, first_dialog_button2, buf);
+                DialogInterface::ShowTwoButtons(GetPackageName(), mCalledFromPauseMenu ? "InGameDialog.fng" : "Dialog.fng", dialog_alert,
+                                                LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, 0x9A5AD46D, 0xA2A07AC4, dialog_message_no,
+                                                first_dialog_button2, buf);
             } else {
                 cFEng::Get()->QueueGameMessage(0x9A5AD46D, nullptr, 0xFF);
             }
@@ -111,7 +115,7 @@ void UIOptionsController::NotificationMessage(u32 msg, FEObject *pobj, u32 param
             TogglePlayer();
             break;
         }
-        case 0xB5AF2461:
+        case __PAD_START__:
             if (mCalledFromPauseMenu) {
                 new EUnPause();
             }
@@ -119,17 +123,17 @@ void UIOptionsController::NotificationMessage(u32 msg, FEObject *pobj, u32 param
         case 0x92B703B5:
             SetupControllerConfig();
             break;
-        case 0xC98356BA:
+        case FEMSG_SCREEN_TICK:
             DetectControllers();
             break;
-        case 0x34DC1BCF:
+        case dialog_message_no:
             return;
     }
 }
 
 void UIOptionsController::Setup() {
     if (FEDatabase->IsOnlineMode() || FEDatabase->IsLANMode()) {
-        FEngSetScript(GetPackageName(), 0x8A41F5B9, 0x16A259, true);
+        FEngSetScript(GetPackageName(), 0x8A41F5B9, FEHASH_HIDE, true);
     }
 
     if (!FEDatabase->IsCareerMode()) {

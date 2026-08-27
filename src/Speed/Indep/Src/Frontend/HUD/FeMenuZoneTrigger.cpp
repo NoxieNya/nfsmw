@@ -2,6 +2,7 @@
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/Database/VehicleDB.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/customize/FECustomize.hpp"
@@ -112,47 +113,47 @@ void MenuZoneTrigger::RequestDoAction() {
 
 void MenuZoneTrigger::HideDPadButton() {
     FEObject *objectPtr;
-    if (!FEngIsScriptSet(mEventIcon, 0x33113AC) && !FEngIsScriptSet(mEventIcon, 0x16A259)) {
-        FEngSetScript(mEventIcon, 0x33113AC, true);
+    if (!FEngIsScriptSet(mEventIcon, FEHASH_LEAVE) && !FEngIsScriptSet(mEventIcon, FEHASH_HIDE)) {
+        FEngSetScript(mEventIcon, FEHASH_LEAVE, true);
     }
-    if (!FEngIsScriptSet(mCingularIcon, 0x33113AC)) {
-        if (!FEngIsScriptSet(mCingularIcon, 0x16A259)) {
-            FEngSetScript(mCingularIcon, 0x33113AC, true);
+    if (!FEngIsScriptSet(mCingularIcon, FEHASH_LEAVE)) {
+        if (!FEngIsScriptSet(mCingularIcon, FEHASH_HIDE)) {
+            FEngSetScript(mCingularIcon, FEHASH_LEAVE, true);
         }
     }
     objectPtr = FEngFindObject(GetPackageName(), 0xA729B1B);
     if (objectPtr != nullptr) {
-        if (!FEngIsScriptSet(objectPtr, 0x33113AC) && !FEngIsScriptSet(objectPtr, 0x1744B3)) {
-            FEngSetScript(objectPtr, 0x33113AC, true);
+        if (!FEngIsScriptSet(objectPtr, FEHASH_LEAVE) && !FEngIsScriptSet(objectPtr, FEHASH_INIT)) {
+            FEngSetScript(objectPtr, FEHASH_LEAVE, true);
         }
     }
     objectPtr = FEngFindObject(GetPackageName(), 0x717C82AE);
     if (objectPtr != nullptr) {
-        if (!FEngIsScriptSet(objectPtr, 0x33113AC) && !FEngIsScriptSet(objectPtr, 0x1744B3)) {
-            FEngSetScript(objectPtr, 0x33113AC, true);
+        if (!FEngIsScriptSet(objectPtr, FEHASH_LEAVE) && !FEngIsScriptSet(objectPtr, FEHASH_INIT)) {
+            FEngSetScript(objectPtr, FEHASH_LEAVE, true);
         }
     }
     objectPtr = FEngFindObject(GetPackageName(), 0xA206A0B4);
     if (objectPtr != nullptr) {
-        if (!FEngIsScriptSet(objectPtr, 0x33113AC) && !FEngIsScriptSet(objectPtr, 0x1744B3)) {
-            FEngSetScript(objectPtr, 0x33113AC, true);
+        if (!FEngIsScriptSet(objectPtr, FEHASH_LEAVE) && !FEngIsScriptSet(objectPtr, FEHASH_INIT)) {
+            FEngSetScript(objectPtr, FEHASH_LEAVE, true);
         }
     }
     objectPtr = FEngFindObject(GetPackageName(), 0x7180B901);
     if (objectPtr != nullptr) {
-        if (!FEngIsScriptSet(objectPtr, 0x33113AC) && !FEngIsScriptSet(objectPtr, 0x1744B3)) {
-            FEngSetScript(objectPtr, 0x33113AC, true);
+        if (!FEngIsScriptSet(objectPtr, FEHASH_LEAVE) && !FEngIsScriptSet(objectPtr, FEHASH_INIT)) {
+            FEngSetScript(objectPtr, FEHASH_LEAVE, true);
         }
     }
-    if (FEngIsScriptSet(mEngageMechanic, 0x5079C8F8)) {
-        FEngSetScript(mEngageMechanic, 0x33113AC, true);
+    if (FEngIsScriptSet(mEngageMechanic, FEHASH_APPEAR)) {
+        FEngSetScript(mEngageMechanic, FEHASH_LEAVE, true);
     }
 }
 
 void MenuZoneTrigger::PulseDPadButton(ENGAGE_DPAD_ELEMENT_DIRECTION direction, FEObject *iconToShow) {
     HideDPadButton();
-    if ((iconToShow != nullptr) && !FEngIsScriptSet(iconToShow, 0x5079C8F8) && !FEngIsScriptSet(iconToShow, 0x280164F)) {
-        FEngSetScript(iconToShow, 0x5079C8F8, true);
+    if ((iconToShow != nullptr) && !FEngIsScriptSet(iconToShow, FEHASH_APPEAR) && !FEngIsScriptSet(iconToShow, 0x280164F)) {
+        FEngSetScript(iconToShow, FEHASH_APPEAR, true);
     }
     if (direction != ENGAGE_DPAD_ELEMENT_NONE) {
         uint32 objectHash = 0;
@@ -174,14 +175,14 @@ void MenuZoneTrigger::PulseDPadButton(ENGAGE_DPAD_ELEMENT_DIRECTION direction, F
 
         FEObject *objectPtr = FEngFindObject(GetPackageName(), objectHash);
         if (objectPtr != nullptr) {
-            if (!FEngIsScriptSet(objectPtr, 0x5079C8F8)) {
-                FEngSetScript(objectPtr, 0x5079C8F8, true);
+            if (!FEngIsScriptSet(objectPtr, FEHASH_APPEAR)) {
+                FEngSetScript(objectPtr, FEHASH_APPEAR, true);
                 g_pEAXSound->PlayUISoundFX(UISND_ENTER_TRIGGER);
             }
         }
     } else {
-        if (!FEngIsScriptSet(mEngageMechanic, 0x5079C8F8)) {
-            FEngSetScript(mEngageMechanic, 0x5079C8F8, true);
+        if (!FEngIsScriptSet(mEngageMechanic, FEHASH_APPEAR)) {
+            FEngSetScript(mEngageMechanic, FEHASH_APPEAR, true);
             g_pEAXSound->PlayUISoundFX(UISND_ENTER_TRIGGER);
         }
     }

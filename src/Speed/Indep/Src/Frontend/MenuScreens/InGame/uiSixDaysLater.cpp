@@ -1,5 +1,7 @@
 #include "uiSixDaysLater.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
@@ -10,18 +12,18 @@
 SixDaysLater::SixDaysLater(ScreenConstructorData *sd) : MenuScreen(sd), mStringMode(sd->Arg) {
     mpDataMainString = FEngFindString(GetPackageName(), 0xb769701e);
     FEngSetLanguageHash(mpDataMainString, FEngHashString("DDAY_TIMELAPSE_%d", mStringMode + 1));
-    new EFadeScreenOff(0x14035fb);
+    new EFadeScreenOff(FEHASH_15_IN);
 }
 
 void SixDaysLater::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    if (msg == 0xC98356BA) {
-        if (FEngIsScriptSet(mpDataMainString, 0x5079c8f8)) {
-            if (!FEngIsScriptSet(GetPackageName(), 0x53d9eb7e, 0x5079c8f8)) {
-                FEngSetScript(GetPackageName(), 0x53d9eb7e, 0x5079c8f8, true);
+    if (msg == FEMSG_SCREEN_TICK) {
+        if (FEngIsScriptSet(mpDataMainString, FEHASH_APPEAR)) {
+            if (!FEngIsScriptSet(GetPackageName(), 0x53d9eb7e, FEHASH_APPEAR)) {
+                FEngSetScript(GetPackageName(), 0x53d9eb7e, FEHASH_APPEAR, true);
             }
         }
-        if (FEngIsScriptSet(mpDataMainString, 0x5a8e4ebe)) {
-            if (!FEngIsScriptRunning(mpDataMainString, 0x5a8e4ebe)) {
+        if (FEngIsScriptSet(mpDataMainString, FEHASH_ANIMATE)) {
+            if (!FEngIsScriptRunning(mpDataMainString, FEHASH_ANIMATE)) {
                 cFEng::Get()->QueuePackagePop(0);
                 MNotifyMessageDone().Post(0x20d60dbf);
             }

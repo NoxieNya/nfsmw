@@ -1,4 +1,5 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeGenericMessage.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
@@ -19,13 +20,13 @@ GenericMessage::GenericMessage(UTL::COM::Object *pOutter, const char *pkg_name, 
 void GenericMessage::Update(IPlayer *player) {
     if (mPriority > GenericMessage_Priority_None) {
         if (!FEngIsScriptRunning(mpMessageFirstLine, mFengHash) || (mPlayOneFrame && mNumFramesPlayed != 0)) {
-            if (!FEngIsScriptSet(mpMessageFirstLine, 0x16a259)) {
-                FEngSetScript(mpMessageFirstLine, 0x16a259, true);
+            if (!FEngIsScriptSet(mpMessageFirstLine, FEHASH_HIDE)) {
+                FEngSetScript(mpMessageFirstLine, FEHASH_HIDE, true);
             }
             mPriority = GenericMessage_Priority_None;
             bStrCpy(mStringBuffer, "");
-            if (!FEngIsScriptSet(mpIcon, 0x16a259)) {
-                FEngSetScript(mpIcon, 0x16a259, true);
+            if (!FEngIsScriptSet(mpIcon, FEHASH_HIDE)) {
+                FEngSetScript(mpIcon, FEHASH_HIDE, true);
             }
         }
         mNumFramesPlayed++;
@@ -37,8 +38,8 @@ bool GenericMessage::RequestGenericMessage(const char *string, bool singleFrame,
     if (priority < mPriority) {
         return false;
     }
-    if (!FEngIsScriptSet(GetPackageName(), 0xe0ba07ec, 0x1744b3)) {
-        FEngSetScript(GetPackageName(), 0xe0ba07ec, 0x1744b3, true);
+    if (!FEngIsScriptSet(GetPackageName(), 0xe0ba07ec, FEHASH_INIT)) {
+        FEngSetScript(GetPackageName(), 0xe0ba07ec, FEHASH_INIT, true);
     }
     mPriority = priority;
     mNumFramesPlayed = 0;
@@ -67,8 +68,8 @@ bool GenericMessage::RequestGenericMessage(const char *string, bool singleFrame,
         }
         FEngSetTextureHash(static_cast<FEImage *>(mpIcon), iconTextureHash);
     } else {
-        if (!FEngIsScriptSet(mpIcon, 0x16a259)) {
-            FEngSetScript(mpIcon, 0x16a259, true);
+        if (!FEngIsScriptSet(mpIcon, FEHASH_HIDE)) {
+            FEngSetScript(mpIcon, FEHASH_HIDE, true);
         }
     }
     return true;

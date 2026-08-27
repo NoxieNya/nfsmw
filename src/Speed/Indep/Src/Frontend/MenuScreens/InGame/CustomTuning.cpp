@@ -13,6 +13,7 @@
 #include "Speed/Indep/Src/FEng/FEString.h"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feWidget.hpp"
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/pvehicle.h"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "Speed/Indep/Src/Physics/PhysicsInfo.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Physics/PhysicsTunings.h"
@@ -130,62 +131,63 @@ void CustomTuningScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1
         HelpTextScroller->HandleNotificationMessage(msg);
     }
 
-    if (msg == 0x35F8620B) {
+    if (msg == FEHASH_INITCOMPLETE) {
         for (TuningSlider *slider = reinterpret_cast<TuningSlider *>(Options.GetHead()); slider != Options.EndOfList();
              slider = reinterpret_cast<TuningSlider *>(slider->GetNext())) {
             slider->UnsetFocus();
         }
     }
 
-    if (!HelpVisible || (msg != 0x9120409E && msg != 0xB5971BF1 && msg != 0x72619778 && msg != 0x911C0A4B)) {
+    if (!HelpVisible || (msg != __PAD_LEFT__ && msg != __PAD_RIGHT__ && msg != __PAD_UP__ && msg != __PAD_DOWN__)) {
         UIWidgetMenu::NotificationMessage(msg, pobj, param1, param2);
     }
 
     switch (msg) {
-        case 0xB5AF2461:
+        case __PAD_START__:
             if (!HelpVisible) {
                 ExitWithStart = true;
             } else {
                 return;
             }
-        case 0x406415E3:
+        case __PAD_ACCEPT__:
             if (!HelpVisible) {
                 StoreSettings();
                 cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             }
             break;
-        case 0x9120409E:
-        case 0xB5971BF1:
+        case __PAD_LEFT__:
+        case __PAD_RIGHT__:
             if (!HelpVisible) {
                 TuningSlider *slider = reinterpret_cast<TuningSlider *>(pCurrentOption);
                 TempTuningRecord.SetTuning(slider->TuningPath, static_cast<eCustomTuningType>(CurrentTuningType), slider->Current);
             }
             break;
-        case 0x5073EF13:
+        case __PAD_LTRIGGER__:
             ScrollTypes(eSD_PREV);
             break;
-        case 0xD9FEEC59:
+        case __PAD_RTRIGGER__:
             ScrollTypes(eSD_NEXT);
             break;
-        case 0xC519BFC4:
+        case __PAD_BUTTON5__:
             if (!HelpVisible) {
                 ShowHelpBlurb();
             }
             break;
-        case 0x911AB364:
+        case __PAD_BACK__:
             if (HelpVisible) {
                 HideHelpBlurb();
             } else if (SettingsDidNotChange()) {
                 cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             } else {
-                DialogInterface::ShowTwoButtons(GetPackageName(), "InGameDialog.fng", dialog_alert, 0x70E01038, 0x417B25E4, 0x775DBA97, 0x34DC1BCF,
-                                                0x34DC1BCF, first_dialog_button2, GetLocalizedString(0xE9CB802F));
+                DialogInterface::ShowTwoButtons(GetPackageName(), "InGameDialog.fng", dialog_alert, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO,
+                                                0x775DBA97, dialog_message_no, dialog_message_no, first_dialog_button2,
+                                                GetLocalizedString(0xE9CB802F));
             }
             break;
         case 0x775DBA97:
             cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             break;
-        case 0xE1FDE1D1:
+        case FEHASH_EXITCOMPLETE:
             if (ExitWithStart) {
                 new EUnPause();
             } else {

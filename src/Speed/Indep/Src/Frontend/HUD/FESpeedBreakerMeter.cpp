@@ -62,7 +62,7 @@ void SpeedBreakerMeter::Update(IPlayer *player) {
         if (mPursuitLevel > 0.0f) {
             FEngSetScript(mpSpeedBreakerMeterIcon, 0x77031c70, true);
         } else {
-            FEngSetScript(mpSpeedBreakerMeterIcon, 0x1744B3, true);
+            FEngSetScript(mpSpeedBreakerMeterIcon, FEHASH_INIT, true);
         }
     }
 }

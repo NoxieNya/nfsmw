@@ -70,7 +70,7 @@ Scrollerina::Scrollerina(const char *parent_pkg, const char *backing, const char
       bWrapped(wrapped),                                     //
       bAlwaysShowBacking(alwaysShowBacking),                 //
       bVertical(vert),                                       //
-      mouseDownMsg(0x406415e3),                              //
+      mouseDownMsg(__PAD_ACCEPT__),                          //
       bInClickToSelectMode(false), pScrollRegion(nullptr) {
     if (backing != nullptr) {
         pBacking = FEngFindImage(parent_pkg, backing);

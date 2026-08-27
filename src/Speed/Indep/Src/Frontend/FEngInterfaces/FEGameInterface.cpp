@@ -102,8 +102,11 @@ bool cFEngGameInterface::UnloadResources(FEPackage *pPackage, i32 Count, FEResou
     return true;
 }
 
+static const u32 DISABLE_INPUTS = 0x5922615; // size: 0x4, Decl: speed/indep/src/frontend/fenginterfaces/FEGameInterface.cpp:196
+static const u32 ENABLE_INPUTS = 0x7e4d1288; // size: 0x4, Decl: speed/indep/src/frontend/fenginterfaces/FEGameInterface.cpp:197
+
 void cFEngGameInterface::NotificationMessage(u32 Message, FEObject *pObject, u32 Param1, u32 Param2) {
-    if (Message != 0x5922615 && Message != 0x7e4d1288) {
+    if (Message != DISABLE_INPUTS && Message != ENABLE_INPUTS) {
         FEPackageManager::Get()->NotificationMessage(Message, pObject, Param1, Param2);
     }
 }

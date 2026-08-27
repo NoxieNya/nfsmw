@@ -712,7 +712,7 @@ void IconScrollerMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
             IconOption *cur_option = Options.GetCurrentOption();
             if (cur_option->IsTutorialAvailable()) {
                 const u32 FEObj_MASTERBLASTER = 0x99344537;
-                const u32 FEObj_HIDE = 0x16A259;
+                const u32 FEObj_HIDE = FEHASH_HIDE;
                 FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_HIDE, true);
                 g_pEAXSound->PlayUISoundFX(UISND_COMMON_SELECT);
                 FEAnyTutorialScreen::LaunchMovie(cur_option->GetTutorialMovieName(), GetPackageName());
@@ -736,7 +736,7 @@ void IconScrollerMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, 
         }
         case FEMSG_MOVIE_FINISHED: {
             const u32 FEObj_MASTERBLASTER = 0x99344537;
-            const u32 FEObj_Init = 0x1744B3;
+            const u32 FEObj_Init = FEHASH_INIT;
             FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_Init, true);
             return;
         }
@@ -774,9 +774,9 @@ void IconScrollerMenu::RefreshHeader() {
 
     const u32 FEObj_TUTORIALGROUP = 0x9C7D33FF;
     if (Options.GetCurrentOption()->IsTutorialAvailable()) {
-        FEngSetScript(GetPackageName(), FEObj_TUTORIALGROUP, 0x1CA7C0, true);
+        FEngSetScript(GetPackageName(), FEObj_TUTORIALGROUP, FEHASH_SHOW, true);
     } else {
-        FEngSetScript(GetPackageName(), FEObj_TUTORIALGROUP, 0x16A259, true);
+        FEngSetScript(GetPackageName(), FEObj_TUTORIALGROUP, FEHASH_HIDE, true);
     }
 }
 

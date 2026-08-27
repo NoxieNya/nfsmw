@@ -11,7 +11,7 @@ uiSafehouseRegionUnlock::uiSafehouseRegionUnlock(ScreenConstructorData *sd) : Me
 uiSafehouseRegionUnlock::~uiSafehouseRegionUnlock() {}
 
 void uiSafehouseRegionUnlock::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
-    if (msg == 0x406415e3) {
+    if (msg == __PAD_ACCEPT__) {
         uiRepSheetRivalFlow::Get()->Next();
     }
 }

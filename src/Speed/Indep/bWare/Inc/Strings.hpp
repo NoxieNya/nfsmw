@@ -113,6 +113,13 @@ inline char bToUpper(char c) {
     return c;
 }
 
+inline char bToLower(char c) {
+    if (c >= 'A' && c <= 'Z') {
+        c |= 0x20;
+    }
+    return c;
+}
+
 char *bToUpper(char *s);
 
 #endif

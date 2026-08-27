@@ -15,14 +15,14 @@ uiRapSheetRankings::uiRapSheetRankings(ScreenConstructorData *sd) : MenuScreen(s
 
 void uiRapSheetRankings::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x0C407210:
+        case __BUTTON_PRESSED__:
             button_pressed = pobj->NameHash;
             break;
-        case 0xC519BFC4:
+        case __PAD_BUTTON5__:
             career_view = !career_view;
             Setup();
             break;
-        case 0x35F8620B:
+        case FEHASH_INITCOMPLETE:
             FEngSetCurrentButton(GetPackageName(), init_button);
             break;
         case FEHASH_EXITCOMPLETE: {

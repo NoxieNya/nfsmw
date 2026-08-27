@@ -3,6 +3,7 @@
 #include "Speed/Indep/Src/Ecstasy/Texture.hpp"
 #include "Speed/Indep/Src/FEng/FEImage.h"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
@@ -74,11 +75,11 @@ void LoadingControllerScreen::SetupControllerConfig() {
 }
 
 void LoadingControllerScreen::ShowControllerConfig() {
-    FEngSetScript(GetPackageName(), 0x3248E720, 0x001CA7C0, true);
+    FEngSetScript(GetPackageName(), 0x3248E720, FEHASH_SHOW, true);
 }
 
 void LoadingControllerScreen::HideControllerConfig() {
-    FEngSetScript(GetPackageName(), 0x3248E720, 0x0016A259, true);
+    FEngSetScript(GetPackageName(), 0x3248E720, FEHASH_HIDE, true);
     WhichControllerTexture = 0;
 }
 

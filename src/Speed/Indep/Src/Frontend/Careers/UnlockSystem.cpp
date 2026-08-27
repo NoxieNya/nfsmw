@@ -189,7 +189,7 @@ bool QuickRaceUnlocker::IsCarUnlocked(eUnlockFilters filter, unsigned int car, i
 
     unsigned char currentBin = FEDatabase->GetCareerSettings()->GetCurrentBin();
     unsigned int handle = fe_car->Handle;
-    if (handle == 0x2D642B8) {
+    if (handle == STRINGHASH_CE_ELISE) {
         return GetIsCollectorsEdition();
     }
     if (handle < 0x2D642B9) {
@@ -240,36 +240,36 @@ bool QuickRaceUnlocker::IsCarUnlocked(eUnlockFilters filter, unsigned int car, i
         }
         return currentBin < 8;
     }
-    if (handle == 0x363A1FEA) {
+    if (handle == STRINGHASH_CE_GTRSTREET) {
         return GetIsCollectorsEdition();
     }
-    if (handle > 0x363A1FEA) {
-        if (handle != 0x634D1BD2) {
+    if (handle > STRINGHASH_CE_GTRSTREET) {
+        if (handle != STRINGHASH_CE_CORVETTE) {
             if (handle < 0x634D1BD3) {
-                if (handle != 0x54655133) {
+                if (handle != STRINGHASH_CE_GT2) {
                     if (handle < 0x54655134) {
-                        if (handle != 0x54653C71) {
+                        if (handle != STRINGHASH_CE_C6R) {
                             return false;
                         }
-                    } else if (handle != 0x582F21D9) {
+                    } else if (handle != STRINGHASH_CE_CAMARO) {
                         return false;
                     }
                 }
-            } else if (handle != 0xE1075862) {
+            } else if (handle != STRINGHASH_CE_997S) {
                 if (handle < 0xE1075863) {
                     if (handle != 0xCB6AAF2F) {
                         return false;
                     }
                     return (FEDatabase->GetCareerSettings()->SpecialFlags & 0x8000) != 0;
                 }
-                if (handle != 0xE115EAD0) {
+                if (handle != STRINGHASH_CE_SL65) {
                     return false;
                 }
             }
         }
         return GetIsCollectorsEdition();
     }
-    if (handle == 0x3D8A6D1) {
+    if (handle == STRINGHASH_CE_SUPRA) {
         return GetIsCollectorsEdition();
     }
     if (handle < 0x3D8A6D2) {
@@ -278,7 +278,7 @@ bool QuickRaceUnlocker::IsCarUnlocked(eUnlockFilters filter, unsigned int car, i
             return FEDatabase->GetCareerSettings()->HasBeatenCareer();
 #endif
         }
-        if (handle != 0x3D3401A) {
+        if (handle != STRINGHASH_CE_SL500) {
             return false;
         }
         return GetIsCollectorsEdition();
@@ -544,13 +544,13 @@ bool UnlockSystem::IsUnlockableUnlocked(eUnlockFilters filter, eUnlockableEntity
     if (UnlockAllThings)
         return true;
     bool answer = false;
-    if (filter & 1) {
+    if (filter & UNLOCK_QUICK_RACE) {
         answer = QuickRaceUnlocker::IsUnlockableUnlocked(filter, thing, level, player, backroom) != 0;
     }
-    if (filter & 2) {
+    if (filter & UNLOCK_CAREER_MODE) {
         answer = static_cast<bool>(answer | CareerUnlocker::IsUnlockableUnlocked(filter, thing, level, backroom));
     }
-    if (filter & 4) {
+    if (filter & UNLOCK_ONLINE) {
         answer = static_cast<bool>(answer | OnlineUnlocker::IsUnlockableUnlocked(filter, thing, level, backroom));
     }
     return answer;
@@ -561,13 +561,13 @@ bool UnlockSystem::IsCarPartUnlocked(eUnlockFilters filter, int carslot, CarPart
     if (UnlockAllThings)
         return true;
     bool answer = false;
-    if (filter & 1) {
+    if (filter & UNLOCK_QUICK_RACE) {
         answer = QuickRaceUnlocker::IsCarPartUnlocked(filter, carslot, part, player, backroom) != 0;
     }
-    if (filter & 2) {
+    if (filter & UNLOCK_CAREER_MODE) {
         answer = static_cast<bool>(answer | CareerUnlocker::IsCarPartUnlocked(filter, carslot, part, backroom));
     }
-    if (filter & 4) {
+    if (filter & UNLOCK_ONLINE) {
         answer = static_cast<bool>(answer | OnlineUnlocker::IsCarPartUnlocked(filter, carslot, part, backroom));
     }
     return answer;
@@ -578,13 +578,13 @@ bool UnlockSystem::IsPerfPackageUnlocked(eUnlockFilters filter, Physics::Upgrade
     if (UnlockAllThings)
         return true;
     bool answer = false;
-    if (filter & 1) {
+    if (filter & UNLOCK_QUICK_RACE) {
         answer = QuickRaceUnlocker::IsPerfPackageUnlocked(filter, pkg_type, level, player, backroom) != 0;
     }
-    if (filter & 2) {
+    if (filter & UNLOCK_CAREER_MODE) {
         answer = static_cast<bool>(answer | CareerUnlocker::IsPerfPackageUnlocked(filter, pkg_type, level, backroom));
     }
-    if (filter & 4) {
+    if (filter & UNLOCK_ONLINE) {
         answer = static_cast<bool>(answer | OnlineUnlocker::IsPerfPackageUnlocked(filter, pkg_type, level, backroom));
     }
     return answer;
@@ -595,13 +595,13 @@ bool UnlockSystem::IsTrackUnlocked(eUnlockFilters filter, int event_hash, int pl
     if (UnlockAllThings)
         return true;
     bool answer = false;
-    if (filter & 1) {
+    if (filter & UNLOCK_QUICK_RACE) {
         answer = QuickRaceUnlocker::IsTrackUnlocked(filter, event_hash, player) != 0;
     }
-    if (filter & 2) {
+    if (filter & UNLOCK_CAREER_MODE) {
         answer = static_cast<bool>(answer | CareerUnlocker::IsTrackUnlocked(filter, event_hash));
     }
-    if (filter & 4) {
+    if (filter & UNLOCK_ONLINE) {
         answer = static_cast<bool>(answer | OnlineUnlocker::IsTrackUnlocked(filter, event_hash));
     }
     return answer;
@@ -612,13 +612,13 @@ bool UnlockSystem::IsCarUnlocked(eUnlockFilters filter, unsigned int handle, int
     if (UnlockAllThings)
         return true;
     bool answer = false;
-    if (filter & 1) {
+    if (filter & UNLOCK_QUICK_RACE) {
         answer = QuickRaceUnlocker::IsCarUnlocked(filter, handle, player);
     }
-    if (filter & 2) {
+    if (filter & UNLOCK_CAREER_MODE) {
         answer = static_cast<bool>(answer | CareerUnlocker::IsCarUnlocked(filter, handle));
     }
-    if (filter & 4) {
+    if (filter & UNLOCK_ONLINE) {
         answer = static_cast<bool>(answer | OnlineUnlocker::IsCarUnlocked(filter, handle));
     }
     if (GetIsCollectorsEdition() && UnlockSystem::IsBonusCarCEOnly(handle)) {
@@ -630,13 +630,13 @@ bool UnlockSystem::IsCarUnlocked(eUnlockFilters filter, unsigned int handle, int
 // UNSOLVED
 bool UnlockSystem::IsBackroomAvailable(eUnlockFilters filter, eUnlockableEntity ent, int level) {
     bool answer = false;
-    if (filter & 1) {
+    if (filter & UNLOCK_QUICK_RACE) {
         answer = QuickRaceUnlocker::IsBackroomAvailable(filter, ent, level, 0);
     }
-    if (filter & 2) {
+    if (filter & UNLOCK_CAREER_MODE) {
         answer = static_cast<bool>(answer | CareerUnlocker::IsBackroomAvailable(filter, ent, level));
     }
-    if (filter & 4) {
+    if (filter & UNLOCK_ONLINE) {
         answer = static_cast<bool>(answer | OnlineUnlocker::IsBackroomAvailable(filter, ent, level));
     }
     return answer;
@@ -835,13 +835,13 @@ bool UnlockSystem::IsBonusCarCEOnly(uint32 name_hash) {
         case 0x02d642b8:
         case 0x03d3401a:
         case 0x03d8a6d1:
-        case 0x363a1fea:
-        case 0x54653c71:
-        case 0x54655133:
-        case 0x582f21d9:
-        case 0x634d1bd2:
-        case 0xe1075862:
-        case 0xe115ead0:
+        case STRINGHASH_CE_GTRSTREET:
+        case STRINGHASH_CE_C6R:
+        case STRINGHASH_CE_GT2:
+        case STRINGHASH_CE_CAMARO:
+        case STRINGHASH_CE_CORVETTE:
+        case STRINGHASH_CE_997S:
+        case STRINGHASH_CE_SL65:
             return true;
         default:
             return false;

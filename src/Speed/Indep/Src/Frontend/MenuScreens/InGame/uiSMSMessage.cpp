@@ -2,11 +2,14 @@
 
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFont.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feDialogBox.hpp"
 #include "Speed/Indep/Src/Generated/Events/ESndGameState.hpp"
 #include "Speed/Indep/Src/EAXSound/Stream/SpeechManager.hpp"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "Speed/Indep/Src/Speech/MiscSpeech.h"
 
 uiSMSMessage::uiSMSMessage(ScreenConstructorData *sd) : MenuScreen(sd), ScrollBar(sd->PackageFilename, "scrollbar", true, true, false) {
@@ -58,9 +61,9 @@ eMenuSoundTriggers uiSMSMessage::NotifySoundMessage(u32 msg, eMenuSoundTriggers 
 void uiSMSMessage::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     m_TextScroller.HandleNotificationMessage(msg);
     switch (msg) {
-        case 0x34dc1bcf:
+        case dialog_message_no:
             break;
-        case 0x35f8620b: {
+        case FEHASH_INITCOMPLETE: {
             if (the_msg->IsVoice() && the_msg->IsUnRead()) {
                 MiscSpeech::SMSCellCall(the_msg->GetHandle());
             }
@@ -68,7 +71,7 @@ void uiSMSMessage::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
             the_msg->SetFlag(4);
             break;
         }
-        case 0xe1fde1d1: {
+        case FEHASH_EXITCOMPLETE: {
             Speech::Module *cop_speech = Speech::Manager::GetSpeechModule(1);
             if (cop_speech != nullptr) {
                 cop_speech->ReleaseResource();
@@ -77,7 +80,7 @@ void uiSMSMessage::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
             cFEng::Get()->QueuePackagePop(1);
             break;
         }
-        case 0xc519bfc3: {
+        case __PAD_BUTTON4__: {
             if (the_msg->IsVoice()) {
                 Speech::Module *cop_speech = Speech::Manager::GetSpeechModule(1);
                 if (cop_speech != nullptr) {
@@ -88,14 +91,14 @@ void uiSMSMessage::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
             }
             break;
         }
-        case 0xc519bfc4: {
-            DialogInterface::ShowTwoButtons(GetPackageName(), "InGameDialog.fng", dialog_alert, 0x70e01038, 0x417b25e4, 0xd05fc3a3, 0x34dc1bcf,
-                                            0x34dc1bcf, first_dialog_button2, 0x8c3c2171);
+        case __PAD_BUTTON5__: {
+            DialogInterface::ShowTwoButtons(GetPackageName(), "InGameDialog.fng", dialog_alert, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO,
+                                            dialog_message_yes, dialog_message_no, dialog_message_no, first_dialog_button2, 0x8c3c2171);
             break;
         }
-        case 0xd05fc3a3: {
+        case dialog_message_yes: {
             the_msg->ClearFlags();
-            cFEng::Get()->QueuePackageMessage(0x911ab364, GetPackageName(), nullptr);
+            cFEng::Get()->QueuePackageMessage(__PAD_BACK__, GetPackageName(), nullptr);
             break;
         }
     }

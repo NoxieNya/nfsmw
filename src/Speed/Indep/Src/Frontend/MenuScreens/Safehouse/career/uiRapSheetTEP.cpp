@@ -1,6 +1,7 @@
 #include "uiRapSheetTEP.hpp"
 #include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
@@ -13,16 +14,16 @@ uiRapSheetTEP::uiRapSheetTEP(ScreenConstructorData *sd) : UIWidgetMenu(sd), butt
 
 void uiRapSheetTEP::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x0C407210:
+        case __BUTTON_PRESSED__:
             button_pressed = pobj->NameHash;
             break;
-        case 0x406415E3:
+        case __PAD_ACCEPT__:
             if (num_pursuits == 0) {
                 return;
             }
             cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             break;
-        case 0x72619778:
+        case __PAD_UP__:
             if (pobj == nullptr) {
                 return;
             }
@@ -31,7 +32,7 @@ void uiRapSheetTEP::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
             }
             FEngSetCurrentButton(GetPackageName(), FEngHashString("BUTTON_%d", num_pursuits));
             break;
-        case 0x911C0A4B:
+        case __PAD_DOWN__:
             if (pobj == nullptr) {
                 return;
             }
@@ -40,7 +41,7 @@ void uiRapSheetTEP::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32
             }
             FEngSetCurrentButton(GetPackageName(), 0xCDA0A66B);
             break;
-        case 0x35F8620B:
+        case FEHASH_INITCOMPLETE:
             if (num_pursuits == 0) {
                 return;
             }

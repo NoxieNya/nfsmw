@@ -623,7 +623,7 @@ void FEngHud::Update(IPlayer *player, float dT) {
     if (mActionQ.IsEnabled()) {
         if (!TheGameFlowManager.IsLoading() && !bIsRestartingRace && (UTL::Collections::Singleton<INIS>::Get() == nullptr) &&
             FadeScreen::IsFadeScreenOn()) {
-            new EFadeScreenOff(0x14035fb);
+            new EFadeScreenOff(FEHASH_15_IN);
         }
     }
 

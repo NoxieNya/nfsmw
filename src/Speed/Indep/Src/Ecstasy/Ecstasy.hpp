@@ -110,7 +110,9 @@ class eSolid : public eSolidPlatInterface, public bTNode<eSolid> {
     float Density;                              // offset 0x9C, size 0x4
     char Name[64];                              // offset 0xA0, size 0x40
 
-    const char *GetName();
+    const char *GetName() {
+        return Name;
+    };
     void ChangeName(const char *new_name);
     void EndianSwap() {}
     void GetBoundingBox(bVector3 *min, bVector3 *max);

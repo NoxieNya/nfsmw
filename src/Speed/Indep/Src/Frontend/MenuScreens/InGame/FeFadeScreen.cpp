@@ -1,5 +1,6 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/FeFadeScreen.hpp"
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 
 FadeScreen::FadeScreen(ScreenConstructorData *sd) : MenuScreen(sd) {}
@@ -18,5 +19,5 @@ void FadeScreen::NotificationMessage(u32 Message, FEObject *pObject, u32 Param1,
 }
 
 bool FadeScreen::IsFadeScreenOn() {
-    return FEngIsScriptSet("FadeScreen.fng", 0x027FF2DC, 0x5079C8F8) != false;
+    return FEngIsScriptSet("FadeScreen.fng", 0x027FF2DC, FEHASH_APPEAR) != false;
 }

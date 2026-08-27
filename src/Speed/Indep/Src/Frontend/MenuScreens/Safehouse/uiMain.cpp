@@ -1,5 +1,7 @@
 #include "uiMain.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/bWare/Inc/bWare.hpp"
 #include "Speed/Indep/Src/FEng/FEList.h"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
@@ -21,7 +23,7 @@ class MainQuickRace : public IconOption {
     MainQuickRace(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
     ~MainQuickRace() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data != 0x0C407210)
+        if (data != __BUTTON_PRESSED__)
             return;
         FEDatabase->SetGameMode(eFE_GAME_MODE_QUICK_RACE);
     }
@@ -32,7 +34,7 @@ class MainCustomize : public IconOption {
     MainCustomize(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
     ~MainCustomize() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data != 0x0C407210)
+        if (data != __BUTTON_PRESSED__)
             return;
         FEDatabase->SetGameMode(eFE_GAME_MODE_CUSTOMIZE);
     };
@@ -43,7 +45,7 @@ class MainProfileManager : public IconOption {
     MainProfileManager(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
     ~MainProfileManager() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data != 0x0C407210)
+        if (data != __BUTTON_PRESSED__)
             return;
         FEDatabase->SetGameMode(eFE_GAME_MODE_PROFILE_MANAGER);
     };
@@ -54,7 +56,7 @@ class MainOptions : public IconOption {
     MainOptions(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
     ~MainOptions() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data != 0x0C407210)
+        if (data != __BUTTON_PRESSED__)
             return;
         FEDatabase->SetGameMode(eFE_GAME_MODE_OPTIONS);
     };
@@ -65,7 +67,7 @@ class MainCareer : public IconOption {
     MainCareer(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
     ~MainCareer() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data != 0x0C407210)
+        if (data != __BUTTON_PRESSED__)
             return;
         if (IsMemcardEnabled) {
             FEDatabase->SetGameMode(eFE_GAME_MODE_CAREER_MANAGER);
@@ -82,12 +84,12 @@ class Challenge : public IconOption {
     }
     ~Challenge() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             extern int IsMemcardEnabled;
             if (FEDatabase->bProfileLoaded || !IsMemcardEnabled) {
                 FEDatabase->SetGameMode(eFE_GAME_MODE_CHALLENGE);
                 SetReactImmediately(false);
-                cFEng::Get()->QueuePackageMessage(0x0C407210, pkg_name, obj);
+                cFEng::Get()->QueuePackageMessage(__BUTTON_PRESSED__, pkg_name, obj);
             } else {
                 MemcardEnter("MainMenu.fng", "ChallengeSeries.fng", 0x10063, nullptr, nullptr, 0, 0);
             }
@@ -106,14 +108,14 @@ void UIMain::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2)
         case 0x1265ece9:
             GarageMainScreen::GetInstance()->UpdateCurrentCameraView(false);
             break;
-        case 0x35f8620b:
+        case FEHASH_INITCOMPLETE:
             if (!MemoryCard::GetInstance()->IsAutoLoadDone()) {
                 MemoryCard::GetInstance()->SetAutoLoadDone(true);
                 MemcardEnter(nullptr, nullptr, 0xF1, nullptr, nullptr, 0, 0);
             }
             break;
-        case 0xe1fde1d1:
-            if (PrevButtonMessage != 0x0c407210) {
+        case FEHASH_EXITCOMPLETE:
+            if (PrevButtonMessage != __BUTTON_PRESSED__) {
                 break;
             }
             if (FEDatabase->IsCareerMode()) {
@@ -132,7 +134,7 @@ void UIMain::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2)
                 cFEng::Get()->QueuePackageSwitch("MyCarsManager.fng", 0, 0, false);
             }
             break;
-        case 0xc519bfc4:
+        case __PAD_BUTTON5__:
             if (FEDatabase->bProfileLoaded) {
                 cFEng::Get()->QueuePackageMessage(FEHashUpper(m_bStatsShowing ? "GAMESATS_LEAVE" : "GAMESTATS_APPEAR"), GetPackageName(), nullptr);
                 m_bStatsShowing = !m_bStatsShowing;
@@ -141,13 +143,13 @@ void UIMain::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2)
         case 0x7e998e5e:
             UpdateProfileData();
             break;
-        case 0x9120409e: // UNSOLVED
+        case __PAD_LEFT__: // UNSOLVED
             break;
     }
 }
 
 void UIMain::Setup() {
-    const u32 FEObj_TITLEGROUP = 0xb71b576d;
+    const u32 FEObj_TITLEGROUP = __TITLE_GROUP__;
 
     FEDatabase->ResetGameMode();
     FEDatabase->SetPlayersJoystickPort(0, -1);

@@ -1,6 +1,7 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeRadarDetector.hpp"
 #include "Speed/Indep/Src/Ecstasy/EcstasyE.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Generated/Messages/MMiscSound.h"
 
@@ -29,48 +30,48 @@ RadarDetector::RadarDetector(UTL::COM::Object *pOutter, const char *pkg_name, in
 
 void RadarDetector::Update(IPlayer *player) {
     if (eGetCurrentViewMode() == EVIEWMODE_ONE_RVM && FEDatabase->GetGameplaySettings()->RearviewOn) {
-        if (!FEngIsScriptSet(mpDataRadarDetectorBacking, 0x16a259)) {
-            FEngSetScript(mpDataRadarDetectorBacking, 0x16a259, true);
+        if (!FEngIsScriptSet(mpDataRadarDetectorBacking, FEHASH_HIDE)) {
+            FEngSetScript(mpDataRadarDetectorBacking, FEHASH_HIDE, true);
         }
 
         if (!mInPursuit || mIsCoolingDown) {
-            if (!FEngIsScriptSet(mpDataRadarDetectorGroup, 0x1744b3)) {
-                FEngSetScript(mpDataRadarDetectorGroup, 0x1744b3, true);
+            if (!FEngIsScriptSet(mpDataRadarDetectorGroup, FEHASH_INIT)) {
+                FEngSetScript(mpDataRadarDetectorGroup, FEHASH_INIT, true);
             }
         } else {
-            if (!FEngIsScriptSet(mpDataRadarDetectorGroup, 0x16a259)) {
-                FEngSetScript(mpDataRadarDetectorGroup, 0x16a259, true);
+            if (!FEngIsScriptSet(mpDataRadarDetectorGroup, FEHASH_HIDE)) {
+                FEngSetScript(mpDataRadarDetectorGroup, FEHASH_HIDE, true);
             }
         }
 
-        if (!FEngIsScriptSet(mpDataRadarDetectorBackingWithMirror, 0x5079c8f8)) {
-            FEngSetScript(mpDataRadarDetectorBackingWithMirror, 0x5079c8f8, true);
+        if (!FEngIsScriptSet(mpDataRadarDetectorBackingWithMirror, FEHASH_APPEAR)) {
+            FEngSetScript(mpDataRadarDetectorBackingWithMirror, FEHASH_APPEAR, true);
         }
     } else {
-        if (!FEngIsScriptSet(mpDataRadarDetectorBackingWithMirror, 0x16a259)) {
-            FEngSetScript(mpDataRadarDetectorBackingWithMirror, 0x16a259, true);
+        if (!FEngIsScriptSet(mpDataRadarDetectorBackingWithMirror, FEHASH_HIDE)) {
+            FEngSetScript(mpDataRadarDetectorBackingWithMirror, FEHASH_HIDE, true);
         }
 
         if (!mInPursuit || mIsCoolingDown) {
-            if (!FEngIsScriptSet(mpDataRadarDetectorBacking, 0x5079c8f8)) {
-                FEngSetScript(mpDataRadarDetectorBacking, 0x5079c8f8, true);
+            if (!FEngIsScriptSet(mpDataRadarDetectorBacking, FEHASH_APPEAR)) {
+                FEngSetScript(mpDataRadarDetectorBacking, FEHASH_APPEAR, true);
             }
-            if (!FEngIsScriptSet(mpDataRadarDetectorGroup, 0x5079c8f8)) {
-                FEngSetScript(mpDataRadarDetectorGroup, 0x5079c8f8, true);
+            if (!FEngIsScriptSet(mpDataRadarDetectorGroup, FEHASH_APPEAR)) {
+                FEngSetScript(mpDataRadarDetectorGroup, FEHASH_APPEAR, true);
             }
         } else {
-            if (FEngIsScriptSet(mpDataRadarDetectorBacking, 0x1744b3)) {
-                FEngSetScript(mpDataRadarDetectorBacking, 0x16a259, true);
+            if (FEngIsScriptSet(mpDataRadarDetectorBacking, FEHASH_INIT)) {
+                FEngSetScript(mpDataRadarDetectorBacking, FEHASH_HIDE, true);
             } else if (!FEngIsScriptSet(mpDataRadarDetectorBacking, 0x033113ac)) {
-                if (!FEngIsScriptSet(mpDataRadarDetectorBacking, 0x16a259)) {
+                if (!FEngIsScriptSet(mpDataRadarDetectorBacking, FEHASH_HIDE)) {
                     FEngSetScript(mpDataRadarDetectorBacking, 0x033113ac, true);
                 }
             }
 
-            if (FEngIsScriptSet(mpDataRadarDetectorGroup, 0x1744b3)) {
-                FEngSetScript(mpDataRadarDetectorGroup, 0x16a259, true);
+            if (FEngIsScriptSet(mpDataRadarDetectorGroup, FEHASH_INIT)) {
+                FEngSetScript(mpDataRadarDetectorGroup, FEHASH_HIDE, true);
             } else if (!FEngIsScriptSet(mpDataRadarDetectorGroup, 0x033113ac)) {
-                if (!FEngIsScriptSet(mpDataRadarDetectorBacking, 0x16a259)) {
+                if (!FEngIsScriptSet(mpDataRadarDetectorBacking, FEHASH_HIDE)) {
                     FEngSetScript(mpDataRadarDetectorGroup, 0x033113ac, true);
                 }
             }
@@ -122,19 +123,19 @@ void RadarDetector::Update(IPlayer *player) {
             }
             FEngSetScript(mpDataRadarDetectorLightsRight, 0xfa44e387, true);
         } else {
-            if (!FEngIsScriptSet(mpDataRadarDetectorArrow, 0x1744b3)) {
-                FEngSetScript(mpDataRadarDetectorArrow, 0x1744b3, true);
+            if (!FEngIsScriptSet(mpDataRadarDetectorArrow, FEHASH_INIT)) {
+                FEngSetScript(mpDataRadarDetectorArrow, FEHASH_INIT, true);
             }
-            if (!FEngIsScriptSet(mpDataRadarIcon, 0x1744b3)) {
-                FEngSetScript(mpDataRadarIcon, 0x1744b3, true);
+            if (!FEngIsScriptSet(mpDataRadarIcon, FEHASH_INIT)) {
+                FEngSetScript(mpDataRadarIcon, FEHASH_INIT, true);
             }
-            if (!FEngIsScriptSet(mpDataRadarDetectorLightsLeft, 0x1744b3)) {
-                FEngSetScript(mpDataRadarDetectorLightsLeft, 0x1744b3, true);
+            if (!FEngIsScriptSet(mpDataRadarDetectorLightsLeft, FEHASH_INIT)) {
+                FEngSetScript(mpDataRadarDetectorLightsLeft, FEHASH_INIT, true);
             }
-            if (FEngIsScriptSet(mpDataRadarDetectorLightsRight, 0x1744b3)) {
+            if (FEngIsScriptSet(mpDataRadarDetectorLightsRight, FEHASH_INIT)) {
                 return;
             }
-            FEngSetScript(mpDataRadarDetectorLightsRight, 0x1744b3, true);
+            FEngSetScript(mpDataRadarDetectorLightsRight, FEHASH_INIT, true);
         }
         return;
     } else {
@@ -146,10 +147,10 @@ void RadarDetector::Update(IPlayer *player) {
         FEngSetMultiImageBottomRightUVs(static_cast<FEMultiImage *>(mpDataRadarDetectorLightsRight), ledUVs, 0);
     }
 
-    if (!FEngIsScriptSet(mpDataRadarDetectorArrow, 0x16a259)) {
-        FEngSetScript(mpDataRadarDetectorArrow, 0x16a259, true);
+    if (!FEngIsScriptSet(mpDataRadarDetectorArrow, FEHASH_HIDE)) {
+        FEngSetScript(mpDataRadarDetectorArrow, FEHASH_HIDE, true);
     }
-    if (!FEngIsScriptSet(mpDataRadarIcon, 0x1744b3)) {
-        FEngSetScript(mpDataRadarIcon, 0x1744b3, true);
+    if (!FEngIsScriptSet(mpDataRadarIcon, FEHASH_INIT)) {
+        FEngSetScript(mpDataRadarIcon, FEHASH_INIT, true);
     }
 }

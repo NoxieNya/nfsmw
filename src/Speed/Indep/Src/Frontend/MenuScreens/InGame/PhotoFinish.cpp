@@ -3,6 +3,7 @@
 #include "Speed/Indep/Src/Camera/ICE/ICEManager.hpp"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Ecstasy/EcstasyData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
@@ -153,7 +154,7 @@ PhotoFinishScreen::~PhotoFinishScreen() {
 
 void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x406415E3:
+        case __PAD_ACCEPT__:
             if (fResultType == FERESULTTYPE_SPEEDTRAP) {
                 extern int foo; // TODO: idk
 
@@ -170,7 +171,7 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *pObj, u32 param1,
                 return;
             }
 
-            if (FEngIsScriptRunning(GetPackageName(), 0x286A9CD4, 0x5079C8F8)) {
+            if (FEngIsScriptRunning(GetPackageName(), 0x286A9CD4, FEHASH_APPEAR)) {
                 return;
             }
 
@@ -219,7 +220,7 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *pObj, u32 param1,
                 new EQuitToFE(GARAGETYPE_MAIN_FE, nullptr);
             }
             return;
-        case 0xC519BFC3:
+        case __PAD_BUTTON4__:
             if (fResultType != FERESULTTYPE_SPEEDTRAP) {
                 cFEng::Get()->QueuePackageMessage(bStringHash("PAD_BUTTON4_CB"), GetPackageName(), nullptr);
                 if (!cFEng::Get()->IsPackagePushed("InGameBackground.fng")) {
@@ -228,7 +229,7 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *pObj, u32 param1,
                 new EShowResults(fResultType, false);
             }
             return;
-        case 0xC519BFC4:
+        case __PAD_BUTTON5__:
             if (fResultType != FERESULTTYPE_SPEEDTRAP) {
                 DialogInterface::ShowTwoButtons(GetPackageName(), "InGameDialog.fng", dialog_alert, 0x417B2601, 0x1A294DAD, 0xE1A57D51, 0xB4623F67,
                                                 0xB4623F67, first_dialog_button2, 0x4D3399A8);
@@ -239,7 +240,7 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *pObj, u32 param1,
             mRestartSelected = true;
             new EUnPause();
             return;
-        case 0xC98356BA: {
+        case FEMSG_SCREEN_TICK: {
 
             if ((mSlowdownTimer.IsSet() != 0) && (RealTimer - mSlowdownTimer).GetSeconds() >= 0.75f) {
                 mSlowdownTimer.UnSet();
@@ -269,23 +270,23 @@ void PhotoFinishScreen::NotificationMessage(u32 msg, FEObject *pObj, u32 param1,
                 }
 
                 if (fResultType == FERESULTTYPE_SPEEDTRAP) {
-                    if (!FEngIsScriptSet(GetPackageName(), 0x857FB472, 0x5079C8F8)) {
-                        FEngSetScript(GetPackageName(), 0x857FB472, 0x5079C8F8, true);
+                    if (!FEngIsScriptSet(GetPackageName(), 0x857FB472, FEHASH_APPEAR)) {
+                        FEngSetScript(GetPackageName(), 0x857FB472, FEHASH_APPEAR, true);
                     }
 
-                    FEngSetScript(GetPackageName(), bStringHash("SPEEDTRAP_GROUP"), 0x5079C8F8, true);
+                    FEngSetScript(GetPackageName(), bStringHash("SPEEDTRAP_GROUP"), FEHASH_APPEAR, true);
                     cFEng::Get()->QueuePackageMessage(bStringHash("SPEEDTRAP"), GetPackageName(), nullptr);
                 } else {
                     if (mPhotoHash == bStringHash("PHOTOFINISH_TOOBOOTH")) {
-                        FEngSetScript(GetPackageName(), bStringHash("TOLL_BOOTH_GROUP"), 0x5079C8F8, true);
+                        FEngSetScript(GetPackageName(), bStringHash("TOLL_BOOTH_GROUP"), FEHASH_APPEAR, true);
                     } else if (mPhotoHash == bStringHash("PHOTOFINISH_RIVAL")) {
-                        FEngSetScript(GetPackageName(), bStringHash("RIVAL_GROUP"), 0x5079C8F8, true);
+                        FEngSetScript(GetPackageName(), bStringHash("RIVAL_GROUP"), FEHASH_APPEAR, true);
                     } else {
-                        FEngSetScript(GetPackageName(), bStringHash("SPRINT_GROUP"), 0x5079C8F8, true);
+                        FEngSetScript(GetPackageName(), bStringHash("SPRINT_GROUP"), FEHASH_APPEAR, true);
                     }
 
-                    if (!FEngIsScriptSet(GetPackageName(), 0x286A9CD4, 0x5079C8F8)) {
-                        FEngSetScript(GetPackageName(), 0x286A9CD4, 0x5079C8F8, true);
+                    if (!FEngIsScriptSet(GetPackageName(), 0x286A9CD4, FEHASH_APPEAR)) {
+                        FEngSetScript(GetPackageName(), 0x286A9CD4, FEHASH_APPEAR, true);
                     }
                 }
 
@@ -354,12 +355,12 @@ void PhotoFinishScreen::Setup() {
 
         int cashHash;
 
-        if (FEngIsScriptSet(GetPackageName(), bStringHash("TOLL_BOOTH_GROUP"), 0x5079C8F8)) {
+        if (FEngIsScriptSet(GetPackageName(), bStringHash("TOLL_BOOTH_GROUP"), FEHASH_APPEAR)) {
             FEPrintf(GetPackageName(), 0x8BB39726, "%$0.0f %s", speed, GetTranslatedString(speedUnits));
             FEPrintf(GetPackageName(), 0x424BB244, "%s", timeAndSpeed);
             FEPrintf(GetPackageName(), 0x8A7F929C, "+%s", bonusTime);
             cashHash = 0x42423E94;
-        } else if (FEngIsScriptSet(GetPackageName(), bStringHash("RIVAL_GROUP"), 0x5079C8F8)) {
+        } else if (FEngIsScriptSet(GetPackageName(), bStringHash("RIVAL_GROUP"), FEHASH_APPEAR)) {
             if (GRaceStatus::Get().GetRaceType() == GRace::kRaceType_SpeedTrap) {
                 FEPrintf(GetPackageName(), 0x37BEA03B, "%s: %$0.0f %s", GetTranslatedString(0x7F54569D), pointsEarned,
                          GetTranslatedString(speedUnits));

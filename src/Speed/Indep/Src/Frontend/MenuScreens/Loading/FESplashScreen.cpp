@@ -106,7 +106,7 @@ void SplashScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 p
         case 0xa6813b08:
             DialogInterface::ShowOneButton(GetPackageName(), "", dialog_alert, 0x417b2601, 0x1fab5998, 0xa1161aaf);
             break;
-        case 0xc98356ba: {
+        case FEMSG_SCREEN_TICK: {
             bool timed_out = ((RealTimer - CalculateLastJoyEventTime()).GetSeconds() > SplashScreenMovieTimeout ||
                               (SplashScreenTotalTimeout != 0 && (RealTimer - SplashStartedTimer).GetSeconds() > SplashScreenTotalTimeout));
 
@@ -121,13 +121,13 @@ void SplashScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 p
             }
             break;
         }
-        case 0x406415e3:
-        case 0xb5af2461:
+        case __PAD_ACCEPT__:
+        case __PAD_START__:
             if (bAllowContinue) {
                 BootFlowManager::Get()->ChangeToNextBootFlowScreen(0xff);
             }
             break;
-        case 0x35f8620b:
+        case FEHASH_INITCOMPLETE:
             bAllowContinue = true;
             break;
     }

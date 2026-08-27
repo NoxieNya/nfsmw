@@ -1,6 +1,7 @@
 #include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/Src/Frontend/HUD/FePursuitBoard.hpp"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
@@ -60,8 +61,8 @@ void PursuitBoard::Update(IPlayer *player) {
         Timer timer;
         char timeToPrint[16];
 
-        if (!FEngIsScriptSet(mpDataPursuitBoardGroup, 0x5079c8f8)) {
-            FEngSetScript(mpDataPursuitBoardGroup, 0x5079c8f8, true);
+        if (!FEngIsScriptSet(mpDataPursuitBoardGroup, FEHASH_APPEAR)) {
+            FEngSetScript(mpDataPursuitBoardGroup, FEHASH_APPEAR, true);
         }
 
         timer = Timer(mPursuitDuration);
@@ -69,8 +70,8 @@ void PursuitBoard::Update(IPlayer *player) {
         FEPrintf(mpDataPursuitTimer, "%s", timeToPrint);
         FEPrintf(mpDataPursuitSummaryTotal, "%$d", mPursuitRep);
 
-        if (!FEngIsScriptSet(mpDataPursuitSummaryGroup, 0x5079c8f8)) {
-            FEngSetScript(mpDataPursuitSummaryGroup, 0x5079c8f8, true);
+        if (!FEngIsScriptSet(mpDataPursuitSummaryGroup, FEHASH_APPEAR)) {
+            FEngSetScript(mpDataPursuitSummaryGroup, FEHASH_APPEAR, true);
         }
 
         if (mTimeUntilBusted <= -1.0f) {
@@ -86,12 +87,12 @@ void PursuitBoard::Update(IPlayer *player) {
             FEngSetTopLeftX(mpDataCooldownBar, originalLeftX);
 
             if (mTimeUntilHidden > 0.0f) {
-                if (!FEngIsScriptSet(mpDataHidingBacking, 0x5079c8f8)) {
-                    FEngSetScript(mpDataHidingBacking, 0x5079c8f8, true);
+                if (!FEngIsScriptSet(mpDataHidingBacking, FEHASH_APPEAR)) {
+                    FEngSetScript(mpDataHidingBacking, FEHASH_APPEAR, true);
                 }
             } else {
-                if (FEngIsScriptSet(mpDataHidingBacking, 0x5079c8f8)) {
-                    FEngSetScript(mpDataHidingBacking, 0x33113ac, true);
+                if (FEngIsScriptSet(mpDataHidingBacking, FEHASH_APPEAR)) {
+                    FEngSetScript(mpDataHidingBacking, FEHASH_LEAVE, true);
                 }
             }
         } else {
@@ -104,13 +105,13 @@ void PursuitBoard::Update(IPlayer *player) {
                 FEngSetScript(mpDataPursuitCooldownMeterGroup, 0x92975065, true);
                 g_pEAXSound->PlayUISoundFX(UISND_COMMON_SCROLL_START);
             } else {
-                if (FEngIsScriptSet(mpDataPursuitMeterGroup, 0x16a259) || FEngIsScriptSet(mpDataPursuitMeterGroup, 0x33113ac)) {
-                    FEngSetScript(mpDataPursuitMeterGroup, 0x5079c8f8, true);
+                if (FEngIsScriptSet(mpDataPursuitMeterGroup, FEHASH_HIDE) || FEngIsScriptSet(mpDataPursuitMeterGroup, FEHASH_LEAVE)) {
+                    FEngSetScript(mpDataPursuitMeterGroup, FEHASH_APPEAR, true);
                 }
             }
 
-            if (FEngIsScriptSet(mpDataHidingBacking, 0x5079c8f8)) {
-                FEngSetScript(mpDataHidingBacking, 0x33113ac, true);
+            if (FEngIsScriptSet(mpDataHidingBacking, FEHASH_APPEAR)) {
+                FEngSetScript(mpDataHidingBacking, FEHASH_LEAVE, true);
             }
 
             numCopsToReport = mNumCopsFullyEngaged;
@@ -123,8 +124,8 @@ void PursuitBoard::Update(IPlayer *player) {
 
             if (mTimeUntilBackup > 0.0f) {
                 if (mTimeUntilBackup > 10.0f) {
-                    if (!FEngIsScriptSet(mpDataBackupBacking, 0x5079c8f8)) {
-                        FEngSetScript(mpDataBackupBacking, 0x5079c8f8, true);
+                    if (!FEngIsScriptSet(mpDataBackupBacking, FEHASH_APPEAR)) {
+                        FEngSetScript(mpDataBackupBacking, FEHASH_APPEAR, true);
                     }
                 } else {
                     if (!FEngIsScriptSet(mpDataBackupBacking, 0x26ded57)) {
@@ -135,8 +136,8 @@ void PursuitBoard::Update(IPlayer *player) {
                 timer.PrintToString(timeToPrint, 4);
                 FEPrintf(mpDataBackupTimer, "%s", timeToPrint);
             } else {
-                if (!FEngIsScriptSet(mpDataBackupBacking, 0x33113ac)) {
-                    FEngSetScript(mpDataBackupBacking, 0x33113ac, true);
+                if (!FEngIsScriptSet(mpDataBackupBacking, FEHASH_LEAVE)) {
+                    FEngSetScript(mpDataBackupBacking, FEHASH_LEAVE, true);
                 }
             }
 
@@ -155,8 +156,8 @@ void PursuitBoard::Update(IPlayer *player) {
                     FEngSetScript(mpDataBustedBar0, 0x26ded57, true);
                 }
             } else {
-                if (!FEngIsScriptSet(mpDataBustedBar0, 0x1744b3)) {
-                    FEngSetScript(mpDataBustedBar0, 0x1744b3, true);
+                if (!FEngIsScriptSet(mpDataBustedBar0, FEHASH_INIT)) {
+                    FEngSetScript(mpDataBustedBar0, FEHASH_INIT, true);
                 }
             }
 
@@ -176,8 +177,8 @@ void PursuitBoard::Update(IPlayer *player) {
                     FEngSetScript(mpDataBustedBar2, 0x3826a28, true);
                 }
             } else {
-                if (!FEngIsScriptSet(mpDataBustedBar2, 0x1ca7c0)) {
-                    FEngSetScript(mpDataBustedBar2, 0x1ca7c0, true);
+                if (!FEngIsScriptSet(mpDataBustedBar2, FEHASH_SHOW)) {
+                    FEngSetScript(mpDataBustedBar2, FEHASH_SHOW, true);
                 }
             }
 
@@ -206,23 +207,23 @@ void PursuitBoard::Update(IPlayer *player) {
                     FEngSetScript(mpDataBustedBar4, 0x26ded57, true);
                 }
             } else {
-                if (!FEngIsScriptSet(mpDataBustedBar4, 0x1744b3)) {
-                    FEngSetScript(mpDataBustedBar4, 0x1744b3, true);
+                if (!FEngIsScriptSet(mpDataBustedBar4, FEHASH_INIT)) {
+                    FEngSetScript(mpDataBustedBar4, FEHASH_INIT, true);
                 }
             }
         }
     } else {
-        if (FEngIsScriptSet(mpDataPursuitBoardGroup, 0x5079c8f8)) {
-            FEngSetScript(mpDataPursuitBoardGroup, 0x33113ac, true);
+        if (FEngIsScriptSet(mpDataPursuitBoardGroup, FEHASH_APPEAR)) {
+            FEngSetScript(mpDataPursuitBoardGroup, FEHASH_LEAVE, true);
         }
-        if (!FEngIsScriptSet(mpDataPursuitMeterGroup, 0x33113ac) && !FEngIsScriptSet(mpDataPursuitMeterGroup, 0x16a259)) {
-            FEngSetScript(mpDataPursuitMeterGroup, 0x33113ac, true);
+        if (!FEngIsScriptSet(mpDataPursuitMeterGroup, FEHASH_LEAVE) && !FEngIsScriptSet(mpDataPursuitMeterGroup, FEHASH_HIDE)) {
+            FEngSetScript(mpDataPursuitMeterGroup, FEHASH_LEAVE, true);
         }
-        if (FEngIsScriptSet(mpDataPursuitCooldownMeterGroup, 0x5079c8f8) || FEngIsScriptSet(mpDataPursuitCooldownMeterGroup, 0x13f51124)) {
-            FEngSetScript(mpDataPursuitCooldownMeterGroup, 0x33113ac, true);
+        if (FEngIsScriptSet(mpDataPursuitCooldownMeterGroup, FEHASH_APPEAR) || FEngIsScriptSet(mpDataPursuitCooldownMeterGroup, 0x13f51124)) {
+            FEngSetScript(mpDataPursuitCooldownMeterGroup, FEHASH_LEAVE, true);
         }
-        if (FEngIsScriptSet(mpDataPursuitIconsGroup, 0x5079c8f8)) {
-            FEngSetScript(mpDataPursuitIconsGroup, 0x33113ac, true);
+        if (FEngIsScriptSet(mpDataPursuitIconsGroup, FEHASH_APPEAR)) {
+            FEngSetScript(mpDataPursuitIconsGroup, FEHASH_LEAVE, true);
         }
     }
 }

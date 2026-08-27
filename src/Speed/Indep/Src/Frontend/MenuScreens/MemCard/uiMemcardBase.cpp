@@ -2,10 +2,12 @@
 #include "Speed/Indep/Src/FEng/FEPackage.h"
 #include "Speed/Indep/Src/FEng/FEString.h"
 #include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/MemoryCard/MemoryCard.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feKeyboardInput.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/Common/feScrollerina.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/MemCard/uiMemcardInterface.hpp"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "types.h"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
@@ -54,9 +56,9 @@ void UIMemcardKeyboard::Setup() {
 }
 
 void UIMemcardKeyboard::ShowKeyboard() {
-    const u32 FEObj_DIM = 0x9e99;
-    const u32 FEObj_SHOW = 0;
-    const u32 FEObj_PC_NAME_ENTRY = 0x47FF4E7C;
+    const u32 FEObj_DIM = FEHASH_DIM;
+    const u32 FEObj_SHOW = FEHASH_SHOW;
+    const u32 FEObj_PC_NAME_ENTRY = FEOBJ_EVENT_HANDLER;
     const u32 FEObjWidget = 0;
 
     FEngSetScript(GetPackageName(), FEObj_PC_NAME_ENTRY, FEObj_DIM, true);
@@ -65,9 +67,9 @@ void UIMemcardKeyboard::ShowKeyboard() {
 }
 
 void UIMemcardKeyboard::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
-    const u32 FEObj_UNDIM = 0x03D8EABC;
-    const u32 FEObj_HIDE = 0x16a259;
-    const u32 FEObj_PC_NAME_ENTRY = 0x47FF4E7C;
+    const u32 FEObj_UNDIM = FEHASH_UNDIM;
+    const u32 FEObj_HIDE = FEHASH_HIDE;
+    const u32 FEObj_PC_NAME_ENTRY = FEOBJ_EVENT_HANDLER;
     if (msg == FEMSG_DECLINE_EDITED_TEXT) {
         FEngSetScript(GetPackageName(), FEObj_PC_NAME_ENTRY, FEObj_UNDIM, true);
     }
@@ -309,7 +311,7 @@ eMenuSoundTriggers UIMemcardBase::NotifySoundMessage(u32 msg, eMenuSoundTriggers
 
 // UNSOLVED
 void UIMemcardBase::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
-    if (msg != 0xc407210 && MemoryCard::GetInstance()->GetOp() == 0) {
+    if (msg != __BUTTON_PRESSED__ && MemoryCard::GetInstance()->GetOp() == 0) {
         UIMemcardKeyboard::NotificationMessage(msg, obj, param1, param2);
     }
 
@@ -319,11 +321,11 @@ void UIMemcardBase::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
     const u32 FEObj_UNHIGHLIGHTCOMPLETE = 0;
 
     switch (msg) {
-        case 0xe1fde1d1:
+        case FEHASH_EXITCOMPLETE:
             ExitComplete();
             break;
         case 0x3a2be557:
-        case 0x35f8620b:
+        case FEHASH_INITCOMPLETE:
             InitComplete();
             break;
         case 0xda5b8712:
@@ -343,7 +345,7 @@ void UIMemcardBase::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
                 m_bDelayedFailed = true;
             }
             break;
-        case 0xc98356ba:
+        case FEMSG_SCREEN_TICK:
             if (m_bDelayedFailed) {
                 m_bDelayedFailed = false;
                 cFEng::Get()->QueueGameMessage(0x8867412d, GetPackageName(), 0xff);
@@ -353,10 +355,10 @@ void UIMemcardBase::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 
             m_bInButtonAnimation = true;
             TranslateButton(obj);
             break;
-        case 0xc407210:
+        case __BUTTON_PRESSED__:
             m_bInButtonAnimation = false;
             gMemcardSetup.mLastController = param1;
-            HandleButtonPressed(0xc407210, obj, param1, param2, false);
+            HandleButtonPressed(__BUTTON_PRESSED__, obj, param1, param2, false);
             break;
         case 0xf35d144e:
             SetupPromptCorruptProfile();
@@ -577,9 +579,9 @@ void UIMemcardBase::ShowYesNo(uint32 language_main, uint32 flag) {
     SetMessageBlurbText(language_main);
     gMemcardSetup.SetPrompt(flag);
     ShowButton(0, true, nullptr);
-    FEngSetLanguageHash(GetPackageName(), gButtonTextIDs[0], 0x417b25e4);
+    FEngSetLanguageHash(GetPackageName(), gButtonTextIDs[0], LANGUAGE_COMMON_NO);
     ShowButton(1, true, nullptr);
-    FEngSetLanguageHash(GetPackageName(), gButtonTextIDs[1], 0x70e01038);
+    FEngSetLanguageHash(GetPackageName(), gButtonTextIDs[1], LANGUAGE_COMMON_YES);
     FEngSetCurrentButton(GetPackageName(), gButtonIDs[0]);
     ShowButton(2, false, nullptr);
     m_ExpectingInput = true;
@@ -652,7 +654,7 @@ void UIMemcardBase::SetupAutoSaveConfirmPrompt() {
     FEngEnableButton(GetPackageName(), gButtonIDs[0]);
     FEngSetVisible(GetPackageName(), gButtonIDs[0]);
     FEngSetVisible(GetPackageName(), gButtonTextIDs[0]);
-    FEPrintf(GetPackageName(), static_cast<int>(gButtonTextIDs[0]), GetLocalizedString(0x417b25e4));
+    FEPrintf(GetPackageName(), static_cast<int>(gButtonTextIDs[0]), GetLocalizedString(LANGUAGE_COMMON_NO));
     FEngEnableButton(GetPackageName(), gButtonIDs[1]);
     FEngSetVisible(GetPackageName(), gButtonIDs[1]);
     FEngSetVisible(GetPackageName(), gButtonTextIDs[1]);
@@ -688,7 +690,7 @@ void UIMemcardBase::SetupPromptAutoSaveEnableFailedNoCard() {
 
 void UIMemcardBase::Setup() {
     const uint32 FEObj_Header_text_02 = 0x99054304;
-    FEngSetLanguageHash(GetPackageName(), 0x42adb44c, 0x774e4dd9);
+    FEngSetLanguageHash(GetPackageName(), FEHASH_HEADERTEXT, 0x774e4dd9);
     FEngSetLanguageHash(m_pDisplayMsg, FEObj_Header_text_02);
     MemoryCard::GetInstance()->FEngLinkObjects(this);
     SetIcon(0x6948e2b3);

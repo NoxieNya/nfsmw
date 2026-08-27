@@ -77,7 +77,7 @@ InGameAnyTutorialScreen::InGameAnyTutorialScreen(ScreenConstructorData *sd) : Me
     FEngSetLanguageHash(GetPackageName(), 0x07d2ea5d, label_hash);
 
     mSubtitler.BeginningMovie(MovieFilename, GetPackageName());
-    new EFadeScreenOff(0x14035fb);
+    new EFadeScreenOff(FEHASH_15_IN);
 }
 
 MenuScreen *InGameAnyTutorialScreen::Create(ScreenConstructorData *sd) {
@@ -91,8 +91,8 @@ void InGameAnyTutorialScreen::NotificationMessage(u32 msg, FEObject *obj, u32 pa
             DismissMovie();
             break;
 
-        case 0xb5af2461:
-        case 0x406415e3:
+        case __PAD_START__:
+        case __PAD_ACCEPT__:
             DismissMovie();
             mSubtitler.Update(0xc3960eb9);
             break;

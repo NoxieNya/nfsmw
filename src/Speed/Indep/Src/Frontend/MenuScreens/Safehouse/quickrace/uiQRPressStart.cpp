@@ -1,13 +1,13 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Safehouse/quickrace/uiQRPressStart.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEManager.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
 
-uiQRPressStart::uiQRPressStart(ScreenConstructorData *sd) : MenuScreen(sd) {
-    iPlayerNum = sd->Arg;
-    param = 0;
+uiQRPressStart::uiQRPressStart(ScreenConstructorData *sd) : MenuScreen(sd), iPlayerNum(sd->Arg), param(0) {
     Setup();
 }
 
@@ -15,10 +15,11 @@ uiQRPressStart::~uiQRPressStart() {}
 
 void uiQRPressStart::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0xebfcda65: {
-            int joyport = FEngMapJoyParamToJoyport(param1);
-            if (iPlayerNum != 1 || joyport != FEDatabase->GetPlayersJoystickPort(0)) {
-                FEDatabase->SetPlayersJoystickPort(iPlayerNum, static_cast<char>(joyport));
+        case __PAD_START_RELEASED__: {
+            int joyPort = FEngMapJoyParamToJoyport(param1);
+            const u32 FEObj_leavescreen = 0x587c018b;
+            if (iPlayerNum != 1 || joyPort != FEDatabase->GetPlayersJoystickPort(0)) {
+                FEDatabase->SetPlayersJoystickPort(iPlayerNum, joyPort);
                 this->param = param1;
                 if ((static_cast<unsigned int>(this->param) & 1) != 0) {
                     this->param = 1;
@@ -33,14 +34,14 @@ void uiQRPressStart::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32
                     this->param = 8;
                 }
                 FEManager::Get()->AllowControllerError(true);
-                cFEng::Get()->QueuePackageMessage(0x587c018b, GetPackageName(), nullptr);
+                cFEng::Get()->QueuePackageMessage(FEObj_leavescreen, GetPackageName(), nullptr);
             }
             break;
         }
 
-        case 0x911ab364:
+        case __PAD_BACK__:
             if (iPlayerNum == 1) {
-                uint32 control_mask = FEngMapJoyportToJoyParam(static_cast<int>(FEDatabase->GetPlayersJoystickPort(0)));
+                int control_mask = FEngMapJoyportToJoyParam(static_cast<int>(FEDatabase->GetPlayersJoystickPort(0)));
                 cFEng::Get()->QueuePackageSwitch("Car_Select.fng", 0, control_mask, false);
             } else {
                 if (FEDatabase->IsSplitScreenMode() &&
@@ -53,15 +54,13 @@ void uiQRPressStart::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32
             }
             break;
 
-        case 0xe1fde1d1:
+        case FEHASH_EXITCOMPLETE:
             cFEng::Get()->QueuePackageSwitch("Car_Select.fng", iPlayerNum, param, false);
             break;
     }
 }
 
 void uiQRPressStart::Setup() {
-    const char *str = GetLocalizedString(0xcf538e1c);
-    FEPrintf(GetPackageName(), 0xb244cf71, str, iPlayerNum + 1);
-    str = GetLocalizedString(0xa065effe);
-    FEPrintf(GetPackageName(), 0x545570c6, str);
+    FEPrintf(GetPackageName(), 0xb244cf71, GetLocalizedString(0xcf538e1c), iPlayerNum + 1);
+    FEPrintf(GetPackageName(), STRINGHASH_FONT_MW_BODY, GetLocalizedString(0xa065effe));
 }

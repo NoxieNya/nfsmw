@@ -1,6 +1,7 @@
 #include "uiRapSheetMain.hpp"
 #include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
@@ -13,10 +14,10 @@ uiRapSheetMain::uiRapSheetMain(ScreenConstructorData *sd)
 
 void uiRapSheetMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x0C407210:
+        case __BUTTON_PRESSED__:
             button_pressed = pobj->NameHash;
             break;
-        case 0x35F8620B: {
+        case FEHASH_INITCOMPLETE: {
             uint8 button = FEngGetLastButton(GetPackageName());
             if (button == 0) {
                 button = 1;
@@ -24,7 +25,7 @@ void uiRapSheetMain::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u3
             FEngSetCurrentButton(GetPackageName(), FEngHashString("BL_%d", button));
             break;
         }
-        case 0xE1FDE1D1: {
+        case FEHASH_EXITCOMPLETE: {
             int button_num = 1;
             switch (button_pressed) {
                 case 0xCDA0A66B:

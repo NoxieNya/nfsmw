@@ -4,6 +4,7 @@
 #include "Speed/Indep/Src/FEng/FEObject.h"
 #include "Speed/Indep/Src/FEng/FEObjectCallback.h"
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 
 // size: 0x40, address: 0x80473CD0, Decl: speed/indep/src/feng/FEButtonMap.cpp:14
 static FEVector2 DirectionVectors[8] = {
@@ -13,7 +14,7 @@ static FEVector2 DirectionVectors[8] = {
 
 // size: 0x20, address: 0x8041D040, Decl: speed/indep/src/feng/FEButtonMap.cpp:26
 u32 FEDirection_Message[8] = {
-    0x72619778u, 0x6FD81B16u, 0xB5971BF1u, 0xAB1A49C9u, 0x911C0A4Bu, 0x79891376u, 0x9120409Eu, 0x6FFB6F23u,
+    __PAD_UP__, __PAD_UPRIGHT__, __PAD_RIGHT__, __PAD_DOWNRIGHT__, __PAD_DOWN__, __PAD_DOWNLEFT__, __PAD_LEFT__, __PAD_UPLEFT__,
 };
 
 // Decl: speed/indep/src/feng/FEButtonMap.cpp:35

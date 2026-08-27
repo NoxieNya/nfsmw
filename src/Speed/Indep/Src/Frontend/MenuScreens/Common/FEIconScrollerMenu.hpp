@@ -298,10 +298,10 @@ class IconScroller : public IconPanel {
     }
     int GetOptionIndex(IconOption *to_find) override;
     int CountElements() {
-        return Options.CountElements();
+        return Options.CountElements() - iNumBookEnds;
     }
     bool IsEmpty() {
-        return Options.CountElements() == iNumBookEnds;
+        return CountElements() == 0;
     }
 
   protected:

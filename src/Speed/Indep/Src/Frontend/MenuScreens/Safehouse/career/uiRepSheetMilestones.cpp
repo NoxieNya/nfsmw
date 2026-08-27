@@ -2,6 +2,7 @@
 
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Frontend/FEngFrontend.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
@@ -13,6 +14,7 @@
 #include "Speed/Indep/Src/Frontend/RaceStarter.hpp"
 #include "Speed/Indep/Src/Gameplay/GManager.h"
 #include "Speed/Indep/Src/Generated/Events/ERaceSheetOff.hpp"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "Speed/Indep/Tools/AttribSys/Runtime/AttribSys.h"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 
@@ -22,7 +24,7 @@ MilestoneDatum *theMilestone = nullptr;
 const char *gTUTORIAL_MOVIE_PURSUIT = "pursuit_tutorial";
 
 void MilestoneDatum::NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) {
-    if (msg == 0xc407210) {
+    if (msg == __BUTTON_PRESSED__) {
 #ifdef EA_BUILD_A124
         theMilestone = this;
 #else
@@ -69,7 +71,7 @@ void uiRepSheetMilestones::NotificationMessage(u32 msg, FEObject *obj, u32 param
 
     // UNSOLVED
     switch (msg) {
-        case 0xc407210: {
+        case __BUTTON_PRESSED__: {
             if (theMilestone == nullptr) {
                 break;
             }
@@ -89,14 +91,14 @@ void uiRepSheetMilestones::NotificationMessage(u32 msg, FEObject *obj, u32 param
             if (theMilestone->GetType() != 0) {
                 messageHash = 0xbf1dcd38;
             }
-            DialogInterface::ShowTwoButtons(GetPackageName(), dialog, dialog_alert, 0x70e01038, 0x417b25e4, 0xd05fc3a3, 0x34dc1bcf, 0x34dc1bcf,
-                                            first_dialog_button2, messageHash);
+            DialogInterface::ShowTwoButtons(GetPackageName(), dialog, dialog_alert, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, dialog_message_yes,
+                                            dialog_message_no, dialog_message_no, first_dialog_button2, messageHash);
             break;
         }
-        case 0xc519bfc3:
+        case __PAD_BUTTON4__:
             if (!bIsInGame) {
                 const u32 FEObj_MASTERBLASTER = 0x99344537;
-                const u32 FEObj_HIDE = 0x16a259;
+                const u32 FEObj_HIDE = FEHASH_HIDE;
                 FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_HIDE, true);
                 FEAnyTutorialScreen::LaunchMovie(gTUTORIAL_MOVIE_PURSUIT, GetPackageName());
             }
@@ -107,7 +109,7 @@ void uiRepSheetMilestones::NotificationMessage(u32 msg, FEObject *obj, u32 param
                 FEngSetVisible(FEngFindObject("InGameBackground.fng", FEObj_BACKGROUND));
             }
             const u32 FEObj_MASTERBLASTER = 0x99344537;
-            const u32 FEObj_Init = 0x1744b3;
+            const u32 FEObj_Init = FEHASH_INIT;
 
             FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_Init, true);
             if (theMilestone == nullptr) {
@@ -135,21 +137,21 @@ void uiRepSheetMilestones::NotificationMessage(u32 msg, FEObject *obj, u32 param
             RaceStarter::StartCareerFreeRoam();
             return;
         }
-        case 0xc98356ba:
+        case FEMSG_SCREEN_TICK:
             if (TrackMapStreamer != nullptr) {
                 TrackMapStreamer->UpdateAnimation();
             }
             break;
-        case 0x911c0a4b:
-        case 0x9120409e:
-        case 0xb5971bf1:
-        case 0x72619778: {
+        case __PAD_DOWN__:
+        case __PAD_LEFT__:
+        case __PAD_RIGHT__:
+        case __PAD_UP__: {
             if (currentIndex != GetNumDatum() - 1 && GetCurrentDatum() != nullptr) {
                 RefreshTrack();
             }
             break;
         }
-        case 0xd05fc3a3: {
+        case dialog_message_yes: {
             UserProfile *prof = FEDatabase->GetUserProfile(0);
             CareerSettings *career = FEDatabase->GetCareerSettings();
             if (!career->HasDonePursuitTutorial()) {
@@ -165,7 +167,7 @@ void uiRepSheetMilestones::NotificationMessage(u32 msg, FEObject *obj, u32 param
                     FEAnyTutorialScreen::LaunchMovie(gTUTORIAL_MOVIE_PURSUIT, GetPackageName());
                 }
                 const u32 FEObj_MASTERBLASTER = 0x99344537;
-                const u32 FEObj_HIDE = 0x16a259;
+                const u32 FEObj_HIDE = FEHASH_HIDE;
                 FEngSetScript(GetPackageName(), FEObj_MASTERBLASTER, FEObj_HIDE, true);
                 FEngSetInvisible(FEngFindObject(GetPackageName(), FEngHashString("TRACK_MAP")));
                 career->SpecialFlags |= 0x200;
@@ -174,14 +176,14 @@ void uiRepSheetMilestones::NotificationMessage(u32 msg, FEObject *obj, u32 param
             cFEng::Get()->QueueGameMessage(0xc3960eb9, GetPackageName(), 0xff);
             break;
         }
-        case 0x911ab364:
+        case __PAD_BACK__:
             if (bIsInGame) {
                 cFEng::Get()->QueuePackageSwitch("InGameReputationOverview.fng", 1, 0, false);
             } else {
                 cFEng::Get()->QueuePackageSwitch("SafeHouseReputationOverview.fng", 0, 0, false);
             }
             break;
-        case 0x34dc1bcf:
+        case dialog_message_no:
             break;
     }
 }

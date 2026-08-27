@@ -3,6 +3,7 @@
 #include "Speed/Indep/Src/Ecstasy/Texture.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/Database/VehicleDB.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEButtons.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
@@ -71,7 +72,7 @@ PostPursuitInfractionsScreen::PostPursuitInfractionsScreen(ScreenConstructorData
         FEngSetScript(GetPackageName(), 0x39F11E5C, GREY, true);
         FEngDisableButton(GetPackageName(), FEObj_Button1);
     } else {
-        const u32 FEObj_NORMAL = 0x6EBBFB68;
+        const u32 FEObj_NORMAL = FEHASH_NORMAL;
         FEngSetScript(GetPackageName(), 0x39F11E5C, FEObj_NORMAL, true);
     }
 
@@ -129,18 +130,18 @@ uint32 PostPursuitInfractionsScreen::CalcBustedTexture() {
 
 void PostPursuitInfractionsScreen::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
-        case 0x35f8620b: {
+        case FEHASH_INITCOMPLETE: {
             const u32 FEObj_Button2 = 0xB8A7C6CC;
             const u32 FEObj_Button1 = 0xB8A7C6CD;
             if (bFirstTimeBusted) {
                 FEngSetCurrentButton(GetPackageName(), FEObj_Button2);
-                DialogInterface::ShowOneButton(GetPackageName(), "", dialog_alert, 0x417b2601, 0xb4edeb6d, 0x9c14b5f1);
+                DialogInterface::ShowOneButton(GetPackageName(), "", dialog_alert, 0x417b2601, dialog_message_cancelled, 0x9c14b5f1);
             } else {
                 FEngSetCurrentButton(GetPackageName(), FEObj_Button1);
             }
             break;
         }
-        case 0x0c407210: {
+        case __BUTTON_PRESSED__: {
             bool paid_with_cash = (pobj->NameHash == 0xB8A7C6CD);
             bool paid_with_marker = (pobj->NameHash == 0xB8A7C6CC);
             bool not_enough_cash;

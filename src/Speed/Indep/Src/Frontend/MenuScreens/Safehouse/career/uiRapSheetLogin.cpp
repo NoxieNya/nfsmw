@@ -15,7 +15,7 @@ uiRapSheetLogin::uiRapSheetLogin(ScreenConstructorData *sd)
 void uiRapSheetLogin::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
     switch (msg) {
         case 0x7EABCA56:
-        case 0x406415E3:
+        case __PAD_ACCEPT__:
             if (screen == 0) {
                 g_pEAXSound->StopUISoundFX(UISND_RAPSHEET_LOGIN);
             } else if (screen == 2) {
@@ -23,7 +23,7 @@ void uiRapSheetLogin::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u
             }
             screen = 3;
             break;
-        case 0x911AB364:
+        case __PAD_BACK__:
             returnToMainMenu = true;
             break;
         case FEHASH_EXITCOMPLETE:

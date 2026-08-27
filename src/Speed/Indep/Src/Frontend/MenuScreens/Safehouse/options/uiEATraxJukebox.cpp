@@ -3,8 +3,10 @@
 #include "Speed/Indep/Src/FEng/FETypes.h"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Generated/LanguageHashes.hpp"
 #include "Speed/Indep/Src/Generated/Messages/MControlPathfinder.h"
 #include "Speed/Indep/bWare/Inc/bWare.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
@@ -124,7 +126,7 @@ void UIEATraxScreen::ScrollOrderState(u32 msg) {
 }
 
 void UIEATraxScreen::ScrollTracks(u32 msg) {
-    if (msg == 0x72619778) {
+    if (msg == __PAD_UP__) {
         if (!Tracks.IsAtHead()) {
             Tracks.ScrollPrev();
         }
@@ -152,12 +154,12 @@ void UIEATraxScreen::ScrollTrackPlayability(u32 msg) {
 
     JukeBoxScrollerSlot *slot = static_cast<JukeBoxScrollerSlot *>(Tracks.GetSelectedSlot());
 
-    if (msg == 0x9120409E) {
+    if (msg == __PAD_LEFT__) {
         play_flag--;
         if (play_flag < 0) {
             play_flag = 3;
         }
-    } else if (msg == 0xB5971BF1) {
+    } else if (msg == __PAD_RIGHT__) {
         play_flag++;
         if (play_flag > 3) {
             play_flag = 0;
@@ -176,9 +178,9 @@ void UIEATraxScreen::MoveTrack(u32 msg) {
     ScrollerSlot *old_slot = Tracks.GetSelectedSlot();
     int oldSlotIndex = Tracks.GetSelectedSlotIndex();
 
-    if (msg == 0x72619778) {
+    if (msg == __PAD_UP__) {
         Tracks.MovePrev();
-    } else if (msg == 0x911C0A4B) {
+    } else if (msg == __PAD_DOWN__) {
         Tracks.MoveNext();
     }
 
@@ -219,32 +221,32 @@ void UIEATraxScreen::ReInsertSong() {
 
 void UIEATraxScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 Param1, u32 Param2) {
     switch (msg) {
-        case 0x35F8620B: {
+        case FEHASH_INITCOMPLETE: {
             Tracks.HighlightSelected();
             break;
         }
-        case 0x5073EF13:
-        case 0xD9FEEC59:
+        case __PAD_LTRIGGER__:
+        case __PAD_RTRIGGER__:
             ScrollOrderState(msg);
             break;
-        case 0x9120409E:
-        case 0xB5971BF1:
+        case __PAD_LEFT__:
+        case __PAD_RIGHT__:
             ScrollTrackPlayability(msg);
             break;
-        case 0x72619778:
-        case 0x911C0A4B:
+        case __PAD_UP__:
+        case __PAD_DOWN__:
             if (bTrackGrabbed) {
                 MoveTrack(msg);
             } else {
                 ScrollTracks(msg);
             }
             break;
-        case 0x911AB364:
+        case __PAD_BACK__:
             if (OptionsDidNotChange()) {
                 cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             } else {
-                DialogInterface::ShowTwoButtons(GetPackageName(), "Dialog.fng", dialog_alert, 0x70E01038, 0x417B25E4, 0x775DBA97, 0x34DC1BCF,
-                                                0x34DC1BCF, first_dialog_button2, GetLocalizedString(0xE9CB802F));
+                DialogInterface::ShowTwoButtons(GetPackageName(), "Dialog.fng", dialog_alert, LANGUAGE_COMMON_YES, LANGUAGE_COMMON_NO, 0x775DBA97,
+                                                dialog_message_no, dialog_message_no, first_dialog_button2, GetLocalizedString(0xE9CB802F));
             }
             MControlPathfinder(true, 0, 0, 0).Send("EATraxInit");
             break;
@@ -252,13 +254,13 @@ void UIEATraxScreen::NotificationMessage(u32 msg, FEObject *pObject, u32 Param1,
             RestoreOriginals();
             cFEng::Get()->QueuePackageMessage(0x587C018B, GetPackageName(), nullptr);
             break;
-        case 0xC519BFC4:
+        case __PAD_BUTTON5__:
             bTrackGrabbed = !bTrackGrabbed;
             break;
-        case 0xC519BFC3:
+        case __PAD_BUTTON4__:
             PreviewSong();
             break;
-        case 0xE1FDE1D1:
+        case FEHASH_EXITCOMPLETE:
             MControlPathfinder(true, 0xFFFFFFFF, 0, 0).Send("EATraxInit");
 
             FEDatabase->SetOptionsDirty(FEDatabase->IsOptionsDirty() || !OptionsDidNotChange());

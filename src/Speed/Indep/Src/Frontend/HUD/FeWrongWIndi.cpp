@@ -1,6 +1,7 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeWrongWIndi.hpp"
 
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 
 WrongWIndi::WrongWIndi(UTL::COM::Object *pOutter, const char *pkg_name, int player_number)
@@ -28,8 +29,8 @@ void WrongWIndi::Update(IPlayer *player) {
         if (mTimeBeforeClosing.IsSet()) {
             if ((WorldTimer - mTimeBeforeClosing).GetSeconds() >= 2.0f) {
                 mTimeBeforeClosing.UnSet();
-                if (!FEngIsScriptSet(mpWrongWayImage, 0x16a259)) {
-                    FEngSetScript(mpWrongWayImage, 0x16a259, true);
+                if (!FEngIsScriptSet(mpWrongWayImage, FEHASH_HIDE)) {
+                    FEngSetScript(mpWrongWayImage, FEHASH_HIDE, true);
                 }
             }
         }

@@ -1,5 +1,7 @@
 #include "uiPause.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/SoundHashes.hpp"
 #include "Speed/Indep/Src/Frontend/MemoryCard/MemoryCard.hpp"
 #include "Speed/Indep/Src/Frontend/MenuScreens/InGame/FEPkg_PostRace.hpp"
 #include "Speed/Indep/Src/Gameplay/GRaceDatabase.h"
@@ -30,26 +32,26 @@ PauseMenu::PauseMenu(ScreenConstructorData *sd) : IconScrollerMenu(sd) {
 PauseMenu::~PauseMenu() {}
 
 eMenuSoundTriggers PauseMenu::NotifySoundMessage(u32 msg, eMenuSoundTriggers maybe) {
-    if (msg == 0x480C9A58 && mCalledFromPostRace) {
+    if (msg == FEHASH_SOUND_BACK && mCalledFromPostRace) {
         return UISND_NONE;
     }
     return maybe;
 }
 
+// UNSOLVED
 void PauseMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) {
-    if (msg != 0x911AB364 || !mCalledFromPostRace) {
+    if (msg != __PAD_BACK__ || !mCalledFromPostRace) {
         IconScrollerMenu::NotificationMessage(msg, pobj, param1, param2);
     }
 
-    // UNSOLVED
     switch (msg) {
-        case 0x911AB364:
+        case __PAD_BACK__:
             if (!mCalledFromPostRace) {
                 FEngSetScript(GetPackageName(), 0x47FF4E7C, 0xDE6EFF34, true);
-                StorePrevNotification(0x911AB364, pobj, param1, param2);
+                StorePrevNotification(__PAD_BACK__, pobj, param1, param2);
             }
             break;
-        case 0xB5AF2461:
+        case __PAD_START__:
             if (!mCalledFromPostRace) {
                 SetSelectionHash(0xFDAE152F);
                 FEngSetScript(GetPackageName(), 0x47FF4E7C, 0xDE6EFF34, true);
@@ -65,10 +67,10 @@ void PauseMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 par
             break;
         case 0xB4623F67:
             Options.StartFadeIn();
-            cFEng::Get()->QueuePackageMessage(0xC6341FF6, GetPackageName(), nullptr);
+            cFEng::Get()->QueuePackageMessage(FEHASH_ENABLE_INPUT, GetPackageName(), nullptr);
             break;
-        case 0xE1FDE1D1:
-            if (PrevButtonMessage != 0x911AB364) {
+        case FEHASH_EXITCOMPLETE:
+            if (PrevButtonMessage != __PAD_BACK__) {
                 switch (mSelectionHash) {
                     case 0xFBDF2EE3:
                         if (GRaceStatus::Exists() && (GRaceStatus::Get().GetRaceParameters() != nullptr) &&
@@ -85,7 +87,7 @@ void PauseMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 par
                         if (GRaceStatus::Exists()) {
                             GRaceStatus::Get().RaceAbandoned();
                         }
-                        MNotifyRaceAbandoned().Post(MNotifyRaceAbandoned::_GetKind());
+                        MNotifyRaceAbandoned().Post(0x20d60dbf);
                         break;
                     }
                     case 0x0506202D:
@@ -115,6 +117,8 @@ void PauseMenu::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 par
                         break;
                 }
             }
+        case 0x409e9120:
+            break;
     }
 }
 

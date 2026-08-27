@@ -381,8 +381,8 @@ class GRaceDatabase {
     GRaceParameters *GetRaceFromActivity(GActivity *activity);
     GRaceCustom *AllocCustomRace(GRaceParameters *parms);
 
-    unsigned int GetRaceCount() const;
-    GRaceParameters *GetRaceParameters(unsigned int index) const;
+    unsigned int GetRaceCount();
+    GRaceParameters *GetRaceParameters(unsigned int index);
 
     static GRaceDatabase &Get() {
         return *mObj;

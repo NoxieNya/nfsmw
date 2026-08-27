@@ -1,5 +1,6 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeRaceInformation.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Gameplay/GRace.h"
@@ -31,20 +32,20 @@ RaceInformation::RaceInformation(UTL::COM::Object *pOutter, const char *pkg_name
 
 void RaceInformation::Update(IPlayer *player) {
     if (GRaceStatus::IsTollboothRace()) {
-        if (!FEngIsScriptSet(mDataPositionGroup, 0x16A259)) {
-            FEngSetScript(mDataPositionGroup, 0x16A259, true);
+        if (!FEngIsScriptSet(mDataPositionGroup, FEHASH_HIDE)) {
+            FEngSetScript(mDataPositionGroup, FEHASH_HIDE, true);
         }
-        if (!FEngIsScriptSet(mDataIconTollbooth, 0x5079C8F8)) {
-            FEngSetScript(mDataIconTollbooth, 0x5079C8F8, true);
+        if (!FEngIsScriptSet(mDataIconTollbooth, FEHASH_APPEAR)) {
+            FEngSetScript(mDataIconTollbooth, FEHASH_APPEAR, true);
         }
         FEPrintf(GetPackageName(), mpDataTollboothNumTop, "%d", mPlayerTollboothNumber);
         FEPrintf(GetPackageName(), mpDataTollboothNumBot, "%d", mNumTollbooths);
     } else {
-        if (!FEngIsScriptSet(mDataPositionGroup, 0x1744B3)) {
-            FEngSetScript(mDataPositionGroup, 0x1744B3, true);
+        if (!FEngIsScriptSet(mDataPositionGroup, FEHASH_INIT)) {
+            FEngSetScript(mDataPositionGroup, FEHASH_INIT, true);
         }
-        if (!FEngIsScriptSet(mDataIconTollbooth, 0x16A259)) {
-            FEngSetScript(mDataIconTollbooth, 0x16A259, true);
+        if (!FEngIsScriptSet(mDataIconTollbooth, FEHASH_HIDE)) {
+            FEngSetScript(mDataIconTollbooth, FEHASH_HIDE, true);
         }
         FEPrintf(GetPackageName(), mpDataRacePosNum, "%d", mPlayerPosition);
         FEPrintf(GetPackageName(), mpDataRacerCount, "%d", mNumRacers);

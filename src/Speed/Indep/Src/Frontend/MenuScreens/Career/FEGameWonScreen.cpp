@@ -1,5 +1,6 @@
 #include "Speed/Indep/Src/Frontend/MenuScreens/Career/FEGameWonScreen.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/Localization/Localize.hpp"
@@ -36,7 +37,7 @@ FEGameWonScreen::FEGameWonScreen(ScreenConstructorData *sd) : MenuScreen(sd) {
 FEGameWonScreen::~FEGameWonScreen() {}
 
 void FEGameWonScreen::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param2) {
-    if (msg == 0xe1fde1d1) {
+    if (msg == FEHASH_EXITCOMPLETE) {
         QueuePackageSwitchForNextScreen();
     }
 }

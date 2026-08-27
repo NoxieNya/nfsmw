@@ -3,6 +3,7 @@
 #include "Speed/Indep/Src/AI/gps.h"
 #include "Speed/Indep/Src/EAXSound/EAXSOund.hpp"
 #include "Speed/Indep/Src/Frontend/FEPackageData.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
@@ -59,7 +60,7 @@ void HeliItem::Draw() {
 }
 
 void ItemTypeToggle::Act(const char *parent_pkg, uint32 data) {
-    if (data == 0xc407210) {
+    if (data == __BUTTON_PRESSED__) {
         bVisibility = !bVisibility;
         FEDatabase->GetGameplaySettings()->SetMapItem(GetType(), bVisibility);
         g_pEAXSound->PlayUISoundFX(UISND_COMMON_LEFT);
@@ -69,7 +70,7 @@ void ItemTypeToggle::Act(const char *parent_pkg, uint32 data) {
 
 void ItemTypeToggle::CheckMouse(const char *parent_pkg, const float mouse_x, const float mouse_y) {
     if (FEngTestForIntersection(mouse_x, mouse_y, GetTitleObject())) {
-        cFEng::Get()->QueueGameMessage(0xc407210, parent_pkg, 0xff);
+        cFEng::Get()->QueueGameMessage(__BUTTON_PRESSED__, parent_pkg, 0xff);
     }
 }
 
@@ -77,7 +78,7 @@ void ItemTypeToggle::Draw() {
     const u32 FEObj_Highlight = 0x249db7b7;
     FEngSetLanguageHash(GetTitleObject(), NameHash);
     if (bVisibility) {
-        const u32 FEObj_NORMAL = 0x6ebbfb68;
+        const u32 FEObj_NORMAL = FEHASH_NORMAL;
         FEngSetScript(pIconGroup, FEObj_NORMAL, true);
         if (!FEngIsScriptSet(GetTitleObject(), FEObj_Highlight)) {
             FEngSetScript(GetTitleObject(), FEObj_NORMAL, true);
@@ -98,7 +99,7 @@ void ItemTypeToggle::Position() {
 
 void ItemTypeToggle::UnsetFocus() {
     if (GetVisibility() || bExiting) {
-        const u32 FEObj_NORMAL = 0x6ebbfb68;
+        const u32 FEObj_NORMAL = FEHASH_NORMAL;
         FEButtonWidget::UnsetFocus();
         FEngSetScript(pIconGroup, FEObj_NORMAL, true);
     } else {
@@ -190,14 +191,14 @@ void WorldMap::NotificationMessage(u32 msg, FEObject *obj, u32 param1, u32 param
     UMath::Vector3 pos;
 
     if (!bInToggleMode) {
-        if (msg == 0x72619778) {
+        if (msg == __PAD_UP__) {
             goto after_base_message;
         }
-        if (msg == 0x911c0a4b) {
+        if (msg == __PAD_DOWN__) {
             goto after_base_message;
         }
     }
-    if (msg != 0xc407210) {
+    if (msg != __BUTTON_PRESSED__) {
         UIWidgetMenu::NotificationMessage(msg, obj, param1, param2);
     }
 after_base_message:
@@ -207,85 +208,85 @@ after_base_message:
     if (msg > 0xa16ca7bd) {
         goto msg_gt_a16ca7bd;
     }
-    if (msg == 0x72619778) {
+    if (msg == __PAD_UP__) {
         goto refresh_and_end;
     }
-    if (msg > 0x72619778) {
+    if (msg > __PAD_UP__) {
         goto msg_gt_72619778;
     }
-    if (msg == 0x35f8620b) {
+    if (msg == FEHASH_INITCOMPLETE) {
         goto clear_focus;
     }
-    if (msg > 0x35f8620b) {
+    if (msg > FEHASH_INITCOMPLETE) {
         goto msg_gt_35f8620b;
     }
-    if (msg == 0xc407210) {
+    if (msg == __BUTTON_PRESSED__) {
         goto handle_toggle_or_dialog;
     }
     return;
 
 msg_gt_35f8620b:
-    if (msg == 0x5073ef13) {
+    if (msg == __PAD_LTRIGGER__) {
         goto zoom_prev;
     }
     return;
 
 msg_gt_72619778:
-    if (msg == 0x911c0a4b) {
+    if (msg == __PAD_DOWN__) {
         goto refresh_and_end;
     }
-    if (msg > 0x911c0a4b) {
+    if (msg > __PAD_DOWN__) {
         goto msg_gt_911c0a4b;
     }
-    if (msg == 0x911ab364) {
+    if (msg == __PAD_BACK__) {
         goto leave_screen;
     }
     return;
 
 msg_gt_911c0a4b:
-    if (msg == 0x9120409e) {
+    if (msg == __PAD_LEFT__) {
         goto maybe_view_switch;
     }
     return;
 
 msg_gt_a16ca7bd:
-    if (msg == 0xc519bfc4) {
+    if (msg == __PAD_BUTTON5__) {
         return;
     }
-    if (msg > 0xc519bfc4) {
+    if (msg > __PAD_BUTTON5__) {
         goto msg_gt_c519bfc4;
     }
-    if (msg == 0xb5af2461) {
+    if (msg == __PAD_START__) {
         goto set_last_button_and_leave;
     }
-    if (msg > 0xb5af2461) {
+    if (msg > __PAD_START__) {
         goto msg_gt_b5af2461;
     }
-    if (msg == 0xb5971bf1) {
+    if (msg == __PAD_RIGHT__) {
         goto maybe_view_switch;
     }
     return;
 
 msg_gt_b5af2461:
-    if (msg == 0xc519bfc3) {
+    if (msg == __PAD_BUTTON4__) {
         goto handle_toggle;
     }
     return;
 
 msg_gt_c519bfc4:
-    if (msg == 0xd9feec59) {
+    if (msg == __PAD_RTRIGGER__) {
         goto zoom_next;
     }
-    if (msg > 0xd9feec59) {
+    if (msg > __PAD_RTRIGGER__) {
         goto msg_gt_d9feec59;
     }
-    if (msg == 0xc98356ba) {
+    if (msg == FEMSG_SCREEN_TICK) {
         goto update_map;
     }
     return;
 
 msg_gt_d9feec59:
-    if (msg == 0xe1fde1d1) {
+    if (msg == FEHASH_EXITCOMPLETE) {
         goto world_map_off;
     }
     return;
@@ -403,8 +404,8 @@ handle_toggle_or_dialog:
         unsigned int message_hash;
         unsigned int button_hash;
         if (SelectedItem != nullptr && SelectedItem->GetIcon() != nullptr) {
-            title_hash = 0x70e01038;
-            message_hash = 0x417b25e4;
+            title_hash = LANGUAGE_COMMON_YES;
+            message_hash = LANGUAGE_COMMON_NO;
             button_hash = 0x96ac0a32;
         } else {
             if (mGPSingIcon == nullptr) {
@@ -414,8 +415,8 @@ handle_toggle_or_dialog:
             message_hash = 0x1a294dad;
             button_hash = 0xa6be2ebb;
         }
-        DialogInterface::ShowTwoButtons(GetPackageName(), "InGameDialog.fng", dialog_confirmation, title_hash, message_hash, 0xa16ca7bd, 0xb4edeb6d,
-                                        0xb4edeb6d, first_dialog_button2, button_hash);
+        DialogInterface::ShowTwoButtons(GetPackageName(), "InGameDialog.fng", dialog_confirmation, title_hash, message_hash, 0xa16ca7bd,
+                                        dialog_message_cancelled, dialog_message_cancelled, first_dialog_button2, button_hash);
     }
     return;
 
@@ -438,7 +439,7 @@ handle_gps:
     }
     SetGPSing(SelectedItem->GetIcon());
     FEngSetLastButton(GetPackageName(), 0);
-    cFEng::Get()->QueuePackageMessage(0x911ab364, GetPackageName(), nullptr);
+    cFEng::Get()->QueuePackageMessage(__PAD_BACK__, GetPackageName(), nullptr);
     goto refresh_and_end;
 
 set_last_button_and_leave:
@@ -1172,7 +1173,7 @@ void WorldMap::RefreshHeader() {
     }
 
     const u32 FEObj_GREY = 0x163c76;
-    const u32 FEObj_NORMAL = 0x6EBBFB68;
+    const u32 FEObj_NORMAL = FEHASH_NORMAL;
 
     // TODO
     uint32 gps_group = 0;

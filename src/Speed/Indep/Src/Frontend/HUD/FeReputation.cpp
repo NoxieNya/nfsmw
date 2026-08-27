@@ -1,5 +1,6 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeReputation.hpp"
 
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEStrings.hpp"
@@ -8,7 +9,7 @@ Reputation::Reputation(UTL::COM::Object *pOutter, const char *pkg_name, int play
     mReputationCareer = 0;
     mNumFramesLeftToShow = 0;
     mDataReputationGrp = RegisterGroup(0xEA903012);
-    FEngSetScript(mDataReputationGrp, 0x16A259, true);
+    FEngSetScript(mDataReputationGrp, FEHASH_HIDE, true);
     mDataReputationCareer = FEngFindString(GetPackageName(), 0x9B0AC8CA);
     mDataTitle = FEngFindString(GetPackageName(), 0x41A55ECF);
 }
@@ -22,12 +23,12 @@ void Reputation::Update(IPlayer *player) {
         mNumFramesLeftToShow = mNumFramesLeftToShow - 1;
         FEngSetLanguageHash(mDataTitle, 0x7D0171E4);
         FEPrintf(mDataReputationCareer, "%$d", mReputationCareer);
-        if (!FEngIsScriptSet(mDataReputationGrp, 0x5079C8F8)) {
-            FEngSetScript(mDataReputationGrp, 0x5079C8F8, true);
+        if (!FEngIsScriptSet(mDataReputationGrp, FEHASH_APPEAR)) {
+            FEngSetScript(mDataReputationGrp, FEHASH_APPEAR, true);
         }
     } else {
-        if (FEngIsScriptSet(mDataReputationGrp, 0x5079C8F8)) {
-            FEngSetScript(mDataReputationGrp, 0x33113AC, true);
+        if (FEngIsScriptSet(mDataReputationGrp, FEHASH_APPEAR)) {
+            FEngSetScript(mDataReputationGrp, FEHASH_LEAVE, true);
         }
     }
 }

@@ -1,5 +1,6 @@
 #include "Speed/Indep/Src/Frontend/HUD/FeMilestoneBoard.hpp"
 #include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterface.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEImages.hpp"
 #include "Speed/Indep/Src/Frontend/FEngInterfaces/FEngInterfaceFEObjects.hpp"
@@ -34,26 +35,26 @@ void MilestoneBoard::Update(IPlayer *player) {
         if (mNumMilestones >= 1) {
             numIncompleteMilestones = GetNumIncompleteMilestones();
             if (numIncompleteMilestones > 0) {
-                if (FEngIsScriptSet(mpDataDetailsBacking, 0x16a259)) {
-                    FEngSetScript(mpDataDetailsBacking, 0x1ca7c0, true);
+                if (FEngIsScriptSet(mpDataDetailsBacking, FEHASH_HIDE)) {
+                    FEngSetScript(mpDataDetailsBacking, FEHASH_SHOW, true);
                 }
-                if (FEngIsScriptSet(mpDataDetailsGroup, 0x16a259)) {
-                    FEngSetScript(mpDataDetailsGroup, 0x1ca7c0, true);
+                if (FEngIsScriptSet(mpDataDetailsGroup, FEHASH_HIDE)) {
+                    FEngSetScript(mpDataDetailsGroup, FEHASH_SHOW, true);
                 }
             } else {
-                if (!FEngIsScriptSet(mpDataDetailsBacking, 0x16a259)) {
-                    FEngSetScript(mpDataDetailsBacking, 0x16a259, true);
+                if (!FEngIsScriptSet(mpDataDetailsBacking, FEHASH_HIDE)) {
+                    FEngSetScript(mpDataDetailsBacking, FEHASH_HIDE, true);
                 }
-                if (!FEngIsScriptSet(mpDataDetailsGroup, 0x16a259)) {
-                    FEngSetScript(mpDataDetailsGroup, 0x16a259, true);
+                if (!FEngIsScriptSet(mpDataDetailsGroup, FEHASH_HIDE)) {
+                    FEngSetScript(mpDataDetailsGroup, FEHASH_HIDE, true);
                 }
             }
 
-            if (!FEngIsScriptSet(mpDataMilestoneInfoGroup, 0x5079c8f8)) {
-                FEngSetScript(mpDataMilestoneInfoGroup, 0x5079c8f8, true);
+            if (!FEngIsScriptSet(mpDataMilestoneInfoGroup, FEHASH_APPEAR)) {
+                FEngSetScript(mpDataMilestoneInfoGroup, FEHASH_APPEAR, true);
             }
-            if (!FEngIsScriptSet(mpDataMilestoneIconGroup, 0x5079c8f8)) {
-                FEngSetScript(mpDataMilestoneIconGroup, 0x5079c8f8, true);
+            if (!FEngIsScriptSet(mpDataMilestoneIconGroup, FEHASH_APPEAR)) {
+                FEngSetScript(mpDataMilestoneIconGroup, FEHASH_APPEAR, true);
             }
 
             FEPrintf(mpDataMilestonesTotal, "%d", GetNumCompleteMilestones());
@@ -64,7 +65,7 @@ void MilestoneBoard::Update(IPlayer *player) {
                     mMilestoneSetVisible = GetFirstIncompleteMilestone();
                 } else {
                     if ((WorldTimer - mScrollTimer).GetSeconds() >= 5.0f) {
-                        if (FEngIsScriptSet(mpDataDetailsGroup, 0x1ca7c0)) {
+                        if (FEngIsScriptSet(mpDataDetailsGroup, FEHASH_SHOW)) {
                             FEngSetScript(mpDataDetailsGroup, 0xaff37f61, true);
                         } else if (FEngIsScriptSet(mpDataDetailsGroup, 0xaff37f61) && !FEngIsScriptRunning(mpDataDetailsGroup, 0xaff37f61)) {
                             FEngSetScript(mpDataDetailsGroup, 0xd6c950a0, true);
@@ -86,21 +87,21 @@ void MilestoneBoard::Update(IPlayer *player) {
                             FEngSetScript(mpDataIconBackings[i], 0x249db7b7, true);
                         }
                     } else {
-                        if (!FEngIsScriptSet(mpDataIconBackings[i], 0x1744b3)) {
-                            FEngSetScript(mpDataIconBackings[i], 0x1744b3, true);
+                        if (!FEngIsScriptSet(mpDataIconBackings[i], FEHASH_INIT)) {
+                            FEngSetScript(mpDataIconBackings[i], FEHASH_INIT, true);
                         }
                     }
                 } else {
-                    if (!FEngIsScriptSet(mpDataIconBackings[i], 0x1744b3)) {
-                        FEngSetScript(mpDataIconBackings[i], 0x1744b3, true);
+                    if (!FEngIsScriptSet(mpDataIconBackings[i], FEHASH_INIT)) {
+                        FEngSetScript(mpDataIconBackings[i], FEHASH_INIT, true);
                     }
                 }
             }
 
             for (int i = 0; i < 4; i++) {
                 if (i < mNumMilestones) {
-                    if (!FEngIsScriptSet(mpDataIcons[i], 0x1ca7c0)) {
-                        FEngSetScript(mpDataIcons[i], 0x1ca7c0, true);
+                    if (!FEngIsScriptSet(mpDataIcons[i], FEHASH_SHOW)) {
+                        FEngSetScript(mpDataIcons[i], FEHASH_SHOW, true);
                     }
                     FEngSetTextureHash(static_cast<FEImage *>(mpDataIcons[i]), mMilestones[i].mMilestoneIconHash);
                     float alpha = 0.5f;
@@ -110,8 +111,8 @@ void MilestoneBoard::Update(IPlayer *player) {
                     unsigned int colour = FEngGetColor(mpDataIcons[i]) & 0x00FFFFFF;
                     FEngSetColor(mpDataIcons[i], colour | (static_cast<int>(alpha * 255.0f) << 24));
                 } else {
-                    if (!FEngIsScriptSet(mpDataIcons[i], 0x16a259)) {
-                        FEngSetScript(mpDataIcons[i], 0x16a259, true);
+                    if (!FEngIsScriptSet(mpDataIcons[i], FEHASH_HIDE)) {
+                        FEngSetScript(mpDataIcons[i], FEHASH_HIDE, true);
                     }
                 }
             }
@@ -126,11 +127,11 @@ void MilestoneBoard::Update(IPlayer *player) {
         }
     }
     mScrollTimer.UnSet();
-    if (FEngIsScriptSet(mpDataMilestoneInfoGroup, 0x5079c8f8)) {
-        FEngSetScript(mpDataMilestoneInfoGroup, 0x33113ac, true);
+    if (FEngIsScriptSet(mpDataMilestoneInfoGroup, FEHASH_APPEAR)) {
+        FEngSetScript(mpDataMilestoneInfoGroup, FEHASH_LEAVE, true);
     }
-    if (FEngIsScriptSet(mpDataMilestoneIconGroup, 0x5079c8f8)) {
-        FEngSetScript(mpDataMilestoneIconGroup, 0x33113ac, true);
+    if (FEngIsScriptSet(mpDataMilestoneIconGroup, FEHASH_APPEAR)) {
+        FEngSetScript(mpDataMilestoneIconGroup, FEHASH_LEAVE, true);
     }
 }
 

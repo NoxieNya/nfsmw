@@ -23,10 +23,10 @@ void uiCareerCrib::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
         case 0x1265ECE9:
             GarageMainScreen::GetInstance()->UpdateCurrentCameraView(false);
             return;
-        case 0xE1FDE1D1: {
+        case FEHASH_EXITCOMPLETE: {
             extern int IsMemcardEnabled;
 
-            if (PrevButtonMessage != 0x911AB364) {
+            if (PrevButtonMessage != __PAD_BACK__) {
                 return;
             }
             FEManager::Get()->SetGarageType(GARAGETYPE_MAIN_FE);
@@ -39,7 +39,7 @@ void uiCareerCrib::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
             }
             return;
         }
-        case 0xD05FC3A3: {
+        case dialog_message_yes: {
             const char *lastDDayRace;
             bool dday_flow_completed = false;
 
@@ -66,7 +66,7 @@ void uiCareerCrib::NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 
             FEDatabase->SetGameMode(eFE_GAME_MODE_CAREER);
             return;
         }
-        case 0x34DC1BCF:
+        case dialog_message_no:
             return;
     }
 }

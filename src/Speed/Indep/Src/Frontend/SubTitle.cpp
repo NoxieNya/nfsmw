@@ -146,8 +146,8 @@ void SubTitler::RefreshText() {
         }
     } else {
         if (data_[next_].stringHash != 0x1A20BA) {
-            FEngSetScript(str_, 0x16A259, true);
-            FEngSetScript(str2_, 0x16A259, true);
+            FEngSetScript(str_, FEHASH_HIDE, true);
+            FEngSetScript(str2_, FEHASH_HIDE, true);
             unsigned int text_hash = bStringHash("_A", data_[next_].stringHash);
             if (DoesStringExist(text_hash)) {
                 FEngSetLanguageHash(str_, text_hash);

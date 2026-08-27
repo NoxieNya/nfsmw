@@ -5,6 +5,7 @@
 #include "Speed/Indep/Src/FEng/FEKeyTrack.h"
 #include "Speed/Indep/Src/FEng/FEList.h"
 #include "Speed/Indep/Src/FEng/FEMath.h"
+#include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 
 // File: speed/indep/src/feng/FEScript.h
 // Decl: speed/indep/src/feng/FEScript.h:30
@@ -24,7 +25,7 @@ enum FEKeyTrack_Indices {
     Num_BaseFETracks = 11
 };
 
-static const u32 FEHash_Init = 0x1744b3; // size: 0x4, Decl: speed/indep/src/feng/FEScript.h:50
+static const u32 FEHash_Init = FEHASH_INIT; // size: 0x4, Decl: speed/indep/src/feng/FEScript.h:50
 
 static const u32 SF_ActionMask = 3; // size: 0x4, Decl: speed/indep/src/feng/FEScript.h:53
 static const u32 SF_PlayOnce = 0;   // size: 0x4, Decl: speed/indep/src/feng/FEScript.h:54

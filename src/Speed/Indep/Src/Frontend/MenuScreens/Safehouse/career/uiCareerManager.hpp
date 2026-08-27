@@ -21,7 +21,7 @@ class CResumeCareer : public IconOption {
     CResumeCareer(uint32 tex_hash, uint32 name_hash, uint32 desc_hash) : IconOption(tex_hash, name_hash, desc_hash) {}
     ~CResumeCareer() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             bool should_go_into_epic_pursuit = false;
             FEDatabase->SetPlayersJoystickPort(0, FEngMapJoyParamToJoyport(param1));
             FEDatabase->GetCareerSettings()->ResumeCareer();
@@ -47,7 +47,7 @@ class CStartNewCareer : public IconOption {
     }
     ~CStartNewCareer() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             FEDatabase->SetPlayersJoystickPort(0, FEngMapJoyParamToJoyport(param1));
 
             if (FEDatabase->GetCareerSettings()->HasCareerStarted() || !FEDatabase->bProfileLoaded) {
@@ -67,7 +67,7 @@ class CLoadCareer : public IconOption {
     }
     ~CLoadCareer() override {}
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {
-        if (data == 0x0C407210) {
+        if (data == __BUTTON_PRESSED__) {
             FEDatabase->SetPlayersJoystickPort(0, FEngMapJoyParamToJoyport(param1));
 
             MemcardEnter(pkg_name, pkg_name, 0x413, nullptr, nullptr, 0x7E998E5E, 0x8867412D);

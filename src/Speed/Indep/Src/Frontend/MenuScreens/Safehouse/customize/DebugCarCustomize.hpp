@@ -23,8 +23,9 @@ class DebugCarCustomizeScreen : public MenuScreen {
     // total size: 0x4C
     class DebugCarOption : public bTNode<DebugCarOption> {
       public:
-        DebugCarOption(const char *name, int value) : Intval(value) {
-            bStrNCpy(String, name, 0x40);
+        DebugCarOption(const char *name, int value) {
+            bStrNCpy(String, name, sizeof(String));
+            Intval = value;
         }
 
         int GetValue() {
