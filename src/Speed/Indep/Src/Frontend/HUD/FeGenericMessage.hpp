@@ -6,11 +6,11 @@
 
 // File: speed/indep/src/frontend/hud/FeGenericMessage.hpp
 // total size: 0x90
-// Decl: speed/indep/src/frontend/hud/FeGenericMessage.hpp:36
+// Decl: 36
 class GenericMessage : public HudElement, public IGenericMessage {
   public:
     GenericMessage(UTL::COM::Object *pOutter, const char *pkg_name, int player_number);
-    ~GenericMessage() override {} // Decl: speed/indep/src/frontend/hud/FeGenericMessage.hpp:39
+    ~GenericMessage() override {} // Decl: 39
 
     bool RequestGenericMessage(const char *string, bool singleFrame, uint32 fengHash, uint32 iconTextureHash, uint32 iconFengHash,
                                GenericMessage_Priority priority) override;

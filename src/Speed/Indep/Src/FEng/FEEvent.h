@@ -5,28 +5,28 @@
 #include "Speed/Indep/Src/FEng/FETypes.h"
 
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEEvent.h:23
+// Decl: 23
 typedef struct {
-    u32 EventID; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEEvent.h:24
-    u32 Target;  // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEEvent.h:25
-    u32 tTime;   // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEEvent.h:26
+    u32 EventID; // offset 0x0, size 0x4, Decl: 24
+    u32 Target;  // offset 0x4, size 0x4, Decl: 25
+    u32 tTime;   // offset 0x8, size 0x4, Decl: 26
 } FEEvent;
 
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEEvent.h:45
+// Decl: 45
 class FEEventList {
   private:
-    i32 Count;       // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEEvent.h:47
-    FEEvent *pEvent; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEEvent.h:48
+    i32 Count;       // offset 0x0, size 0x4, Decl: 47
+    FEEvent *pEvent; // offset 0x4, size 0x4, Decl: 48
 
     void Insert(i32 Index);
 
   public:
-    FEEventList() { // Decl: speed/indep/src/feng/FEEvent.h:53
+    FEEventList() { // Decl: 53
         Count = 0;
         pEvent = nullptr;
     }
-    FEEventList(FEEventList &Src) {} // Decl: speed/indep/src/feng/FEEvent.h:54
+    FEEventList(FEEventList &Src) {} // Decl: 54
     ~FEEventList() {
         delete[] pEvent;
         pEvent = nullptr;
@@ -35,17 +35,17 @@ class FEEventList {
     FEEvent &operator[](int Index) {
         return pEvent[Index];
     }
-    void operator=(FEEventList &Src); // Decl: speed/indep/src/feng/FEEvent.h:62
+    void operator=(FEEventList &Src); // Decl: 62
 
     void SetCount(i32 NewCount);
     i32 AddEvent(u32 EventID, u32 Target, u32 tTime);
     i32 FindEvent(u32 EventID);
     void Delete(i32 Index);
-    u32 GetCount() { // Decl: speed/indep/src/feng/FEEvent.h:68
+    u32 GetCount() { // Decl: 68
         return Count;
     }
 
-    void SortEvents(); // Decl: speed/indep/src/feng/FEEvent.h:70
+    void SortEvents(); // Decl: 70
 };
 
 #endif

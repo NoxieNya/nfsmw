@@ -8,7 +8,7 @@
 
 class FEGameInterface;
 
-// Decl: speed/indep/src/feng/FEButtonMap.h:41
+// Decl: 41
 typedef enum FEButtonWrapMode {
     Wrap_None = 0,
     Wrap_Horizontal = 1,
@@ -17,14 +17,14 @@ typedef enum FEButtonWrapMode {
 } FEButtonWrapMode;
 
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEButtonMap.h:53
+// Decl: 53
 class FEButtonMap {
   private:
-    FEObject **pList; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEButtonMap.h:55
-    u32 Count;        // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEButtonMap.h:56
+    FEObject **pList; // offset 0x0, size 0x4, Decl: 55
+    u32 Count;        // offset 0x4, size 0x4, Decl: 56
 
   public:
-    FEButtonMap() : pList(nullptr), Count(0) {} // Decl: speed/indep/src/feng/FEButtonMap.h:59
+    FEButtonMap() : pList(nullptr), Count(0) {} // Decl: 59
     ~FEButtonMap() {
         if (pList) {
             delete[] pList;
@@ -32,7 +32,7 @@ class FEButtonMap {
     }
 
     void SetCount(u32 NewCount);
-    u32 GetCount() { // Decl: speed/indep/src/feng/FEButtonMap.h:63
+    u32 GetCount() { // Decl: 63
         return Count;
     }
 
@@ -46,7 +46,7 @@ class FEButtonMap {
 
     FEObject *GetButtonFrom(FEObject *pButton, i32 Direction, FEGameInterface *pInterface, FEButtonWrapMode WrapMode);
 
-    void ComputeButtonLocation(FEObject *pObj, FEGameInterface *pInterface, FEVector2 &Loc); // Decl: speed/indep/src/feng/FEButtonMap.h:72
+    void ComputeButtonLocation(FEObject *pObj, FEGameInterface *pInterface, FEVector2 &Loc); // Decl: 72
 };
 
 extern u32 FEDirection_Message[8];

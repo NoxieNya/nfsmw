@@ -6,7 +6,7 @@
 
 // File: speed/indep/src/frontend/menuscreens/loading/FELoadingControllerScreen.hpp
 // total size: 0x38
-// Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingControllerScreen.hpp:15
+// Decl: 15
 
 class LoadingControllerScreen : public MenuScreen {
   public:
@@ -19,8 +19,8 @@ class LoadingControllerScreen : public MenuScreen {
     static void *operator new(size_t size, char *msg) {
         return mLoadingControllerScreenPtr;
     }
-    static void operator delete(void *ptr) {}            // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingControllerScreen.hpp:30
-    static void operator delete(void *ptr, char *msg) {} // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingControllerScreen.hpp:31
+    static void operator delete(void *ptr) {}            // Decl: 30
+    static void operator delete(void *ptr, char *msg) {} // Decl: 31
 
     LoadingControllerScreen(ScreenConstructorData *sd);
     ~LoadingControllerScreen() override;

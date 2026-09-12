@@ -6,7 +6,7 @@
 #include "Speed/Indep/Src/Misc/Timer.hpp"
 
 // File: speed/indep/src/frontend/menuscreens/loading/FELoadingScreenSelector.hpp
-// Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreenSelector.hpp:15
+// Decl: 15
 enum eGameTips {
     GAME_TIP_LAST_CAR_AND_2_STRIKES = 0,
     GAME_TIP_INTRO_TIP = 1,
@@ -42,7 +42,7 @@ enum eGameTips {
 };
 
 // total size: 0x10
-// Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreenSelector.hpp:143
+// Decl: 143
 enum eGameTipBins {
     GT_BIN_NONE = 0,
     GT_BIN_1 = 2,
@@ -98,7 +98,7 @@ struct GameTipInfo {
 
 // File: speed/indep/src/frontend/menuscreens/loading/FELoadingTips.hpp
 // total size: 0x3C
-// Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingTips.hpp:15
+// Decl: 15
 
 class LoadingTips : public MenuScreen {
   public:
@@ -114,9 +114,9 @@ class LoadingTips : public MenuScreen {
         return mLoadingTipsScreenPtr;
     }
 
-    static inline void operator delete(void *ptr) {} // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingTips.hpp:21
+    static inline void operator delete(void *ptr) {} // Decl: 21
 
-    static inline void operator delete(void *ptr, char *msg) {} // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingTips.hpp:22
+    static inline void operator delete(void *ptr, char *msg) {} // Decl: 22
 
     LoadingTips(ScreenConstructorData *sd);
     ~LoadingTips() override;
@@ -143,7 +143,7 @@ class LoadingTips : public MenuScreen {
 
     static bool mDoneLoading;
     static bool mDoneShowingLoadingTips;
-    static void *mLoadingTipsScreenPtr; // size: 0x4, address: 0x8041C188, Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingTips.cpp:21
+    static void *mLoadingTipsScreenPtr; // size: 0x4, address: 0x8041C188, Decl: 21
 
     uint32 TipTextureHash;         // offset 0x2C
     Timer DisplayTime;             // offset 0x30

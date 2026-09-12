@@ -14,7 +14,7 @@
 
 // File: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.hpp
 // total size: 0x1C
-// Decl: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.hpp:15
+// Decl: 15
 class QRCarSelectBustedManager {
   public:
     enum eBustedAnimationTypes {
@@ -27,8 +27,8 @@ class QRCarSelectBustedManager {
     FECarRecord *WorkingCarRecord;       // offset 0x4, size 0x4
     eBustedAnimationTypes Flags;         // offset 0x8, size 0x4
 
-    QRCarSelectBustedManager(const char *pkg_name, int flags); // Decl: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.hpp:25
-    virtual ~QRCarSelectBustedManager();                       // Decl: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.hpp:26
+    QRCarSelectBustedManager(const char *pkg_name, int flags); // Decl: 25
+    virtual ~QRCarSelectBustedManager();                       // Decl: 26
 
     void NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2);
 
@@ -40,9 +40,9 @@ class QRCarSelectBustedManager {
 
     void LoadImpoundTexture();
 
-    void MaybeReleaseCar(); // Decl: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.hpp:33
+    void MaybeReleaseCar(); // Decl: 33
 
-    void MaybeAddImpoundBox(); // Decl: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.hpp:34
+    void MaybeAddImpoundBox(); // Decl: 34
 
     void SetSelectedCar(FECarRecord *record);
 
@@ -68,16 +68,16 @@ class QRCarSelectBustedManager {
     const char *GetPackageName() {
         return ParentPkg;
     }
-    void RefreshHeader(); // Decl: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.hpp:54
+    void RefreshHeader(); // Decl: 54
     void PayInfractions();
     void UseInfractionMarker();
     void UseImpoundMarker();
-    bool CalcGameOver(); // Decl: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.hpp:60
+    bool CalcGameOver(); // Decl: 60
     void CalcInfractionStatus();
     void BustCar();
     void ImpoundCar();
 
-    static bool bPlayerJustGotBusted; // size: 0x1, address: 0x80439150, Decl: speed/indep/src/frontend/StateManagers/FECarSelectStateManager.cpp:24
+    static bool bPlayerJustGotBusted; // size: 0x1, address: 0x80439150, Decl: 24
     static bool bIsCross;             // size: 0x1, address: 0xFFFFFFFF
 
     uint32 ImpoundStampHash; // offset 0xC, size 0x4

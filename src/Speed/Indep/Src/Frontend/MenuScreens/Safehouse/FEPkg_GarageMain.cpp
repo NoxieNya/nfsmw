@@ -38,13 +38,13 @@ extern bTList<eSolid> SolidList;
 
 float carPosX = 0.0f;
 float carPosY = 0.0f;
-float CarSelectTireSteerAngle = 21.6723f; // size: 0x4, address: 0x804390EC, Decl: speed/indep/src/frontend/menuscreens/FeGarageMain.cpp:94
+float CarSelectTireSteerAngle = 21.6723f; // size: 0x4, address: 0x804390EC, Decl: 94
 static int sNumTicksSinceUserMovedCamera = 0;
 static int sNumTicksBeforeCamMovesBackToScreenPosition = 300;
 static float CarRotateSpeed = 0.5f;
 static bool bPass1 = false;
 static bool bAutoMovement = false;
-static float cam_blur = 0.0f; // size: 0x4, address: 0x80439104, Decl: speed/indep/src/frontend/menuscreens/FeGarageMain.cpp:96
+static float cam_blur = 0.0f; // size: 0x4, address: 0x80439104, Decl: 96
 
 static Attrib::Key FindScreenInfo(const char *screenName, int customizationCategory) {
     char screenNameNoExt[128];

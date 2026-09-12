@@ -2,7 +2,7 @@
 #include "FEObject.h"
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
 
-FELabelCallback *FEString::pLabelCallback; // size: 0x4, address: 0x8041D15C, Decl: speed/indep/src/feng/FEString.cpp:16
+FELabelCallback *FEString::pLabelCallback; // size: 0x4, address: 0x8041D15C, Decl: 16
 
 FEString::FEString(const FEString &String, bool bReference)
     : FEObject(String, bReference), pLabelName(nullptr), string(String.string), Format(String.Format), Leading(String.Leading),

@@ -17,7 +17,7 @@ class FEngine;
 
 // File: speed/indep/src/feng/FEPackage.h
 // total size: 0x4
-// Decl: speed/indep/src/feng/FEPackage.h:44
+// Decl: 44
 class PackageInitStateCB : public FEObjectCallback {
   public:
     PackageInitStateCB() {}
@@ -26,56 +26,56 @@ class PackageInitStateCB : public FEObjectCallback {
 };
 
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEPackage.h:54
+// Decl: 54
 struct FELoadPackageDesc {
-    char *pPackageName; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:55
-    u32 Type;           // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:56
+    char *pPackageName; // offset 0x0, size 0x4, Decl: 55
+    u32 Type;           // offset 0x4, size 0x4, Decl: 56
 };
 
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEPackage.h:60
+// Decl: 60
 struct FELoadPackageDescArray {
-    u32 Num;                    // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:61
-    FELoadPackageDesc Descs[1]; // offset 0x4, size 0x8, Decl: speed/indep/src/feng/FEPackage.h:62
+    u32 Num;                    // offset 0x0, size 0x4, Decl: 61
+    FELoadPackageDesc Descs[1]; // offset 0x4, size 0x8, Decl: 62
 };
 
 // total size: 0x14
-// Decl: speed/indep/src/feng/FEPackage.h:66
+// Decl: 66
 class FEObjectComment : public FEMinNode {
   public:
-    u32 ObjectGUID; // offset 0xC, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:67
-    char *pStr;     // offset 0x10, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:68
+    u32 ObjectGUID; // offset 0xC, size 0x4, Decl: 67
+    char *pStr;     // offset 0x10, size 0x4, Decl: 68
 
     FEObjectComment() {}
 
-    FEObjectComment *GetNext() { // Decl: speed/indep/src/feng/FEPackage.h:70
+    FEObjectComment *GetNext() { // Decl: 70
         return static_cast<FEObjectComment *>(FEMinNode::GetNext());
     }
 
-    FEObjectComment *GetPrev() { // Decl: speed/indep/src/feng/FEPackage.h:71
+    FEObjectComment *GetPrev() { // Decl: 71
         return static_cast<FEObjectComment *>(FEMinNode::GetPrev());
     }
 };
 
-static const u32 FEMouseFlag_MouseOver = 1;         // size: 0x4, Decl: speed/indep/src/feng/FEPackage.h:80
-static const u32 FEMouseFlag_MouseLeftPressed = 2;  // size: 0x4, Decl: speed/indep/src/feng/FEPackage.h:81
-static const u32 FEMouseFlag_MouseRightPressed = 4; // size: 0x4, Decl: speed/indep/src/feng/FEPackage.h:82
+static const u32 FEMouseFlag_MouseOver = 1;         // size: 0x4, Decl: 80
+static const u32 FEMouseFlag_MouseLeftPressed = 2;  // size: 0x4, Decl: 81
+static const u32 FEMouseFlag_MouseRightPressed = 4; // size: 0x4, Decl: 82
 
 // total size: 0x10
-// Decl: speed/indep/src/feng/FEPackage.h:85
+// Decl: 85
 class FEObjectMouseState {
   public:
-    FEObjectMouseState();  // Decl: speed/indep/src/feng/FEPackage.h:87
-    ~FEObjectMouseState(); // Decl: speed/indep/src/feng/FEPackage.h:88
+    FEObjectMouseState();  // Decl: 87
+    ~FEObjectMouseState(); // Decl: 88
 
-    FEObject *pObject; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:90
-    FEPoint Offset;    // offset 0x4, size 0x8, Decl: speed/indep/src/feng/FEPackage.h:91
-    u32 Flags;         // offset 0xC, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:92
+    FEObject *pObject; // offset 0x0, size 0x4, Decl: 90
+    FEPoint Offset;    // offset 0x4, size 0x8, Decl: 91
+    u32 Flags;         // offset 0xC, size 0x4, Decl: 92
 
-    bool GetBit(u32 bit) { // Decl: speed/indep/src/feng/FEPackage.h:94
+    bool GetBit(u32 bit) { // Decl: 94
         return (Flags & bit) != 0;
     }
-    void SetBit(u32 bit, bool state) { // Decl: speed/indep/src/feng/FEPackage.h:95
+    void SetBit(u32 bit, bool state) { // Decl: 95
         if (state) {
             Flags |= bit;
         } else {
@@ -85,40 +85,40 @@ class FEObjectMouseState {
 };
 
 // total size: 0xC4
-// Decl: speed/indep/src/feng/FEPackage.h:104
+// Decl: 104
 class FEPackage : public FENode {
   private:
-    bool bExecuting;                       // offset 0x14, size 0x1, Decl: speed/indep/src/feng/FEPackage.h:106
-    bool bUseIdleList;                     // offset 0x18, size 0x1, Decl: speed/indep/src/feng/FEPackage.h:107
-    bool bIsLibrary;                       // offset 0x1C, size 0x1, Decl: speed/indep/src/feng/FEPackage.h:108
-    bool bStartEqualsAccept;               // offset 0x20, size 0x1, Decl: speed/indep/src/feng/FEPackage.h:109
-    bool bErrorScreen;                     // offset 0x24, size 0x1, Decl: speed/indep/src/feng/FEPackage.h:111
-    i32 Priority;                          // offset 0x28, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:113
-    u32 Controllers;                       // offset 0x2C, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:114
-    u32 OldControllers;                    // offset 0x30, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:115
-    bool bInputEnabled;                    // offset 0x34, size 0x1, Decl: speed/indep/src/feng/FEPackage.h:116
-    u32 VersionNumber;                     // offset 0x38, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:117
-    FEngine *pEnginePtr;                   // offset 0x3C, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:119
-    i32 iTickIncrement;                    // offset 0x40, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:120
-    char *pFilename;                       // offset 0x44, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:122
-    FEPackage *pParentPackage;             // offset 0x48, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:123
-    u32 UserParam;                         // offset 0x4C, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:125
-    FEMinList Objects;                     // offset 0x50, size 0x10, Decl: speed/indep/src/feng/FEPackage.h:127
-    FEMinList Responses;                   // offset 0x60, size 0x10, Decl: speed/indep/src/feng/FEPackage.h:128
-    u32 NumRequests;                       // offset 0x70, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:130
-    FEResourceRequest *pRequests;          // offset 0x74, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:131
-    u32 NumMsgTargets;                     // offset 0x78, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:133
-    FEMsgTargetList *pMsgTargets;          // offset 0x7C, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:134
-    FEList LibrariesUsed;                  // offset 0x80, size 0x10, Decl: speed/indep/src/feng/FEPackage.h:137
-    u32 NumLibRefs;                        // offset 0x90, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:138
-    FELibraryRef *pLibRefs;                // offset 0x94, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:139
-    FEObject *pCurrentButton;              // offset 0x98, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:141
-    FEButtonMap ButtonMap;                 // offset 0x9C, size 0x8, Decl: speed/indep/src/feng/FEPackage.h:143
-    char *pResourceNames;                  // offset 0xA4, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:145
-    FEMinList Comments;                    // offset 0xA8, size 0x10, Decl: speed/indep/src/feng/FEPackage.h:147
-    static u32 uHoldDirtyFlags;            // size: 0x4, address: 0x8041D158, Decl: speed/indep/src/feng/FEPackage.cpp:26
-    FEObjectMouseState *MouseObjectStates; // offset 0xB8, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:150
-    int NumMouseObjects;                   // offset 0xBC, size 0x4, Decl: speed/indep/src/feng/FEPackage.h:151
+    bool bExecuting;                       // offset 0x14, size 0x1, Decl: 106
+    bool bUseIdleList;                     // offset 0x18, size 0x1, Decl: 107
+    bool bIsLibrary;                       // offset 0x1C, size 0x1, Decl: 108
+    bool bStartEqualsAccept;               // offset 0x20, size 0x1, Decl: 109
+    bool bErrorScreen;                     // offset 0x24, size 0x1, Decl: 111
+    i32 Priority;                          // offset 0x28, size 0x4, Decl: 113
+    u32 Controllers;                       // offset 0x2C, size 0x4, Decl: 114
+    u32 OldControllers;                    // offset 0x30, size 0x4, Decl: 115
+    bool bInputEnabled;                    // offset 0x34, size 0x1, Decl: 116
+    u32 VersionNumber;                     // offset 0x38, size 0x4, Decl: 117
+    FEngine *pEnginePtr;                   // offset 0x3C, size 0x4, Decl: 119
+    i32 iTickIncrement;                    // offset 0x40, size 0x4, Decl: 120
+    char *pFilename;                       // offset 0x44, size 0x4, Decl: 122
+    FEPackage *pParentPackage;             // offset 0x48, size 0x4, Decl: 123
+    u32 UserParam;                         // offset 0x4C, size 0x4, Decl: 125
+    FEMinList Objects;                     // offset 0x50, size 0x10, Decl: 127
+    FEMinList Responses;                   // offset 0x60, size 0x10, Decl: 128
+    u32 NumRequests;                       // offset 0x70, size 0x4, Decl: 130
+    FEResourceRequest *pRequests;          // offset 0x74, size 0x4, Decl: 131
+    u32 NumMsgTargets;                     // offset 0x78, size 0x4, Decl: 133
+    FEMsgTargetList *pMsgTargets;          // offset 0x7C, size 0x4, Decl: 134
+    FEList LibrariesUsed;                  // offset 0x80, size 0x10, Decl: 137
+    u32 NumLibRefs;                        // offset 0x90, size 0x4, Decl: 138
+    FELibraryRef *pLibRefs;                // offset 0x94, size 0x4, Decl: 139
+    FEObject *pCurrentButton;              // offset 0x98, size 0x4, Decl: 141
+    FEButtonMap ButtonMap;                 // offset 0x9C, size 0x8, Decl: 143
+    char *pResourceNames;                  // offset 0xA4, size 0x4, Decl: 145
+    FEMinList Comments;                    // offset 0xA8, size 0x10, Decl: 147
+    static u32 uHoldDirtyFlags;            // size: 0x4, address: 0x8041D158, Decl: 26
+    FEObjectMouseState *MouseObjectStates; // offset 0xB8, size 0x4, Decl: 150
+    int NumMouseObjects;                   // offset 0xBC, size 0x4, Decl: 151
     int NumMouseObjectsCounter;            // offset 0xC0, size 0x4
 
     void IssueScriptMessages(FEngine *pEngine, FEObject *pObjPtr, FEScript *pScript, i32 tFrom, i32 tTo);
@@ -135,27 +135,27 @@ class FEPackage : public FENode {
 
     void SetFilename(const char *pName);
 
-    char *GetFilename() { // Decl: speed/indep/src/feng/FEPackage.h:174
+    char *GetFilename() { // Decl: 174
         return pFilename;
     }
 
-    u32 GetVersion() { // Decl: speed/indep/src/feng/FEPackage.h:180
+    u32 GetVersion() { // Decl: 180
         return VersionNumber;
     }
 
-    u32 GetNumParentObjects() { // Decl: speed/indep/src/feng/FEPackage.h:183
+    u32 GetNumParentObjects() { // Decl: 183
         return Objects.GetNumElements();
     }
 
-    void SetExecute(bool bExec) { // Decl: speed/indep/src/feng/FEPackage.h:185
+    void SetExecute(bool bExec) { // Decl: 185
         bExecuting = bExec;
     }
 
-    void SetUseIdleList(bool bUseIdle) { // Decl: speed/indep/src/feng/FEPackage.h:186
+    void SetUseIdleList(bool bUseIdle) { // Decl: 186
         bUseIdleList = bUseIdle;
     }
 
-    bool UsesIdleList() { // Decl: speed/indep/src/feng/FEPackage.h:187
+    bool UsesIdleList() { // Decl: 187
         return bUseIdleList;
     }
 
@@ -163,7 +163,7 @@ class FEPackage : public FENode {
         return bErrorScreen;
     }
 
-    void SetErrorScreen(bool b) { // Decl: speed/indep/src/feng/FEPackage.h:190
+    void SetErrorScreen(bool b) { // Decl: 190
         bErrorScreen = b;
     }
 
@@ -171,15 +171,15 @@ class FEPackage : public FENode {
         return Priority;
     }
 
-    void SetPriority(i32 NewPri) { // Decl: speed/indep/src/feng/FEPackage.h:193
+    void SetPriority(i32 NewPri) { // Decl: 193
         Priority = NewPri;
     }
 
-    bool IsLibrary() const { // Decl: speed/indep/src/feng/FEPackage.h:195
+    bool IsLibrary() const { // Decl: 195
         return bIsLibrary;
     }
 
-    void SetStartEqualsAccept(bool bVal) { // Decl: speed/indep/src/feng/FEPackage.h:197
+    void SetStartEqualsAccept(bool bVal) { // Decl: 197
         bStartEqualsAccept = bVal;
     }
 
@@ -187,19 +187,19 @@ class FEPackage : public FENode {
         return bStartEqualsAccept;
     }
 
-    u32 GetUserParam() const { // Decl: speed/indep/src/feng/FEPackage.h:201
+    u32 GetUserParam() const { // Decl: 201
         return UserParam;
     }
 
-    void SetUserParam(u32 NewParam) { // Decl: speed/indep/src/feng/FEPackage.h:202
+    void SetUserParam(u32 NewParam) { // Decl: 202
         UserParam = NewParam;
     }
 
-    void SetParentPackage(FEPackage *pPack) { // Decl: speed/indep/src/feng/FEPackage.h:204
+    void SetParentPackage(FEPackage *pPack) { // Decl: 204
         pParentPackage = pPack;
     }
 
-    FEPackage *GetParentPackage() { // Decl: speed/indep/src/feng/FEPackage.h:205
+    FEPackage *GetParentPackage() { // Decl: 205
         return pParentPackage;
     }
 
@@ -219,7 +219,7 @@ class FEPackage : public FENode {
         return Controllers;
     }
 
-    void SetControlMask(u32 ControlMask) { // Decl: speed/indep/src/feng/FEPackage.h:221
+    void SetControlMask(u32 ControlMask) { // Decl: 221
         Controllers = ControlMask;
     }
 
@@ -227,7 +227,7 @@ class FEPackage : public FENode {
         return OldControllers;
     }
 
-    void SetOldControlMask(u32 ControlMask) { // Decl: speed/indep/src/feng/FEPackage.h:224
+    void SetOldControlMask(u32 ControlMask) { // Decl: 224
         OldControllers = ControlMask;
     }
 
@@ -235,43 +235,43 @@ class FEPackage : public FENode {
         return bInputEnabled;
     }
 
-    void SetInputEnabled(bool b) { // Decl: speed/indep/src/feng/FEPackage.h:227
+    void SetInputEnabled(bool b) { // Decl: 227
         bInputEnabled = b;
     }
 
-    u32 GetNumResponses() { // Decl: speed/indep/src/feng/FEPackage.h:229
+    u32 GetNumResponses() { // Decl: 229
         return Responses.GetNumElements();
     }
 
-    FEMessageResponse *GetFirstResponse() { // Decl: speed/indep/src/feng/FEPackage.h:232
+    FEMessageResponse *GetFirstResponse() { // Decl: 232
         return reinterpret_cast<FEMessageResponse *>(Responses.GetHead());
     }
 
-    FEMessageResponse *GetResponse(u32 Index) { // Decl: speed/indep/src/feng/FEPackage.h:235
+    FEMessageResponse *GetResponse(u32 Index) { // Decl: 235
         return reinterpret_cast<FEMessageResponse *>(Responses.FindNode(Index));
     }
 
     FEMessageResponse *FindResponse(u32 MsgID);
 
-    void AddResponse(FEMessageResponse *pResp) { // Decl: speed/indep/src/feng/FEPackage.h:240
+    void AddResponse(FEMessageResponse *pResp) { // Decl: 240
         Responses.AddTail(reinterpret_cast<FEMinNode *>(pResp));
     }
 
-    void PurgeResponses() { // Decl: speed/indep/src/feng/FEPackage.h:241
+    void PurgeResponses() { // Decl: 241
         Responses.Purge();
     }
 
-    void RemoveResponse(FEMessageResponse *pResp) { // Decl: speed/indep/src/feng/FEPackage.h:242
+    void RemoveResponse(FEMessageResponse *pResp) { // Decl: 242
         Responses.RemNode(reinterpret_cast<FEMinNode *>(pResp));
     }
 
-    FEObject *GetCurrentButton() { // Decl: speed/indep/src/feng/FEPackage.h:245
+    FEObject *GetCurrentButton() { // Decl: 245
         return pCurrentButton;
     }
 
     void SetCurrentButton(FEObject *pNewButton, bool bSendMsgs);
 
-    FEButtonMap *GetButtonMap() { // Decl: speed/indep/src/feng/FEPackage.h:247
+    FEButtonMap *GetButtonMap() { // Decl: 247
         return &ButtonMap;
     }
 
@@ -281,23 +281,23 @@ class FEPackage : public FENode {
 
     FEObject *FindObjectByGUID(u32 GUID);
 
-    void AddObject(FEObject *pObject) { // Decl: speed/indep/src/feng/FEPackage.h:253
+    void AddObject(FEObject *pObject) { // Decl: 253
         Objects.AddTail(static_cast<FEMinNode *>(pObject));
     }
 
-    void AddObjectAfter(FEObject *pObject, FEObject *pAddAfter) { // Decl: speed/indep/src/feng/FEPackage.h:254
+    void AddObjectAfter(FEObject *pObject, FEObject *pAddAfter) { // Decl: 254
         Objects.AddNode(static_cast<FEMinNode *>(pAddAfter), static_cast<FEMinNode *>(pObject));
     }
 
-    void RemoveObject(FEObject *pObject) { // Decl: speed/indep/src/feng/FEPackage.h:256
+    void RemoveObject(FEObject *pObject) { // Decl: 256
         Objects.RemNode(static_cast<FEMinNode *>(pObject));
     }
 
-    FEObject *GetFirstObject() { // Decl: speed/indep/src/feng/FEPackage.h:258
+    FEObject *GetFirstObject() { // Decl: 258
         return static_cast<FEObject *>(Objects.GetHead());
     }
 
-    FEObject *GetLastObject() { // Decl: speed/indep/src/feng/FEPackage.h:259
+    FEObject *GetLastObject() { // Decl: 259
         return static_cast<FEObject *>(Objects.GetTail());
     }
 
@@ -307,19 +307,19 @@ class FEPackage : public FENode {
 
     bool ForAllObjects(FEObjectCallback &Callback);
 
-    FEPackage *GetNext() { // Decl: speed/indep/src/feng/FEPackage.h:265
+    FEPackage *GetNext() { // Decl: 265
         return static_cast<FEPackage *>(FEMinNode::GetNext());
     }
 
-    FEPackage *GetPrev() { // Decl: speed/indep/src/feng/FEPackage.h:266
+    FEPackage *GetPrev() { // Decl: 266
         return static_cast<FEPackage *>(FEMinNode::GetPrev());
     }
 
-    FEMsgTargetList *const GetMessageTargetList(u32 Index) const { // Decl: speed/indep/src/feng/FEPackage.h:268
+    FEMsgTargetList *const GetMessageTargetList(u32 Index) const { // Decl: 268
         return &pMsgTargets[Index];
     }
 
-    u32 GetNumMessageTargets() const { // Decl: speed/indep/src/feng/FEPackage.h:269
+    u32 GetNumMessageTargets() const { // Decl: 269
         return NumMsgTargets;
     }
 
@@ -333,7 +333,7 @@ class FEPackage : public FENode {
 
     void SetComment(u32 ObjectGUID, const char *pString);
 
-    FEMinList &GetCommentList() { // Decl: speed/indep/src/feng/FEPackage.h:278
+    FEMinList &GetCommentList() { // Decl: 278
         return Comments;
     }
 
@@ -341,7 +341,7 @@ class FEPackage : public FENode {
 
     void UpdateMouseObjectOffsets(FEObject *obj);
 
-    FEObjectMouseState *GetMouseObjectStates() { // Decl: speed/indep/src/feng/FEPackage.h:282
+    FEObjectMouseState *GetMouseObjectStates() { // Decl: 282
         return MouseObjectStates;
     }
 
@@ -358,16 +358,16 @@ class FEPackage : public FENode {
 
     bool RemoveLibraryReference(u32 ObjGUID);
 
-    u32 NumLibraryReferences() const { // Decl: speed/indep/src/feng/FEPackage.h:290
+    u32 NumLibraryReferences() const { // Decl: 290
         return NumLibRefs;
     }
-    FELibraryRef *GetLibraryReference(u32 Index) const { // Decl: speed/indep/src/feng/FEPackage.h:291
+    FELibraryRef *GetLibraryReference(u32 Index) const { // Decl: 291
         return &pLibRefs[Index];
     }
 
     void PurgeUnusedPackageLibraries();
 
-    FEList &GetLibraryList() { // Decl: speed/indep/src/feng/FEPackage.h:297
+    FEList &GetLibraryList() { // Decl: 297
         return LibrariesUsed;
     }
 
@@ -379,7 +379,7 @@ class FEPackage : public FENode {
 
     void UpdateObject(FEObject *pObject, const i32 tDeltaTicks);
 
-    void SetTickIncrement(i32 tDeltaTicks) { // Decl: speed/indep/src/feng/FEPackage.h:311
+    void SetTickIncrement(i32 tDeltaTicks) { // Decl: 311
         iTickIncrement = tDeltaTicks;
     }
 

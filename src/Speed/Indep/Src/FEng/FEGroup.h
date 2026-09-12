@@ -5,29 +5,29 @@
 
 // File: speed/indep/src/feng/FEGroup.h
 // total size: 0x6C
-// Decl: speed/indep/src/feng/FEGroup.h:28
+// Decl: 28
 class FEGroup : public FEObject {
   private:
-    FEMinList Children; // offset 0x5C, size 0x10, Decl: speed/indep/src/feng/FEGroup.h:30
+    FEMinList Children; // offset 0x5C, size 0x10, Decl: 30
 
   public:
-    FEGroup() { // Decl: speed/indep/src/feng/FEGroup.h:33
+    FEGroup() { // Decl: 33
         Type = FE_Group;
     }
     FEGroup(const FEGroup &Object, bool bCloneChildren, bool bReference);
     ~FEGroup() override {}
-    FEObject *Clone(bool bReference) override { // Decl: speed/indep/src/feng/FEGroup.h:36
+    FEObject *Clone(bool bReference) override { // Decl: 36
         return FNEW FEGroup(*this, true, bReference);
     }
 
-    void AddObject(FEObject *pObj) { // Decl: speed/indep/src/feng/FEGroup.h:38
+    void AddObject(FEObject *pObj) { // Decl: 38
         Children.AddTail(pObj);
     }
-    void AddObjectAfter(FEObject *pObj, FEObject *pAddAfter) { // Decl: speed/indep/src/feng/FEGroup.h:39
+    void AddObjectAfter(FEObject *pObj, FEObject *pAddAfter) { // Decl: 39
         Children.AddNode(pAddAfter, pObj);
     }
 
-    void RemoveObject(FEObject *pObj) { // Decl: speed/indep/src/feng/FEGroup.h:41
+    void RemoveObject(FEObject *pObj) { // Decl: 41
         Children.RemNode(pObj);
     }
 

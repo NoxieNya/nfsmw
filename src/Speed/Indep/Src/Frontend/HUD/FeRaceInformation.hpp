@@ -8,11 +8,11 @@
 
 // File: speed/indep/src/frontend/hud/FeRaceInformation.hpp
 // total size: 0x78
-// Decl: speed/indep/src/frontend/hud/FeRaceInformation.hpp:8
+// Decl: 8
 class RaceInformation : public HudElement, public IRaceInformation {
   public:
     RaceInformation(UTL::COM::Object *pOutter, const char *pkg_name, int player_number);
-    ~RaceInformation() override {} // Decl: speed/indep/src/frontend/hud/FeRaceInformation.hpp:11
+    ~RaceInformation() override {} // Decl: 11
 
     void Update(IPlayer *player) override;
     void SetNumRacers(int numRacers) override {

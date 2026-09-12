@@ -6,7 +6,7 @@
 
 // File: speed/indep/src/frontend/menuscreens/loading/FESplashScreen.hpp
 // total size: 0x38
-// Decl: speed/indep/src/frontend/menuscreens/loading/FESplashScreen.hpp:14
+// Decl: 14
 class SplashScreen : public MenuScreen {
   public:
     SplashScreen(ScreenConstructorData *);
@@ -20,7 +20,7 @@ class SplashScreen : public MenuScreen {
     }
     Timer CalculateLastJoyEventTime();
 
-    bool bAllowContinue; // offset 0x2C, size 0x1, Decl: speed/indep/src/frontend/menuscreens/loading/FESplashScreen.hpp:27
+    bool bAllowContinue; // offset 0x2C, size 0x1, Decl: 27
 
   private:
     Timer CopyrightNotice;

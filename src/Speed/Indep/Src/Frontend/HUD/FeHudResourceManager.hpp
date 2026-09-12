@@ -6,7 +6,7 @@
 
 // File: speed/indep/src/frontend/hud/FeHudResourceManager.hpp
 // total size: 0xC
-// Decl: speed/indep/src/frontend/hud/FeHudResourceManager.hpp:10
+// Decl: 10
 class HudResourceManager {
   public:
     enum HudResourceLoadStates {
@@ -17,9 +17,9 @@ class HudResourceManager {
     };
 
   private:
-    HudResourceLoadStates mHudResourcesState; // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/hud/FeHudResourceManager.hpp:20
+    HudResourceLoadStates mHudResourcesState; // offset 0x0, size 0x4, Decl: 20
 
-    ResourceFile *pHudTextures; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/hud/FeHudResourceManager.hpp:22
+    ResourceFile *pHudTextures; // offset 0x4, size 0x4, Decl: 22
 
     static const char *mPackageName;                   // size: 0x4, address: 0x8041BE44
     static int mTachLinesHash;                         // size: 0x4, address: 0x8041BE38
@@ -32,7 +32,7 @@ class HudResourceManager {
 
   public:
     HudResourceManager();
-    virtual ~HudResourceManager() {} // Decl: speed/indep/src/frontend/hud/FeHudResourceManager.hpp:31
+    virtual ~HudResourceManager() {} // Decl: 31
 
     void LoadRequiredResources(ePlayerHudType ht, const char *pkg_name);
     void UnloadRequiredResources(ePlayerHudType ht);
@@ -52,7 +52,7 @@ class HudResourceManager {
     static void LoadingCompleteCallbackBridge(uint32 param);
     static void LoadedCustomHudTexturePackCallbackBridge(uint32 param);
     static void LoadedCustomHudTexturesCallbackBridge(uint32 param);
-    static void LoadingCompleteCallbackBridge(void *param) {} // Decl: speed/indep/src/frontend/hud/FeHudResourceManager.hpp:47
+    static void LoadingCompleteCallbackBridge(void *param) {} // Decl: 47
 };
 
 HudResourceManager TheHudResourceManager; // size: 0x38, Decl:speed/indep/src/frontend/hud/FeHudResourceManager.hpp:51

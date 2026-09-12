@@ -5,7 +5,7 @@
 
 // File: speed/indep/src/frontend/menuscreens/loading/FELoadingScreen.hpp
 // total size: 0x2C
-// Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreen.hpp:15
+// Decl: 15
 class LoadingScreen : public MenuScreen {
   public:
     static void *operator new(size_t size) {
@@ -20,9 +20,9 @@ class LoadingScreen : public MenuScreen {
         return mLoadingScreenPtr;
     }
 
-    static void operator delete(void *ptr) {} // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreen.hpp:21
+    static void operator delete(void *ptr) {} // Decl: 21
 
-    static void operator delete(void *ptr, char *msg) {} // Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreen.hpp:22
+    static void operator delete(void *ptr, char *msg) {} // Decl: 22
 
     enum LoadingScreenTypes {
         LS_LOADING_FE = 0,
@@ -38,7 +38,7 @@ class LoadingScreen : public MenuScreen {
     static void CloseLoadingScreen();
 
   private:
-    static void *mLoadingScreenPtr; // size: 0x4, address: 0x8041C194, Decl: speed/indep/src/frontend/menuscreens/loading/FELoadingScreen.cpp:20
+    static void *mLoadingScreenPtr; // size: 0x4, address: 0x8041C194, Decl: 20
 };
 
 #endif

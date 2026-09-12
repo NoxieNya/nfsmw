@@ -9,12 +9,12 @@
 #include "Speed/Indep/Src/FEng/FEMath.h"
 #include "Speed/Indep/Src/FEng/FEngine.h"
 
-FEMultiPool ObjDataPool;                                   // size: 0x10, address: 0x80473D58, Decl: speed/indep/src/feng/FEObject.cpp:19
-FEObjectDestructorCallback *FEObject::pDestructorCallback; // size: 0x4, address: 0x8041D154, Decl: speed/indep/src/feng/FEObject.cpp:20
+FEMultiPool ObjDataPool;                                   // size: 0x10, address: 0x80473D58, Decl: 19
+FEObjectDestructorCallback *FEObject::pDestructorCallback; // size: 0x4, address: 0x8041D154, Decl: 20
 
-static const float PositionEpsilon = 0.000001f; // size: 0x4, Decl: speed/indep/src/feng/FEObject.cpp:23
-static const float SizeEpsilon = 0.000001f;     // size: 0x4, Decl: speed/indep/src/feng/FEObject.cpp:24
-static const i32 ColorEpsilon = 1;              // size: 0x4, Decl: speed/indep/src/feng/FEObject.cpp:25
+static const float PositionEpsilon = 0.000001f; // size: 0x4, Decl: 23
+static const float SizeEpsilon = 0.000001f;     // size: 0x4, Decl: 24
+static const i32 ColorEpsilon = 1;              // size: 0x4, Decl: 25
 
 static bool Close(float x, float y, float epsilon) {
     return x + epsilon >= y && x - epsilon <= y;
@@ -422,4 +422,4 @@ FEObject *FEObject::Clone(bool bReference) {
     return FNEW FEObject(*this, bReference);
 }
 
-static const FEColoredImageData MaximumObjData; // size: 0x94, address: 0x80473D68, Decl: speed/indep/src/feng/FEObject.cpp:606
+static const FEColoredImageData MaximumObjData; // size: 0x94, address: 0x80473D68, Decl: 606

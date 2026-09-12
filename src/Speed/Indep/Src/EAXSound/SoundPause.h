@@ -2,7 +2,7 @@
 #ifndef SNDPAUSE_H
 #define SNDPAUSE_H
 
-// Decl: speed/indep/src/eaxsound/soundpause.h:8
+// Decl: 8
 enum eSNDPAUSE_REASON {
     eSNDPAUSE_SMS_MESSAGE = 11,
     eSNDPAUSE_PHOTOFINISH = 10,
@@ -19,7 +19,7 @@ enum eSNDPAUSE_REASON {
     ePAUSE_ERROR = -1,
 };
 
-// Decl: speed/indep/src/eaxsound/soundpause.h:29
+// Decl: 29
 enum eSNDCTLSTATE {
     MAX_SNDCTL_STATES = 18,
     SNDSTATE_SYSTEM_HUD = 17,

@@ -3,8 +3,8 @@
 
 #include "types.h"
 
-static const u32 FENG_PACKAGE_VERSION = 0x10002; // size: 0x4, Decl: speed/indep/src/feng/FEPackageFile.h:26
-static const u32 FENG_ALIGNMENT_SIZE = 16;       // size: 0x4, Decl: speed/indep/src/feng/FEPackageFile.h:27
+static const u32 FENG_PACKAGE_VERSION = 0x10002; // size: 0x4, Decl: 26
+static const u32 FENG_ALIGNMENT_SIZE = 16;       // size: 0x4, Decl: 27
 
 #define GET_ID(id) (*(i32 *)(&(id)))                                        // :38
 #define BCHUNK_FENG_NULL DATA_FECHUNK                                       // :48

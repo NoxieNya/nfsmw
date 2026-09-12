@@ -21,7 +21,7 @@ struct UnlockDatum {
 };
 
 // File: speed/indep/src/database/datalogic/UnlockSystem.hpp
-// Decl: speed/indep/src/database/datalogic/UnlockSystem.hpp:35
+// Decl: 35
 enum eUnlockFilters {
     UNLOCK_QUICK_RACE = 1,
     UNLOCK_CAREER_MODE = 2,
@@ -35,7 +35,7 @@ enum eUnlockNewStatus {
 };
 
 // total size: 0x1
-// Decl: speed/indep/src/database/datalogic/UnlockSystem.hpp:53
+// Decl: 53
 class UnlockSystem {
   public:
     static bool IsUnlockableUnlocked(eUnlockFilters filter, eUnlockableEntity thing, int level, int player, bool backroom);

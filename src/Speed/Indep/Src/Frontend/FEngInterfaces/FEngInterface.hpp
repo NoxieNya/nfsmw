@@ -6,68 +6,68 @@
 
 // File: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp
 // total size: 0x8
-// Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:20
+// Decl: 20
 class cFEng {
   public:
-    static void Init(); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:24
+    static void Init(); // Decl: 24
 
-    static void Destroy(); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:25
+    static void Destroy(); // Decl: 25
 
-    static cFEng *Get() { // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:26
+    static cFEng *Get() { // Decl: 26
         return mInstance;
     }
 
     void QueuePackagePush(const char *pPackageName, int pArg, u32 ControlMask,
-                          bool pSuppressSimPause); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:31
+                          bool pSuppressSimPause); // Decl: 31
 
-    void QueuePackagePop(int numPackagesToPop); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:32
+    void QueuePackagePop(int numPackagesToPop); // Decl: 32
 
     void QueuePackageSwitch(const char *pPackageName, int pArg, u32 ControlMask,
-                            bool pSuppressSimPause); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:30
+                            bool pSuppressSimPause); // Decl: 30
     void QueuePopChildPackages(const char *pPackageName);
 
     void PushNoControlPackage(const char *pPackageName,
-                              FE_PACKAGE_PRIORITY pPriority); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:36
+                              FE_PACKAGE_PRIORITY pPriority); // Decl: 36
 
-    void PopNoControlPackage(const char *pPackageName); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:37
+    void PopNoControlPackage(const char *pPackageName); // Decl: 37
 
-    void PushErrorPackage(const char *pPackageName, int pArg, u32 ControlMask); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:41
-    void PopErrorPackage();                                                     // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:42
-    bool IsErrorState() {                                                       // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:43
+    void PushErrorPackage(const char *pPackageName, int pArg, u32 ControlMask); // Decl: 41
+    void PopErrorPackage();                                                     // Decl: 42
+    bool IsErrorState() {                                                       // Decl: 43
         return mFEng->IsErrorScreenMode();
     }
 
-    void PopErrorPackage(int port); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:42
+    void PopErrorPackage(int port); // Decl: 42
 
-    FEPackage *FindPackageWithControl(); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:47
-    FEPackage *FindPackageAtBase();      // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:48
+    FEPackage *FindPackageWithControl(); // Decl: 47
+    FEPackage *FindPackageAtBase();      // Decl: 48
     FEPackage *FindPackageActive(const char *pPackageName);
     FEPackage *FindPackageIdle(const char *pPackageName);
-    FEPackage *FindPackage(const char *pPackageName); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:49
+    FEPackage *FindPackage(const char *pPackageName); // Decl: 49
 
-    bool IsPackagePushed(const char *pPackageName); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:50
+    bool IsPackagePushed(const char *pPackageName); // Decl: 50
 
-    bool IsPackageInControl(const char *pPackageName); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:51
+    bool IsPackageInControl(const char *pPackageName); // Decl: 51
 
-    void PrintLoadedPackages(); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:94
+    void PrintLoadedPackages(); // Decl: 94
 
-    void UnloadPackage(FEPackage *pPackagePtr) { // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:70
+    void UnloadPackage(FEPackage *pPackagePtr) { // Decl: 70
         mFEng->UnloadPackage(pPackagePtr);
     }
 
     void QueuePackageMessage(uint32 pMessage, const char *pPackageName,
-                             FEObject *obj); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:60
+                             FEObject *obj); // Decl: 60
 
     void QueueGameMessage(uint32 pMessage, const char *pPackageName,
-                          uint32 controlMask); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:61
+                          uint32 controlMask); // Decl: 61
 
-    void QueueSoundMessage(uint32 pMessage, const char *pPackageName); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:62
+    void QueueSoundMessage(uint32 pMessage, const char *pPackageName); // Decl: 62
 
     void QueueGameMessagePkg(unsigned int pMessage, FEPackage *topkg);
 
-    void Service();         // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:66
-    void ServiceFengOnly(); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:67
-    void DrawForeground();  // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:68
+    void Service();         // Decl: 66
+    void ServiceFengOnly(); // Decl: 67
+    void DrawForeground();  // Decl: 68
 
     bool RecordPackageMarker(const char *pkg_name);
 
@@ -77,27 +77,27 @@ class cFEng {
 
     const char *PeekPackageMarker();
 
-    void MakeLoadedPackagesDirty(); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:69
+    void MakeLoadedPackagesDirty(); // Decl: 69
 
     void EnablePackageControl(FEPackage *pkg, bool bProcess);
 
     int GetNumPackagesPushed() {}
     bool IsErrorMode();
 
-    cFEng();  // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:80
-    ~cFEng(); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:81
+    cFEng();  // Decl: 80
+    ~cFEng(); // Decl: 81
 
   private:
     void QueueMessage(uint32 pMessage, const char *pPackageName, FEObject *to,
-                      uint32 controlMask); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:84
+                      uint32 controlMask); // Decl: 84
 
-    void PauseAllSystems();                   // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:98
-    void ResumeAllSystems(bool flushActions); // Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:99
+    void PauseAllSystems();                   // Decl: 98
+    void ResumeAllSystems(bool flushActions); // Decl: 99
 
   private:
-    static cFEng *mInstance; // size: 0x4, address: 0x8041B96C, Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:103
-    FEngine *mFEng;          // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:104
-    bool bWasPaused;         // offset 0x4, size 0x1, Decl: speed/indep/src/frontend/fenginterfaces/FEngInterface.hpp:108
+    static cFEng *mInstance; // size: 0x4, address: 0x8041B96C, Decl: 103
+    FEngine *mFEng;          // offset 0x0, size 0x4, Decl: 104
+    bool bWasPaused;         // offset 0x4, size 0x1, Decl: 108
 
     friend class cFEngGameInterface;
 };

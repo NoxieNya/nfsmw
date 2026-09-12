@@ -10,15 +10,15 @@ typedef float f32;
 
 // File: speed/indep/src/feng/FEMath.h
 // total size: 0x10
-// Decl: speed/indep/src/feng/FEMath.h:48
+// Decl: 48
 class FEQuaternion {
   public:
-    f32 x, y, z, w; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEMath.h:51
+    f32 x, y, z, w; // offset 0x0, size 0x4, Decl: 51
 
-    FEQuaternion() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {} // Decl: speed/indep/src/feng/FEMath.h:54
+    FEQuaternion() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {} // Decl: 54
     FEQuaternion(float X, float Y, float Z, float W) {}
 
-    void Conjugate() { // Decl: speed/indep/src/feng/FEMath.h:56
+    void Conjugate() { // Decl: 56
         x = -x;
         y = -y;
         z = -z;
@@ -62,7 +62,7 @@ class FEQuaternion {
         return qRet;
     }
 
-    void GetMatrix(FEMatrix4 *rotmat); // Decl: speed/indep/src/feng/FEMath.h:74
+    void GetMatrix(FEMatrix4 *rotmat); // Decl: 74
 };
 
 inline f32 QuaternionDot(const FEQuaternion &q0, const FEQuaternion &q1) {
@@ -120,12 +120,12 @@ inline void NormalizeQuaternion(FEQuaternion &q) {
 }
 
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEMath.h:82
+// Decl: 82
 class FEVector2 {
   public:
-    f32 x, y; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEMath.h:84
+    f32 x, y; // offset 0x0, size 0x4, Decl: 84
 
-    FEVector2() { // Decl: speed/indep/src/feng/FEMath.h:86
+    FEVector2() { // Decl: 86
         x = y = 0.0f;
     }
     FEVector2(float v) : x(v), y(v) {}
@@ -152,12 +152,12 @@ class FEVector2 {
         y = v.y;
         return *this;
     }
-    FEVector2 &operator+=(FEVector2 v) { // Decl: speed/indep/src/feng/FEMath.h:98
+    FEVector2 &operator+=(FEVector2 v) { // Decl: 98
         x += v.x;
         y += v.y;
         return *this;
     }
-    FEVector2 &operator-=(FEVector2 v) { // Decl: speed/indep/src/feng/FEMath.h:99
+    FEVector2 &operator-=(FEVector2 v) { // Decl: 99
         x -= v.x;
         y -= v.y;
         return *this;
@@ -167,15 +167,15 @@ class FEVector2 {
         y *= f;
         return *this;
     }
-    FEVector2 &operator*=(FEVector2 &v) {} // Decl: speed/indep/src/feng/FEMath.h:101
+    FEVector2 &operator*=(FEVector2 &v) {} // Decl: 101
     FEVector2 &operator/=(float f) {}
-    FEVector2 &operator/=(FEVector2 &v) {} // Decl: speed/indep/src/feng/FEMath.h:103
+    FEVector2 &operator/=(FEVector2 &v) {} // Decl: 103
 
     int operator==(const FEVector2 &v) const {}
     f32 operator*(const FEVector2 &v) const {}
 
     const f32 operator[](int i) const {}
-    const f32 &operator[](int i) {} // Decl: speed/indep/src/feng/FEMath.h:109
+    const f32 &operator[](int i) {} // Decl: 109
 
     float Dot(const FEVector2 &v) const {
         return x * v.x + y * v.y;
@@ -184,7 +184,7 @@ class FEVector2 {
     f32 Length() const {
         return FEngSqrt(Dot(*this));
     }
-    f32 Normalize() { // Decl: speed/indep/src/feng/FEMath.h:114
+    f32 Normalize() { // Decl: 114
         f32 ret = Length();
         if (ret >= 0.1f) {
             f32 oof = 1.0f / ret;
@@ -196,12 +196,12 @@ class FEVector2 {
 };
 
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEMath.h:123
+// Decl: 123
 class FEVector3 {
   public:
-    f32 x, y, z; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEMath.h:125
+    f32 x, y, z; // offset 0x0, size 0x4, Decl: 125
 
-    FEVector3() { // Decl: speed/indep/src/feng/FEMath.h:127
+    FEVector3() { // Decl: 127
         x = y = z = 0.0f;
     }
     FEVector3(float v) : x(v), y(v), z(v) {}
@@ -244,13 +244,13 @@ class FEVector3 {
 
     const f32 operator[](int i) const {}
 
-    const f32 &operator[](int i) {} // Decl: speed/indep/src/feng/FEMath.h:148
+    const f32 &operator[](int i) {} // Decl: 148
 
     f32 Dot(const FEVector3 &v) const {}
 
     f32 Length() const {}
 
-    f32 Normalize() {} // Decl: speed/indep/src/feng/FEMath.h:153
+    f32 Normalize() {} // Decl: 153
 
     FEVector3 CrossProduct(const FEVector3 &v) const {}
 
@@ -260,7 +260,7 @@ class FEVector3 {
 };
 
 // total size: 0x10
-// Decl: speed/indep/src/feng/FEMath.h: unknown
+// Decl:  unknown
 class FEVector4 {
   public:
     float x, y, z, w; // offset 0x0, size 0x4
@@ -273,10 +273,10 @@ class FEVector4 {
 };
 
 // total size: 0x40
-// Decl: speed/indep/src/feng/FEMath.h:181
+// Decl: 181
 class FEMatrix4 {
   public:
-    FEMatrix4() {} // Decl: speed/indep/src/feng/FEMath.h:183
+    FEMatrix4() {} // Decl: 183
     FEMatrix4(const FEMatrix4 &m) {
         *this = m;
     }
@@ -286,12 +286,12 @@ class FEMatrix4 {
         return *this;
     }
 
-    void Identify(); // Decl: speed/indep/src/feng/FEMath.h:189
+    void Identify(); // Decl: 189
 
-    float m11, m12, m13, m14; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEMath.h:191
-    float m21, m22, m23, m24; // offset 0x10, size 0x4, Decl: speed/indep/src/feng/FEMath.h:192
-    float m31, m32, m33, m34; // offset 0x20, size 0x4, Decl: speed/indep/src/feng/FEMath.h:193
-    float m41, m42, m43, m44; // offset 0x30, size 0x4, Decl: speed/indep/src/feng/FEMath.h:194
+    float m11, m12, m13, m14; // offset 0x0, size 0x4, Decl: 191
+    float m21, m22, m23, m24; // offset 0x10, size 0x4, Decl: 192
+    float m31, m32, m33, m34; // offset 0x20, size 0x4, Decl: 193
+    float m41, m42, m43, m44; // offset 0x30, size 0x4, Decl: 194
 };
 
 void FEMultMatrix(FEMatrix4 *dest, const FEMatrix4 *a, const FEMatrix4 *b);

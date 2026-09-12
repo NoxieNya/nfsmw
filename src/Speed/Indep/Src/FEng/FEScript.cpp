@@ -2,12 +2,12 @@
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
 #include "Speed/Indep/Src/FEng/ObjectPool.h"
 
-// size: 0x2C, address: 0x803EAC10, Decl: speed/indep/src/feng/FEScript.cpp:11
+// size: 0x2C, address: 0x803EAC10, Decl: 11
 const u32 FETrackOffsets[11] = {
     0x00000000, 0x00000004, 0x00000007, 0x0000000A, 0x0000000E, 0x00000011, 0x00000013, 0x00000015, 0x00000019, 0x0000001D, 0x00000021,
 };
 
-// size: 0x10, address: 0x80473DFC, Decl: speed/indep/src/feng/FEScript.cpp:27
+// size: 0x10, address: 0x80473DFC, Decl: 27
 ObjectPool<FEScript, 32> FEScript::NodePool = ObjectPool<FEScript, 32>();
 
 void FEScript::Init() {

@@ -9,11 +9,11 @@
 
 // File: speed/indep/src/frontend/menuscreens/common/Slider.hpp
 // total size: 0x3C
-// Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:74
+// Decl: 74
 class cSlider {
   public:
     cSlider();
-    virtual ~cSlider() {} // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:77
+    virtual ~cSlider() {} // Decl: 77
 
     virtual bool Update(u32 msg);
     virtual void Init(const char *pkg_name, const char *name, float min, float max, float inc, float cur, float range);
@@ -23,28 +23,28 @@ class cSlider {
 
     void SetValue(float fvalue);
 
-    void Increment() {} // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:87
-    void Decrement() {} // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:88
+    void Increment() {} // Decl: 87
+    void Decrement() {} // Decl: 88
 
     virtual void Highlight();
     virtual void UnHighlight();
 
-    float GetMax() { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:93
+    float GetMax() { // Decl: 93
         return fMaxValue;
     }
-    float GetMin() { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:94
+    float GetMin() { // Decl: 94
         return fMinValue;
     }
-    float GetValue() { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:95
+    float GetValue() { // Decl: 95
         return fCurValue;
     }
-    float GetPrevValue() { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:96
+    float GetPrevValue() { // Decl: 96
         return fPrevValue;
     }
-    float GetBaseWidth() { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:97
+    float GetBaseWidth() { // Decl: 97
         return FEngGetSizeX(pBase);
     }
-    float GetBaseHeight() { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:98
+    float GetBaseHeight() { // Decl: 98
         return FEngGetSizeY(pBase);
     }
 
@@ -53,38 +53,38 @@ class cSlider {
     virtual void Draw();
 
   protected:
-    FEImage *pBase;      // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:109
-    FEImage *pFillBar;   // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:110
-    FEImage *pHandle;    // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:112
-    FEImage *pLeftCap;   // offset 0xC, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:113
-    FEImage *pRightCap;  // offset 0x10, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:114
-    FEString *pValue;    // offset 0x14, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:115
-    float fMaxValue;     // offset 0x18, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:117
-    float fMinValue;     // offset 0x1C, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:118
-    float fPrevValue;    // offset 0x20, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:119
-    float fCurValue;     // offset 0x24, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:120
-    float fDesiredValue; // offset 0x28, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:121
-    float fIncrement;    // offset 0x2C, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:122
-    float fRange;        // offset 0x30, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:123
-    float fInnerOffset;  // offset 0x34, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:124
+    FEImage *pBase;      // offset 0x0, size 0x4, Decl: 109
+    FEImage *pFillBar;   // offset 0x4, size 0x4, Decl: 110
+    FEImage *pHandle;    // offset 0x8, size 0x4, Decl: 112
+    FEImage *pLeftCap;   // offset 0xC, size 0x4, Decl: 113
+    FEImage *pRightCap;  // offset 0x10, size 0x4, Decl: 114
+    FEString *pValue;    // offset 0x14, size 0x4, Decl: 115
+    float fMaxValue;     // offset 0x18, size 0x4, Decl: 117
+    float fMinValue;     // offset 0x1C, size 0x4, Decl: 118
+    float fPrevValue;    // offset 0x20, size 0x4, Decl: 119
+    float fCurValue;     // offset 0x24, size 0x4, Decl: 120
+    float fDesiredValue; // offset 0x28, size 0x4, Decl: 121
+    float fIncrement;    // offset 0x2C, size 0x4, Decl: 122
+    float fRange;        // offset 0x30, size 0x4, Decl: 123
+    float fInnerOffset;  // offset 0x34, size 0x4, Decl: 124
 };
 
 // total size: 0x44
-// Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:130
+// Decl: 130
 class TwoStageSlider : public cSlider {
   public:
-    TwoStageSlider() {}           // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:132
-    ~TwoStageSlider() override {} // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:133
+    TwoStageSlider() {}           // Decl: 132
+    ~TwoStageSlider() override {} // Decl: 133
 
     virtual void Init(const char *pkg_name, const char *name, float min, float max, float inc, float cur, float preview, float range);
     void InitObjects(const char *pkg_name, const char *name) override;
     virtual void InitValues(float min, float max, float inc, float cur, float preview, float range);
 
-    float GetPreviewValue() { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:143
+    float GetPreviewValue() { // Decl: 143
         return fPreviewValue;
     }
 
-    void SetPreviewValue(float preview_value) { // Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:146
+    void SetPreviewValue(float preview_value) { // Decl: 146
         fPreviewValue = bMin(bMax(preview_value, fMinValue), fMaxValue);
     }
 
@@ -92,8 +92,8 @@ class TwoStageSlider : public cSlider {
     void Draw() override;
 
   protected:
-    FEImage *pPreviewBar; // offset 0x3C, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:153
-    float fPreviewValue;  // offset 0x40, size 0x4, Decl: speed/indep/src/frontend/menuscreens/common/Slider.hpp:155
+    FEImage *pPreviewBar; // offset 0x3C, size 0x4, Decl: 153
+    float fPreviewValue;  // offset 0x40, size 0x4, Decl: 155
 };
 
 #endif

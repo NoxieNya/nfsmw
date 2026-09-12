@@ -8,10 +8,10 @@
 
 // File: speed/indep/src/feng/FEPackageList.h
 // total size: 0x10
-// Decl: speed/indep/src/feng/FEPackageList.h:22
+// Decl: 22
 class FEPackageList {
   private:
-    FEList Packages; // offset 0x0, size 0x10, Decl: speed/indep/src/feng/FEPackageList.h:24
+    FEList Packages; // offset 0x0, size 0x10, Decl: 24
 
   public:
     FEPackageList() {}
@@ -31,15 +31,15 @@ class FEPackageList {
 
     FEPackage *FindPackage(const char *pName, u8 ControllerIndex) const;
 
-    void AddPackage(FEPackage *pPack); // Decl: speed/indep/src/feng/FEPackageList.h:36
+    void AddPackage(FEPackage *pPack); // Decl: 36
 
-    void AddPackageAfter(FEPackage *pPack, FEPackage *pAfter); // Decl: speed/indep/src/feng/FEPackageList.h:40
+    void AddPackageAfter(FEPackage *pPack, FEPackage *pAfter); // Decl: 40
 
-    bool RemovePackage(FEPackage *pPack); // Decl: speed/indep/src/feng/FEPackageList.h:42
+    bool RemovePackage(FEPackage *pPack); // Decl: 42
 
-    void ReplaceParentLinks(const FEPackage *pParent, const FEPackage *pReplacement); // Decl: speed/indep/src/feng/FEPackageList.h:45
+    void ReplaceParentLinks(const FEPackage *pParent, const FEPackage *pReplacement); // Decl: 45
 
-    u32 GetCount() const { // Decl: speed/indep/src/feng/FEPackageList.h:48
+    u32 GetCount() const { // Decl: 48
         return Packages.GetNumElements();
     }
 };

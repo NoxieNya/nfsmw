@@ -760,7 +760,7 @@ inline int FLOAT2INT(float f) {
     return static_cast<int>(f);
 }
 
-static const float kFloatScaleUp = IntAsFloat(0x00800000); // size: 0x4, address: 0x80457778, Decl: speed/indep/libs/support/utility/UVectorMath.h:167
-static const float kFloatScaleDown = 1.0f / kFloatScaleUp; // size: 0x4, address: 0x804565FC, Decl: speed/indep/libs/support/utility/UVectorMath.h:168
+static const float kFloatScaleUp = IntAsFloat(0x00800000); // size: 0x4, address: 0x80457778, Decl: 167
+static const float kFloatScaleDown = 1.0f / kFloatScaleUp; // size: 0x4, address: 0x804565FC, Decl: 168
 
 #endif

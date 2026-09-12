@@ -6,22 +6,22 @@
 #include "Speed/Indep/Src/FEng/FEWideString.h"
 
 // File: speed/indep/src/feng/FEListBox.h
-static const u32 INVALID_RESOURCE_HANDLE = 0xFFFFFFFF;   // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:26
-static const u16 INVALID_RESOURCE_HANDLE_SHORT = 0xFFFF; // size: 0x2, Decl: speed/indep/src/feng/FEListBox.h:27
-static const u32 INVALID_LIST_ENTRY = 0xFFFFFFFF;        // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:28
+static const u32 INVALID_RESOURCE_HANDLE = 0xFFFFFFFF;   // size: 0x4, Decl: 26
+static const u16 INVALID_RESOURCE_HANDLE_SHORT = 0xFFFF; // size: 0x2, Decl: 27
+static const u32 INVALID_LIST_ENTRY = 0xFFFFFFFF;        // size: 0x4, Decl: 28
 
-static const u32 FELISTBOX_FLAGS_INITIALIZED = 1; // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:42
-static const u32 FELISTBOX_FLAGS_SCROLL = 2;      // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:43
-static const u32 FELISTBOX_FLAGS_DONTWRAP = 4;    // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:44
-static const u32 FELISTBOX_FLAGS_WRAPH = 8;       // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:45
-static const u32 FELISTBOX_FLAGS_WRAPV = 16;      // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:46
-static const u32 FELISTBOX_FLAGS_SCROLLH = 32;    // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:47
-static const u32 FELISTBOX_FLAGS_SCROLLV = 64;    // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:48
+static const u32 FELISTBOX_FLAGS_INITIALIZED = 1; // size: 0x4, Decl: 42
+static const u32 FELISTBOX_FLAGS_SCROLL = 2;      // size: 0x4, Decl: 43
+static const u32 FELISTBOX_FLAGS_DONTWRAP = 4;    // size: 0x4, Decl: 44
+static const u32 FELISTBOX_FLAGS_WRAPH = 8;       // size: 0x4, Decl: 45
+static const u32 FELISTBOX_FLAGS_WRAPV = 16;      // size: 0x4, Decl: 46
+static const u32 FELISTBOX_FLAGS_SCROLLH = 32;    // size: 0x4, Decl: 47
+static const u32 FELISTBOX_FLAGS_SCROLLV = 64;    // size: 0x4, Decl: 48
 
-static const u32 FENG_HASH_SCROLLLEFT = 0xE10C4AF9;  // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:55
-static const u32 FENG_HASH_SCROLLRIGHT = 0x030471AC; // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:56
-static const u32 FENG_HASH_SCROLLUP = 0xFB814F13;    // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:57
-static const u32 FENG_HASH_SCROLLDOWN = 0xE10814A6;  // size: 0x4, Decl: speed/indep/src/feng/FEListBox.h:58
+static const u32 FENG_HASH_SCROLLLEFT = 0xE10C4AF9;  // size: 0x4, Decl: 55
+static const u32 FENG_HASH_SCROLLRIGHT = 0x030471AC; // size: 0x4, Decl: 56
+static const u32 FENG_HASH_SCROLLUP = 0xFB814F13;    // size: 0x4, Decl: 57
+static const u32 FENG_HASH_SCROLLDOWN = 0xE10814A6;  // size: 0x4, Decl: 58
 
 #define FENG_MESSAGE_SCROLLLEFT "Scroll Left"   // :50
 #define FENG_MESSAGE_SCROLLRIGHT "Scroll Right" // :51
@@ -30,13 +30,13 @@ static const u32 FENG_HASH_SCROLLDOWN = 0xE10814A6;  // size: 0x4, Decl: speed/i
 
 // File: speed/indep/src/feng/FEListBox.h
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEListBox.h:62
+// Decl: 62
 struct ListBoxResource {
-    u32 Handle;        // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:63
-    u32 UserParam;     // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:64
-    u32 ResourceIndex; // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:65
+    u32 Handle;        // offset 0x0, size 0x4, Decl: 63
+    u32 UserParam;     // offset 0x4, size 0x4, Decl: 64
+    u32 ResourceIndex; // offset 0x8, size 0x4, Decl: 65
 
-    ListBoxResource() {} // Decl: speed/indep/src/feng/FEListBox.h:67
+    ListBoxResource() {} // Decl: 67
 
     void Set(u32 ulHandle, u32 ulUserParam, u32 ulResourceIndex) {
         this->Handle = ulHandle;
@@ -46,13 +46,13 @@ struct ListBoxResource {
 };
 
 // total size: 0x30
-// Decl: speed/indep/src/feng/FEListBox.h:79
+// Decl: 79
 struct FEListBoxCell {
-    u32 ulColor;                // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:80
-    FEPoint stScale;            // offset 0x4, size 0x8, Decl: speed/indep/src/feng/FEListBox.h:81
-    ListBoxResource stResource; // offset 0xC, size 0xC, Decl: speed/indep/src/feng/FEListBox.h:82
-    u32 ulType;                 // offset 0x18, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:83
-    u32 ulJustification;        // offset 0x1C, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:84
+    u32 ulColor;                // offset 0x0, size 0x4, Decl: 80
+    FEPoint stScale;            // offset 0x4, size 0x8, Decl: 81
+    ListBoxResource stResource; // offset 0xC, size 0xC, Decl: 82
+    u32 ulType;                 // offset 0x18, size 0x4, Decl: 83
+    u32 ulJustification;        // offset 0x1C, size 0x4, Decl: 84
 
     union _u {
         struct r {
@@ -66,9 +66,9 @@ struct FEListBoxCell {
             u32 Label; // offset 0x4, size 0x4
         } string;      // offset 0x0, size 0x8
     };
-    _u u; // offset 0x20, size 0x10, Decl: speed/indep/src/feng/FEListBox.h:101
+    _u u; // offset 0x20, size 0x10, Decl: 101
 
-    FEListBoxCell() : ulColor(0), stScale(1.0f) { // Decl: speed/indep/src/feng/FEListBox.h:103
+    FEListBoxCell() : ulColor(0), stScale(1.0f) { // Decl: 103
         stResource.Handle = 0;
         stResource.UserParam = 0;
         stResource.ResourceIndex = 0;
@@ -91,39 +91,39 @@ struct FEListBoxCell {
         return *reinterpret_cast<const FERect *>(&u.rect);
     }
 
-    FERect &SetUV() { // Decl: speed/indep/src/feng/FEListBox.h:128
+    FERect &SetUV() { // Decl: 128
         return *reinterpret_cast<FERect *>(&u.rect);
     }
 };
 
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEListBox.h:135
+// Decl: 135
 struct FEListEntryData {
-    float fValue;            // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:136
-    float fCummulativeValue; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:137
-    u32 ulJustification;     // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:138
+    float fValue;            // offset 0x0, size 0x4, Decl: 136
+    float fCummulativeValue; // offset 0x4, size 0x4, Decl: 137
+    u32 ulJustification;     // offset 0x8, size 0x4, Decl: 138
 };
 
 // total size: 0xAC
-// Decl: speed/indep/src/feng/FEListBox.h:142
+// Decl: 142
 class FEListBox : public FEObject {
   public:
-    u32 mulFlags;                    // offset 0x5C, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:145
-    u32 mulNumColumns;               // offset 0x60, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:146
-    u32 mulNumRows;                  // offset 0x64, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:147
-    FEPoint mstViewDimensions;       // offset 0x68, size 0x8, Decl: speed/indep/src/feng/FEListBox.h:148
-    FEPoint mstCurrentLocation;      // offset 0x70, size 0x8, Decl: speed/indep/src/feng/FEListBox.h:149
-    FEListEntryData *mpstColumnData; // offset 0x78, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:150
-    FEListEntryData *mpstRowData;    // offset 0x7C, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:151
-    FEPoint mstSelectionSpeed;       // offset 0x80, size 0x8, Decl: speed/indep/src/feng/FEListBox.h:152
-    u32 mulCurrentColumn;            // offset 0x88, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:153
-    u32 mulCurrentRow;               // offset 0x8C, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:154
-    FEListBoxCell *mpstCells;        // offset 0x90, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:155
-    FEPoint mstTargetLocation;       // offset 0x94, size 0x8, Decl: speed/indep/src/feng/FEListBox.h:156
-    FEPoint mstDirection;            // offset 0x9C, size 0x8, Decl: speed/indep/src/feng/FEListBox.h:157
+    u32 mulFlags;                    // offset 0x5C, size 0x4, Decl: 145
+    u32 mulNumColumns;               // offset 0x60, size 0x4, Decl: 146
+    u32 mulNumRows;                  // offset 0x64, size 0x4, Decl: 147
+    FEPoint mstViewDimensions;       // offset 0x68, size 0x8, Decl: 148
+    FEPoint mstCurrentLocation;      // offset 0x70, size 0x8, Decl: 149
+    FEListEntryData *mpstColumnData; // offset 0x78, size 0x4, Decl: 150
+    FEListEntryData *mpstRowData;    // offset 0x7C, size 0x4, Decl: 151
+    FEPoint mstSelectionSpeed;       // offset 0x80, size 0x8, Decl: 152
+    u32 mulCurrentColumn;            // offset 0x88, size 0x4, Decl: 153
+    u32 mulCurrentRow;               // offset 0x8C, size 0x4, Decl: 154
+    FEListBoxCell *mpstCells;        // offset 0x90, size 0x4, Decl: 155
+    FEPoint mstTargetLocation;       // offset 0x94, size 0x8, Decl: 156
+    FEPoint mstDirection;            // offset 0x9C, size 0x8, Decl: 157
 
-    float mfCurrentAlpha; // offset 0xA4, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:160
-    float mfAlphaDelta;   // offset 0xA8, size 0x4, Decl: speed/indep/src/feng/FEListBox.h:161
+    float mfCurrentAlpha; // offset 0xA4, size 0x4, Decl: 160
+    float mfAlphaDelta;   // offset 0xA8, size 0x4, Decl: 161
 
     FEListBox();
     FEListBox(const FEListBox &Object);
@@ -133,7 +133,7 @@ class FEListBox : public FEObject {
 
     void Terminate();
 
-    FEObject *Clone() { // Decl: speed/indep/src/feng/FEListBox.h:174
+    FEObject *Clone() { // Decl: 174
         FEListBox *pNew = new FEListBox(*this);
         return pNew;
     }

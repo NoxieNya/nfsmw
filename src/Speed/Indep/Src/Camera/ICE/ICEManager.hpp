@@ -8,17 +8,17 @@ struct Matrix4; // TODO where is this from
 
 // File: speed/indep/src/Camera/ICE/ICEManager.hpp
 // total size: 0x80
-// Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:14
+// Decl: 14
 class ICEManager {
   public:
-    ICEManager();  // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:17
-    ~ICEManager(); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:18
+    ICEManager();  // Decl: 17
+    ~ICEManager(); // Decl: 18
 
-    bool IsEditorOn() { // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:26
+    bool IsEditorOn() { // Decl: 26
         // TODO maybe negated?
         return nState >= 1;
     }
-    bool IsEditorOff() { // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:27
+    bool IsEditorOff() { // Decl: 27
         return nState == 0;
     }
 
@@ -32,14 +32,14 @@ class ICEManager {
         return fParameterLength;
     }
 
-    void Init();                                // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:36
-    void Update();                              // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:37
-    void Resolve();                             // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:38
-    void Render(eView *p_view);                 // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:39
-    void LoadCameraSet(bChunk *set_chunk);      // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:40
-    void UnloadCameraSet(bChunk *set_chunk);    // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:41
-    void LoadCameraShakes(bChunk *set_chunk);   // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:42
-    void UnloadCameraShakes(bChunk *set_chunk); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:43
+    void Init();                                // Decl: 36
+    void Update();                              // Decl: 37
+    void Resolve();                             // Decl: 38
+    void Render(eView *p_view);                 // Decl: 39
+    void LoadCameraSet(bChunk *set_chunk);      // Decl: 40
+    void UnloadCameraSet(bChunk *set_chunk);    // Decl: 41
+    void LoadCameraShakes(bChunk *set_chunk);   // Decl: 42
+    void UnloadCameraShakes(bChunk *set_chunk); // Decl: 43
 
     struct ICEData *GetCameraData(uint32 scene_hash, int camTrack);
     struct ICEData *GetCameraData(ICETrack **p_track, float *p_start, float *p_end);
@@ -53,8 +53,8 @@ class ICEManager {
     void SetupAnimElevation();
     float GetAnimElevationFixup(Vector3 *position);
 
-    void SetGenericCameraToPlay(const char *group_name, const char *track_name); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:48
-    bool IsGenericCameraPlaying() {}                                             // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:49
+    void SetGenericCameraToPlay(const char *group_name, const char *track_name); // Decl: 48
+    bool IsGenericCameraPlaying() {}                                             // Decl: 49
 
     ICEGroup *GetCurrentGroup();
     ICETrack *GetCurrentTrack();
@@ -65,19 +65,19 @@ class ICEManager {
 
     float GetTrackLengthByName(char *trackName);
 
-    void ChooseReplayCamera();        // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:51
-    bool ChooseCameraPlaybackTrack(); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:52
+    void ChooseReplayCamera();        // Decl: 51
+    bool ChooseCameraPlaybackTrack(); // Decl: 52
     int GetNumSceneCameraTrack(uint32 scene_hash);
     int GetCameraIndex(float f_param, ICETrack *track);
-    void SetSmoothExit(bool smooth) {} // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:53
-    bool IsSmoothExit() {}             // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:54
+    void SetSmoothExit(bool smooth) {} // Decl: 53
+    bool IsSmoothExit() {}             // Decl: 54
     int ChooseGoodSceneCameraTrackIndex(uint32 scene_hash, Matrix4 *scene_origin);
-    void SetUseRealTime(bool val) { // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:55
+    void SetUseRealTime(bool val) { // Decl: 55
         bUseRealTime = val;
     }
-    float IsUsingRealTime() { // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:56
+    float IsUsingRealTime() { // Decl: 56
     }
-    float GetTimerSeconds(); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:57
+    float GetTimerSeconds(); // Decl: 57
 
   private:
     float GetParameter(int i, ICETrack *track);
@@ -88,12 +88,12 @@ class ICEManager {
 
     ICETrack *ChooseGenericCamera();
 
-    ICEGroup *GetNisCameraGroup(uint32 scene_hash);              // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:65
-    ICEGroup *GetFmvCameraGroup(uint32 scene_hash);              // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:66
-    ICEGroup *GetReplayCameraGroup(uint32 category_hash);        // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:68
-    ICEGroup *GetGenericCameraGroup(uint32 name_hash);           // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:69
-    ICEGroup *AddCameraGroup(ICEContext context, uint32 handle); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:62
-    ICEGroup *GetCameraGroup(ICEContext context, uint32 handle); // Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:63
+    ICEGroup *GetNisCameraGroup(uint32 scene_hash);              // Decl: 65
+    ICEGroup *GetFmvCameraGroup(uint32 scene_hash);              // Decl: 66
+    ICEGroup *GetReplayCameraGroup(uint32 category_hash);        // Decl: 68
+    ICEGroup *GetGenericCameraGroup(uint32 name_hash);           // Decl: 69
+    ICEGroup *AddCameraGroup(ICEContext context, uint32 handle); // Decl: 62
+    ICEGroup *GetCameraGroup(ICEContext context, uint32 handle); // Decl: 63
 
     int GetNumGroupsWithData(ICEContext context);
     int GetNumGroups();
@@ -126,11 +126,11 @@ class ICEManager {
     char nPlayGenericTrackName[14]; // offset 0x64, size 0xE
     int nMarkerIndex;               // offset 0x78, size 0x4
     bool bUseRealTime;              // offset 0x7C, size 0x1
-    uint32 nPlayGenericGroupHash;   // offset 0x60, size 0x4, Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:83
-    bool bSmoothExit;               // offset 0x74, size 0x1, Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:85
+    uint32 nPlayGenericGroupHash;   // offset 0x60, size 0x4, Decl: 83
+    bool bSmoothExit;               // offset 0x74, size 0x1, Decl: 85
 };
 
-ICEManager TheICEManager; // size: 0x80, Decl: speed/indep/src/Camera/ICE/ICEManager.hpp:93
+ICEManager TheICEManager; // size: 0x80, Decl: 93
 
 void ICECompleteEventTags();
 

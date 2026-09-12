@@ -15,23 +15,23 @@
 
 // File: speed/indep/src/frontend/MoviePlayer/MoviePlayer.cpp
 // total size: 0x8
-// Decl: speed/indep/src/frontend/MoviePlayer/MoviePlayer.cpp:141
+// Decl: 141
 struct ShapeMemoryAllocator : public EA::Allocator::IAllocator {
   public:
-    ShapeMemoryAllocator() {}           // Decl: speed/indep/src/frontend/MoviePlayer/MoviePlayer.cpp:143
-    ~ShapeMemoryAllocator() override {} // Decl: speed/indep/src/frontend/MoviePlayer/MoviePlayer.cpp:144
+    ShapeMemoryAllocator() {}           // Decl: 143
+    ~ShapeMemoryAllocator() override {} // Decl: 144
 
     void *Alloc(size_t size, const EA::TagValuePair &flags) override;
     void *Alloc(size_t size);
 
   private:
-    int mRefcount; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/MoviePlayer/MoviePlayer.cpp:152
+    int mRefcount; // offset 0x4, size 0x4, Decl: 152
 
-    void Free(void *pBlock, size_t size) override; // Decl: speed/indep/src/frontend/MoviePlayer/MoviePlayer.cpp:228
+    void Free(void *pBlock, size_t size) override; // Decl: 228
 
-    int AddRef() override; // Decl: speed/indep/src/frontend/MoviePlayer/MoviePlayer.cpp:240
+    int AddRef() override; // Decl: 240
 
-    int Release() override; // Decl: speed/indep/src/frontend/MoviePlayer/MoviePlayer.cpp:245
+    int Release() override; // Decl: 245
 };
 
 #define MOVIE_TEXTUREINFO_COUNT 3 // :258

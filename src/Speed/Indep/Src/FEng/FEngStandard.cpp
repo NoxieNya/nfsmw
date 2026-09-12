@@ -5,15 +5,15 @@
 #include "Speed/Indep/bWare/Inc/bMath.hpp"
 #include "Speed/Indep/bWare/Inc/bMemory.hpp"
 
-int FEngMemoryPoolNumber = -1; // size: 0x4, address: 0x8041D140, Decl: speed/indep/src/feng/FEngStandard.cpp:23
+int FEngMemoryPoolNumber = -1; // size: 0x4, address: 0x8041D140, Decl: 23
 
-void *pFEngMemoryPoolMemory = nullptr; // size: 0x4, address: 0x8041D144, Decl: speed/indep/src/feng/FEngStandard.cpp:26
+void *pFEngMemoryPoolMemory = nullptr; // size: 0x4, address: 0x8041D144, Decl: 26
 
-int FEngMemoryPoolSize = 390000; // size: 0x4, address: 0x8041D148, Decl: speed/indep/src/feng/FEngStandard.cpp:31
+int FEngMemoryPoolSize = 390000; // size: 0x4, address: 0x8041D148, Decl: 31
 
-int FEngMemoryPoolHighwaterWarning = 9999999; // size: 0x4, address: 0xFFFFFFFF, Decl: speed/indep/src/feng/FEngStandard.cpp:35
+int FEngMemoryPoolHighwaterWarning = 9999999; // size: 0x4, address: 0xFFFFFFFF, Decl: 35
 
-int FEngMemoryPoolTracingEnabled = 0; // size: 0x4, address: 0x8041D150, Decl: speed/indep/src/feng/FEngStandard.cpp:42
+int FEngMemoryPoolTracingEnabled = 0; // size: 0x4, address: 0x8041D150, Decl: 42
 
 void InitFEngMemoryPool() {
     if (FEngMemoryPoolNumber != 0) {

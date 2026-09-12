@@ -6,7 +6,7 @@
 #define SNDUPG_ENGINE_PRO (0x01) << 1     // :14
 #define SNDUPG_ENGINE_EXTREME (0x01) << 2 // :15
 
-// Decl: speed/indep/src/eaxsound/EAXAudioParams.hpp:17
+// Decl: 17
 enum eGAMEMODE {
     SNDGM_FREEROAM = 0,
     SNDGM_RACE = 1,
@@ -14,7 +14,7 @@ enum eGAMEMODE {
     SNDGM_SPLITSCREEN = 3,
 };
 
-// Decl: speed/indep/src/eaxsound/EAXAudioParams.hpp:26
+// Decl: 26
 enum eSndAudioMode {
     AUDIO_MODE_MONO = 0,
     AUDIO_MODE_STEREO = 1,
@@ -23,7 +23,7 @@ enum eSndAudioMode {
     AUDIO_MODE_MAX = 2,
 };
 
-// Decl: speed/indep/src/eaxsound/EAXAudioParams.hpp:52
+// Decl: 52
 enum eSndGameMode {
     SND_MODE_NONE = 0,
     SND_FRONTEND = 1,

@@ -30,105 +30,105 @@ class GIcon {
         kType_Count = 17,
     };
 
-    void Show() {}             // Decl: speed/indep/src/Gameplay/GIcon.h:62
-    void Hide() {}             // Decl: speed/indep/src/Gameplay/GIcon.h:63
-    void HideUntilRespawn() {} // Decl: speed/indep/src/Gameplay/GIcon.h:64
+    void Show() {}             // Decl: 62
+    void Hide() {}             // Decl: 63
+    void HideUntilRespawn() {} // Decl: 64
 
-    void ShowOnMap() {} // Decl: speed/indep/src/Gameplay/GIcon.h:66
-    void HideOnMap() {} // Decl: speed/indep/src/Gameplay/GIcon.h:67
+    void ShowOnMap() {} // Decl: 66
+    void HideOnMap() {} // Decl: 67
 
-    void SetGPSing() { // Decl: speed/indep/src/Gameplay/GIcon.h:70
+    void SetGPSing() { // Decl: 70
         SetFlag(0x80);
     }
 
-    void ClearGPSing() { // Decl: speed/indep/src/Gameplay/GIcon.h:71
+    void ClearGPSing() { // Decl: 71
         ClearFlag(0x80);
     }
 
-    void SnapToGround(); // Decl: speed/indep/src/Gameplay/GIcon.h:73
+    void SnapToGround(); // Decl: 73
 
-    Type GetType() const { // Decl: speed/indep/src/Gameplay/GIcon.h:75
+    Type GetType() const { // Decl: 75
         return static_cast<Type>(mType);
     }
-    int GetSectionID() const { // Decl: speed/indep/src/Gameplay/GIcon.h:76
+    int GetSectionID() const { // Decl: 76
         return mSectionID;
     }
-    int GetCombinedSectionID() const { // Decl: speed/indep/src/Gameplay/GIcon.h:77
+    int GetCombinedSectionID() const { // Decl: 77
         return mCombSectionID;
     }
 
-    bool GetVisibleInWorld() const {} // Decl: speed/indep/src/Gameplay/GIcon.h:78
-    bool GetVisibleOnMap() const {}   // Decl: speed/indep/src/Gameplay/GIcon.h:79
-    bool GetIsDisposable() const {}   // Decl: speed/indep/src/Gameplay/GIcon.h:80
-    bool GetIsSnapped() const {}      // Decl: speed/indep/src/Gameplay/GIcon.h:81
-    bool GetIsGPSing() const {        // Decl: speed/indep/src/Gameplay/GIcon.h:82
+    bool GetVisibleInWorld() const {} // Decl: 78
+    bool GetVisibleOnMap() const {}   // Decl: 79
+    bool GetIsDisposable() const {}   // Decl: 80
+    bool GetIsSnapped() const {}      // Decl: 81
+    bool GetIsGPSing() const {        // Decl: 82
         return IsFlagSet(0x80);
     }
 
-    const UMath::Vector3 &GetPosition() const { // Decl: speed/indep/src/Gameplay/GIcon.h:84
+    const UMath::Vector3 &GetPosition() const { // Decl: 84
         return mPosition;
     }
-    void GetPosition2D(bVector2 &outPos) { // Decl: speed/indep/src/Gameplay/GIcon.h:85
+    void GetPosition2D(bVector2 &outPos) { // Decl: 85
         outPos.x = mPosition.x;
         outPos.y = mPosition.y;
     }
 
-    struct EffectInfo { // Decl: speed/indep/src/Gameplay/GIcon.h:104
+    struct EffectInfo { // Decl: 104
         Type mType;
         uint32 mModelHash;
         uint32 mParticleHash;
     };
 
-    GIcon(Type type, const UMath::Vector3 &pos, float rotDeg); // Decl: speed/indep/src/Gameplay/GIcon.h:143
+    GIcon(Type type, const UMath::Vector3 &pos, float rotDeg); // Decl: 143
 
   private:
-    ~GIcon(); // Decl: speed/indep/src/Gameplay/GIcon.h:144
+    ~GIcon(); // Decl: 144
 
-    void MarkDisposable() {} // Decl: speed/indep/src/Gameplay/GIcon.h:146
+    void MarkDisposable() {} // Decl: 146
 
-    bool GetIsEnabled() const {} // Decl: speed/indep/src/Gameplay/GIcon.h:147
+    bool GetIsEnabled() const {} // Decl: 147
 
-    void Spawn(); // Decl: speed/indep/src/Gameplay/GIcon.h:149
+    void Spawn(); // Decl: 149
 
-    void Unspawn(); // Decl: speed/indep/src/Gameplay/GIcon.h:150
+    void Unspawn(); // Decl: 150
 
-    void Enable(); // Decl: speed/indep/src/Gameplay/GIcon.h:152
+    void Enable(); // Decl: 152
 
-    void Disable(); // Decl: speed/indep/src/Gameplay/GIcon.h:153
+    void Disable(); // Decl: 153
 
-    void FindSection(); // Decl: speed/indep/src/Gameplay/GIcon.h:155
+    void FindSection(); // Decl: 155
 
-    void RefreshEffects(); // Decl: speed/indep/src/Gameplay/GIcon.h:156
+    void RefreshEffects(); // Decl: 156
 
-    void SetFlag(unsigned int mask) { // Decl: speed/indep/src/Gameplay/GIcon.h:160
+    void SetFlag(unsigned int mask) { // Decl: 160
         mFlags |= mask;
     };
-    void ClearFlag(unsigned int mask) { // Decl: speed/indep/src/Gameplay/GIcon.h:161
+    void ClearFlag(unsigned int mask) { // Decl: 161
         mFlags &= ~mask;
     }
 
-    bool IsFlagSet(unsigned int mask) const { // Decl: speed/indep/src/Gameplay/GIcon.h:162
+    bool IsFlagSet(unsigned int mask) const { // Decl: 162
         return (mFlags & mask) != 0;
     }
 
-    bool IsFlagClear(unsigned int mask) const { // Decl: speed/indep/src/Gameplay/GIcon.h:163
+    bool IsFlagClear(unsigned int mask) const { // Decl: 163
         return (mFlags & mask) == 0;
     }
 
-    struct AcidEffect *CreateParticleEffect(uint32 particleHash); // Decl: speed/indep/src/Gameplay/GIcon.h:165
+    struct AcidEffect *CreateParticleEffect(uint32 particleHash); // Decl: 165
 
-    void ReleaseParticleEffect(); // Decl: speed/indep/src/Gameplay/GIcon.h:166
+    void ReleaseParticleEffect(); // Decl: 166
 
-    struct WorldModel *CreateGeometry(uint32 modelHash); // Decl: speed/indep/src/Gameplay/GIcon.h:168
+    struct WorldModel *CreateGeometry(uint32 modelHash); // Decl: 168
 
-    void ReleaseGeometry(); // Decl: speed/indep/src/Gameplay/GIcon.h:169
+    void ReleaseGeometry(); // Decl: 169
 
-    void SetPosition(); // Decl: speed/indep/src/Gameplay/GIcon.h:171
+    void SetPosition(); // Decl: 171
 
     static void NotifyEmitterGroupDelete(void *obj, EmitterGroup *group);
 
   private:
-    uint16 mType; // offset 0x0, size 0x2, Decl: speed/indep/src/Gameplay/GIcon.h:123
+    uint16 mType; // offset 0x0, size 0x2, Decl: 123
     uint16 mFlags;
     int16 mSectionID;
     int16 mCombSectionID;

@@ -8,7 +8,7 @@
 
 // File: speed/indep/src/frontend/hud/FeMenuZoneTrigger.hpp
 // total size: 0x50
-// Decl: speed/indep/src/frontend/hud/FeMenuZoneTrigger.hpp:14
+// Decl: 14
 class MenuZoneTrigger : public HudElement, public IMenuZoneTrigger {
   public:
     enum ENGAGE_DPAD_ELEMENT_DIRECTION {
@@ -21,7 +21,7 @@ class MenuZoneTrigger : public HudElement, public IMenuZoneTrigger {
     };
 
     MenuZoneTrigger(UTL::COM::Object *pOuter, const char *pkg_name, int player_number);
-    ~MenuZoneTrigger() override {} // Decl: speed/indep/src/frontend/hud/FeMenuZoneTrigger.hpp:36
+    ~MenuZoneTrigger() override {} // Decl: 36
 
     void Update(IPlayer *player) override;
 
@@ -47,19 +47,19 @@ class MenuZoneTrigger : public HudElement, public IMenuZoneTrigger {
 
     void HideDPadButton();
 
-    void RequestCingularLogo() override { // Decl: speed/indep/src/frontend/hud/FeMenuZoneTrigger.hpp:47
+    void RequestCingularLogo() override { // Decl: 47
         mbCingularQueued = true;
     }
 
   private:
-    FEGroup *mEngageMechanic;         // offset 0x30, size 0x4, Decl: speed/indep/src/frontend/hud/FeMenuZoneTrigger.hpp:56
-    FEImage *mEventIcon;              // offset 0x34, size 0x4, Decl: speed/indep/src/frontend/hud/FeMenuZoneTrigger.hpp:57
+    FEGroup *mEngageMechanic;         // offset 0x30, size 0x4, Decl: 56
+    FEImage *mEventIcon;              // offset 0x34, size 0x4, Decl: 57
     FEGroup *mCingularIcon;           // offset 0x38, size 0x4
     const char *mZoneType;            // offset 0x3C, size 0x4
     GRuntimeInstance *mpRaceActivity; // offset 0x40, size 0x4
-    bool mbCingularQueued;            // offset 0x44, size 0x1, Decl: speed/indep/src/frontend/hud/FeMenuZoneTrigger.hpp:61
+    bool mbCingularQueued;            // offset 0x44, size 0x1, Decl: 61
     bool mbInsideTrigger;             // offset 0x48, size 0x1
-    Timer mCingularTimer;             // offset 0x4C, size 0x4, Decl: speed/indep/src/frontend/hud/FeMenuZoneTrigger.hpp:65
+    Timer mCingularTimer;             // offset 0x4C, size 0x4, Decl: 65
 };
 
 #endif

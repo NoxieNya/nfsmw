@@ -6,10 +6,10 @@
 
 // File: speed/indep/src/feng/FEWideString.cpp
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEWideString.cpp:48
+// Decl: 48
 struct ColorSpecialSequence {
-    char *pCharString; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEWideString.cpp:49
-    i16 ConvertedCode; // offset 0x4, size 0x2, Decl: speed/indep/src/feng/FEWideString.cpp:50
+    char *pCharString; // offset 0x0, size 0x4, Decl: 49
+    i16 ConvertedCode; // offset 0x4, size 0x2, Decl: 50
 
     bool operator==(const i16 *pString) {}
 
@@ -18,42 +18,42 @@ struct ColorSpecialSequence {
     bool operator==(const u8 *pString) {}
 };
 
-static const i16 WIDE_CODE_RESERVED = -32768; // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:67
-static const i16 WIDE_CODE_MASK = -255;       // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:68
-static const i16 WIDE_VALUE_MASK = 255;       // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:69
-static const i16 WIDE_MODE_MASK = -16384;     // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:70
-static const i16 RED_CODE = -32512;           // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:72
-static const i16 GREEN_CODE = -32256;         // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:73
-static const i16 BLUE_CODE = -32000;          // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:74
-static const i16 ALPHA_CODE = -31744;         // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:75
-static const i16 WHOLE_CODE = -31488;         // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:76
-static const i16 WHOLEA_CODE = -31232;        // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:77
-static const i16 SETR_CODE = -30976;          // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:78
-static const i16 SETG_CODE = -30720;          // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:79
-static const i16 SETB_CODE = -30464;          // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:80
+static const i16 WIDE_CODE_RESERVED = -32768; // size: 0x2, Decl: 67
+static const i16 WIDE_CODE_MASK = -255;       // size: 0x2, Decl: 68
+static const i16 WIDE_VALUE_MASK = 255;       // size: 0x2, Decl: 69
+static const i16 WIDE_MODE_MASK = -16384;     // size: 0x2, Decl: 70
+static const i16 RED_CODE = -32512;           // size: 0x2, Decl: 72
+static const i16 GREEN_CODE = -32256;         // size: 0x2, Decl: 73
+static const i16 BLUE_CODE = -32000;          // size: 0x2, Decl: 74
+static const i16 ALPHA_CODE = -31744;         // size: 0x2, Decl: 75
+static const i16 WHOLE_CODE = -31488;         // size: 0x2, Decl: 76
+static const i16 WHOLEA_CODE = -31232;        // size: 0x2, Decl: 77
+static const i16 SETR_CODE = -30976;          // size: 0x2, Decl: 78
+static const i16 SETG_CODE = -30720;          // size: 0x2, Decl: 79
+static const i16 SETB_CODE = -30464;          // size: 0x2, Decl: 80
 
-static const i16 MODCOLOR_CODE = -16128;  // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:82
-static const i16 SETCOLOR_CODE = -15872;  // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:83
-static const i16 SETCOLORA_CODE = -15616; // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:84
-static const i16 ADDCOLOR_CODE = -15360;  // size: 0x2, Decl: speed/indep/src/feng/FEWideString.h:85
+static const i16 MODCOLOR_CODE = -16128;  // size: 0x2, Decl: 82
+static const i16 SETCOLOR_CODE = -15872;  // size: 0x2, Decl: 83
+static const i16 SETCOLORA_CODE = -15616; // size: 0x2, Decl: 84
+static const i16 ADDCOLOR_CODE = -15360;  // size: 0x2, Decl: 85
 
 #define ESCAPE_CHARACTER '\\' // :87
 
 // File: speed/indep/src/feng/FEWideString.h
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEWideString.h:94
+// Decl: 94
 class FEWideString {
   public:
-    i16 *mpsString;      // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEWideString.h:97
-    u32 mulBufferLength; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEWideString.h:98
+    i16 *mpsString;      // offset 0x0, size 0x4, Decl: 97
+    u32 mulBufferLength; // offset 0x4, size 0x4, Decl: 98
 
-    FEWideString(); // Decl: speed/indep/src/feng/FEWideString.h:100
+    FEWideString(); // Decl: 100
     FEWideString(const i16 *psString);
     FEWideString(const char *pcString);
     FEWideString(const FEWideString &string);
-    ~FEWideString(); // Decl: speed/indep/src/feng/FEWideString.h:104
+    ~FEWideString(); // Decl: 104
 
-    bool operator==(const FEWideString &string); // Decl: speed/indep/src/feng/FEWideString.h:106
+    bool operator==(const FEWideString &string); // Decl: 106
 
     FEWideString &operator=(const FEWideString &string);
     FEWideString &operator=(const i16 *psString);
@@ -63,8 +63,8 @@ class FEWideString {
     FEWideString &operator+=(const i16 *pString);
     FEWideString &operator+=(const char *pcString);
 
-    void Associate(i16 *pString) {} // Decl: speed/indep/src/feng/FEWideString.h:116
-    i16 *Disaccociate() {}          // Decl: speed/indep/src/feng/FEWideString.h:117
+    void Associate(i16 *pString) {} // Decl: 116
+    i16 *Disaccociate() {}          // Decl: 117
 
     operator i16 *() {
         return mpsString;
@@ -73,20 +73,20 @@ class FEWideString {
         return mpsString;
     }
 
-    u32 Length() const; // Decl: speed/indep/src/feng/FEWideString.h:122
+    u32 Length() const; // Decl: 122
 
-    const i16 operator[](int i) { // Decl: speed/indep/src/feng/FEWideString.h:123
+    const i16 operator[](int i) { // Decl: 123
         return mpsString[i];
     }
     const i16 operator[](int i) const {
         return mpsString[i];
     }
 
-    void SetLength(u32 newLength); // Decl: speed/indep/src/feng/FEWideString.h:126
+    void SetLength(u32 newLength); // Decl: 126
 
-    char *Convert(char *pString) const; // Decl: speed/indep/src/feng/FEWideString.h:128
+    char *Convert(char *pString) const; // Decl: 128
 
-    i16 *AllocateString(u32 newLength); // Decl: speed/indep/src/feng/FEWideString.h:130
+    i16 *AllocateString(u32 newLength); // Decl: 130
 
     void ConvertToSpecial(const FEWideString &string) {}
 
@@ -96,13 +96,13 @@ class FEWideString {
 
     void ConvertToSpecial(const i16 *psString);
 
-    void ConvertFromSpecial(char *pcString); // Decl: speed/indep/src/feng/FEWideString.h:139
+    void ConvertFromSpecial(char *pcString); // Decl: 139
     void ConvertFromSpecial(i16 *psString);
-    void ConvertFromSpecial(FEWideString &string); // Decl: speed/indep/src/feng/FEWideString.h:141
+    void ConvertFromSpecial(FEWideString &string); // Decl: 141
 };
 
 template <class T>
-void CopyString(i16 *pDst, const T *pSrc) // Decl: speed/indep/src/feng/FEWideString.h:149
+void CopyString(i16 *pDst, const T *pSrc) // Decl: 149
 {
     if (pDst == nullptr) {
         return;
@@ -119,7 +119,7 @@ void CopyString(i16 *pDst, const T *pSrc) // Decl: speed/indep/src/feng/FEWideSt
 }
 
 template <class T>
-void CopyString(i16 *pDst, const T *pSrc, u32 ulMaxLength) // Decl: speed/indep/src/feng/FEWideString.h:171
+void CopyString(i16 *pDst, const T *pSrc, u32 ulMaxLength) // Decl: 171
 {
     if (pDst == nullptr) {
         return;

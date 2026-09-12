@@ -23,11 +23,11 @@ struct LeaderBoardRacerData {
 
 // File: speed/indep/src/frontend/hud/FeLeaderBoard.hpp
 // total size: 0x290
-// Decl: speed/indep/src/frontend/hud/FeLeaderBoard.hpp:8
+// Decl: 8
 class LeaderBoard : public HudElement, public ILeaderBoard {
   public:
     LeaderBoard(UTL::COM::Object *pOutter, const char *pkg_name, int player_number);
-    ~LeaderBoard() override {} // Decl: speed/indep/src/frontend/hud/FeLeaderBoard.hpp:11
+    ~LeaderBoard() override {} // Decl: 11
 
   private:
     int mNumRacers;                          // offset 0x30, size 0x4
@@ -36,11 +36,11 @@ class LeaderBoard : public HudElement, public ILeaderBoard {
     bool mSplitTimeQueued;                   // offset 0x3C, size 0x1
     LeaderBoardRacerData mTopRacers[4];      // offset 0x40, size 0x200
     int mNumFramesBeforeTogglingPlayerTimes; // offset 0x240, size 0x4
-    bool mShowingRacerTimes;                 // offset 0x244, size 0x1, Decl: speed/indep/src/frontend/hud/FeLeaderBoard.hpp:22
+    bool mShowingRacerTimes;                 // offset 0x244, size 0x1, Decl: 22
 
-    FEGroup *mDataLeaderboardGroup;     // offset 0x248, size 0x4, Decl: speed/indep/src/frontend/hud/FeLeaderBoard.hpp:26
+    FEGroup *mDataLeaderboardGroup;     // offset 0x248, size 0x4, Decl: 26
     FEString *mDataRacerText[4];        // offset 0x24C, size 0x10
-    FEString *mDataRacerNum[4];         // offset 0x25C, size 0x10, Decl: speed/indep/src/frontend/hud/FeLeaderBoard.hpp:30
+    FEString *mDataRacerNum[4];         // offset 0x25C, size 0x10, Decl: 30
     FEImage *mDataRacerIcon[4];         // offset 0x26C, size 0x10
     FEImage *mDataRacerTextBackings[4]; // offset 0x27C, size 0x10
 

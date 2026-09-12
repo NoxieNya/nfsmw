@@ -6,10 +6,10 @@
 
 // File: speed/indep/src/feng/FEGenericVal.h
 // total size: 0x10
-// Decl: speed/indep/src/feng/FEGenericVal.h:74
+// Decl: 74
 class FEGenericVal {
   public:
-    u32 Data[4]; // offset 0x0, size 0x10, Decl: speed/indep/src/feng/FEGenericVal.h:85
+    u32 Data[4]; // offset 0x0, size 0x10, Decl: 85
 
   private:
     operator float() const {}

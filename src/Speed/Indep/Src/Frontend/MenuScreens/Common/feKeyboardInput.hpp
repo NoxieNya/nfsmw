@@ -75,7 +75,6 @@ class KeyboardEditString {
     FEngTextInputObject *TextInputObject; // offset 0x414, size 0x4
 };
 
-extern KeyboardEditString
-    gKeyboardManager; // size: 0x418, address: 0x80473360, Decl: speed/indep/src/frontend/menuscreens/common/feKeyboardInput.hpp:97
+extern KeyboardEditString gKeyboardManager; // size: 0x418, address: 0x80473360, Decl: 97
 
 #endif

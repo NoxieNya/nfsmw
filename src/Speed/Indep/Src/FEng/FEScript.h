@@ -8,7 +8,7 @@
 #include "Speed/Indep/Src/Frontend/FEngHashes/ScriptHashes.hpp"
 
 // File: speed/indep/src/feng/FEScript.h
-// Decl: speed/indep/src/feng/FEScript.h:30
+// Decl: 30
 enum FEKeyTrack_Indices {
     FETrack_Color = 0,
     FETrack_Pivot = 1,
@@ -25,47 +25,47 @@ enum FEKeyTrack_Indices {
     Num_BaseFETracks = 11
 };
 
-static const u32 FEHash_Init = FEHASH_INIT; // size: 0x4, Decl: speed/indep/src/feng/FEScript.h:50
+static const u32 FEHash_Init = FEHASH_INIT; // size: 0x4, Decl: 50
 
-static const u32 SF_ActionMask = 3; // size: 0x4, Decl: speed/indep/src/feng/FEScript.h:53
-static const u32 SF_PlayOnce = 0;   // size: 0x4, Decl: speed/indep/src/feng/FEScript.h:54
-static const u32 SF_PlayLoop = 1;   // size: 0x4, Decl: speed/indep/src/feng/FEScript.h:55
-static const u32 SF_PingPong = 2;   // size: 0x4, Decl: speed/indep/src/feng/FEScript.h:56
+static const u32 SF_ActionMask = 3; // size: 0x4, Decl: 53
+static const u32 SF_PlayOnce = 0;   // size: 0x4, Decl: 54
+static const u32 SF_PlayLoop = 1;   // size: 0x4, Decl: 55
+static const u32 SF_PingPong = 2;   // size: 0x4, Decl: 56
 
 // total size: 0x34
-// Decl: speed/indep/src/feng/FEScript.h:68
+// Decl: 68
 class FEScript : public FEMinNode {
   private:
-    static ObjectPool<FEScript, 32> NodePool; // size: 0x10, address: 0x80473DFC, Decl: speed/indep/src/feng/FEScript.cpp:27
+    static ObjectPool<FEScript, 32> NodePool; // size: 0x10, address: 0x80473DFC, Decl: 27
 
   public:
-    i32 Length;          // offset 0xC, size 0x4, Decl: speed/indep/src/feng/FEScript.h:73
-    i32 CurTime;         // offset 0x10, size 0x4, Decl: speed/indep/src/feng/FEScript.h:74
-    u32 Flags;           // offset 0x14, size 0x4, Decl: speed/indep/src/feng/FEScript.h:75
-    FEScript *pChainTo;  // offset 0x18, size 0x4, Decl: speed/indep/src/feng/FEScript.h:76
-    u32 TrackCount;      // offset 0x1C, size 0x4, Decl: speed/indep/src/feng/FEScript.h:78
-    FEKeyTrack *pTracks; // offset 0x20, size 0x4, Decl: speed/indep/src/feng/FEScript.h:79
-    FEEventList Events;  // offset 0x24, size 0x8, Decl: speed/indep/src/feng/FEScript.h:81
-    char *pName;         // offset 0x2C, size 0x4, Decl: speed/indep/src/feng/FEScript.h:83
-    u32 ID;              // offset 0x30, size 0x4, Decl: speed/indep/src/feng/FEScript.h:84
+    i32 Length;          // offset 0xC, size 0x4, Decl: 73
+    i32 CurTime;         // offset 0x10, size 0x4, Decl: 74
+    u32 Flags;           // offset 0x14, size 0x4, Decl: 75
+    FEScript *pChainTo;  // offset 0x18, size 0x4, Decl: 76
+    u32 TrackCount;      // offset 0x1C, size 0x4, Decl: 78
+    FEKeyTrack *pTracks; // offset 0x20, size 0x4, Decl: 79
+    FEEventList Events;  // offset 0x24, size 0x8, Decl: 81
+    char *pName;         // offset 0x2C, size 0x4, Decl: 83
+    u32 ID;              // offset 0x30, size 0x4, Decl: 84
 
-    FEScript() { // Decl: speed/indep/src/feng/FEScript.h:87
+    FEScript() { // Decl: 87
         Init();
     }
-    FEScript(FEScript &Src, bool bReference); // Decl: speed/indep/src/feng/FEScript.h:87
+    FEScript(FEScript &Src, bool bReference); // Decl: 87
     ~FEScript() override;
 
     void Init();
 
     void operator=(FEScript &Src);
 
-    static void *operator new(size_t size, int) {} // Decl: speed/indep/src/feng/FEScript.h:95
+    static void *operator new(size_t size, int) {} // Decl: 95
 
-    static void *operator new(size_t); // Decl: speed/indep/src/feng/FEScript.h:95
+    static void *operator new(size_t); // Decl: 95
 
-    static void operator delete(void *pNode, int) {} // Decl: speed/indep/src/feng/FEScript.h:97
+    static void operator delete(void *pNode, int) {} // Decl: 97
 
-    static void operator delete(void *pNode); // Decl: speed/indep/src/feng/FEScript.h:97
+    static void operator delete(void *pNode); // Decl: 97
 
     u32 ComputeSize();
 
@@ -107,7 +107,7 @@ class FEScript : public FEMinNode {
         return static_cast<FEScript *>(FEMinNode::GetNext());
     }
 
-    FEScript *GetPrev() const { // Decl: speed/indep/src/feng/FEScript.h:128
+    FEScript *GetPrev() const { // Decl: 128
         return static_cast<FEScript *>(FEMinNode::GetPrev());
     }
 };

@@ -35,8 +35,7 @@ extern bool MinimapShowNonPursuitCops;
 extern bool MinimapShowPursuitCops;
 extern RaceParameters TheRaceParameters;
 
-Minimap::GameplayIconInfo
-    Minimap::kGameplayIconInfo[GIcon::kType_Count]; // size: 0x0, address: 0x8041BCA0, Decl: speed/indep/src/frontend/hud/FeMinimap.cpp:69
+Minimap::GameplayIconInfo Minimap::kGameplayIconInfo[GIcon::kType_Count]; // size: 0x0, address: 0x8041BCA0, Decl: 69
 
 void GetVehicleVectors(bVector2 *pos, bVector2 *dir, ISimable *isimable) {
     UMath::Vector3 position = isimable->GetPosition();

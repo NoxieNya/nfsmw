@@ -11,7 +11,7 @@ struct ScreenFactoryDatum;
 
 // File: speed/indep/src/frontend/FEPackageData.hpp
 // total size: 0x38
-// Decl: speed/indep/src/frontend/FEPackageData.hpp:12
+// Decl: 12
 class FEPackageData : public bTNode<FEPackageData> {
   public:
     FEPackageData(bChunk *chunk);
@@ -21,13 +21,13 @@ class FEPackageData : public bTNode<FEPackageData> {
 
     void *GetDataChunk();
 
-    bChunk *GetChunk() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:20
+    bChunk *GetChunk() { // Decl: 20
         return MyChunk;
     }
-    FEPackage *GetPackage() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:21
+    FEPackage *GetPackage() { // Decl: 21
         return pPackage;
     }
-    bool IsCompressedChunk() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:22
+    bool IsCompressedChunk() { // Decl: 22
         return MyChunk->GetID() == BCHUNK_FENG_COMPRESSED_PACKAGE;
     }
 
@@ -39,50 +39,50 @@ class FEPackageData : public bTNode<FEPackageData> {
 
     void UnActivate();
 
-    bool IsActive() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:28
+    bool IsActive() { // Decl: 28
         return pPackage != nullptr;
     }
 
     void Close();
 
-    void SetPermanent(int flag) { // Decl: speed/indep/src/frontend/FEPackageData.hpp:31
+    void SetPermanent(int flag) { // Decl: 31
         IsPermanent = flag;
     }
 
-    int GetPermanent() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:32
+    int GetPermanent() { // Decl: 32
         return IsPermanent;
     }
 
-    void SetArgument(int pArg) { // Decl: speed/indep/src/frontend/FEPackageData.hpp:34
+    void SetArgument(int pArg) { // Decl: 34
         mArg = pArg;
     }
-    int GetArgument() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:35
+    int GetArgument() { // Decl: 35
         return mArg;
     }
 
-    bool GetVisibility() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:37
+    bool GetVisibility() { // Decl: 37
         return IsVisible;
     }
-    void SetVisibility(bool visible) { // Decl: speed/indep/src/frontend/FEPackageData.hpp:38
+    void SetVisibility(bool visible) { // Decl: 38
         IsVisible = visible;
     }
 
-    int GetLastKnownControlMask() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:43
+    int GetLastKnownControlMask() { // Decl: 43
         return LastKnownControlMask;
     }
-    int LastKnownControlMask;    // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/FEPackageData.hpp:44
-    int bWasSetupForHotchunk;    // offset 0xC, size 0x4, Decl: speed/indep/src/frontend/FEPackageData.hpp:45
-    bool WasSetupForHotchunk() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:46
+    int LastKnownControlMask;    // offset 0x8, size 0x4, Decl: 44
+    int bWasSetupForHotchunk;    // offset 0xC, size 0x4, Decl: 45
+    bool WasSetupForHotchunk() { // Decl: 46
         return bWasSetupForHotchunk;
     }
-    void SetupForHotchunk() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:47
+    void SetupForHotchunk() { // Decl: 47
         bWasSetupForHotchunk = true;
     }
-    void ClearHotchunk() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:48
+    void ClearHotchunk() { // Decl: 48
         bWasSetupForHotchunk = false;
     }
 
-    MenuScreen *GetScreen() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:50
+    MenuScreen *GetScreen() { // Decl: 50
         return pScreen;
     }
 
@@ -90,22 +90,22 @@ class FEPackageData : public bTNode<FEPackageData> {
         return &RenderInfo;
     }
 
-    static int IsInScreenConstructor() { // Decl: speed/indep/src/frontend/FEPackageData.hpp:52
+    static int IsInScreenConstructor() { // Decl: 52
         return mInScreenConstructor > 0;
     }
 
   private:
-    void *DataChunk;                // offset 0x10, size 0x4, Decl: speed/indep/src/frontend/FEPackageData.hpp:55
-    bChunk *MyChunk;                // offset 0x14, size 0x4, Decl: speed/indep/src/frontend/FEPackageData.hpp:56
-    MenuScreen *pScreen;            // offset 0x18, size 0x4, Decl: speed/indep/src/frontend/FEPackageData.hpp:57
-    FEPackage *pPackage;            // offset 0x1C, size 0x4, Decl: speed/indep/src/frontend/FEPackageData.hpp:58
-    int16 IsPermanent;              // offset 0x20, size 0x2, Decl: speed/indep/src/frontend/FEPackageData.hpp:59
-    int16 IsVisible;                // offset 0x22, size 0x2, Decl: speed/indep/src/frontend/FEPackageData.hpp:60
-    ScreenFactoryDatum *CreateData; // offset 0x24, size 0x4, Decl: speed/indep/src/frontend/FEPackageData.hpp:61
+    void *DataChunk;                // offset 0x10, size 0x4, Decl: 55
+    bChunk *MyChunk;                // offset 0x14, size 0x4, Decl: 56
+    MenuScreen *pScreen;            // offset 0x18, size 0x4, Decl: 57
+    FEPackage *pPackage;            // offset 0x1C, size 0x4, Decl: 58
+    int16 IsPermanent;              // offset 0x20, size 0x2, Decl: 59
+    int16 IsVisible;                // offset 0x22, size 0x2, Decl: 60
+    ScreenFactoryDatum *CreateData; // offset 0x24, size 0x4, Decl: 61
     FEPackageRenderInfo RenderInfo; // offset 0x28, size 0x8
-    int mArg;                       // offset 0x30, size 0x4, Decl: speed/indep/src/frontend/FEPackageData.hpp:62
+    int mArg;                       // offset 0x30, size 0x4, Decl: 62
 
-    static int mInScreenConstructor; // size: 0x4, address: 0x8041CB60, Decl: speed/indep/src/frontend/FEPackageData.cpp:730
+    static int mInScreenConstructor; // size: 0x4, address: 0x8041CB60, Decl: 730
 };
 
 #define gMainMenuName "FeMainMenu.fng" // :70

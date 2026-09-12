@@ -6,18 +6,18 @@
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
 #include "Speed/Indep/Src/Frontend/FEngHashes/FEHash_FeBonusCards.hpp"
 
-// size: 0x40, address: 0x80473CD0, Decl: speed/indep/src/feng/FEButtonMap.cpp:14
+// size: 0x40, address: 0x80473CD0, Decl: 14
 static FEVector2 DirectionVectors[8] = {
     FEVector2(0.0f, -1.0f), FEVector2(0.707110f, -0.707110f), FEVector2(1.0f, 0.0f),  FEVector2(0.707110f, 0.707110f),
     FEVector2(0.0f, 1.0f),  FEVector2(-0.707110f, 0.707110f), FEVector2(-1.0f, 0.0f), FEVector2(-0.707110f, -0.707110f),
 };
 
-// size: 0x20, address: 0x8041D040, Decl: speed/indep/src/feng/FEButtonMap.cpp:26
+// size: 0x20, address: 0x8041D040, Decl: 26
 u32 FEDirection_Message[8] = {
     __PAD_UP__, __PAD_UPRIGHT__, __PAD_RIGHT__, __PAD_DOWNRIGHT__, __PAD_DOWN__, __PAD_DOWNLEFT__, __PAD_LEFT__, __PAD_UPLEFT__,
 };
 
-// Decl: speed/indep/src/feng/FEButtonMap.cpp:35
+// Decl: 35
 void FEButtonMap::SetCount(u32 NewCount) {
     if (pList != nullptr) {
         delete[] pList;
@@ -29,15 +29,15 @@ void FEButtonMap::SetCount(u32 NewCount) {
     Count = NewCount;
 }
 
-// size: 0x28, address: 0x80473D10, Decl: speed/indep/src/feng/FEButtonMap.cpp:45
+// size: 0x28, address: 0x80473D10, Decl: 45
 static FEVector2 PassOffsets[5] = {
     FEVector2(0.0f, 0.0f), FEVector2(-640.0f, 0.0f), FEVector2(640.0f, 0.0f), FEVector2(0.0f, -480.0f), FEVector2(0.0f, 480.0f),
 };
 
-// size: 0x14, address: 0x8041D060, Decl: speed/indep/src/feng/FEButtonMap.cpp:53
+// size: 0x14, address: 0x8041D060, Decl: 53
 static u32 PassWrapMode[5] = {3, 1, 1, 2, 2};
 
-// Decl: speed/indep/src/feng/FEButtonMap.cpp:75
+// Decl: 75
 FEObject *FEButtonMap::GetButtonFrom(FEObject *pButton, i32 Direction, FEGameInterface *pInterface, FEButtonWrapMode WrapMode) {
     float BestScore;
     u32 BestIndex = 0;
@@ -89,7 +89,7 @@ FEObject *FEButtonMap::GetButtonFrom(FEObject *pButton, i32 Direction, FEGameInt
     return nullptr;
 }
 
-// Decl: speed/indep/src/feng/FEButtonMap.cpp:141
+// Decl: 141
 void FEButtonMap::ComputeButtonLocation(FEObject *pButton, FEGameInterface *pInterface, FEVector2 &Dest) {
     if ((pInterface == nullptr) || pButton->RenderContext == 0) {
         Dest = reinterpret_cast<FEVector2 &>(pButton->GetObjData()->Pos);
@@ -107,12 +107,12 @@ void FEButtonMap::ComputeButtonLocation(FEObject *pButton, FEGameInterface *pInt
 
 // File: speed/indep/src/feng/FEButtonMap.cpp
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEButtonMap.cpp:161
+// Decl: 161
 class FEButtonCounter : public FEObjectCallback {
   public:
-    u32 Count; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEButtonMap.cpp:163
+    u32 Count; // offset 0x4, size 0x4, Decl: 163
 
-    bool Callback(FEObject *pObj) override { // Decl: speed/indep/src/feng/FEButtonMap.cpp:165
+    bool Callback(FEObject *pObj) override { // Decl: 165
         if (pObj->Flags & FF_IsButton) {
             this->Count++;
         }
@@ -121,13 +121,13 @@ class FEButtonCounter : public FEObjectCallback {
 };
 
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEButtonMap.cpp:175
+// Decl: 175
 class FEButtonEnumerator : public FEObjectCallback {
   public:
-    FEButtonMap *pButtonMap; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEButtonMap.cpp:177
-    u32 Count;               // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEButtonMap.cpp:178
+    FEButtonMap *pButtonMap; // offset 0x4, size 0x4, Decl: 177
+    u32 Count;               // offset 0x8, size 0x4, Decl: 178
 
-    bool Callback(FEObject *pObj) override { // Decl: speed/indep/src/feng/FEButtonMap.cpp:180
+    bool Callback(FEObject *pObj) override { // Decl: 180
         if (pObj->Flags & FF_IsButton) {
             pButtonMap->SetButton(this->Count++, pObj);
         }

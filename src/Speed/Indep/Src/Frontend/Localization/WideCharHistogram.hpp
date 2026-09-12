@@ -20,18 +20,18 @@ class WideCharHistogram {
 
 // File: speed/indep/src/frontend/localization/WideCharHistogram.hpp
 // total size: 0x41808
-// Decl: speed/indep/src/frontend/localization/WideCharHistogram.hpp:42
+// Decl: 42
 class WideCharHistogramBuilder : public WideCharHistogram {
   public:
-    WideCharHistogramBuilder() {} // Decl: speed/indep/src/frontend/localization/WideCharHistogram.hpp:44
+    WideCharHistogramBuilder() {} // Decl: 44
 
-    void AddEntry(uint16 wide_char); // Decl: speed/indep/src/frontend/localization/WideCharHistogram.hpp:46
+    void AddEntry(uint16 wide_char); // Decl: 46
 
-    void BuildTable(); // Decl: speed/indep/src/frontend/localization/WideCharHistogram.hpp:48
+    void BuildTable(); // Decl: 48
 
   private:
-    int32 TotalFrequency;        // offset 0x1804, size 0x4, Decl: speed/indep/src/frontend/localization/WideCharHistogram.hpp:57
-    int32 FrequencyTable[65536]; // offset 0x1808, size 0x40000, Decl: speed/indep/src/frontend/localization/WideCharHistogram.hpp:58
+    int32 TotalFrequency;        // offset 0x1804, size 0x4, Decl: 57
+    int32 FrequencyTable[65536]; // offset 0x1808, size 0x40000, Decl: 58
 };
 
 extern WideCharHistogram *pWideCharHistogram;

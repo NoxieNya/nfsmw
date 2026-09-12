@@ -5,16 +5,16 @@
 
 // File: speed/indep/src/feng/FESimpleImage.h
 // total size: 0x5C
-// Decl: speed/indep/src/feng/FESimpleImage.h:24
+// Decl: 24
 class FESimpleImage : public FEObject {
   public:
-    FESimpleImage() { // Decl: speed/indep/src/feng/FESimpleImage.h:26
+    FESimpleImage() { // Decl: 26
         Type = FE_SimpleImage;
     }
     FESimpleImage(const FESimpleImage &Object, bool bReference) : FEObject(Object, bReference) {}
-    ~FESimpleImage() override {} // Decl: speed/indep/src/feng/FESimpleImage.h:28
+    ~FESimpleImage() override {} // Decl: 28
 
-    FEObject *Clone(bool bReference) override { // Decl: speed/indep/src/feng/FESimpleImage.h:30
+    FEObject *Clone(bool bReference) override { // Decl: 30
         return FNEW FESimpleImage(*this, bReference);
     }
 };

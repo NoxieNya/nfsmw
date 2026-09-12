@@ -6,28 +6,28 @@
 
 // File: speed/indep/src/frontend/UnicodeFile.hpp
 // total size: 0xC
-// Decl: speed/indep/src/frontend/UnicodeFile.hpp:5
+// Decl: 5
 class UnicodeFile {
   public:
-    UnicodeFile(); // Decl: speed/indep/src/frontend/UnicodeFile.hpp:7
+    UnicodeFile(); // Decl: 7
     UnicodeFile(const char *filename);
-    ~UnicodeFile(); // Decl: speed/indep/src/frontend/UnicodeFile.hpp:9
+    ~UnicodeFile(); // Decl: 9
 
-    bool Load(const char *filename); // Decl: speed/indep/src/frontend/UnicodeFile.hpp:11
-    void Unload();                   // Decl: speed/indep/src/frontend/UnicodeFile.hpp:12
+    bool Load(const char *filename); // Decl: 11
+    void Unload();                   // Decl: 12
 
-    void LineWrap(int maxCharacters); // Decl: speed/indep/src/frontend/UnicodeFile.hpp:14
+    void LineWrap(int maxCharacters); // Decl: 14
 
-    i16 *First(); // Decl: speed/indep/src/frontend/UnicodeFile.hpp:16
-    i16 *Next();  // Decl: speed/indep/src/frontend/UnicodeFile.hpp:17
+    i16 *First(); // Decl: 16
+    i16 *Next();  // Decl: 17
 
   private:
-    i16 *data_; // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/UnicodeFile.hpp:20
-    i16 *next_; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/UnicodeFile.hpp:21
-    i16 *end_;  // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/UnicodeFile.hpp:22
+    i16 *data_; // offset 0x0, size 0x4, Decl: 20
+    i16 *next_; // offset 0x4, size 0x4, Decl: 21
+    i16 *end_;  // offset 0x8, size 0x4, Decl: 22
 
-    void FixEndian(); // Decl: speed/indep/src/frontend/UnicodeFile.hpp:24
-    void FixEOLs();   // Decl: speed/indep/src/frontend/UnicodeFile.hpp:25
+    void FixEndian(); // Decl: 24
+    void FixEOLs();   // Decl: 25
 };
 
 #endif

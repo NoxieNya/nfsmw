@@ -9,11 +9,11 @@
 
 // File: speed/indep/src/frontend/hud/FeTachometer.hpp
 // total size: 0x70
-// Decl: speed/indep/src/frontend/hud/FeTachometer.hpp:13
+// Decl: 13
 class Tachometer : public HudElement, public ITachometer {
   public:
     Tachometer(UTL::COM::Object *pOutter, const char *pkg_name, int player_number);
-    ~Tachometer() override {} // Decl: speed/indep/src/frontend/hud/FeTachometer.hpp:16
+    ~Tachometer() override {} // Decl: 16
 
     void Update(IPlayer *player) override;
     void SetRpm(float rpm) override {

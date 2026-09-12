@@ -84,15 +84,15 @@
 #include "types.h"
 
 // File: speed/indep/src/frontend/FEPackageData.cpp
-const char *gLoadinScreenPackageName = ""; // size: 0x4, address: 0x8041C4BC, Decl: speed/indep/src/frontend/FEPackageData.cpp:176
+const char *gLoadinScreenPackageName = ""; // size: 0x4, address: 0x8041C4BC, Decl: 176
 
-// Decl: speed/indep/src/frontend/FEPackageData.cpp:178
+// Decl: 178
 // Range: 0x8016BDDC -> 0x8016BDE8
 void SetLoadingScreenPackageName(const char *name) {
     gLoadinScreenPackageName = name;
 }
 
-// Decl: speed/indep/src/frontend/FEPackageData.cpp:183
+// Decl: 183
 // Range: 0x8016BDE8 -> 0x8016BDF4
 const char *GetLoadingScreenPackageName() {
     return gLoadinScreenPackageName;
@@ -101,13 +101,13 @@ const char *GetLoadingScreenPackageName() {
 // STRIPPED
 const char *GetSplashScreenPackageName() {}
 
-// Decl: speed/indep/src/frontend/FEPackageData.cpp:194
+// Decl: 194
 // Range: 0x8016BDF4 -> 0x8016BE2C
 static MenuScreen *CreateMainMenu(ScreenConstructorData *sd) {
     return new ("UIMain", 0) UIMain(sd);
 }
 
-// Decl: speed/indep/src/frontend/FEPackageData.cpp:196
+// Decl: 196
 // Range: 0x8016BE2C -> 0x8016BF20
 static MenuScreen *CreateSubMenu(ScreenConstructorData *sd) {
     if (FEDatabase->IsOptionsMode()) {
@@ -388,22 +388,22 @@ static MenuScreen *CreateOptionsControllerScreen(ScreenConstructorData *sd) {
 
 // File: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEButtons.cpp
 // total size: 0xC
-// Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEButtons.cpp:93
+// Decl: 93
 struct ScreenButtonDatum {
-    uint32 ScreenHash; // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEButtons.cpp:94
-    uint8 LastButton;  // offset 0x4, size 0x1, Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEButtons.cpp:95
-    uint32 GameMode;   // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEButtons.cpp:96
+    uint32 ScreenHash; // offset 0x0, size 0x4, Decl: 94
+    uint8 LastButton;  // offset 0x4, size 0x1, Decl: 95
+    uint32 GameMode;   // offset 0x8, size 0x4, Decl: 96
 };
 
-// size: 0x258, address: 0x8041C908, Decl: speed/indep/src/frontend/fenginterfaces/FEngInterfaceFEButtons.cpp:101
+// size: 0x258, address: 0x8041C908, Decl: 101
 static ScreenButtonDatum ScreenButtonData[50] = {};
 
 // File: speed/indep/src/frontend/FEPackageData.cpp
 // total size: 0x8
-// Decl: speed/indep/src/frontend/FEPackageData.cpp:437
+// Decl: 437
 struct ScreenFactoryDatum {
-    char *FEngPackageFilename;                    // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/FEPackageData.cpp:438
-    MenuScreenCreateFunction ConstructorFunction; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/FEPackageData.cpp:439
+    char *FEngPackageFilename;                    // offset 0x0, size 0x4, Decl: 438
+    MenuScreenCreateFunction ConstructorFunction; // offset 0x4, size 0x4, Decl: 439
 };
 
 static ScreenFactoryDatum ScreenFactoryData[] = {

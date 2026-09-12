@@ -7,12 +7,12 @@
 
 // File: speed/indep/src/frontend/FEPackageManager.hpp
 // total size: 0xC
-// Decl: speed/indep/src/frontend/FEPackageManager.hpp:11
+// Decl: 11
 class FEPackageManager {
   public:
     static void Init();
     static void Destroy();
-    static FEPackageManager *Get(); // Decl: speed/indep/src/frontend/FEPackageManager.hpp:15
+    static FEPackageManager *Get(); // Decl: 15
 
     FEPackage *FindPackage(const char *pkg_name);
 
@@ -43,12 +43,12 @@ class FEPackageManager {
     bool SetPackageDataArg(const char *pPackageName, const int pArg);
 
   private:
-    static FEPackageManager *mInstance; // size: 0x4, address: 0x8041CB64, Decl: speed/indep/src/frontend/FEPackageManager.cpp:4
+    static FEPackageManager *mInstance; // size: 0x4, address: 0x8041CB64, Decl: 4
 
-    FEPackageManager() {}          // Decl: speed/indep/src/frontend/FEPackageManager.hpp:47
-    virtual ~FEPackageManager() {} // Decl: speed/indep/src/frontend/FEPackageManager.hpp:48
+    FEPackageManager() {}          // Decl: 47
+    virtual ~FEPackageManager() {} // Decl: 48
 
-    bTList<FEPackageData> ScreenList; // offset 0x0, size 0x8, Decl: speed/indep/src/frontend/FEPackageManager.hpp:50
+    bTList<FEPackageData> ScreenList; // offset 0x0, size 0x8, Decl: 50
 
     FEPackageData *FindFEPackageData(bChunk *chunk);
 
@@ -56,11 +56,11 @@ class FEPackageManager {
 
     FEPackageData *FindFEPackageData(FEPackage *pkg);
 
-    FEPackageData *Add(FEPackageData *screen) { // Decl: speed/indep/src/frontend/FEPackageManager.hpp:57
+    FEPackageData *Add(FEPackageData *screen) { // Decl: 57
         return ScreenList.AddTail(screen);
     }
 
-    FEPackageData *Remove(FEPackageData *screen) { // Decl: speed/indep/src/frontend/FEPackageManager.hpp:58
+    FEPackageData *Remove(FEPackageData *screen) { // Decl: 58
         return ScreenList.Remove(screen);
     }
     void PackageWasLoaded(FEPackage *pkg);

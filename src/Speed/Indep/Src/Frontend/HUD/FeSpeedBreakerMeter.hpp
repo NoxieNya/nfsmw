@@ -7,11 +7,11 @@
 
 // File: speed/indep/src/frontend/hud/FeSpeedBreakerMeter.hpp
 // total size: 0x50
-// Decl: speed/indep/src/frontend/hud/FeSpeedBreakerMeter.hpp:8
+// Decl: 8
 class SpeedBreakerMeter : public HudElement, public ISpeedBreakerMeter {
   public:
     SpeedBreakerMeter(UTL::COM::Object *pOutter, const char *pkg_name, int player_number);
-    ~SpeedBreakerMeter() override {} // Decl: speed/indep/src/frontend/hud/FeSpeedBreakerMeter.hpp:11
+    ~SpeedBreakerMeter() override {} // Decl: 11
 
     void Update(IPlayer *player) override;
     void SetPursuitLevel(float pursuitLevel) override;

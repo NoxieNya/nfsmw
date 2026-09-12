@@ -19,22 +19,22 @@ enum eFEMultiImageTexNum {
 
 // File: speed/indep/src/feng/FEMultiImage.h
 // total size: 0x90
-// Decl: speed/indep/src/feng/FEMultiImage.h:42
+// Decl: 42
 class FEMultiImageData : public FEImageData {
   public:
-    FEVector2 TopLeftUV[3];     // offset 0x54, size 0x18, Decl: speed/indep/src/feng/FEMultiImage.h:44
-    FEVector2 BottomRightUV[3]; // offset 0x6C, size 0x18, Decl: speed/indep/src/feng/FEMultiImage.h:45
-    FEVector3 PivotRot;         // offset 0x84, size 0xC, Decl: speed/indep/src/feng/FEMultiImage.h:46
+    FEVector2 TopLeftUV[3];     // offset 0x54, size 0x18, Decl: 44
+    FEVector2 BottomRightUV[3]; // offset 0x6C, size 0x18, Decl: 45
+    FEVector3 PivotRot;         // offset 0x84, size 0xC, Decl: 46
 };
 
 // total size: 0x78
-// Decl: speed/indep/src/feng/FEMultiImage.h:52
+// Decl: 52
 class FEMultiImage : public FEImage {
   public:
-    u32 hTexture[3];     // offset 0x60, size 0xC, Decl: speed/indep/src/feng/FEMultiImage.h:54
-    u32 TextureFlags[3]; // offset 0x6C, size 0xC, Decl: speed/indep/src/feng/FEMultiImage.h:55
+    u32 hTexture[3];     // offset 0x60, size 0xC, Decl: 54
+    u32 TextureFlags[3]; // offset 0x6C, size 0xC, Decl: 55
 
-    FEMultiImage() : FEImage() { // Decl: speed/indep/src/feng/FEMultiImage.h:62
+    FEMultiImage() : FEImage() { // Decl: 62
         Type = FE_MultiImage;
         for (int i = 0; i <= 2; i++) {
             hTexture[i] = 0;
@@ -44,13 +44,13 @@ class FEMultiImage : public FEImage {
 
     FEMultiImage(const FEMultiImage &Object, bool bReference) : FEImage(Object, bReference) {}
 
-    ~FEMultiImage() override {} // Decl: speed/indep/src/feng/FEMultiImage.h:77
+    ~FEMultiImage() override {} // Decl: 77
 
-    FEMultiImageData *GetMultiImageData() { // Decl: speed/indep/src/feng/FEMultiImage.h:79
+    FEMultiImageData *GetMultiImageData() { // Decl: 79
         return reinterpret_cast<FEMultiImageData *>(GetObjData());
     }
 
-    FEObject *Clone(bool bReference) override { // Decl: speed/indep/src/feng/FEMultiImage.h:81
+    FEObject *Clone(bool bReference) override { // Decl: 81
         return FNEW FEMultiImage(*this, bReference);
     }
 

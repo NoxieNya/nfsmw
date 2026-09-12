@@ -12,14 +12,14 @@
 #include "Speed/Indep/bWare/Inc/bTypes.hpp"
 
 // total size: 0x1C
-// Decl: speed/indep/src/frontend/FEJoyInput.cpp:30
+// Decl: 30
 struct cMapJoyEventToFEPad {
-    ActionID Event;    // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/FEJoyInput.cpp:31
-    uint32 FEPadValue; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/FEJoyInput.cpp:32
-    char *Name;        // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/FEJoyInput.cpp:33
-    int State[4];      // offset 0xC, size 0x10, Decl: speed/indep/src/frontend/FEJoyInput.cpp:34
+    ActionID Event;    // offset 0x0, size 0x4, Decl: 31
+    uint32 FEPadValue; // offset 0x4, size 0x4, Decl: 32
+    char *Name;        // offset 0x8, size 0x4, Decl: 33
+    int State[4];      // offset 0xC, size 0x10, Decl: 34
 
-    void ResetState() {} // Decl: speed/indep/src/frontend/FEJoyInput.cpp:36
+    void ResetState() {} // Decl: 36
 };
 
 static cMapJoyEventToFEPad MapJoyEventToFEPad[16] = {

@@ -3,7 +3,7 @@
 
 namespace BuildRegion {
 
-// Decl: speed/indep/src/misc/BuildRegion.hpp:45
+// Decl: 45
 enum eBuildRegion {
     BUILD_REGION_AMERICA = 0,
     BUILD_REGION_EU = 1,

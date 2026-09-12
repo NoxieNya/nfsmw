@@ -1,7 +1,7 @@
 #ifndef FEREFLECTED_HPP
 #define FEREFLECTED_HPP
 
-// Decl: speed/indep/src/Frontend/FEReflected.hpp:14
+// Decl: 14
 enum eFEPartUpgradeLevels {
     PART_UPGRADE_LEVEL_UNSPECIFIED = -1,
     PART_UPGRADE_LEVEL_STOCK = 0,
@@ -15,7 +15,7 @@ enum eFEPartUpgradeLevels {
     NUM_PART_UPGRADE_LEVELS = 8,
 };
 
-// Decl: speed/indep/src/Frontend/FEReflected.hpp:54
+// Decl: 54
 enum eUnlockableEntity {
     UNLOCKABLE_THING_UNKNOWN = 0,
     UNLOCKABLE_THING_CUSTOMIZE_PARTS = 1,
@@ -78,15 +78,15 @@ enum eUnlockableEntity {
 };
 
 // total size: 0xC
-// Decl: speed/indep/src/Frontend/FEReflected.hpp:295
+// Decl: 295
 struct FECarPartInfo {
-    eFEPartUpgradeLevels Level; // offset 0x0, size 0x4, Decl: speed/indep/src/Frontend/FEReflected.hpp:296
+    eFEPartUpgradeLevels Level; // offset 0x0, size 0x4, Decl: 296
     float Rep;                  // offset 0x4, size 0x4
-    float Cost;                 // offset 0x8, size 0x4, Decl: speed/indep/src/Frontend/FEReflected.hpp:299
+    float Cost;                 // offset 0x8, size 0x4, Decl: 299
 };
 
 struct type_bStringHash {
-    unsigned int hash; // offset 0x0, size 0x4, Decl: speed/indep/src/Frontend/FEReflected.hpp:308
+    unsigned int hash; // offset 0x0, size 0x4, Decl: 308
 };
 
 #endif

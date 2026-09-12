@@ -5,10 +5,10 @@
 
 // File: speed/indep/src/feng/FERefList.h
 // total size: 0x10
-// Decl: speed/indep/src/feng/FERefList.h:15
+// Decl: 15
 class FERefList {
   private:
-    bool bIsReference; // offset 0x0, size 0x1, Decl: speed/indep/src/feng/FERefList.h:18
+    bool bIsReference; // offset 0x0, size 0x1, Decl: 18
 
   protected:
     union {
@@ -16,18 +16,18 @@ class FERefList {
         FEMinNode *head; // offset 0x0, size 0x4
     };
 
-    FEMinNode *tail; // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FERefList.h:25
+    FEMinNode *tail; // offset 0x8, size 0x4, Decl: 25
 
   private:
     bool IsInList(FEMinNode *node) const;
 
   public:
-    FERefList() { // Decl: speed/indep/src/feng/FERefList.h:28
+    FERefList() { // Decl: 28
         head = nullptr;
         tail = nullptr;
         bIsReference = false;
     }
-    virtual ~FERefList() { // Decl: speed/indep/src/feng/FERefList.h:29
+    virtual ~FERefList() { // Decl: 29
         if (!bIsReference) {
             Purge();
         }
@@ -39,7 +39,7 @@ class FERefList {
         return bIsReference;
     }
 
-    FERefList *GetRefSource() { // Decl: speed/indep/src/feng/FERefList.h:33
+    FERefList *GetRefSource() { // Decl: 33
         return pRef;
     }
 
@@ -54,20 +54,20 @@ class FERefList {
     FEMinNode *GetHead() const {
         return bIsReference ? pRef->GetHead() : head;
     }
-    FEMinNode *GetTail() const { // Decl: speed/indep/src/feng/FERefList.h:42
+    FEMinNode *GetTail() const { // Decl: 42
         return bIsReference ? pRef->GetTail() : tail;
     }
-    void AddHead(FEMinNode *n) { // Decl: speed/indep/src/feng/FERefList.h:43
+    void AddHead(FEMinNode *n) { // Decl: 43
         AddNode(head, n);
     }
 
-    void AddTail(FEMinNode *n) { // Decl: speed/indep/src/feng/FERefList.h:45
+    void AddTail(FEMinNode *n) { // Decl: 45
         AddNode(tail, n);
     }
     void AddNode(FEMinNode *insertpoint, FEMinNode *node);
     FEMinNode *FindNode(u32 ordinalnumber) const;
 
-    void Purge() { // Decl: speed/indep/src/feng/FERefList.h:49
+    void Purge() { // Decl: 49
         FEMinNode *cmn = RemHead();
         while (cmn != nullptr) {
             delete cmn;
@@ -75,7 +75,7 @@ class FERefList {
         }
     }
 
-    bool IsListEmpty() const { // Decl: speed/indep/src/feng/FERefList.h:62
+    bool IsListEmpty() const { // Decl: 62
         return GetHead() == nullptr;
     }
 

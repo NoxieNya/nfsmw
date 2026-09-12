@@ -6,23 +6,23 @@
 
 // File: speed/indep/src/feng/FEColoredImage.h
 // total size: 0x94
-// Decl: speed/indep/src/feng/FEColoredImage.h:27
+// Decl: 27
 class FEColoredImageData : public FEImageData {
   public:
-    FEColor VertexColors[4]; // offset 0x54, size 0x40, Decl: speed/indep/src/feng/FEColoredImage.h:29
+    FEColor VertexColors[4]; // offset 0x54, size 0x40, Decl: 29
 };
 
 // total size: 0x60
-// Decl: speed/indep/src/feng/FEColoredImage.h:36
+// Decl: 36
 class FEColoredImage : public FEImage {
   public:
-    FEColoredImage() { // Decl: speed/indep/src/feng/FEColoredImage.h:39
+    FEColoredImage() { // Decl: 39
         Type = FE_ColoredImage;
     }
     FEColoredImage(const FEColoredImage &Object, bool bReference) : FEImage(reinterpret_cast<const FEImage &>(Object), bReference) {}
     ~FEColoredImage() override {}
 
-    FEObject *Clone(bool bReference) override { // Decl: speed/indep/src/feng/FEColoredImage.h:43
+    FEObject *Clone(bool bReference) override { // Decl: 43
         return FNEW FEColoredImage(*this, bReference);
     }
 

@@ -7,11 +7,11 @@
 
 // File: speed/indep/src/frontend/hud/FeTimeExtension.hpp
 // total size: 0x48
-// Decl: speed/indep/src/frontend/hud/FeTimeExtension.hpp:11
+// Decl: 11
 class TimeExtension : public HudElement, public ITimeExtension {
   public:
     TimeExtension(UTL::COM::Object *pOutter, const char *pkg_name, int player_number);
-    ~TimeExtension() override {} // Decl: speed/indep/src/frontend/hud/FeTimeExtension.hpp:14
+    ~TimeExtension() override {} // Decl: 14
 
     void Update(IPlayer *player) override;
     void SetPlayerLapTime(float time) override {
@@ -20,7 +20,7 @@ class TimeExtension : public HudElement, public ITimeExtension {
     void RequestTimeExtensionMessage(IPlayer *iplayer, float timeToShow) override;
 
   private:
-    bool mShowingCountdown;    // offset 0x30, size 0x1, Decl: speed/indep/src/frontend/hud/FeTimeExtension.hpp:21
+    bool mShowingCountdown;    // offset 0x30, size 0x1, Decl: 21
     float mPlayerLapTime;      // offset 0x34, size 0x4
     float mTimeToShow;         // offset 0x38, size 0x4
     int mScriptHash;           // offset 0x3C, size 0x4

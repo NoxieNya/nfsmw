@@ -32,7 +32,7 @@ class FEGeometryModels {
     eModel *mModels;                  // offset 0x10, size 0x4
 };
 
-// Decl: src/frontend/menuscreens/Safehouse/FEPkg_GarageMain.hpp:29
+// Decl: 29
 class GarageMainScreen : public MenuScreen {
   public:
     GarageMainScreen(ScreenConstructorData *sd, int eview_id, RideInfo *start_ride, int player);
@@ -80,7 +80,7 @@ class GarageMainScreen : public MenuScreen {
     eSetRideInfoReasons LoadingReason;   // offset 0x30, size 0x4
 
   private:
-    FrontEndRenderingCar *RenderingCar; // offset 0x34, size 0x4 Decl: src/frontend/menuscreens/Safehouse/FeGarageMain.hpp:145
+    FrontEndRenderingCar *RenderingCar; // offset 0x34, size 0x4 Decl: 145
     FEGeometryModels mGeometryModels;   // offset 0x38, size 0x14
     SelectCarCameraMover *pCameraMover; // offset 0x4C, size 0x4
     int Player;                         // offset 0x50, size 0x4

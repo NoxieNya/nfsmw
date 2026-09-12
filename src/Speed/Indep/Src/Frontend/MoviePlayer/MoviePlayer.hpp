@@ -642,12 +642,12 @@ struct AV_PLAYER {
 
 // File: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp
 // total size: 0x158
-// Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:87
+// Decl: 87
 class MoviePlayer {
   public:
-    class Settings { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+    class Settings { // Decl: 95
       public:
-        Settings() { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        Settings() { // Decl: 95
             bufferSize = 0x40000;
             activeController = 0;
             preload = false;
@@ -659,8 +659,8 @@ class MoviePlayer {
             type = 0;
             movieId = 0;
         }
-        ~Settings() {}                                       // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        void operator=(const struct Settings &newSettings) { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        ~Settings() {}                                       // Decl: 95
+        void operator=(const struct Settings &newSettings) { // Decl: 95
             activeController = newSettings.activeController;
             bufferSize = newSettings.bufferSize;
             loop = newSettings.loop;
@@ -672,17 +672,17 @@ class MoviePlayer {
             movieId = newSettings.movieId;
             bStrNCpy(filename, newSettings.filename, 256);
         }
-        unsigned int volume;           // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        unsigned int bufferSize;       // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        unsigned int activeController; // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        int type;                      // offset 0xC, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        int movieId;                   // offset 0x10, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        bool preload;                  // offset 0x14, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        bool sound;                    // offset 0x18, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        bool loop;                     // offset 0x1C, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        bool pal;                      // offset 0x20, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-        char filename[256];            // offset 0x24, size 0x100, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
-    }; // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:95
+        unsigned int volume;           // offset 0x0, size 0x4, Decl: 95
+        unsigned int bufferSize;       // offset 0x4, size 0x4, Decl: 95
+        unsigned int activeController; // offset 0x8, size 0x4, Decl: 95
+        int type;                      // offset 0xC, size 0x4, Decl: 95
+        int movieId;                   // offset 0x10, size 0x4, Decl: 95
+        bool preload;                  // offset 0x14, size 0x1, Decl: 95
+        bool sound;                    // offset 0x18, size 0x1, Decl: 95
+        bool loop;                     // offset 0x1C, size 0x1, Decl: 95
+        bool pal;                      // offset 0x20, size 0x1, Decl: 95
+        char filename[256];            // offset 0x24, size 0x100, Decl: 95
+    }; // Decl: 95
 
     MoviePlayer(int memClass);
     ~MoviePlayer();
@@ -704,25 +704,25 @@ class MoviePlayer {
 
     void DisplayTime();
 
-    bool IsMoviePaused() { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:204
+    bool IsMoviePaused() { // Decl: 204
         return mMoviePaused;
     }
 
     void FillInTextureInfo(uint32 *frame_address, TextureInfo *texture_info, RealShape::Shape *shape);
 
-    Settings GetSettings() { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:211
+    Settings GetSettings() { // Decl: 211
         return mSettings;
     }
 
-    int GetStatus() { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:214
+    int GetStatus() { // Decl: 214
 
         return fStatus;
     }
-    int GetLiveStatus() { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:215
+    int GetLiveStatus() { // Decl: 215
         return fLiveStatus;
     }
 
-    bool IsMoviePlaying() { // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:217
+    bool IsMoviePlaying() { // Decl: 217
         return fStatus >= 3 && fStatus < 6;
     }
 
@@ -731,7 +731,7 @@ class MoviePlayer {
   protected:
     void UpdateFunction();
 
-    void GetFirstFrame(); // Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:237
+    void GetFirstFrame(); // Decl: 237
 
   private:
     uint32 GetMillisecondsPerFrame();
@@ -740,18 +740,18 @@ class MoviePlayer {
 
     int GetMovieCategoryVolume();
 
-    Settings mSettings;        // offset 0x0, size 0x124, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:250
-    unsigned int fCurFrameNum; // offset 0x124, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:253
-    int fStatus;               // offset 0x128, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:256
-    int fLiveStatus;           // offset 0x12C, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:257
-    unsigned int mTicker;      // offset 0x130, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:260
-    bool mTickerFirstTime;     // offset 0x134, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:261
-    bool mMoviePaused;         // offset 0x138, size 0x1, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:262
-    int mili_seconds;          // offset 0x13C, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:263
-    int seconds;               // offset 0x140, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:264
-    int minutes;               // offset 0x144, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:265
-    float milliseconds;        // offset 0x148, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:266
-    float prevMilliseconds;    // offset 0x14C, size 0x4, Decl: speed/indep/src/frontend/movieplayer/MoviePlayer.hpp:267
+    Settings mSettings;        // offset 0x0, size 0x124, Decl: 250
+    unsigned int fCurFrameNum; // offset 0x124, size 0x4, Decl: 253
+    int fStatus;               // offset 0x128, size 0x4, Decl: 256
+    int fLiveStatus;           // offset 0x12C, size 0x4, Decl: 257
+    unsigned int mTicker;      // offset 0x130, size 0x4, Decl: 260
+    bool mTickerFirstTime;     // offset 0x134, size 0x1, Decl: 261
+    bool mMoviePaused;         // offset 0x138, size 0x1, Decl: 262
+    int mili_seconds;          // offset 0x13C, size 0x4, Decl: 263
+    int seconds;               // offset 0x140, size 0x4, Decl: 264
+    int minutes;               // offset 0x144, size 0x4, Decl: 265
+    float milliseconds;        // offset 0x148, size 0x4, Decl: 266
+    float prevMilliseconds;    // offset 0x14C, size 0x4, Decl: 267
     RCMP::AV_PLAYER *fPlayer;  // offset 0x150, size 0x4
     RCMP::FRAME *CurFrame;     // offset 0x154, size 0x4
 };

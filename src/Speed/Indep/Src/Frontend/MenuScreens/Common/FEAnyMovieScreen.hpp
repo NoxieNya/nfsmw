@@ -6,13 +6,13 @@
 
 // File: speed/indep/src/frontend/menuscreens/common/FEAnyMovieScreen.hpp
 // total size: 0x58
-// Decl: speed/indep/src/frontend/menuscreens/common/FEAnyMovieScreen.hpp:15
+// Decl: 15
 class FEAnyMovieScreen : public MenuScreen {
   private:
-    static char MovieFilename[64];       // size: 0x40, address: 0x8041B9A4, Decl: speed/indep/src/frontend/menuscreens/common/FEAnyMovieScreen.cpp:20
+    static char MovieFilename[64];       // size: 0x40, address: 0x8041B9A4, Decl: 20
     SubTitler mSubtitler;                // offset 0x2C, size 0x24
     static char ReturnToPackageName[64]; // size: 0x40, address: 0x804FE740
-    bool bHidGarage;                     // offset 0x50, size 0x1, Decl: speed/indep/src/frontend/menuscreens/common/FEAnyMovieScreen.hpp:20
+    bool bHidGarage;                     // offset 0x50, size 0x1, Decl: 20
     bool bAllowingControllerErrors;      // offset 0x54, size 0x1
 
   public:

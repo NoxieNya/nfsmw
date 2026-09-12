@@ -37,17 +37,17 @@ enum FEPlayActions {
 
 // File: speed/indep/src/feng/FETypeNode.h
 // total size: 0x24
-// Decl: speed/indep/src/feng/FETypeNode.h:25
+// Decl: 25
 class FEFieldNode : public FENode {
   private:
-    i32 Type;     // offset 0x14, size 0x4, Decl: speed/indep/src/feng/FETypeNode.h:27
-    u32 Size;     // offset 0x18, size 0x4, Decl: speed/indep/src/feng/FETypeNode.h:28
-    u32 Offset;   // offset 0x1C, size 0x4, Decl: speed/indep/src/feng/FETypeNode.h:29
-    u8 *pDefault; // offset 0x20, size 0x4, Decl: speed/indep/src/feng/FETypeNode.h:30
+    i32 Type;     // offset 0x14, size 0x4, Decl: 27
+    u32 Size;     // offset 0x18, size 0x4, Decl: 28
+    u32 Offset;   // offset 0x1C, size 0x4, Decl: 29
+    u8 *pDefault; // offset 0x20, size 0x4, Decl: 30
 
   public:
-    FEFieldNode() : Size(0), Offset(0), pDefault(nullptr) {} // Decl: speed/indep/src/feng/FETypeNode.h:33
-    ~FEFieldNode() override {                                // Decl: speed/indep/src/feng/FETypeNode.h:34
+    FEFieldNode() : Size(0), Offset(0), pDefault(nullptr) {} // Decl: 33
+    ~FEFieldNode() override {                                // Decl: 34
         if (pDefault != nullptr) {
             delete[] pDefault;
         }
@@ -56,21 +56,21 @@ class FEFieldNode : public FENode {
     i32 GetType() const {
         return Type;
     }
-    void SetType(i32 NewType) { // Decl: speed/indep/src/feng/FETypeNode.h:37
+    void SetType(i32 NewType) { // Decl: 37
         Type = NewType;
     }
 
     u32 GetSize() const {
         return Size;
     }
-    void SetSize(u32 Val) { // Decl: speed/indep/src/feng/FETypeNode.h:40
+    void SetSize(u32 Val) { // Decl: 40
         Size = Val;
     }
 
     u32 GetOffset() const {
         return Offset;
     }
-    void SetOffset(u32 Val) { // Decl: speed/indep/src/feng/FETypeNode.h:43
+    void SetOffset(u32 Val) { // Decl: 43
         Offset = Val;
     }
 
@@ -78,11 +78,11 @@ class FEFieldNode : public FENode {
 
     void GetDefault(void *pDest);
 
-    void *const GetDefault() { // Decl: speed/indep/src/feng/FETypeNode.h:49
+    void *const GetDefault() { // Decl: 49
         return pDefault;
     }
 
-    struct FEFieldNode *GetNext() const { // Decl: speed/indep/src/feng/FETypeNode.h:52
+    struct FEFieldNode *GetNext() const { // Decl: 52
         return static_cast<FEFieldNode *>(FEMinNode::GetNext());
     }
     struct FEFieldNode *GetPrev() const {
@@ -91,18 +91,18 @@ class FEFieldNode : public FENode {
 };
 
 // total size: 0x28
-// Decl: speed/indep/src/feng/FETypeNode.h:65
+// Decl: 65
 class FETypeNode : public FENode {
   private:
-    FEMinList Fields; // offset 0x14, size 0x10, Decl: speed/indep/src/feng/FETypeNode.h:67
-    u32 TypeID;       // offset 0x24, size 0x4, Decl: speed/indep/src/feng/FETypeNode.h:68
+    FEMinList Fields; // offset 0x14, size 0x10, Decl: 67
+    u32 TypeID;       // offset 0x24, size 0x4, Decl: 68
 
   public:
-    void InsertField(FEFieldNode *pField, FEFieldNode *pInsertAfter) {} // Decl: speed/indep/src/feng/FETypeNode.h:71
-    void AppendField(FEFieldNode *pField) {                             // Decl: speed/indep/src/feng/FETypeNode.h:72
+    void InsertField(FEFieldNode *pField, FEFieldNode *pInsertAfter) {} // Decl: 71
+    void AppendField(FEFieldNode *pField) {                             // Decl: 72
         Fields.AddTail(pField);
     }
-    void RemoveField(FEFieldNode *pField) { // Decl: speed/indep/src/feng/FETypeNode.h:73
+    void RemoveField(FEFieldNode *pField) { // Decl: 73
         Fields.RemNode(pField);
     }
 
@@ -110,36 +110,36 @@ class FETypeNode : public FENode {
 
     void UpdateOffsets();
 
-    i32 GetFieldCount() { // Decl: speed/indep/src/feng/FETypeNode.h:78
+    i32 GetFieldCount() { // Decl: 78
         return Fields.GetNumElements();
     }
 
-    FEFieldNode *GetField(i32 Index) { // Decl: speed/indep/src/feng/FETypeNode.h:80
+    FEFieldNode *GetField(i32 Index) { // Decl: 80
         return reinterpret_cast<FEFieldNode *>(Fields.FindNode(static_cast<u32>(Index)));
     }
 
-    FEFieldNode *GetField(const char *pName); // Decl: speed/indep/src/feng/FETypeNode.h:80
+    FEFieldNode *GetField(const char *pName); // Decl: 80
 
-    FEFieldNode *GetFirstField() { // Decl: speed/indep/src/feng/FETypeNode.h:81
+    FEFieldNode *GetFirstField() { // Decl: 81
         return reinterpret_cast<FEFieldNode *>(Fields.GetHead());
     }
-    i32 GetFieldIndex(FEFieldNode *pNode) { // Decl: speed/indep/src/feng/FETypeNode.h:82
+    i32 GetFieldIndex(FEFieldNode *pNode) { // Decl: 82
         return Fields.ElementNumber(pNode);
     }
 
-    u32 GetID() { // Decl: speed/indep/src/feng/FETypeNode.h:84
+    u32 GetID() { // Decl: 84
         return TypeID;
     }
-    void SetID(u32 ID) { // Decl: speed/indep/src/feng/FETypeNode.h:85
+    void SetID(u32 ID) { // Decl: 85
         TypeID = ID;
     }
 
     u32 GetTypeSize();
 
-    FETypeNode *GetNext() { // Decl: speed/indep/src/feng/FETypeNode.h:89
+    FETypeNode *GetNext() { // Decl: 89
         return static_cast<FETypeNode *>(FEMinNode::GetNext());
     }
-    FETypeNode *GetPrev() { // Decl: speed/indep/src/feng/FETypeNode.h:90
+    FETypeNode *GetPrev() { // Decl: 90
         return static_cast<FETypeNode *>(FEMinNode::GetPrev());
     }
 };

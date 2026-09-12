@@ -136,7 +136,7 @@ typedef UMath::Vector4 Vector4;
 // typedef Vector4 Quaternion;
 typedef UMath::Matrix4 Matrix;
 
-typedef int PathEventEnum; // Decl: speed/indep/src/misc/attribuserinclude.h:196
+typedef int PathEventEnum; // Decl: 196
 
 //         #define:237  USER_ATTRIB_GROWTABLE(currententries,overrun) NONDEBUG_USER_ATTRIB_GROWTABLE(currententries, overrun)
 

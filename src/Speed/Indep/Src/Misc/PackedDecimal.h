@@ -67,9 +67,9 @@ template <typename N, int a, int b> class FixedPoint {
 };
 
 typedef FloatingPoint<int8, 10, 1, 3, 5> decimal8;
-typedef FloatingPoint<int16, 10, 3, 5, 11> decimal16; // Decl: speed/indep/src/Misc/PackedDecimal.h:107
+typedef FloatingPoint<int16, 10, 3, 5, 11> decimal16; // Decl: 107
 
 typedef FixedPoint<int16, 10, 2> decfix16;
-typedef FixedPoint<uint16, 10, 2u> udecfix16; // Decl: speed/indep/src/Misc/PackedDecimal.h:110
+typedef FixedPoint<uint16, 10, 2u> udecfix16; // Decl: 110
 
 #endif

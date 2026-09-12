@@ -16,7 +16,7 @@ enum ePerformanceRatingType {
 
 // File: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp
 // total size: 0x1C4
-// Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:218
+// Decl: 218
 class CarCustomizeManager {
   public:
     CarCustomizeManager() : ThePVehicle(static_cast<const Attrib::Collection *>(nullptr), 0, nullptr), PreviewRecord() {}
@@ -29,9 +29,9 @@ class CarCustomizeManager {
 
     void AddToCart(SelectablePart *part);
 
-    bool RemoveFromCart(ShoppingCartItem *item); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:230
+    bool RemoveFromCart(ShoppingCartItem *item); // Decl: 230
 
-    void AddRemovalCarPart(CAR_SLOT_ID slot_id); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:229
+    void AddRemovalCarPart(CAR_SLOT_ID slot_id); // Decl: 229
 
     ShoppingCartItem *IsPartTypeInCart(SelectablePart *to_find);
 
@@ -51,19 +51,19 @@ class CarCustomizeManager {
         return static_cast<ShoppingCartItem *>(ShoppingCart.GetTail());
     }
 
-    int GetNumCartItems() { // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:237
+    int GetNumCartItems() { // Decl: 237
         return ShoppingCart.CountElements();
     }
 
-    ShoppingCartItem *GetCartItem(int index) { // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:236
+    ShoppingCartItem *GetCartItem(int index) { // Decl: 236
         return ShoppingCart.GetNode(index);
     }
 
-    int GetCartTotal(eCustomizeCartTotals type); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:248
+    int GetCartTotal(eCustomizeCartTotals type); // Decl: 248
 
-    void Checkout(); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:249
+    void Checkout(); // Decl: 249
 
-    void EmptyCart() { // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:250
+    void EmptyCart() { // Decl: 250
         ShoppingCart.DeleteAllElements();
         ResetPreview();
     }
@@ -86,7 +86,7 @@ class CarCustomizeManager {
 
     void ResetToStockPerformance();
 
-    void ResetPreview(); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:255
+    void ResetPreview(); // Decl: 255
 
     void PreviewPart(int slot, CarPart *part);
 
@@ -98,7 +98,7 @@ class CarCustomizeManager {
 
     void InstallPerfPkg(Physics::Upgrades::Type part_type, int level);
 
-    int GetInstalledPerfPkg(Physics::Upgrades::Type type); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:287
+    int GetInstalledPerfPkg(Physics::Upgrades::Type type); // Decl: 287
 
     bool IsJunkmanInstalled(Physics::Upgrades::Type type);
 
@@ -106,7 +106,7 @@ class CarCustomizeManager {
 
     int GetNumPackages(Physics::Upgrades::Type type);
 
-    void MaxOutPerformance(); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:290
+    void MaxOutPerformance(); // Decl: 290
 
     float GetPerformanceRating(ePerformanceRatingType type, bool preview);
 
@@ -116,7 +116,7 @@ class CarCustomizeManager {
 
     uint32 GetUnlockHash(eCustomizeCategory cat, int upgrade_lvl);
 
-    bool IsPartInstalled(SelectablePart *part); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:292
+    bool IsPartInstalled(SelectablePart *part); // Decl: 292
 
     bool IsPartLocked(SelectablePart *part, int perf_unlock_level);
 
@@ -140,7 +140,7 @@ class CarCustomizeManager {
 
     void GetPerformancePartsList(Physics::Upgrades::Type type, bTList<SelectablePart> &the_list);
 
-    CarType GetTuningCarType() {} // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:325
+    CarType GetTuningCarType() {} // Decl: 325
 
     void SetInBackRoom(bool in_back) {
         CustomizeSetInBackRoom(in_back);
@@ -152,7 +152,7 @@ class CarCustomizeManager {
 
     bool CanInstallJunkman(Physics::Upgrades::Type type);
 
-    bool IsCareerMode(); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:334
+    bool IsCareerMode(); // Decl: 334
 
     float GetMaxRPM() {
         return Physics::Info::Redline(ThePVehicle);
@@ -176,21 +176,21 @@ class CarCustomizeManager {
         return CustomizeIsInParts();
     }
 
-    float GetActualHeat(); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:306
+    float GetActualHeat(); // Decl: 306
 
     float GetActualRep() {}
 
-    float GetPreviewHeat(SelectablePart *part); // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:307
+    float GetPreviewHeat(SelectablePart *part); // Decl: 307
 
     float GetPreviewRep() {}
 
     float GetCartHeat();
 
-    const FECustomizationRecord *GetPreviewRecord() { // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:285
+    const FECustomizationRecord *GetPreviewRecord() { // Decl: 285
         return &PreviewRecord;
     }
 
-    const FECarRecord *GetTuningCar() { // Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:328
+    const FECarRecord *GetTuningCar() { // Decl: 328
         return TuningCar;
     }
 
@@ -206,12 +206,12 @@ class CarCustomizeManager {
     float GetCartRep() {}
 
   private:
-    eCustomizeEntryPoint EntryPoint;       // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:371
-    FECarRecord *TuningCar;                // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:373
-    Attrib::Gen::pvehicle ThePVehicle;     // offset 0x8, size 0x14, Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:374
-    FECustomizationRecord PreviewRecord;   // offset 0x1C, size 0x198, Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:375
-    bTList<ShoppingCartItem> ShoppingCart; // offset 0x1B4, size 0x8, Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:378
-    int NumPartsInCart;                    // offset 0x1BC, size 0x4, Decl: speed/indep/src/frontend/menuscreens/customize/CustomizeManager.hpp:379
+    eCustomizeEntryPoint EntryPoint;       // offset 0x0, size 0x4, Decl: 371
+    FECarRecord *TuningCar;                // offset 0x4, size 0x4, Decl: 373
+    Attrib::Gen::pvehicle ThePVehicle;     // offset 0x8, size 0x14, Decl: 374
+    FECustomizationRecord PreviewRecord;   // offset 0x1C, size 0x198, Decl: 375
+    bTList<ShoppingCartItem> ShoppingCart; // offset 0x1B4, size 0x8, Decl: 378
+    int NumPartsInCart;                    // offset 0x1BC, size 0x4, Decl: 379
     SelectablePart *TheTempColoredPart;    // offset 0x1C0, size 0x4
 };
 

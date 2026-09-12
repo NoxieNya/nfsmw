@@ -10,11 +10,11 @@
 
 // File: speed/indep/src/frontend/FEngFont.cpp
 // total size: 0xC
-// Decl: speed/indep/src/frontend/FEngFont.cpp:309
+// Decl: 309
 struct ExtraFontData {
-    uint32 FontHash;      // offset 0x0, size 0x4, Decl: speed/indep/src/frontend/FEngFont.cpp:310
-    float BaselineOffset; // offset 0x4, size 0x4, Decl: speed/indep/src/frontend/FEngFont.cpp:311
-    float LeadingScale;   // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/FEngFont.cpp:312
+    uint32 FontHash;      // offset 0x0, size 0x4, Decl: 310
+    float BaselineOffset; // offset 0x4, size 0x4, Decl: 311
+    float LeadingScale;   // offset 0x8, size 0x4, Decl: 312
 };
 
 static ExtraFontData ExtraFontDataTable[] = {
@@ -40,7 +40,7 @@ ExtraFontData *FindExtraFontData(uint32 font_hash) {
     return nullptr;
 }
 
-// Decl: speed/indep/src/frontend/FEngFont.cpp:177
+// Decl: 177
 uint32 FontReplacementTable[2] = {0x9583AA1A, 0x5B9D88B9};
 
 // UNSOLVED

@@ -4,11 +4,11 @@
 #include "Speed/Indep/Src/FEng/FEngStandard.h"
 #include "Speed/Indep/bWare/Inc/bPrintf.hpp"
 
-static const char *FEColor1Name = "Top Left";       // size: 0x4, address: 0x8041D160, Decl: speed/indep/src/feng/FETypeLib.cpp:23
-static const char *FEColor2Name = "Top Right";      // size: 0x4, address: 0x8041D164, Decl: speed/indep/src/feng/FETypeLib.cpp:24
-static const char *FEColor3Name = "Bottom Right";   // size: 0x4, address: 0x8041D168, Decl: speed/indep/src/feng/FETypeLib.cpp:25
-static const char *FEColor4Name = "Bottom Left";    // size: 0x4, address: 0x8041D16C, Decl: speed/indep/src/feng/FETypeLib.cpp:26
-static const char *FEFrameNumName = "Frame Number"; // size: 0x4, address: 0x8041D170, Decl: speed/indep/src/feng/FETypeLib.cpp:27
+static const char *FEColor1Name = "Top Left";       // size: 0x4, address: 0x8041D160, Decl: 23
+static const char *FEColor2Name = "Top Right";      // size: 0x4, address: 0x8041D164, Decl: 24
+static const char *FEColor3Name = "Bottom Right";   // size: 0x4, address: 0x8041D168, Decl: 25
+static const char *FEColor4Name = "Bottom Left";    // size: 0x4, address: 0x8041D16C, Decl: 26
+static const char *FEFrameNumName = "Frame Number"; // size: 0x4, address: 0x8041D170, Decl: 27
 
 FETypeNode *FETypeLib::CreateBaseObjectType(const char *pName) {
     FETypeNode *pType;

@@ -7,7 +7,7 @@
 
 // File: speed/indep/src/frontend/Subtitle.hpp
 // total size: 0x24
-// Decl: speed/indep/src/frontend/Subtitle.hpp:15
+// Decl: 15
 class SubTitler {
   private:
     unsigned int next_;    // offset 0x0, size 0x4

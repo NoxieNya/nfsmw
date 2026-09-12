@@ -12,7 +12,7 @@
 class ISteeringWheel;
 
 // File: speed/indep/src/interfaces/simentities/IPlayer.h
-// Decl: speed/indep/src/interfaces/simentities/IPlayer.h:11
+// Decl: 11
 enum ePlayerHudType {
     PHT_NONE = 0,
     PHT_STANDARD = 1,
@@ -23,7 +23,7 @@ enum ePlayerHudType {
     PHT_DRAG_SPLIT2 = 6,
 };
 
-// Decl: speed/indep/src/interfaces/simentities/IPlayer.h:23
+// Decl: 23
 enum ePlayerList {
     PLAYER_ALL = 0,
     PLAYER_LOCAL = 1,

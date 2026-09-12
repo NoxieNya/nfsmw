@@ -98,7 +98,7 @@ enum ePerformancePkgLevels {
 };
 
 // File: speed/indep/src/frontend/menuscreens/customize/FECustomize.hpp
-// Decl: speed/indep/src/frontend/menuscreens/customize/FECustomize.hpp:82
+// Decl: 82
 enum eCustomizeEntryPoint {
     CEP_GAMEPLAY = 0,
     CEP_MAIN_MENU = 1,
@@ -115,7 +115,7 @@ enum eCustomizePartState {
     CPS_PLAYER_STATE_MASK = 0xF0,
 };
 
-// Decl: speed/indep/src/frontend/menuscreens/customize/FECustomize.hpp:106
+// Decl: 106
 enum eCustomizeCartTotals {
     CCT_PART_PRICES = 0,
     CCT_TRADE_IN = 1,

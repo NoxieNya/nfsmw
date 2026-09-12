@@ -7,40 +7,40 @@
 
 // File: speed/indep/src/feng/FEObjectSorter.h
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEObjectSorter.h:24
+// Decl: 24
 struct SFERadixKey {
-    FEObject *pobObject; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEObjectSorter.h:25
-    u32 ulKey;           // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEObjectSorter.h:26
+    FEObject *pobObject; // offset 0x0, size 0x4, Decl: 25
+    u32 ulKey;           // offset 0x4, size 0x4, Decl: 26
 };
 
 // total size: 0x4004
-// Decl: speed/indep/src/feng/FEObjectSorter.h:34
+// Decl: 34
 template <int N> class FEObjectSorter {
   private:
-    u32 mulNumObjects;              // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEObjectSorter.h:36
-    SFERadixKey mastFinalList[N];   // offset 0x4, size 0x2000, Decl: speed/indep/src/feng/FEObjectSorter.h:37
-    SFERadixKey mastScratchList[N]; // offset 0x2004, size 0x2000, Decl: speed/indep/src/feng/FEObjectSorter.h:38
+    u32 mulNumObjects;              // offset 0x0, size 0x4, Decl: 36
+    SFERadixKey mastFinalList[N];   // offset 0x4, size 0x2000, Decl: 37
+    SFERadixKey mastScratchList[N]; // offset 0x2004, size 0x2000, Decl: 38
 
   public:
-    FEObjectSorter() { // Decl: speed/indep/src/feng/FEObjectSorter.h:41
+    FEObjectSorter() { // Decl: 41
         Zero();
     }
 
-    void Zero() { // Decl: speed/indep/src/feng/FEObjectSorter.h:46
+    void Zero() { // Decl: 46
         mulNumObjects = 0;
     }
 
-    void AddObject(FEObject *pobObject, float fZValue) { // Decl: speed/indep/src/feng/FEObjectSorter.h:51
+    void AddObject(FEObject *pobObject, float fZValue) { // Decl: 51
         mastFinalList[mulNumObjects].pobObject = pobObject;
         mastFinalList[mulNumObjects].ulKey = *reinterpret_cast<u32 *>(&fZValue);
         mulNumObjects++;
     }
 
-    u32 GetNumObjects() { // Decl: speed/indep/src/feng/FEObjectSorter.h:59
+    u32 GetNumObjects() { // Decl: 59
         return mulNumObjects;
     }
 
-    SFERadixKey *GetListPtr() { // Decl: speed/indep/src/feng/FEObjectSorter.h:70
+    SFERadixKey *GetListPtr() { // Decl: 70
         return mastFinalList;
     }
 
@@ -48,7 +48,7 @@ template <int N> class FEObjectSorter {
 };
 
 // UNSOLVED
-template <int N> void FEObjectSorter<N>::SortObjects() { // Decl: speed/indep/src/feng/FEObjectSorter.h:81
+template <int N> void FEObjectSorter<N>::SortObjects() { // Decl: 81
     SFERadixKey *pstDestList = mastScratchList;
     SFERadixKey *pstSrcList = mastFinalList;
     i32 alElemCount[256];

@@ -26,10 +26,10 @@
 
 // File: speed/indep/src/feng/FEPackageReader.cpp
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEPackageReader.cpp:36
+// Decl: 36
 struct FETypeSize {
-    u32 ID;   // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEPackageReader.cpp:37
-    u32 Size; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEPackageReader.cpp:37
+    u32 ID;   // offset 0x0, size 0x4, Decl: 37
+    u32 Size; // offset 0x4, size 0x4, Decl: 37
 };
 
 FEPackageReader::FEPackageReader() {

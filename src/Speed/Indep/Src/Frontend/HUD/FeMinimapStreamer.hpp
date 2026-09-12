@@ -24,18 +24,18 @@ class UncompressedMiniMap {
 
 // File: speed/indep/src/frontend/hud/FeMinimapStreamer.hpp
 // total size: 0x1B4
-// Decl: speed/indep/src/frontend/hud/FeMinimapStreamer.hpp:33
+// Decl: 33
 class ChoppedMiniMapManager {
   public:
-    ChoppedMiniMapManager(int numSections); // Decl: speed/indep/src/frontend/hud/FeMinimapStreamer.hpp:35
-    ~ChoppedMiniMapManager();               // Decl: speed/indep/src/frontend/hud/FeMinimapStreamer.hpp:36
+    ChoppedMiniMapManager(int numSections); // Decl: 35
+    ~ChoppedMiniMapManager();               // Decl: 36
 
-    static void Init();  // Decl: speed/indep/src/frontend/hud/FeMinimapStreamer.hpp:38
-    static void Close(); // Decl: speed/indep/src/frontend/hud/FeMinimapStreamer.hpp:39
+    static void Init();  // Decl: 38
+    static void Close(); // Decl: 39
 
     void Resize(int newNumSections);
 
-    bool IsLoaded() { // Decl: speed/indep/src/frontend/hud/FeMinimapStreamer.hpp:49
+    bool IsLoaded() { // Decl: 49
         return LoadingChopNum > 0;
     }
 
@@ -43,7 +43,7 @@ class ChoppedMiniMapManager {
 
     int Unloader(bChunk *chunk);
 
-    void GetTextureName(char *buffer, int buffer_size, int chop_num); // Decl: speed/indep/src/frontend/hud/FeMinimapStreamer.hpp:52
+    void GetTextureName(char *buffer, int buffer_size, int chop_num); // Decl: 52
 
     int CountAllocated();
 

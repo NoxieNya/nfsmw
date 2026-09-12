@@ -15,13 +15,13 @@ typedef unsigned long long HudFeaturesType; // :13
 
 // File: speed/indep/src/frontend/hud/FeHudElement.hpp
 // total size: 0x28
-// Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:17
+// Decl: 17
 class HudElement {
   private:
-    bPList<FEObject> Objects;           // offset 0x0, size 0x8, Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:19
-    const char *pPackageName;           // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:20
-    HudFeaturesType Mask;               // offset 0x10, size 0x8, Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:21
-    HudFeaturesType CurrentHudFeatures; // offset 0x18, size 0x8, Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:22
+    bPList<FEObject> Objects;           // offset 0x0, size 0x8, Decl: 19
+    const char *pPackageName;           // offset 0x8, size 0x4, Decl: 20
+    HudFeaturesType Mask;               // offset 0x10, size 0x8, Decl: 21
+    HudFeaturesType CurrentHudFeatures; // offset 0x18, size 0x8, Decl: 22
     bool mCurrentlySetVisible;          // offset 0x20, size 0x1
 
   protected:
@@ -32,29 +32,29 @@ class HudElement {
 
   public:
     HudElement(const char *pkg_name, HudFeaturesType mask);
-    virtual ~HudElement() {} // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:33
+    virtual ~HudElement() {} // Decl: 33
 
-    virtual void Update(IPlayer *player) {} // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:35
+    virtual void Update(IPlayer *player) {} // Decl: 35
 
-    FEString *RegisterString(const char *name) { // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:45
+    FEString *RegisterString(const char *name) { // Decl: 45
         return RegisterString(FEHashUpper(name));
     }
-    FEString *RegisterString(uint32 hash);     // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:45
-    FEImage *RegisterImage(const char *name) { // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:46
+    FEString *RegisterString(uint32 hash);     // Decl: 45
+    FEImage *RegisterImage(const char *name) { // Decl: 46
         return RegisterImage(FEHashUpper(name));
     }
-    FEImage *RegisterImage(uint32 hash); // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:46
+    FEImage *RegisterImage(uint32 hash); // Decl: 46
 
-    FEObject *RegisterObject(const char *name) { // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:47
+    FEObject *RegisterObject(const char *name) { // Decl: 47
         return RegisterObject(FEHashUpper(name));
     }
-    FEObject *RegisterObject(uint32 hash); // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:47
+    FEObject *RegisterObject(uint32 hash); // Decl: 47
 
     FEMultiImage *RegisterMultiImage(uint32 hash);
 
     FEGroup *RegisterGroup(uint32 hash);
 
-    const char *GetPackageName() { // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:55
+    const char *GetPackageName() { // Decl: 55
         return pPackageName;
     }
 
@@ -62,7 +62,7 @@ class HudElement {
 
     void Toggle(HudFeaturesType hud_features);
 
-    bool IsElementVisible() { // Decl: speed/indep/src/frontend/hud/FeHudElement.hpp:58
+    bool IsElementVisible() { // Decl: 58
         return (CurrentHudFeatures & Mask) != 0;
     }
 };

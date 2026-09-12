@@ -117,30 +117,30 @@ typedef eMenuSoundTriggers reflection_typedef_eMenuSoundTriggers;
 
 // File: speed/indep/src/eaxsound/AemsDef.hpp
 // total size: 0x14
-// Decl: speed/indep/src/eaxsound/AemsDef.hpp:279
+// Decl: 279
 typedef struct PlayCommonSampleSt {
-    int nHack;        // offset 0x0, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:280
-    int id;           // offset 0x4, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:282
-    int volume;       // offset 0x8, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:284
-    int pitch;        // offset 0xC, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:286
-    int azimuth;      // offset 0x10, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:288
-} PlayCommonSampleSt; // Decl: speed/indep/src/eaxsound/AemsDef.hpp:289
+    int nHack;        // offset 0x0, size 0x4, Decl: 280
+    int id;           // offset 0x4, size 0x4, Decl: 282
+    int volume;       // offset 0x8, size 0x4, Decl: 284
+    int pitch;        // offset 0xC, size 0x4, Decl: 286
+    int azimuth;      // offset 0x10, size 0x4, Decl: 288
+} PlayCommonSampleSt; // Decl: 289
 
 // total size: 0x14
-// Decl: speed/indep/src/eaxsound/AemsDef.hpp:292
+// Decl: 292
 typedef struct PlayFrontEndSampleSt {
-    int nHack;          // offset 0x0, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:293
-    int id;             // offset 0x4, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:295
-    int volume;         // offset 0x8, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:297
-    int pitch;          // offset 0xC, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:299
-    int azimuth;        // offset 0x10, size 0x4, Decl: speed/indep/src/eaxsound/AemsDef.hpp:301
-} PlayFrontEndSampleSt; // Decl: speed/indep/src/eaxsound/AemsDef.hpp:302
+    int nHack;          // offset 0x0, size 0x4, Decl: 293
+    int id;             // offset 0x4, size 0x4, Decl: 295
+    int volume;         // offset 0x8, size 0x4, Decl: 297
+    int pitch;          // offset 0xC, size 0x4, Decl: 299
+    int azimuth;        // offset 0x10, size 0x4, Decl: 301
+} PlayFrontEndSampleSt; // Decl: 302
 
 #define AEMS_EVENT_NONE -1              // :305
 #define AEMS_EVENT_PLAYCOMMONSAMPLE 0   // :306
 #define AEMS_EVENT_PLAYFRONTENDSAMPLE 1 // :307
 
-// Decl: speed/indep/src/eaxsound/AemsDef.hpp:312
+// Decl: 312
 enum eEAXGameState {
     EAXGS_INITIALIZING = 0,
     EAXGS_FRONTEND = 1,
@@ -156,7 +156,7 @@ enum eEAXGameState {
     EAXGS_EXIT_FE = 11,
 };
 
-// Decl: speed/indep/src/eaxsound/AemsDef.hpp:483
+// Decl: 483
 enum eAemsStreamBanks {
     EAX_AEMS_MUSIC_UG0_S = 0,
     EAX_AEMS_AMB_STEREO = 1,

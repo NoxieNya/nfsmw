@@ -10,7 +10,7 @@
 #include "Speed/Indep/Src/FEng/FEGameInterface.h"
 #include "Speed/Indep/Src/FEng/FEMovie.h"
 
-u32 FEPackage::uHoldDirtyFlags = 0xFFFFFFFF; // size: 0x4, address: 0x8041D158, Decl: speed/indep/src/feng/FEPackage.cpp:26
+u32 FEPackage::uHoldDirtyFlags = 0xFFFFFFFF; // size: 0x4, address: 0x8041D158, Decl: 26
 
 bool PackageInitStateCB::Callback(FEObject *pObj) {
     pObj->SetCurrentScript(pObj->FindScript(FEHASH_INIT));
@@ -133,13 +133,13 @@ bool FEPackage::ForAllObjects(FEObjectCallback &Callback) {
 
 // File: speed/indep/src/feng/FEPackage.cpp
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEPackage.cpp:211
+// Decl: 211
 class FEFindByHash : public FEObjectCallback {
   public:
-    u32 Hash;         // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:213
-    FEObject *pFound; // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:214
+    u32 Hash;         // offset 0x4, size 0x4, Decl: 213
+    FEObject *pFound; // offset 0x8, size 0x4, Decl: 214
 
-    bool Callback(FEObject *pObj) override { // Decl: speed/indep/src/feng/FEPackage.cpp:216
+    bool Callback(FEObject *pObj) override { // Decl: 216
         if (pObj->NameHash == Hash) {
             pFound = pObj;
             return false;
@@ -160,13 +160,13 @@ FEObject *FEPackage::FindObjectByHash(u32 NameHash) {
 }
 
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEPackage.cpp:257
+// Decl: 257
 class FEFindByGUID : public FEObjectCallback {
   public:
-    u32 GUID;         // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:259
-    FEObject *pFound; // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:260
+    u32 GUID;         // offset 0x4, size 0x4, Decl: 259
+    FEObject *pFound; // offset 0x8, size 0x4, Decl: 260
 
-    bool Callback(FEObject *pObj) override { // Decl: speed/indep/src/feng/FEPackage.cpp:262
+    bool Callback(FEObject *pObj) override { // Decl: 262
         if (pObj->GUID == GUID) {
             pFound = pObj;
             return false;
@@ -252,9 +252,9 @@ void FEPackage::UpdateGroup(FEGroup *pGroup, const i32 tDeltaTicks) {
     }
 }
 
-uint32 eFrameCounter = 0; // size: 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:400
-uint32 eFrameCounterOLD;  // size: 0x4, address: 0x80473E0C, Decl: speed/indep/src/feng/FEPackage.cpp:401
-uint32 objCount;          // size: 0x4, address: 0x80473E10, Decl: speed/indep/src/feng/FEPackage.cpp:402
+uint32 eFrameCounter = 0; // size: 0x4, Decl: 400
+uint32 eFrameCounterOLD;  // size: 0x4, address: 0x80473E0C, Decl: 401
+uint32 objCount;          // size: 0x4, address: 0x80473E10, Decl: 402
 
 // UNSOLVED
 void FEPackage::UpdateObject(FEObject *pObject, const i32 tDeltaTicks) {
@@ -459,7 +459,7 @@ class MouseStateArrayOffsetUpdater : public FEObjectCallback {
     };
 };
 
-// Decl: speed/indep/src/feng/FEPackage.cpp:765
+// Decl: 765
 void FEPackage::Update(FEngine *pEngine, const i32 tDeltaTicks) {
     FEObject *pObject = static_cast<FEObject *>(Objects.GetHead());
     pEnginePtr = pEngine;
@@ -493,47 +493,47 @@ void FEPackage::SetCurrentButton(FEObject *pNewButton, bool bSendMsgs) {
 }
 
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEPackage.cpp:888
+// Decl: 888
 class FEGetNumSpawnResponses : public FEObjectCallback {
   public:
-    ~FEGetNumSpawnResponses() override {} // Decl: speed/indep/src/feng/FEPackage.cpp:888
+    ~FEGetNumSpawnResponses() override {} // Decl: 888
 
-    u32 *pNumLoad;      // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:890
-    u32 *pStringLength; // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:891
+    u32 *pNumLoad;      // offset 0x4, size 0x4, Decl: 890
+    u32 *pStringLength; // offset 0x8, size 0x4, Decl: 891
 
-    FEGetNumSpawnResponses(u32 &TheNumLoad, u32 &TheStringLength) {} // Decl: speed/indep/src/feng/FEPackage.cpp:893
+    FEGetNumSpawnResponses(u32 &TheNumLoad, u32 &TheStringLength) {} // Decl: 893
 
-    bool Callback(FEObject *pObj) override {} // Decl: speed/indep/src/feng/FEPackage.cpp:896
+    bool Callback(FEObject *pObj) override {} // Decl: 896
 };
 
 // total size: 0x10
-// Decl: speed/indep/src/feng/FEPackage.cpp:904
+// Decl: 904
 class FESetSpawnResponses : public FEObjectCallback {
   public:
-    ~FESetSpawnResponses() override {} // Decl: speed/indep/src/feng/FEPackage.cpp:904
+    ~FESetSpawnResponses() override {} // Decl: 904
 
-    u32 *pNumLoad;                 // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:906
-    u32 *pStringLength;            // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:907
-    FELoadPackageDescArray *pDesc; // offset 0xC, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:908
+    u32 *pNumLoad;                 // offset 0x4, size 0x4, Decl: 906
+    u32 *pStringLength;            // offset 0x8, size 0x4, Decl: 907
+    FELoadPackageDescArray *pDesc; // offset 0xC, size 0x4, Decl: 908
 
-    FESetSpawnResponses(u32 &TheNumLoad, u32 &TheStringLength, FELoadPackageDescArray *pTheDesc) {} // Decl: speed/indep/src/feng/FEPackage.cpp:910
+    FESetSpawnResponses(u32 &TheNumLoad, u32 &TheStringLength, FELoadPackageDescArray *pTheDesc) {} // Decl: 910
 
-    bool Callback(FEObject *pObj) override {} // Decl: speed/indep/src/feng/FEPackage.cpp:913
+    bool Callback(FEObject *pObj) override {} // Decl: 913
 };
 
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEPackage.cpp:968
+// Decl: 968
 class ResourceConnector : public FEObjectCallback {
   public:
-    FEPackage *pPack;             // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:970
-    FEResourceRequest **pReqList; // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:971
+    FEPackage *pPack;             // offset 0x4, size 0x4, Decl: 970
+    FEResourceRequest **pReqList; // offset 0x8, size 0x4, Decl: 971
 
-    bool Callback(FEObject *pObj) override; // Decl: speed/indep/src/feng/FEPackage.cpp:978
+    bool Callback(FEObject *pObj) override; // Decl: 978
 
-    void ConnectListBoxResources(FEListBox *pList); // Decl: speed/indep/src/feng/FEPackage.cpp:1006
+    void ConnectListBoxResources(FEListBox *pList); // Decl: 1006
 };
 
-bool ResourceConnector::Callback(FEObject *pObj) { // Decl: speed/indep/src/feng/FEPackage.cpp:978
+bool ResourceConnector::Callback(FEObject *pObj) { // Decl: 978
     switch (pObj->Type) {
         case FE_List:
             ConnectListBoxResources(static_cast<FEListBox *>(pObj));
@@ -549,7 +549,7 @@ bool ResourceConnector::Callback(FEObject *pObj) { // Decl: speed/indep/src/feng
     return true;
 };
 
-void ResourceConnector::ConnectListBoxResources(FEListBox *pList) { // Decl: speed/indep/src/feng/FEPackage.cpp:1006
+void ResourceConnector::ConnectListBoxResources(FEListBox *pList) { // Decl: 1006
     pList->SetCurrentColumn(0);
     pList->SetCurrentRow(0);
 
@@ -588,12 +588,12 @@ FEObjectMouseState::FEObjectMouseState() {
 FEObjectMouseState::~FEObjectMouseState() {}
 
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEPackage.cpp:1074
+// Decl: 1074
 class MouseStateObjectCounter : public FEObjectCallback {
   public:
-    int NumMouseObjects; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:1076
+    int NumMouseObjects; // offset 0x4, size 0x4, Decl: 1076
 
-    bool Callback(FEObject *pObj) override { // Decl: speed/indep/src/feng/FEPackage.cpp:1078
+    bool Callback(FEObject *pObj) override { // Decl: 1078
         if (pObj->Flags & FF_MouseObject) {
             NumMouseObjects++;
         }
@@ -602,12 +602,12 @@ class MouseStateObjectCounter : public FEObjectCallback {
 };
 
 // total size: 0x8
-// Decl: speed/indep/src/feng/FEPackage.cpp:1089
+// Decl: 1089
 class MouseStateArrayBuilder : public FEObjectCallback {
   public:
-    FEPackage *pPack; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEPackage.cpp:1091
+    FEPackage *pPack; // offset 0x4, size 0x4, Decl: 1091
 
-    bool Callback(struct FEObject *pObj) override { // Decl: speed/indep/src/feng/FEPackage.cpp:1093
+    bool Callback(struct FEObject *pObj) override { // Decl: 1093
         if (pObj->Flags & FF_MouseObject) {
             pPack->AddMouseObjectState(pObj);
         }

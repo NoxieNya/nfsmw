@@ -18,11 +18,11 @@
 
 // File: speed/indep/src/frontend/menuscreens/common/FEIconScrollerMenu.hpp
 // total size: 0x5C
-// Decl: speed/indep/src/frontend/menuscreens/common/FEIconScrollerMenu.hpp:131
+// Decl: 131
 class IconOption : public bTNode<IconOption> {
   public:
     IconOption(uint32 tex_hash, uint32 name_hash, uint32 desc_hash);
-    virtual ~IconOption() {} // Decl: speed/indep/src/frontend/menuscreens/common/FEIconScrollerMenu.hpp:134
+    virtual ~IconOption() {} // Decl: 134
     virtual void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) = 0;
 
     uint32 GetName() {
@@ -105,16 +105,16 @@ class IconOption : public bTNode<IconOption> {
 };
 
 // total size: 0x5C
-// Decl: speed/indep/src/frontend/menuscreens/common/FEIconScrollerMenu.hpp:254
+// Decl: 254
 class FEScrollyBookEnd : public IconOption {
   public:
     FEScrollyBookEnd(uint32 tex_hash) : IconOption(tex_hash, 0, 0) {}
-    ~FEScrollyBookEnd() override {} // Decl: speed/indep/src/frontend/menuscreens/common/FEIconScrollerMenu.hpp:258
+    ~FEScrollyBookEnd() override {} // Decl: 258
 
     void React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override;
 };
 
-// Decl: speed/indep/src/frontend/menuscreens/common/FEIconScrollerMenu.hpp:262
+// Decl: 262
 // Range: 0x8017D56C -> 0x8017D570
 // Overrides: IconOption
 inline void FEScrollyBookEnd::React(const char *pkg_name, uint32 data, FEObject *obj, uint32 param1, uint32 param2) override {}
@@ -340,12 +340,12 @@ class IconScroller : public IconPanel {
 };
 
 // total size: 0x16C
-// Decl: speed/indep/src/frontend/menuscreens/common/FEIconScrollerMenu.hpp:538
+// Decl: 538
 class IconScrollerMenu : public MenuScreen {
   public:
-    IconScrollerMenu(ScreenConstructorData *sd); // Decl: speed/indep/src/frontend/menuscreens/common/FEIconScrollerMenu.hpp:543
+    IconScrollerMenu(ScreenConstructorData *sd); // Decl: 543
 
-    ~IconScrollerMenu() override {} // Decl: speed/indep/src/frontend/menuscreens/common/FEIconScrollerMenu.hpp:545
+    ~IconScrollerMenu() override {} // Decl: 545
 
     void NotificationMessage(u32 msg, FEObject *pobj, u32 param1, u32 param2) override;
 

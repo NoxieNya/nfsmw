@@ -5,7 +5,7 @@
 
 // File: speed/indep/src/frontend/fenginterfaces/FEGameInterface.hpp
 // total size: 0xC
-// Decl: speed/indep/src/frontend/fenginterfaces/FEGameInterface.hpp:20
+// Decl: 20
 class cFEngGameInterface : public FEGameInterface {
   public:
     cFEngGameInterface();
@@ -45,11 +45,11 @@ class cFEngGameInterface : public FEGameInterface {
 
     void OutputWarning(const char *pString, FEng_WarningLevel WarningLevel) override;
 
-    static cFEngGameInterface *pInstance; // size: 0x4, Decl: speed/indep/src/frontend/fenginterfaces/FEGameInterface.cpp:90
+    static cFEngGameInterface *pInstance; // size: 0x4, Decl: 90
 
   private:
-    bool RenderThisPackage; // offset 0x4, size 0x1, Decl: speed/indep/src/frontend/fenginterfaces/FEGameInterface.hpp:83
-    int iGameMode;          // offset 0x8, size 0x4, Decl: speed/indep/src/frontend/fenginterfaces/FEGameInterface.hpp:91
+    bool RenderThisPackage; // offset 0x4, size 0x1, Decl: 83
+    int iGameMode;          // offset 0x8, size 0x4, Decl: 91
 };
 
 #endif

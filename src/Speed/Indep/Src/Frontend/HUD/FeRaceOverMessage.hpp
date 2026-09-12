@@ -6,11 +6,11 @@
 
 // File: speed/indep/src/frontend/hud/FeRaceOverMessage.hpp
 // total size: 0x38
-// Decl: speed/indep/src/frontend/hud/FeRaceOverMessage.hpp:8
+// Decl: 8
 class RaceOverMessage : public HudElement, public IRaceOverMessage {
   public:
     RaceOverMessage(UTL::COM::Object *pOutter, const char *pkg_name, int player_number);
-    ~RaceOverMessage() override {} // Decl: speed/indep/src/frontend/hud/FeRaceOverMessage.hpp:11
+    ~RaceOverMessage() override {} // Decl: 11
 
     void Update(IPlayer *player) override;
 

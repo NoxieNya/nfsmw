@@ -9,11 +9,11 @@
 #include <types.h>
 
 // total size: 0x28
-// Decl: speed/indep/src/frontend/menuscreens/customize/FeMyCarsManager.hpp:17
+// Decl: 17
 class CarDatum : public ArrayDatum {
   public:
     CarDatum(uint32 hash, uint32 desc, uint32 handle) : ArrayDatum(hash, desc), Handle(handle) {}
-    ~CarDatum() override {} // Decl: speed/indep/src/frontend/menuscreens/customize/FeMyCarsManager.hpp:20
+    ~CarDatum() override {} // Decl: 20
 
     void NotificationMessage(u32 msg, FEObject *pObj, u32 param1, u32 param2) override;
 
@@ -21,7 +21,7 @@ class CarDatum : public ArrayDatum {
 };
 
 // total size: 0x1BC
-// Decl: speed/indep/src/frontend/menuscreens/customize/FeMyCarsManager.hpp:45
+// Decl: 45
 class MyCarsManager : public ArrayScrollerMenu {
   public:
     MyCarsManager(ScreenConstructorData *sd);

@@ -6,7 +6,7 @@
 
 // File: speed/indep/src/frontend/menuscreens/loading/FELanguageSelect.hpp
 // total size: 0x170
-// Decl: speed/indep/src/frontend/menuscreens/loading/FELanguageSelect.hpp:14
+// Decl: 14
 class LanguageSelectScreen : public IconScrollerMenu {
   public:
     LanguageSelectScreen(ScreenConstructorData *sd);

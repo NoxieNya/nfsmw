@@ -130,23 +130,23 @@ class ICETrack : public bTNode<ICETrack> {
 };
 
 // total size: 0x14
-// Decl: speed/indep/src/Camera/ICE/ICEData.hpp:732
+// Decl: 732
 class ICEGroup {
   public:
     static void *operator new(size_t size, const char *debug_name) {}
 
     static void operator delete(void *ptr) {}
 
-    ICEGroup() {}  // Decl: speed/indep/src/Camera/ICE/ICEData.hpp:740
-    ~ICEGroup() {} // Decl: speed/indep/src/Camera/ICE/ICEData.hpp:741
+    ICEGroup() {}  // Decl: 740
+    ~ICEGroup() {} // Decl: 741
 
-    uint32 GetHandle() {} // Decl: speed/indep/src/Camera/ICE/ICEData.hpp:744
+    uint32 GetHandle() {} // Decl: 744
 
-    void SetContext(int context) {} // Decl: speed/indep/src/Camera/ICE/ICEData.hpp:747
+    void SetContext(int context) {} // Decl: 747
 
-    int GetContext() {} // Decl: speed/indep/src/Camera/ICE/ICEData.hpp:745
+    int GetContext() {} // Decl: 745
 
-    void SetHandle(uint32 n) {} // Decl: speed/indep/src/Camera/ICE/ICEData.hpp:746
+    void SetHandle(uint32 n) {} // Decl: 746
 
     int GetNumTracks() {}
 
@@ -165,8 +165,8 @@ class ICEGroup {
     bTList<ICETrack> *GetTrackList() {}
 
   private:
-    uint32 Handle;              // offset 0x0, size 0x4, Decl: speed/indep/src/Camera/ICE/ICEData.hpp:784
-    int Context;                // offset 0x4, size 0x4, Decl: speed/indep/src/Camera/ICE/ICEData.hpp:785
+    uint32 Handle;              // offset 0x0, size 0x4, Decl: 784
+    int Context;                // offset 0x4, size 0x4, Decl: 785
     int NumTracks;              // offset 0x8, size 0x4
     bTList<ICETrack> TrackList; // offset 0xC, size 0x8
 };

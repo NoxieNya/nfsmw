@@ -5,17 +5,17 @@
 
 // File: speed/indep/src/feng/FEMemStream.h
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEMemStream.h:17
+// Decl: 17
 class FEMemStream {
   private:
-    char *pBuf;   // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEMemStream.h:19
-    u32 Len, Pos; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEMemStream.h:20
+    char *pBuf;   // offset 0x0, size 0x4, Decl: 19
+    u32 Len, Pos; // offset 0x4, size 0x4, Decl: 20
 
   public:
-    FEMemStream() {} // Decl: speed/indep/src/feng/FEMemStream.h:23
+    FEMemStream() {} // Decl: 23
     ~FEMemStream() {}
 
-    u32 GetPos() { // Decl: speed/indep/src/feng/FEMemStream.h:26
+    u32 GetPos() { // Decl: 26
         return Pos;
     }
 

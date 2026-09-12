@@ -36,31 +36,31 @@ void FEMsgTargetList::AppendTarget(FEObject *pObject) {
 
 // File: speed/indep/src/feng/FEMsgTargetList.cpp
 // total size: 0x14
-// Decl: speed/indep/src/feng/FEMsgTargetList.cpp:79
+// Decl: 79
 class FECountMsgs : public FEObjectCallback {
   public:
-    u32 *pMsgList, *pCountList; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEMsgTargetList.cpp:81
-    u32 MsgCount, MsgAlloc;     // offset 0xC, size 0x4, Decl: speed/indep/src/feng/FEMsgTargetList.cpp:82
+    u32 *pMsgList, *pCountList; // offset 0x4, size 0x4, Decl: 81
+    u32 MsgCount, MsgAlloc;     // offset 0xC, size 0x4, Decl: 82
 
-    FECountMsgs() {}           // Decl: speed/indep/src/feng/FEMsgTargetList.cpp:84
-    ~FECountMsgs() override {} // Decl: speed/indep/src/feng/FEMsgTargetList.cpp:85
+    FECountMsgs() {}           // Decl: 84
+    ~FECountMsgs() override {} // Decl: 85
 
-    bool Callback(struct FEObject *pObj) override; // Decl: speed/indep/src/feng/FEMsgTargetList.cpp:91
+    bool Callback(struct FEObject *pObj) override; // Decl: 91
 };
 
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEMsgTargetList.cpp:129
+// Decl: 129
 class FEBuildMsgs : public FEObjectCallback {
   public:
-    FEMsgTargetList *pList; // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEMsgTargetList.cpp:131
-    u32 Count;              // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEMsgTargetList.cpp:132
+    FEMsgTargetList *pList; // offset 0x4, size 0x4, Decl: 131
+    u32 Count;              // offset 0x8, size 0x4, Decl: 132
 
     FEBuildMsgs() {}
 
-    bool Callback(struct FEObject *pObj) override; // Decl: speed/indep/src/feng/FEMsgTargetList.cpp:137
+    bool Callback(struct FEObject *pObj) override; // Decl: 137
 };
 
-// Decl: speed/indep/src/feng/FEMsgTargetList.cpp:198
+// Decl: 198
 // Range: 0x801856DC -> 0x8018571C
 // this: r3
 FEMsgTargetList *FEPackage::GetMessageTargets(u32 MsgID) {

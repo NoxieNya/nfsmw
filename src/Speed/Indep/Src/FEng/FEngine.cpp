@@ -20,30 +20,30 @@
 
 extern "C" int printf(const char *, ...);
 
-static const u32 FEAutoRepeatFrames = 6;       // size: 0x4, Decl: speed/indep/src/feng/FEngine.cpp:26
-static const u32 FEAutoRepeatFirstFrames = 16; // size: 0x4, Decl: speed/indep/src/feng/FEngine.cpp:27
+static const u32 FEAutoRepeatFrames = 6;       // size: 0x4, Decl: 26
+static const u32 FEAutoRepeatFirstFrames = 16; // size: 0x4, Decl: 27
 
-static const u32 Msg_Global_DisableInputs = __DISABLE_ALL_INPUTS__; // size: 0x4, Decl: speed/indep/src/feng/FEngine.cpp:29
-static const u32 Msg_Global_EnableInputs = __ENABLE_ALL_INPUTS__;   // size: 0x4, Decl: speed/indep/src/feng/FEngine.cpp:30
+static const u32 Msg_Global_DisableInputs = __DISABLE_ALL_INPUTS__; // size: 0x4, Decl: 29
+static const u32 Msg_Global_EnableInputs = __ENABLE_ALL_INPUTS__;   // size: 0x4, Decl: 30
 
 // total size: 0x4
-// Decl: speed/indep/src/feng/FEngine.cpp:33
+// Decl: 33
 typedef struct {
-    u8 Index1, Index2; // offset 0x0, size 0x1, Decl: speed/indep/src/feng/FEngine.cpp:34
-    u16 Dir;           // offset 0x2, size 0x2, Decl: speed/indep/src/feng/FEngine.cpp:35
+    u8 Index1, Index2; // offset 0x0, size 0x1, Decl: 34
+    u16 Dir;           // offset 0x2, size 0x2, Decl: 35
 } PadDirImpulse;
 
 static PadDirImpulse ImpulseDir[8] = {
-    // size: 0x20, address: 0x8041D080, Decl: speed/indep/src/feng/FEngine.cpp:38
+    // size: 0x20, address: 0x8041D080, Decl: 38
     {0x00, 0x02, 0x0007}, {0x00, 0x03, 0x0001}, {0x01, 0x02, 0x0005}, {0x01, 0x03, 0x0003},
     {0x00, 0xFF, 0x0000}, {0x02, 0xFF, 0x0006}, {0x01, 0xFF, 0x0004}, {0x03, 0xFF, 0x0002},
 };
 
 // total size: 0x4
-// Decl: speed/indep/src/feng/FEngine.cpp:674
+// Decl: 674
 class FEngSetDirtyFlagsCallback : public FEObjectCallback {
   private:
-    bool Callback(FEObject *pObj) override {} // Decl: speed/indep/src/feng/FEngine.cpp:675
+    bool Callback(FEObject *pObj) override {} // Decl: 675
 };
 
 FEngine::FEngine() {
@@ -341,20 +341,20 @@ void FEngine::Update(const i32 tDeltaTicks, uint32 lock) {
     }
 }
 
-// size: 0x4C, address: 0x8041D0A0, Decl: speed/indep/src/feng/FEngine.cpp:873
+// size: 0x4C, address: 0x8041D0A0, Decl: 873
 static u32 PadButtonHash[19] = {
     0x00000000,       0x00000000,       0x00000000,      0x00000000,      __PAD_ACCEPT__,  __PAD_BACK__,    __PAD_START__,
     __PAD_LTRIGGER__, __PAD_RTRIGGER__, __PAD_BUTTON0__, __PAD_BUTTON1__, __PAD_BUTTON2__, __PAD_BUTTON3__, __PAD_BUTTON4__,
     __PAD_BUTTON5__,  __PAD_BUTTON6__,  __PAD_BUTTON7__, __PAD_BUTTON8__, __PAD_BUTTON9__,
 };
 
-// size: 0x8, address: 0x8041D0EC, Decl: speed/indep/src/feng/FEngine.cpp:881
+// size: 0x8, address: 0x8041D0EC, Decl: 881
 static u32 PadButtonHeldHash[2] = {
     __PAD_LTRIGGER_HELD__,
     __PAD_RTRIGGER_HELD__,
 };
 
-// size: 0x4C, address: 0x8041D0F4, Decl: speed/indep/src/feng/FEngine.cpp:886
+// size: 0x4C, address: 0x8041D0F4, Decl: 886
 static u32 PadReleasedHash[19] = {
     0x00000000,
     0x00000000,

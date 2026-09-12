@@ -69,17 +69,17 @@ class MyMutex : public IMutex {
 #endif
         MUTEX_create(&mMutex);
     }
-    virtual ~MyMutex() { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:49
+    virtual ~MyMutex() { // Decl: 49
         MUTEX_destroy(&mMutex);
     }
-    IMutex *CreateInstance() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:50
+    IMutex *CreateInstance() override { // Decl: 50
         return new ("Realmc::IMutex", 0) MyMutex();
     };
-    int AddRef() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:51
+    int AddRef() override { // Decl: 51
         return ++mRefcount;
     };
 
-    int Release() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:54
+    int Release() override { // Decl: 54
         mRefcount--;
         if (mRefcount < 1) {
             if (this != nullptr) {
@@ -89,10 +89,10 @@ class MyMutex : public IMutex {
         }
         return mRefcount;
     };
-    void Lock() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:63
+    void Lock() override { // Decl: 63
         MUTEX_lock(&mMutex);
     };
-    void Unlock() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:64
+    void Unlock() override { // Decl: 64
         MUTEX_unlock(&mMutex);
     };
 };
@@ -110,20 +110,20 @@ class MyThread : public IThread {
   public:
     MyThread() : mRefcount(1), mStackSize(0x1000), mStackBuffer(nullptr), mThreadData(), mPriority(0), mActive(false) {}
 
-    virtual ~MyThread() { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:80
+    virtual ~MyThread() { // Decl: 80
         if (mActive) {
             WaitForEnd(0);
             THREAD_destroy(&mThreadData);
         }
     }
 
-    IThread *CreateInstance() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:89
+    IThread *CreateInstance() override { // Decl: 89
         return new ("Realmc::IThread", 0) MyThread();
     };
-    int AddRef() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:94
+    int AddRef() override { // Decl: 94
         return ++mRefcount;
     };
-    int Release() override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:99
+    int Release() override { // Decl: 99
         mRefcount--;
         if (mRefcount < 1) {
             if (this != nullptr) {
@@ -133,10 +133,10 @@ class MyThread : public IThread {
         }
         return mRefcount;
     };
-    void SetStackSize(unsigned int stacksize) override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:109
+    void SetStackSize(unsigned int stacksize) override { // Decl: 109
         mStackSize = stacksize;
     }
-    static int EntryProc(void *pContext) { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:115
+    static int EntryProc(void *pContext) { // Decl: 115
         MyThread *pThread = static_cast<MyThread *>(pContext);
         while (!pThread->MyThread::IsActive()) {
             THREAD_yield(1);
@@ -144,30 +144,30 @@ class MyThread : public IThread {
         pThread->MyThread::GetEntryFunc()(pContext);
         return 0;
     };
-    void Begin(ThreadEntryFunc func) override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:129
+    void Begin(ThreadEntryFunc func) override { // Decl: 129
         mEntryFunc = func;
         mStackBuffer = new char[mStackSize];
         THREAD_create(&mThreadData, EntryProc, this, mStackBuffer, mStackSize, mPriority);
         mActive = true;
     };
-    void WaitForEnd(int) override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:137
+    void WaitForEnd(int) override { // Decl: 137
         THREAD_waitexit(&mThreadData, 0);
         if (mStackBuffer != nullptr) {
             delete[] static_cast<char *>(mStackBuffer);
         }
         mActive = false;
     };
-    void Sleep(int ticks) override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:143
+    void Sleep(int ticks) override { // Decl: 143
         THREAD_yield(ticks);
     };
-    void SetPriority(int priority) override { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:148
+    void SetPriority(int priority) override { // Decl: 148
         mPriority = 0;
         THREAD_setpriority(&mThreadData, 0);
     };
-    virtual ThreadEntryFunc GetEntryFunc() { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:153
+    virtual ThreadEntryFunc GetEntryFunc() { // Decl: 153
         return mEntryFunc;
     };
-    virtual bool IsActive() { // Decl: speed/indep/src/frontend/MemoryCard/MemoryCardHelper.hpp:154
+    virtual bool IsActive() { // Decl: 154
         return mActive;
     };
 };
@@ -218,7 +218,7 @@ struct IGameInterface {
 };
 
 // File: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp
-// Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:22
+// Decl: 22
 enum MemoryCardJoyLoggableEvents {
     MJ_None = 0,
     MJ_ShowMesssage = 1,
@@ -244,27 +244,27 @@ enum MemoryCardJoyLoggableEvents {
 };
 
 // total size: 0x1
-// Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:47
+// Decl: 47
 class IJoyHelper {
   public:
-    void JLog(const char *msg) { // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:64
+    void JLog(const char *msg) { // Decl: 64
         Joylog::AddOrGetData(const_cast<char *>(msg), JOYLOG_CHANNEL_MEMORY_CARD);
     }
 
-    void JLog(bool &value) { // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:86
+    void JLog(bool &value) { // Decl: 86
         value = Joylog::AddOrGetData(static_cast<unsigned int>(value), 1, JOYLOG_CHANNEL_MEMORY_CARD) != 0;
     }
 
-    void JLog(MemoryCardJoyLoggableEvents op) { // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:108
+    void JLog(MemoryCardJoyLoggableEvents op) { // Decl: 108
         if (Joylog::IsCapturing())
             Joylog::AddData(static_cast<int>(op), 8, JOYLOG_CHANNEL_MEMORY_CARD);
     }
 
-    void JLog(void *data, int data_size_bytes) { // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:139
+    void JLog(void *data, int data_size_bytes) { // Decl: 139
         Joylog::AddData(data, data_size_bytes, JOYLOG_CHANNEL_MEMORY_CARD);
     }
 
-    static void EmulateMemoryCardLibrary(int aJoyOp); // Decl: speed/indep/src/frontend/memorycard/MemoryCardHelper.hpp:169
+    static void EmulateMemoryCardLibrary(int aJoyOp); // Decl: 169
 
     void JLog(const wchar_t *msg) {
         Joylog::AddOrGetData(reinterpret_cast<uint16 *>(const_cast<wchar_t *>(msg)), JOYLOG_CHANNEL_MEMORY_CARD);

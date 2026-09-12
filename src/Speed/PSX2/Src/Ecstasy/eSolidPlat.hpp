@@ -35,7 +35,7 @@
 
 class eSolid;
 
-extern bTList<eSolid> SolidList; // size: 0x8, Decl: speed/ps3/src/ecstasy/eSolidPlat.cpp:23
+extern bTList<eSolid> SolidList; // size: 0x8, Decl: 23
 
 struct eStripEntry {         // 0x10
     uint16 Flags;            /* 0x0 */
@@ -52,10 +52,10 @@ struct eStripEntry {         // 0x10
 };
 
 // total size: 0x24
-// Decl: speed/ps3/src/ecstasy/esolidplat.hpp:139
+// Decl: 139
 class eSolidPlatInfo {
   public:
-    uint16 Version;    // offset 0x0, size 0x2, Decl: speed/ps3/src/ecstasy/esolidplat.hpp:141
+    uint16 Version;    // offset 0x0, size 0x2, Decl: 141
     uint16 StripFlags; // offset 0x2, size 0x2
     uint16 NumStrips;  // offset 0x4, size 0x2
     uint16 pad0;

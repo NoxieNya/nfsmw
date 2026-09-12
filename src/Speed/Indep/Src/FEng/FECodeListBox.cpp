@@ -315,7 +315,7 @@ void FECodeListBox::DeallocateString(i16 *psString) {
     mppsStringData[mulCurrentString] = psString;
 }
 
-inline i32 GetRealValue(i32 i, i32 lNumTotal, i32 lCurrentVirtual, i32 lNumVisible) { // Decl: speed/indep/src/feng/FECodeListBox.cpp:807
+inline i32 GetRealValue(i32 i, i32 lNumTotal, i32 lCurrentVirtual, i32 lNumVisible) { // Decl: 807
     if (lNumTotal == 0) {
         return -1;
     }

@@ -8,16 +8,16 @@ typedef unsigned short u16;
 typedef short i16;
 typedef unsigned char u8;
 #else
-typedef unsigned int u32;   // Decl: speed/indep/src/feng/FETypes.h:26
-typedef int i32;            // Decl: speed/indep/src/feng/FETypes.h:27
-typedef unsigned short u16; // Decl: speed/indep/src/feng/FETypes.h:28
-typedef short i16;          // Decl: speed/indep/src/feng/FETypes.h:29
-typedef unsigned char u8;   // Decl: speed/indep/src/feng/FETypes.h:30
+typedef unsigned int u32;   // Decl: 26
+typedef int i32;            // Decl: 27
+typedef unsigned short u16; // Decl: 28
+typedef short i16;          // Decl: 29
+typedef unsigned char u8;   // Decl: 30
 #endif
 
 #define FENG_BIG_ENDIAN // :32 // TODO: probably set conditionally by build platform
 
-static const u32 FEngLibVersion = 78339; // size: 0x4, Decl: speed/indep/src/feng/FETypes.h:67
+static const u32 FEngLibVersion = 78339; // size: 0x4, Decl: 67
 
 #define FEMAX(a, b) ((a) > (b) ? (a) : (b))                    // :76
 #define FEMIN(a, b) ((a) < (b) ? (a) : (b))                    // :77
@@ -25,49 +25,49 @@ static const u32 FEngLibVersion = 78339; // size: 0x4, Decl: speed/indep/src/fen
 
 // File: speed/indep/src/feng/FETypes.h
 // total size: 0x10
-// Decl: speed/indep/src/feng/FETypes.h:85
+// Decl: 85
 class FEColor {
   public:
-    i32 b, g, r, a; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FETypes.h:88
+    i32 b, g, r, a; // offset 0x0, size 0x4, Decl: 88
 
-    FEColor() {} // Decl: speed/indep/src/feng/FETypes.h:90
+    FEColor() {} // Decl: 90
     FEColor(u32 Col);
 
     operator u32() const;
 
-    FEColor &operator=(const FEColor &rhs); // Decl: speed/indep/src/feng/FETypes.h:94
+    FEColor &operator=(const FEColor &rhs); // Decl: 94
 
-    bool operator==(const FEColor &rhs) {} // Decl: speed/indep/src/feng/FETypes.h:97
+    bool operator==(const FEColor &rhs) {} // Decl: 97
 
-    FEColor operator+(const FEColor &rhs) const; // Decl: speed/indep/src/feng/FETypes.h:99
-    FEColor &operator+=(const FEColor &rhs);     // Decl: speed/indep/src/feng/FETypes.h:100
-    FEColor operator-(const FEColor &rhs) const; // Decl: speed/indep/src/feng/FETypes.h:101
-    FEColor &operator-=(const FEColor &rhs);     // Decl: speed/indep/src/feng/FETypes.h:102
+    FEColor operator+(const FEColor &rhs) const; // Decl: 99
+    FEColor &operator+=(const FEColor &rhs);     // Decl: 100
+    FEColor operator-(const FEColor &rhs) const; // Decl: 101
+    FEColor &operator-=(const FEColor &rhs);     // Decl: 102
 
-    FEColor Modulate(const FEColor &rhs) const; // Decl: speed/indep/src/feng/FETypes.h:104
+    FEColor Modulate(const FEColor &rhs) const; // Decl: 104
 };
 
 // total size: 0x8
-// Decl: speed/indep/src/feng/FETypes.h:108
+// Decl: 108
 class FEPoint {
   public:
-    float h, v; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FETypes.h:110
+    float h, v; // offset 0x0, size 0x4, Decl: 110
 
-    FEPoint() : h(0.0f), v(0.0f) {}              // Decl: speed/indep/src/feng/FETypes.h:112
-    FEPoint(float Value) : h(Value), v(Value) {} // Decl: speed/indep/src/feng/FETypes.h:113
-    FEPoint(float H, float V) : h(H), v(V) {}    // Decl: speed/indep/src/feng/FETypes.h:114
+    FEPoint() : h(0.0f), v(0.0f) {}              // Decl: 112
+    FEPoint(float Value) : h(Value), v(Value) {} // Decl: 113
+    FEPoint(float H, float V) : h(H), v(V) {}    // Decl: 114
 
-    FEPoint &operator=(const FEPoint &p) { // Decl: speed/indep/src/feng/FETypes.h:116
+    FEPoint &operator=(const FEPoint &p) { // Decl: 116
         h = p.h;
         v = p.v;
         return *this;
     }
-    FEPoint &operator-=(const FEPoint &p) { // Decl: speed/indep/src/feng/FETypes.h:117
+    FEPoint &operator-=(const FEPoint &p) { // Decl: 117
         h -= p.h;
         v -= p.v;
         return *this;
     }
-    FEPoint &operator+=(const FEPoint &p) { // Decl: speed/indep/src/feng/FETypes.h:118
+    FEPoint &operator+=(const FEPoint &p) { // Decl: 118
         h += p.h;
         v += p.v;
         return *this;
@@ -75,16 +75,16 @@ class FEPoint {
 };
 
 // total size: 0x10
-// Decl: speed/indep/src/feng/FETypes.h:122
+// Decl: 122
 class FERect {
   public:
-    float left, top, right, bottom; // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FETypes.h:124
+    float left, top, right, bottom; // offset 0x0, size 0x4, Decl: 124
 
-    FERect() : left(0.0f), top(0.0f), right(0.0f), bottom(0.0f) {}                       // Decl: speed/indep/src/feng/FETypes.h:126
-    FERect(float Value) : left(Value), top(Value), right(Value), bottom(Value) {}        // Decl: speed/indep/src/feng/FETypes.h:127
-    FERect(float l, float t, float r, float b) : left(l), top(t), right(r), bottom(b) {} // Decl: speed/indep/src/feng/FETypes.h:128
+    FERect() : left(0.0f), top(0.0f), right(0.0f), bottom(0.0f) {}                       // Decl: 126
+    FERect(float Value) : left(Value), top(Value), right(Value), bottom(Value) {}        // Decl: 127
+    FERect(float l, float t, float r, float b) : left(l), top(t), right(r), bottom(b) {} // Decl: 128
 
-    FERect &operator=(const FERect &r) { // Decl: speed/indep/src/feng/FETypes.h:136
+    FERect &operator=(const FERect &r) { // Decl: 136
         left = r.left;
         top = r.top;
         right = r.right;
@@ -92,16 +92,16 @@ class FERect {
         return *this;
     }
 
-    FERect operator+(const FEPoint &p) const {} // Decl: speed/indep/src/feng/FETypes.h:138
-    FERect &operator+=(const FEPoint &p) {}     // Decl: speed/indep/src/feng/FETypes.h:139
+    FERect operator+(const FEPoint &p) const {} // Decl: 138
+    FERect &operator+=(const FEPoint &p) {}     // Decl: 139
 
-    FERect operator-(const FEPoint &p) const {} // Decl: speed/indep/src/feng/FETypes.h:141
-    FERect &operator-=(const FEPoint &p) {}     // Decl: speed/indep/src/feng/FETypes.h:142
+    FERect operator-(const FEPoint &p) const {} // Decl: 141
+    FERect &operator-=(const FEPoint &p) {}     // Decl: 142
 
-    FERect operator*(const FEPoint &p) const {} // Decl: speed/indep/src/feng/FETypes.h:144
-    FERect &operator*=(const FEPoint &p) {}     // Decl: speed/indep/src/feng/FETypes.h:145
+    FERect operator*(const FEPoint &p) const {} // Decl: 144
+    FERect &operator*=(const FEPoint &p) {}     // Decl: 145
 
-    void operator()(float l, float t, float r, float b) { // Decl: speed/indep/src/feng/FETypes.h:147
+    void operator()(float l, float t, float r, float b) { // Decl: 147
         left = l;
         top = t;
         right = r;
@@ -109,7 +109,7 @@ class FERect {
     }
 };
 
-// Decl: speed/indep/src/feng/FETypes.h:152-154 // TODO: probably checks FENG_BIG_ENDIAN for byte swaps
+// Decl: 152-154 // TODO: probably checks FENG_BIG_ENDIAN for byte swaps
 inline u32 FEngGetu32(u32 Val) {
     return (Val >> 24) | (Val << 24) | ((Val & 0xFF00) << 8) | ((Val >> 8) & 0xFF00);
 }

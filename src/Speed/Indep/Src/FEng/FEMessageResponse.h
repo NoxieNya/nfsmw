@@ -6,19 +6,19 @@
 
 // File: speed/indep/src/feng/FEMessageResponse.h
 // total size: 0xC
-// Decl: speed/indep/src/feng/FEMessageResponse.h:91
+// Decl: 91
 class FEResponse {
   public:
-    u32 ResponseID;     // offset 0x0, size 0x4, Decl: speed/indep/src/feng/FEMessageResponse.h:93
-    u32 ResponseParam;  // offset 0x4, size 0x4, Decl: speed/indep/src/feng/FEMessageResponse.h:94
-    u32 ResponseTarget; // offset 0x8, size 0x4, Decl: speed/indep/src/feng/FEMessageResponse.h:95
+    u32 ResponseID;     // offset 0x0, size 0x4, Decl: 93
+    u32 ResponseParam;  // offset 0x4, size 0x4, Decl: 94
+    u32 ResponseTarget; // offset 0x8, size 0x4, Decl: 95
 
-    FEResponse() : ResponseID(0), ResponseParam(0), ResponseTarget(0) {} // Decl: speed/indep/src/feng/FEMessageResponse.h:97
+    FEResponse() : ResponseID(0), ResponseParam(0), ResponseTarget(0) {} // Decl: 97
     ~FEResponse();
 
-    void ReleaseParam(); // Decl: speed/indep/src/feng/FEMessageResponse.h:100
+    void ReleaseParam(); // Decl: 100
 
-    FEResponse &operator=(FEResponse &rhs); // Decl: speed/indep/src/feng/FEMessageResponse.h:102
+    FEResponse &operator=(FEResponse &rhs); // Decl: 102
 
     static bool HasString(u32 ResponseID) {
         return (ResponseID - 0x200u < 5) && (ResponseID != 0x203);
@@ -69,24 +69,24 @@ enum FEMessageResponseCommands {
 };
 
 // total size: 0x18
-// Decl: speed/indep/src/feng/FEMessageResponse.h:131
+// Decl: 131
 class FEMessageResponse : public FEMinNode {
   public:
-    u32 MsgID;                 // offset 0xC, size 0x4, Decl: speed/indep/src/feng/FEMessageResponse.h:133
-    u32 Count;                 // offset 0x10, size 0x4, Decl: speed/indep/src/feng/FEMessageResponse.h:134
-    FEResponse *pResponseList; // offset 0x14, size 0x4, Decl: speed/indep/src/feng/FEMessageResponse.h:135
+    u32 MsgID;                 // offset 0xC, size 0x4, Decl: 133
+    u32 Count;                 // offset 0x10, size 0x4, Decl: 134
+    FEResponse *pResponseList; // offset 0x14, size 0x4, Decl: 135
 
   private:
-    static ObjectPool<FEMessageResponse, 64> NodePool; // size: 0x10, address: 0x80473D48, Decl: speed/indep/src/feng/FEMessageResponse.cpp:59
+    static ObjectPool<FEMessageResponse, 64> NodePool; // size: 0x10, address: 0x80473D48, Decl: 59
 
-    void Init() { // Decl: speed/indep/src/feng/FEMessageResponse.h:139
+    void Init() { // Decl: 139
         MsgID = 0;
         Count = 0;
         pResponseList = nullptr;
     }
 
   public:
-    FEMessageResponse() : FEMinNode() { // Decl: speed/indep/src/feng/FEMessageResponse.h:142
+    FEMessageResponse() : FEMinNode() { // Decl: 142
         Init();
     }
     ~FEMessageResponse() override;
@@ -133,11 +133,11 @@ class FEMessageResponse : public FEMinNode {
 
     u32 FindConditionBranchTarget(u32 Index) const;
 
-    FEMessageResponse *GetNext() { // Decl: speed/indep/src/feng/FEMessageResponse.h:183
+    FEMessageResponse *GetNext() { // Decl: 183
         return static_cast<FEMessageResponse *>(FEMinNode::GetNext());
     }
 
-    FEMessageResponse *GetPrev() { // Decl: speed/indep/src/feng/FEMessageResponse.h:184
+    FEMessageResponse *GetPrev() { // Decl: 184
         return static_cast<FEMessageResponse *>(FEMinNode::GetPrev());
     }
 };
