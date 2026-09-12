@@ -1,14 +1,28 @@
 #ifndef EAX_SOUND_HPP
-#define EAX_SOUND_HPP
+#define EAX_SOUND_HPP // Decl: 37
 
+#define MAX_EAXMODS 32; // Decl: 39
+
+#define MAX_NUM_DEBUG_BANKS 15 // Decl: 41
+
+#define SND_HIGH_DETAIL 44100 // Decl: 43
+
+#define SND_LOW_DETAIL 22050   // Decl: 44
+#define MAX_EAX_AITUNERCARS 10 // Decl: 46
+
+#include "Speed/Indep/Src/EAXSound/AemsDef.hpp"
 #include "Speed/Indep/Src/EAXSound/AudioMemBase.hpp"
-#include "Speed/Indep/Src/EAXSound/EAXSoundEnums.hpp"
 #include "Speed/Indep/Src/EAXSound/EAXAudioParams.hpp"
+#include "Speed/Indep/Src/EAXSound/EAXFrontEnd.hpp"
+#include "Speed/Indep/Src/EAXSound/EAXSND8Wrapper.hpp"
+#include "Speed/Indep/Src/EAXSound/EAXSoundEnums.hpp"
 #include "Speed/Indep/Src/EAXSound/SoundPause.h"
-#include "Speed/Indep/Src/EAXSound/States/STATE_Base.hpp"
-#include "Speed/Indep/Src/EAXSound/Stream/SpeechModule.hpp"
+#include "Speed/Indep/Src/EAXSound/CARSFX/SFXObj_Enums.hpp"
+#include "Speed/Indep/Src/EAXSound/Dynamic_Mixer/NFSMixMaster.hpp"
+#include "Speed/Indep/Src/Frontend/Database/FEDatabase.hpp"
+#include "Speed/Indep/Src/EAXSound/Dynamic_Mixer/NFSLiveLink.hpp"
 #include "Speed/Indep/Src/EAXSound/SFX_base.hpp"
-#include "Speed/Indep/Src/EAXSound/STICH_Playback.h"
+#include "Speed/Indep/Src/Frontend/MenuScreens/Common/FEMenuScreen.hpp"
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/audiosystem.h"
 #include "Speed/Indep/Src/Main/Event.h"
 #include "Speed/Indep/Src/Misc/Hermes.h"
@@ -16,81 +30,7 @@
 
 class AudioSettings;
 
-// yes that is the correct name for the file
-
-#define MAX_EAXMODS 32;           // :39
-#define MAX_NUM_DEBUG_BANKS 15    // :41
-#define SND_HIGH_DETAIL 44100     // :43
-#define SND_LOW_DETAIL 22050      // :44
-#define MAX_EAX_AITUNERCARS 10    // :46
-#define SNDPRINTF_BUFFER_SIZE 512 // :467
-#define SNDPRINTF_CHANNEL 9       // :468
-#define NO_SNDPRINTF              // :471
-#define SndPrintf if (0)          // :478
-
-// TODO probably move all of these enums
-enum eNFSSndShapeCurve {
-    SSC_LINEAR = 0,
-    SSC_EQPWR = 1,
-    SSC_EQPWR_SQ = 2,
-    SSC_ONE_MIN_EQPWR = 3,
-    SSC_ONE_MIN_EQPWR_SQ = 4,
-    SSC_COS_X_ONE_MIN_EQPWR = 5,
-    SSC_COS_PLUS_DIST_ROLL = 6,
-    SSC_DIST_ROLLOFF = 7,
-    SSC_ONEMIN_REVDIST_ROLLOFF = 8,
-};
-
-typedef eNFSSndShapeCurve reflection_typedef_eNFSSndShapeCurve;
-
-enum eSFXOBJ_IN_GENERIC {
-    eSFXOBJ_AZIMUTH = 0,
-    eSFXOBJ_IN_GAMEVOL = 1,
-    eSFXOBJ_IN_DMIX_OUT = 2,
-    eSFXOBJ_IN_MAXNUM = 3,
-};
-typedef eSFXOBJ_IN_GENERIC reflection_typedef_eSFXOBJ_IN_GENERIC;
-
-enum eSFX_VOLUMES {
-    eSFX_AZIMUTH = 0,
-    eSFX_VOL_COMMON2 = 1,
-    eSFX_VOL_COMMON3 = 2,
-    eSFX_VOL_COMMON4 = 3,
-};
-typedef eSFX_VOLUMES reflection_typedef_eSFX_VOLUMES;
-
-enum eSFXOBJ_MUSIC_TYPES {
-    SFXOBJ_PATHFINDER = 0,
-    SFXOBJ_PFEATRAX = 1,
-};
-typedef eSFXOBJ_MUSIC_TYPES reflection_typedef_eSFXOBJ_MUSIC_TYPES;
-
-enum eVOL_MUSIC {
-    eVOL_FE_LICENSED = 0,
-    eVOL_IG_LICENSED = 1,
-    eVOL_FE_COMPOSED = 2,
-    eVOL_IG_COMPOSED = 3,
-    eVOL_FE_AMBIENCE = 4,
-    eVOL_IG_AMBIENCE = 5,
-    eTRG_LICENSED_PLAYING = 6,
-    eTRG_COMPOSED_PLAYING = 7,
-    eTRG_AMBIENCE_PLAYING = 8,
-    eFLT_MUSIC_FILTER = 9,
-};
-
-typedef eVOL_MUSIC reflection_typedef_eVOL_MUSIC;
-
-enum eSFXOBJ_GENERIC_TYPES {
-    eSFXOBJ_UNKNOWN = 0,
-};
-
-typedef eSFXOBJ_GENERIC_TYPES reflection_typedef_eSFXOBJ_GENERIC_TYPES;
-
-enum eSFXCTL_GENERIC_TYPES {
-    eSFXCTL_UNKNOWN = 0,
-};
-
-typedef eSFXCTL_GENERIC_TYPES reflection_typedef_eSFXCTL_GENERIC_TYPES;
+class cSTICH_PlayBack;
 
 enum eSFXOBJ_COLLISON_TYPES {
     eSFXOBJ_COLLISION = 0,
@@ -170,15 +110,6 @@ enum eSFXOBJ_HELI {
 };
 
 typedef eSFXOBJ_HELI reflection_typedef_eSFXOBJ_HELI;
-
-enum eRACETYPE {
-    eRACE_CIRCUIT = 0,
-    eRACE_DRAG = 1,
-    eRACE_TWOCIRC = 2,
-    eRACE_TWODRG = 3,
-};
-
-typedef eRACETYPE reflection_typedef_eRACETYPE;
 
 enum eVOL_SPEECH {
     eAZI_CLOSESTCOP_AZI = 0,
@@ -463,32 +394,16 @@ typedef eMISC_SOUNDS reflection_typedef_eMISC_SOUNDS;
 
 // typedef eGameFlowSndState reflection_typedef_eGameFlowSndState;
 
-// TODO where does sound go??
-namespace Sound {
-
-struct stSongInfo {
-    char *SongName;
-    char *Artist;
-    char *Album;
-    char *DefPlay;
-    int PathEvent;
-};
-
-} // namespace Sound
-
-typedef std::vector<Sound::stSongInfo *> SongInfoList;
-
-extern SongInfoList Songs;
-// ENDTODO
+// TODO where does this go?
+extern Sound::SongInfoList Songs;
 
 // File: speed/indep/src/eaxsound/EAXSOund.hpp
 // total size: 0xBC
 // Decl: 131
 class EAXSound : public AudioMemBase {
   public:
-    EAXSound();
-
-    ~EAXSound() override;
+    EAXSound(void);
+    virtual ~EAXSound();
 
     void Update(float t);
 
@@ -501,31 +416,22 @@ class EAXSound : public AudioMemBase {
     void Destroy();
 
     void QueueNISButtonThrough(uint32 anim_id, int camera_track_number);
-
     void QueueNISStream(uint32 anim_id, int camera_track_number, void (*setmstimecb)(unsigned int, int));
-
     bool IsNISStreamQueued();
-
     void PlayNIS();
-
     void NISFinished();
-
     bool AreResourceLoadsPending();
-
     void START_321Countdown();
 
-    static struct SndBase *GetSndBase_Object(int nID);
+    static SndBase *GetSndBase_Object(int nID);
+    SFX_Base *GetSFXBase_Object(int nID);
 
-    struct SFX_Base *GetSFXBase_Object(int nID);
-
-    void SetSndBaseObject(struct SndBase *psb, eMAINMAPSTATES estate, int ntype, int instance);
-
-    void SetSFXBaseObject(struct SFX_Base *psb, eMAINMAPSTATES estate, int ntype, int instance);
+    void SetSndBaseObject(SndBase *psb, eMAINMAPSTATES estate, int ntype, int instance);
+    void SetSFXBaseObject(SFX_Base *psb, eMAINMAPSTATES estate, int ntype, int instance);
 
     static int *GetPointerCallback(int nid);
 
     static void SetSFXOutCallback(int nid, int *ptr);
-
     static bool SetSFXInputCallback(int nid, int *ptr);
 
     static int GetStateRefCount(int nstate);
@@ -538,115 +444,109 @@ class EAXSound : public AudioMemBase {
 
     void InitSndCars();
 
-    void SetCarSoundPlayback(bool _On) {} // Decl: 197
-
-    bool IsPlayingCarSounds() {} // Decl: 198
+    // void SetCarSoundPlayback(bool _On) {} // Decl: 197
+    // bool IsPlayingCarSounds() {}          // Decl: 198
 
     Sound::stSongInfo *GetNewSongInfo();
 
     void UpdateSongInfo();
-
     void InitEATRAX();
-
     void PlayEATraxSong(int nindex);
 
     void PlayFEMusic(int nIndex);
-
     void PauseFEMusic(const char *pMovieString);
-
     void ResumeFEMusic();
 
-    bool IsAudioStreamReading() {} // Decl: 211
-
+    bool IsAudioStreamReading() {}         // Decl: 211
     bool IsAudioStreamingBlockedByWDR() {} // Decl: 212
-
-    bool DidAudioInterruptWDR() {} // Decl: 213
+    bool DidAudioInterruptWDR() {}         // Decl: 213
 
     void ReInitMasterVolumes();
-
     int GetMasterVolume(eMasterMixChannel eMasterMixChannel);
 
     void UpdateVolumes(AudioSettings *paudiosettings, float NewValue);
-
     void StartNewGamePlay();
-
     void InitializeFrontEnd();
-
     void InitializeInGame();
-
-    void LoadInGameSoundBanks(void (*callback)(int32 callback_param));
-
-    void LoadFrontEndSoundBanks(void (*callback)(int32 callback_param));
-
+    void LoadInGameSoundBanks(void (*callback)(int), int32 callback_param);
+    void LoadFrontEndSoundBanks(void (*callback)(int), int32 callback_param);
     void UnloadFrontEndSoundBanks();
-
     void UnLoadInGameSoundBanks();
-
     void EnterPauseMenu(eSNDPAUSE_REASON pause_reason);
-
     void ExitPauseMenu(eSNDPAUSE_REASON pause_reason);
-
     void CloseSound();
 
-    struct NFSMixMaster *GetMixMaster() {}
+    NFSMixMaster *GetMixMaster() {
+        return this->m_pNFSMixMaster;
+    }
 
-    void SetSndGameMode(eSndGameMode eGameMode) {} // Decl: 243
+    void SetSndGameMode(eSndGameMode eGameMode) {
+        this->m_prevSndGameMode = this->m_eSndGameMode;
+        this->m_eSndGameMode = eGameMode;
+    } // Decl: 243
 
-    eSndGameMode GetSndGameMode() {} // Decl: 244
-
-    eSndGameMode GetPrevSndGameMode() {} // Decl: 245
+    eSndGameMode GetSndGameMode() {
+        return this->m_eSndGameMode;
+    } // Decl: 244
+    eSndGameMode GetPrevSndGameMode() {
+        return this->m_prevSndGameMode;
+    } // Decl: 245
 
     void SetDebugStreamState(int nstate) {} // Decl: 247
 
-    EAXFrontEnd *GetFrontEnd() { // Decl: 250
-        return m_pFESnd;
-    }
+    struct EAXFrontEnd *GetFrontEnd() {
+        return this->m_pFESnd;
+    } // Decl: 250
 
-    struct EAXCar *ConnectCarSnd(struct EAX_CarState *pcar);
-
-    struct EAXCar *GetPlayerTunerCar(int nindex);
-
-    struct EAXCar *GetAITunerCar(int nindex);
-
-    void DestroyEAXCar(struct EAX_CarState *pCar);
-
+    EAXCar *ConnectCarSnd(EAX_CarState *pcar);
+    EAXCar *GetPlayerTunerCar(int nindex);
+    EAXCar *GetAITunerCar(int nindex);
+    void DestroyEAXCar(EAX_CarState *pCar);
     struct CSTATE_Helicopter *SpawnHelicopter(struct EAX_HeliState *pHeli);
 
     void DestroyEAXHeli(struct EAX_HeliState *pHeli);
+    unsigned int Random(int range);
+    float Random(float range);
 
-    char *GetCsisName() {} // Decl: 276
+    // char *GetCsisName() {} // Decl: 276
+    void SetCsisName(SndBase *psndbase);
+    void SetCsisName(char *pcsAllocName);
 
     void PlayUISoundFX(eMenuSoundTriggers etriggertype);
-
     void StopUISoundFX(eMenuSoundTriggers etriggertype);
 
-    struct EAXS_StreamManager *GetStreamManager() {} // Decl: 282
+    struct EAXS_StreamManager *GetStreamManager() {
+        return this->m_pStreamManager;
+    } // Decl: 282
 
-    int IsSpeechDone() {} // Decl: 284
-
+    int IsSpeechDone() {}      // Decl: 284
     void StopSpeechStream() {} // Decl: 285
 
-    e3DPlayerMix GetPlayerMixMode() {} // Decl: 287
-
+    e3DPlayerMix GetPlayerMixMode() {
+        return this->m_ePlayerMixMode;
+    } // Decl: 287
     void SetPlayerMixMode(e3DPlayerMix emix) {} // Decl: 288
-
-    void PauseAudioStreams() {} // Decl: 289
-
-    void ResumeAudioStreams() {} // Decl: 290
-
-    void ChangeLanguage(int new_language) {} // Decl: 291
+    void PauseAudioStreams() {}                 // Decl: 289
+    void ResumeAudioStreams() {}                // Decl: 290
+    void ChangeLanguage(int new_language) {}    // Decl: 291
 
     void CommitAssets();
 
-    struct cSTICH_PlayBack *GetStichPlayer() {} // Decl: 307
+    cSTICH_PlayBack *GetStichPlayer() {
+        return this->m_pSTICH_Playback;
+    } // Decl: 307
 
     eSndAudioMode GetDefaultPlatformAudioMode();
+
+    bool ValidateStreamChunks(const char *filepath, int start, int end);
 
     eSndAudioMode SetAudioRenderMode(eSndAudioMode mode);
 
     eSndAudioMode SetAudioModeFromMemoryCard(eSndAudioMode mode);
 
-    struct AudioSettings *GetCurAudioSettings() {}
+    AudioSettings *GetCurAudioSettings() {
+        return this->m_pCurAudioSettings;
+    }
 
     float GetCurMusicVolume();
 
@@ -656,23 +556,28 @@ class EAXSound : public AudioMemBase {
 
   private:
     void DebugAndProfile();
-
     void AttachPlayerCars();
 
   public:
-    static struct CSTATEMGR_Base *GetStateMgr(eMAINMAPSTATES estate) {} // Decl: 391
-
-    int ncompiletest; // offset 0x4, size 0x4, Decl: 144
-
-    struct Attrib::Gen::audiosystem &GetAttributes() {} // Decl: 394
-
-    struct Attrib::Gen::audiosystem &GetLocalAttr() {} // Decl: 395
+    Attrib::Gen::audiosystem &GetAttributes() {
+        return *this->mAttributes;
+    } // Decl: 394
+    Attrib::Gen::audiosystem &GetLocalAttr() {
+        return *this->mLocalAttr;
+    } // 395
 
     void ReStartRace(bool bIs321);
 
     void RefreshLocalAttr();
 
-    int m_nCopAIStateParam;    // offset 0x8, size 0x4, Decl: 195
+    static CSTATEMGR_Base *GetStateMgr(eMAINMAPSTATES estate) {
+        return m_pStateMgr[estate];
+    }
+
+    int ncompiletest; // offset 0x4, size 0x4, Decl: 144
+
+    int m_nCopAIStateParam; // offset 0x8, size 0x4, Decl: 195
+
     bool bPlayCameraSnapShot;  // offset 0xC, size 0x1, Decl: 318
     bool bPlayCarSounds;       // offset 0x10, size 0x1, Decl: 319
     bool m_bIsSpecialUGMovie;  // offset 0x14, size 0x1, Decl: 320
@@ -681,70 +586,100 @@ class EAXSound : public AudioMemBase {
     bool m_bLostFocus;         // offset 0x20, size 0x1, Decl: 323
     float t_Paused;            // offset 0x24, size 0x4, Decl: 324
     float t_CurTime;           // offset 0x28, size 0x4, Decl: 325
-    int FrameCnt;              // offset 0x2C, size 0x4, Decl: 328
 
-    static bool m_bAreInGameBanksLoaded; // size: 0x1, address: 0xFFFFFFFF, Decl: 330
+    int FrameCnt; // offset 0x2C, size 0x4, Decl: 328
 
     int m_nDebugStreamState;            // offset 0x30, size 0x4, Decl: 331
     AudioSettings *m_pCurAudioSettings; // offset 0x34, size 0x4
-    bool m_bPause_MainFNG;              // offset 0x38, size 0x1, Decl: 333
+
+#ifndef EA_BUILD_A124
+    bool m_bPause_MainFNG; // offset 0x38, size 0x1, Decl: 333
+#endif
 
   private:
-    void *m_pMemoryPoolMem;             // offset 0x3C, size 0x4, Decl: 339
-    int m_memoryPoolSize;               // offset 0x40, size 0x4, Decl: 340
-    int m_numMemoryAllocations;         // offset 0x44, size 0x4, Decl: 341
+    void *m_pMemoryPoolMem;     // offset 0x3C, size 0x4, Decl: 339
+    int m_memoryPoolSize;       // offset 0x40, size 0x4, Decl: 340
+    int m_numMemoryAllocations; // offset 0x44, size 0x4, Decl: 341
+
     eSNDPAUSE_REASON m_LastPauseReason; // offset 0x48, size 0x4, Decl: 345
 
-  public:
-    static struct CSTATEMGR_Base *m_pStateMgr[13]; // size: 0x34, address: 0x804F4288, Decl: 346
-
-  private:
     int m_transStartTime;     // offset 0x4C, size 0x4, Decl: 347
     int m_startingLoopVolume; // offset 0x50, size 0x4, Decl: 348
-    bool m_bAudioIsPaused;    // offset 0x54, size 0x1, Decl: 350
 
-  public:
+    bool m_bAudioIsPaused; // offset 0x54, size 0x1, Decl: 350
+#ifndef EA_BUILD_A124
     bool m_X360_UI_Override; // offset 0x58, size 0x1
+#endif
 
-  private:
-    char *m_pcsCsisName;                      // offset 0x5C, size 0x4, Decl: 359
-    Sound::stSongInfo *m_pNewSongInfoSt;      // offset 0x60, size 0x4
-    eEAXGameState m_streamManagerState;       // offset 0x64, size 0x4, Decl: 361
-    char *m_pEAX_SysHeap;                     // offset 0x68, size 0x4, Decl: 363
-    EAXFrontEnd *m_pFESnd;                    // offset 0x6C, size 0x4, Decl: 365
-    struct EAXCommon *m_pCmnSnd;              // offset 0x70, size 0x4, Decl: 366
-    struct NFSLiveLink *m_pNFSLiveLink;       // offset 0x74, size 0x4, Decl: 367
-    e3DPlayerMix m_ePlayerMixMode;            // offset 0x78, size 0x4, Decl: 370
-    int m_nStereoUpgradeLevel;                // offset 0x7C, size 0x4, Decl: 373
-    int m_nGameMode;                          // offset 0x80, size 0x4, Decl: 374
-    eSndGameMode m_eSndGameMode;              // offset 0x84, size 0x4, Decl: 376
-    eSndGameMode m_prevSndGameMode;           // offset 0x88, size 0x4, Decl: 377
-    int m_nNumCarsInGame;                     // offset 0x8C, size 0x4, Decl: 378
-    struct EAXSND8Wrapper *m_pEAXSND8Wrapper; // offset 0x90, size 0x4
-    EAXS_StreamManager *m_pStreamManager;     // offset 0x94, size 0x4, Decl: 386
-    NFSMixMaster *m_pNFSMixMaster;            // offset 0x98, size 0x4
+    char *m_pcsCsisName;                 // offset 0x5C, size 0x4, Decl: 359
+    Sound::stSongInfo *m_pNewSongInfoSt; // offset 0x60, size 0x4
+    eEAXGameState m_streamManagerState;  // offset 0x64, size 0x4, Decl: 361
+
+    char *m_pEAX_SysHeap; // offset 0x68, size 0x4, Decl: 363
+
+    EAXFrontEnd *m_pFESnd;       // offset 0x6C, size 0x4, Decl: 365
+    EAXCommon *m_pCmnSnd;        // offset 0x70, size 0x4, Decl: 366
+    NFSLiveLink *m_pNFSLiveLink; // offset 0x74, size 0x4, Decl: 367
+
+    e3DPlayerMix m_ePlayerMixMode; // offset 0x78, size 0x4, Decl: 370
+
+    int m_nStereoUpgradeLevel; // offset 0x7C, size 0x4, Decl: 373
+    int m_nGameMode;           // offset 0x80, size 0x4, Decl: 374
+
+    eSndGameMode m_eSndGameMode;    // offset 0x84, size 0x4, Decl: 376
+    eSndGameMode m_prevSndGameMode; // offset 0x88, size 0x4, Decl: 377
+    int m_nNumCarsInGame;           // offset 0x8C, size 0x4, Decl: 378
+
+    EAXSND8Wrapper *m_pEAXSND8Wrapper;    // offset 0x90, size 0x4
+    EAXS_StreamManager *m_pStreamManager; // offset 0x94, size 0x4, Decl: 386
+    NFSMixMaster *m_pNFSMixMaster;        // offset 0x98, size 0x4
 
   public:
-    void SetCsisName(struct SndBase *psndbase);
-
-    void SetCsisName(char *pcsAllocName);
-
-    unsigned int Random(int range);
-
-    float Random(float range);
-
-    bool ValidateStreamChunks(const char *filepath, int start, int end);
+    static CSTATEMGR_Base *m_pStateMgr[eMM_MAX_MAIN_MIXSTATES];
 
   private:
-    cSTICH_PlayBack *m_pSTICH_Playback;    // offset 0x9C, size 0x4, Decl: 404
-    eAemsStreamBanks m_eSpeechLoadBank;    // offset 0xA0, size 0x4, Decl: 407
-    int m_nSpeechLoadBankIndex;            // offset 0xA4, size 0x4, Decl: 408
+    cSTICH_PlayBack *m_pSTICH_Playback; // offset 0x9C, size 0x4, Decl: 404
+
+    eAemsStreamBanks m_eSpeechLoadBank; // offset 0xA0, size 0x4, Decl: 407
+    int m_nSpeechLoadBankIndex;         // offset 0xA4, size 0x4, Decl: 408
+
     Attrib::Gen::audiosystem *mAttributes; // offset 0xA8, size 0x4, Decl: 410
     Attrib::Gen::audiosystem *mLocalAttr;  // offset 0xAC, size 0x4, Decl: 411
-    Hermes::HHANDLER mmsgMRestartRace;     // offset 0xB0, size 0x4, Decl: 413
-    int mEventID;                          // offset 0xB4, size 0x4
-    Event::StaticData mData;               // offset 0xB8, size 0x4
+
+    Hermes::HHANDLER mmsgMRestartRace; // offset 0xB0, size 0x4, Decl: 413
+
+    int mEventID;            // offset 0xB4, size 0x4
+    Event::StaticData mData; // offset 0xB8, size 0x4
 };
+
+// total size: 0x18
+// Decl: 422
+struct SND_Params {
+    // TODO it's sus that only these are initialized
+    SND_Params()
+        : Vol(0x7FFF),     //
+          Pitch(0x1000) {} // Decl: 423
+
+    SND_Params(int _ID, int _Vol, int _Pitch, int _Az, int _Mag, int _RVerb)
+        : ID(_ID),         //
+          Vol(_Vol),       //
+          Pitch(_Pitch),   //
+          Az(_Az),         //
+          Mag(_Mag),       //
+          RVerb(_RVerb) {} // Decl: 433
+
+    int ID;    // offset 0x0, size 0x4, Decl: 443
+    int Vol;   // offset 0x4, size 0x4, Decl: 444
+    int Pitch; // offset 0x8, size 0x4, Decl: 445
+    int Az;    // offset 0xC, size 0x4, Decl: 446
+    int Mag;   // offset 0x10, size 0x4, Decl: 447
+    int RVerb; // offset 0x14, size 0x4, Decl: 448
+};
+
+#define SNDPRINTF_BUFFER_SIZE 512 // Decl: 467
+#define SNDPRINTF_CHANNEL 9       // Decl: 468
+#define NO_SNDPRINTF              // Decl: 471
+#define SndPrintf if (0)          // Decl: 478
 
 void InitializeSoundDriver();
 
@@ -757,6 +692,8 @@ void SoundPause(bool bpause, eSNDPAUSE_REASON esndpause);
 void FESoundControl(bool bOn, const char *name);
 
 extern EAXSound *g_pEAXSound;
+extern bool gbAudioInterruptsWorldDataRead;
+extern bool gbWorldDataBlocksAudioRead;
 
 // TODO move these to Ecstasy
 extern int32 eDisableFixUpTables;

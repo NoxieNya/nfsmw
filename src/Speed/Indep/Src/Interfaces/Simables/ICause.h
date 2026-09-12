@@ -1,5 +1,5 @@
-#ifndef INTERFACES_SIMABLES_ICAUSE_H
-#define INTERFACES_SIMABLES_ICAUSE_H
+#ifndef ICAUSE_H
+#define ICAUSE_H
 
 #include "IExplosion.h"
 #include "Speed/Indep/Libs/Support/Utility/UCOM.h"
@@ -12,8 +12,8 @@ class ICause : public UTL::COM::IUnknown, public UTL::Collections::Instanceable<
   public:
     DECL_INTERFACE(ICause);
 
-    // virtual void OnCausedCollision(const COLLISION_INFO &cinfo, ISimable *from, ISimable *to);
-    virtual void OnCausedExplosion(IExplosion *explosion, ISimable *to);
+    virtual void OnCausedCollision(const COLLISION_INFO &cinfo, ISimable *from, ISimable *to) = 0;
+    virtual void OnCausedExplosion(IExplosion *explosion, ISimable *to) = 0;
 };
 
 #endif

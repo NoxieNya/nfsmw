@@ -10,11 +10,18 @@
 
 // TODO move these to the correct place
 // #define PLAT_NEXT_GEN
+
+#if defined(EA_PLATFORM_GAMECUBE) || defined(EA_PLATFORM_XENON)
 #define NATIVE_ENDIAN_BIG
+#else
+#define NATIVE_ENDIAN_LITTLE
+#endif
+
 #define MEMORY_DUMP
 //   #undef  NO_DEBUG_BMEMORY
 //   #define   NULL 0
 #define MUL 0
+// TODO
 #define bPrintf (1) ? ((void)0) : bNullPrintf
 #define bMilestonePutString bReleasePutString
 #define bMilestonePrintf bReleasePrintf
@@ -30,9 +37,23 @@
 #define ASSERT_NOTRENDERTHREAD()
 #define ASSERT_ISMAINTHREAD()
 #define ASSERT_ISRENDERTHREAD()
-// #define bMemCpy(dest, src, numbytes) memcpy(dest, src, numbytes)
-// #define bMemSet(dest, pattern, size) memset(dest, pattern, size)
-// #define bMemCmp(s1, s2, numbytes) memcmp(s1, s2, numbytes)
+
+#if defined(EA_PLATFORM_WIN32)
+#define bMemCpy(dest, src, numbytes) memcpy(dest, src, numbytes)
+#define bMemSet(dest, pattern, size) memset(dest, pattern, size)
+#define bMemCmp(s1, s2, numbytes) memcmp(s1, s2, numbytes)
+#else
+extern "C" {
+void bMemCpy(void *dest, const void *src, unsigned int numbytes);
+void bMemSet(void *dest, unsigned char pattern, unsigned int size);
+int bMemCmp(const void *s1, const void *s2, unsigned int numbytes);
+}
+#endif
+
+extern "C" {
+void bOverlappedMemCpy(void *dest, const void *src, unsigned int numbytes);
+}
+
 #define BMEMORY_TOP_BIT (1 << 6)
 #define BMEMORY_MAX_POOLS 16
 #define BMEMORY_POOL_MASK (BMEMORY_MAX_POOLS - 1)
@@ -63,6 +84,7 @@
 #define END_SOURCELIST(_MODULE)
 #define THIS_SCOPE_EXECUTES_ONLY_ONCE()
 
+// TODO get rid of these
 #ifdef DEBUG_OPT
 #define ENABLE_IN_DEBUG true
 #else
@@ -97,13 +119,6 @@ const char *bGetMallocName(void *ptr);
 size_t bGetMallocSize(const void *ptr);
 int bGetMallocPool(void *ptr);
 int bMemoryGetAllocations(int pool_num, void **allocations, int max_allocations);
-
-extern "C" {
-void bMemCpy(void *dest, const void *src, unsigned int numbytes);
-void bMemSet(void *dest, unsigned char pattern, unsigned int size);
-int bMemCmp(const void *s1, const void *s2, unsigned int numbytes);
-void bOverlappedMemCpy(void *dest, const void *src, unsigned int numbytes);
-}
 
 bool bSetMemoryPoolDebugFill(int pool_num, bool on_off);
 void bSetMemoryPoolTopDirection(int pool_num, bool top_means_larger_address);
@@ -145,6 +160,8 @@ inline char *bGetPlatformName() {
     return "PSX2";
 #elif defined(EA_PLATFORM_XENON)
     return "XENON";
+#elif defined(EA_PLATFORM_WIN32)
+    return "PC";
 #else
 #error "Platform not specified";
 #endif
@@ -164,6 +181,7 @@ inline void bEndianSwap(short *value) {
 void bInitSharedStringPool(int size);
 void bCloseSharedStringPool();
 
+// TODO EA_SYSTEM_BIG_ENDIAN
 inline void bPlatEndianSwap(uint64 *value) {
 #ifdef EA_PLATFORM_GAMECUBE
     bEndianSwap64(value);
@@ -213,6 +231,10 @@ inline void bPlatEndianSwap(UCrc32 *c) {
     bPlatEndianSwap(&val);
     *c = UCrc32(val);
 }
+
+inline void bNullPrintf(const char *format, ...) {}
+
+inline void bNullPrintf(char terminal_channel, const char *format, ...) {}
 
 inline bool bIsDigit(char c) {
     return c >= '0' && c <= '9';

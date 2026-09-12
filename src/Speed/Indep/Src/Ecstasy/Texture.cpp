@@ -271,7 +271,7 @@ void TexturePack::AttachTextureInfo(TextureInfo *texture_info, TextureInfoPlatIn
     texture_info->ImageData = nullptr;
     texture_info->PaletteData = nullptr;
     texture_info->SetPlatInfo(plat_info);
-    if (texture_info->NameHash == BINHASH(DEFAULTALPHA)) {
+    if (texture_info->NameHash == STRINGHASH_DEFAULTALPHA) {
         DefaultTextureInfo = texture_info;
     }
     eDirtyTextures = 1;
@@ -413,8 +413,8 @@ TextureInfo *TexturePack::GetTexture(uint32 name_hash) {
 }
 
 TextureInfo *eCreateTextureInfo() {
-    TextureInfo *texture_info = new TextureInfo();
-    TextureInfoPlatInfo *plat_info = new TextureInfoPlatInfo();
+    TextureInfo *texture_info = BNEW TextureInfo();
+    TextureInfoPlatInfo *plat_info = BNEW TextureInfoPlatInfo();
     texture_info->SetPlatInfo(plat_info);
     return texture_info;
 }

@@ -2,11 +2,9 @@
 #define ICEMANAGER_HPP_
 
 #include "Speed/Indep/Src/Camera/ICE/ICEData.hpp"
-#include "Speed/Indep/Src/Ecstasy/Ecstasy.hpp"
+#include "Speed/Indep/bWare/Inc/bList.hpp"
+#include "Speed/Indep/Src/Misc/Timer.hpp"
 
-struct Matrix4; // TODO where is this from
-
-// File: speed/indep/src/Camera/ICE/ICEManager.hpp
 // total size: 0x80
 // Decl: 14
 class ICEManager {
@@ -32,6 +30,8 @@ class ICEManager {
         return fParameterLength;
     }
 
+    void MaybeAllocate();
+
     void Init();                                // Decl: 36
     void Update();                              // Decl: 37
     void Resolve();                             // Decl: 38
@@ -41,8 +41,8 @@ class ICEManager {
     void LoadCameraShakes(bChunk *set_chunk);   // Decl: 42
     void UnloadCameraShakes(bChunk *set_chunk); // Decl: 43
 
-    struct ICEData *GetCameraData(uint32 scene_hash, int camTrack);
-    struct ICEData *GetCameraData(ICETrack **p_track, float *p_start, float *p_end);
+    ICEData *GetCameraData(uint32 scene_hash, int camTrack);
+    ICEData *GetCameraData(ICETrack **p_track, float *p_start, float *p_end);
 
     void GetSlope(Vector3 *p_eye_slope, Vector3 *p_look_slope, float *p_dutch_slope, float *p_lens_slope, ICEData *p_camera, int n_key,
                   ICETrack *p_track);
@@ -71,13 +71,16 @@ class ICEManager {
     int GetCameraIndex(float f_param, ICETrack *track);
     void SetSmoothExit(bool smooth) {} // Decl: 53
     bool IsSmoothExit() {}             // Decl: 54
-    int ChooseGoodSceneCameraTrackIndex(uint32 scene_hash, Matrix4 *scene_origin);
+    // int ChooseGoodSceneCameraTrackIndex(uint32 scene_hash, Matrix4 *scene_origin);
     void SetUseRealTime(bool val) { // Decl: 55
         bUseRealTime = val;
     }
     float IsUsingRealTime() { // Decl: 56
+        return bUseRealTime;
     }
-    float GetTimerSeconds(); // Decl: 57
+    float GetTimerSeconds() { // Decl: 57
+        return bUseRealTime ? WorldTimer.GetSeconds() : RealTimer.GetSeconds();
+    }
 
   private:
     float GetParameter(int i, ICETrack *track);
@@ -123,11 +126,11 @@ class ICEManager {
     float fParameterStart;          // offset 0x54, size 0x4
     float fParameterLength;         // offset 0x58, size 0x4
     float fParameterLengthBackup;   // offset 0x5C, size 0x4
+    uint32 nPlayGenericGroupHash;   // offset 0x60, size 0x4, Decl: 83
     char nPlayGenericTrackName[14]; // offset 0x64, size 0xE
+    bool bSmoothExit;               // offset 0x74, size 0x1, Decl: 85
     int nMarkerIndex;               // offset 0x78, size 0x4
     bool bUseRealTime;              // offset 0x7C, size 0x1
-    uint32 nPlayGenericGroupHash;   // offset 0x60, size 0x4, Decl: 83
-    bool bSmoothExit;               // offset 0x74, size 0x1, Decl: 85
 };
 
 ICEManager TheICEManager; // size: 0x80, Decl: 93

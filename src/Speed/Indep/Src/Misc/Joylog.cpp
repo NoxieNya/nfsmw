@@ -47,8 +47,7 @@ JoylogBuffer::JoylogBuffer(const char *filename, int top_position) {
     this->BufferStartPosition = 0;
     bMemSet(this->Buffer, 0, sizeof(this->Buffer));
     if (bIsCodeineConnected()) {
-        bFunkJoylogCaptureInitPacket packet;
-        memset(&packet, 0, sizeof(packet));
+        bFunkJoylogCaptureInitPacket packet = {};
         packet.BufferAddress = reinterpret_cast<intptr_t>(&this->Buffer);
         packet.BufferSizeAddress = reinterpret_cast<intptr_t>(&this->NumBytesInBuffer);
 
@@ -189,13 +188,18 @@ int JoylogBuffer::GetEntry(JoylogBufferEntry *entry, uint8 *pbuf) {
     return entry->DataSize + 1;
 }
 
-// UNSOLVED
 void JoylogBuffer::PrintNearbyJoylogEntries(int error_pos) {
     int pos = this->BufferStartPosition;
     const int range = 40;
-    while (pos < this->TopPosition && (pos < this->CurrentPosition + range) && (this->CurrentLoadPosition == 0 || pos < this->CurrentLoadPosition)) {
+    while (pos < this->TopPosition && pos < this->CurrentPosition + range) {
+        if (this->CurrentLoadPosition != 0 && pos >= this->CurrentLoadPosition) {
+            break;
+        }
         JoylogBufferEntry buffer_entry;
-        int new_pos = GetEntry(&buffer_entry, pos);
+        int new_pos = this->GetEntry(&buffer_entry, pos);
+        {
+            const char *current_string = (pos <= this->CurrentPosition && this->CurrentPosition < new_pos) ? "***" : "   ";
+        }
         pos = new_pos;
     }
 }
@@ -390,23 +394,31 @@ bool JoylogPutStringFunction(int terminal_channel, const char *s) {
     return 0;
 }
 
-// UNSOLVED
 void DumpJoylogPrint() {
-    bool last_line_missing_linefeed;
+    bool last_line_missing_linefeed = false;
     Joylog::LoadReadAheadBuffer();
     int len = 0;
     char string[512];
+
     while (Joylog::ReadAheadFromChannel(string + len, 1, JOYLOG_CHANNEL_PRINTF) != 0) {
         if (len == 510) {
             len = 511;
             string[len] = 0;
         }
+
         if (string[len] != 0) {
             len++;
         } else {
+            last_line_missing_linefeed = len > 0 && string[len - 1] != '\n';
+            bPrintf("%s", string);
             len = 0;
         }
     }
+
+    if (last_line_missing_linefeed) {
+        bPrintf("\n");
+    }
+
     Joylog::FreeReadAheadBuffer();
 }
 

@@ -9,11 +9,12 @@ class GRuntimeInstance : public Attrib::Gen::gameplay {
   public:
     GRuntimeInstance(const Attrib::Key &key, GameplayObjType type);
     virtual ~GRuntimeInstance();
-    virtual GameplayObjType GetType() const;
+
+    virtual GameplayObjType GetType() const; // Decl: 47
 
   private:
-    unsigned short mFlags;                // offset 0x14, size 0x2
-    unsigned short mNumConnected;         // offset 0x16, size 0x2
+    uint16 mFlags;                        // offset 0x14, size 0x2
+    uint16 mNumConnected;                 // offset 0x16, size 0x2
     struct ConnectedInstance *mConnected; // offset 0x18, size 0x4
     GRuntimeInstance *mPrev;              // offset 0x1C, size 0x4
     GRuntimeInstance *mNext;              // offset 0x20, size 0x4

@@ -8,6 +8,16 @@ extern void *NullPointer;
 
 namespace Sound {
 
+// total size: 0x8
+// Decl: 39
+struct Battalion {
+    Battalion(int nam, int num) {}
+
+    int name;   // offset 0x0, size 0x4
+    int number; // offset 0x4, size 0x4
+};
+
+// Decl: 85
 enum Context {
     CONTEXT_PLAYER = 0,
     CONTEXT_AIRACER = 1,
@@ -19,6 +29,7 @@ enum Context {
     CONTEXT_MAX = 7,
 };
 
+// Decl: 98
 enum SirenState {
     SIREN_OFF = -1,
     SIREN_WAIL = 0,
@@ -27,6 +38,7 @@ enum SirenState {
     SIREN_DIE = 3,
 };
 
+// Decl: 108
 enum WheelConfig {
     EAX4WD_FL = 0,
     EAX4WD_FR = 1,
@@ -34,6 +46,7 @@ enum WheelConfig {
     EAX4WD_RL = 3,
 };
 
+// Decl: 116
 enum ControlSource {
     CONTROL_NONE = 0,
     CONTROL_HUMAN = 1,
@@ -43,12 +56,22 @@ enum ControlSource {
 };
 
 // total size: 0x44
+// Decl: 126
 struct Wheel {
-    Wheel() {}
+    Wheel() {
+        this->Reset();
+    }
 
-    ~Wheel();
-
-    void Reset() {}
+    void Reset() {
+        this->mWheelOnGround = 1;
+        this->mWheelForceZ = 0.0f;
+        this->mWheelSlip = bVector2(0.0f, 0.0f);
+        this->mTerrainType = SimSurface::kNull;
+        this->mPercentFsFkTransfer = 0.0f;
+        this->mLoad = 0.0f;
+        this->mBlownState = 0;
+        this->mPrevBlownState = 0;
+    }
 
     bVector2 mWheelSlip;         // offset 0x0, size 0x8
     float mWheelForceZ;          // offset 0x8, size 0x4
@@ -62,10 +85,21 @@ struct Wheel {
 };
 
 // total size: 0x1C
+// Decl: 157
 struct Engine {
-    Engine() {}
+    Engine() {
+        this->Reset();
+    }
 
-    void Reset() {}
+    void Reset() {
+        this->mBoostFlag = 0;
+        this->mNOSFlag = 0;
+        this->mNOS = 0.0f;
+        this->mRPMPct = 0.0f;
+        this->mThrottle = 0.0f;
+        this->mBoost = 0.0f;
+        this->mBlownFlag = 0;
+    }
 
     int mBoostFlag;  // offset 0x0, size 0x4
     int mNOSFlag;    // offset 0x4, size 0x4
@@ -77,12 +111,28 @@ struct Engine {
 };
 
 // total size: 0x8
+// Decl: 184
 struct Driveline {
-    Driveline() {}
+    Driveline()
+        : mGearShiftFlag(0), //
+          mGear(NEUTRAL) {}
 
     int mGearShiftFlag; // offset 0x0, size 0x4
     Gear mGear;         // offset 0x4, size 0x4
 };
+
+// total size: 0x14
+// Decl: unknown
+struct stSongInfo {
+    char *SongName; // offset 0x0, size 0x4
+    char *Artist;   // offset 0x4, size 0x4
+    char *Album;    // offset 0x8, size 0x4
+    char *DefPlay;  // offset 0xC, size 0x4
+    int PathEvent;  // offset 0x10, size 0x4
+};
+
+// total size: 0x10
+class SongInfoList : public std::vector<stSongInfo *> {};
 
 }; // namespace Sound
 

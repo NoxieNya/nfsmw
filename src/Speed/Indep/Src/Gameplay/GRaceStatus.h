@@ -10,6 +10,7 @@
 #include "GRaceDatabase.h"
 #include "GActivity.h"
 #include "GTimer.h"
+#include "GTrigger.h"
 #include "Speed/Indep/Libs/Support/Utility/UTypes.h"
 #include "Speed/Indep/Src/Ecstasy/EmitterSystem.h"
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/gameplay.h"
@@ -182,9 +183,9 @@ class GRacerInfo {
     void KnockOut();
     void BlowEngine();
     void TotalVehicle();
-    void Busted();
-    void ChallengeComplete();
-    void ForceStop();
+    void Busted();            // Decl: 185
+    void ChallengeComplete(); // Decl: 186
+    void ForceStop();         // Decl: 199
     void EndForceStop();
     void Update(float dT);
     void SaveStartPosition();

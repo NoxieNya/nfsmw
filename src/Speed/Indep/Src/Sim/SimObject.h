@@ -17,26 +17,24 @@ class Object : public UTL::COM::Object, public IServiceable, public ITaskable, p
 
   protected:
     Object(std::size_t num_interfaces);
+    ~Object() override;
+
+    // IServiceable
+    bool OnService(HSIMSERVICE hCon, Sim::Packet *pkt) override {
+        return false;
+    }
+
+    // ITaskable
+    bool OnTask(HSIMTASK htask, float dT) override {
+        return false;
+    }
+
     HSIMTASK AddTask(const UCrc32 &schedule, float rate, float start_offset, TaskMode mode);
     void ModifyTask(HSIMTASK htask, float rate);
     void RemoveTask(HSIMTASK htask);
     HSIMSERVICE OpenService(UCrc32 server, Packet *pkt);
     void CloseService(HSIMSERVICE hservice);
     ConnStatus CheckService(HSIMSERVICE hservice) const;
-
-    // Virtual functions
-    // IUnknown
-    virtual ~Object();
-
-    // IServiceable
-    virtual bool OnService(HSIMSERVICE hCon, Sim::Packet *pkt) {
-        return false;
-    }
-
-    // ITaskable
-    virtual bool OnTask(HSIMTASK htask, float dT) {
-        return false;
-    }
 
   private:
     unsigned int mTaskCount;    // offset 0x24, size 0x4

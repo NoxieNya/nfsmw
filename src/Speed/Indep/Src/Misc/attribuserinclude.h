@@ -22,10 +22,8 @@ class StringKey {
     }
 
     StringKey(const StringKey &src)
-        : mHash64(src.mHash64) //
-          ,
-          mHash32(src.mHash32) //
-          ,
+        : mHash64(src.mHash64), //
+          mHash32(src.mHash32), //
           mString(src.mString) {}
 
     const StringKey &operator=(const StringKey &rhs) {
@@ -36,54 +34,52 @@ class StringKey {
     }
 
     const char *GetString() const {
-        return mString != nullptr ? mString : "";
+        return (this->mString != nullptr) ? this->mString : "";
     }
 
     uint64_t GetHash64() const {
-        return mHash64;
+        return this->mHash64;
     }
 
     uint32_t GetHash32() const {
-        return mHash32;
+        return this->mHash32;
     }
 
     bool IsEmpty() const {
-        if (mString != nullptr) {
-            return mString[0] == 0;
+        if (this->mString != nullptr) {
+            return this->mString[0] == 0;
         }
         return true;
     }
 
     bool IsNotEmpty() const {
-        if (mString == nullptr) {
+        if (this->mString == nullptr) {
             return false;
         }
-        if (mString[0] == '\0') {
+        if (this->mString[0] == '\0') {
             return false;
         }
         return true;
     }
 
     bool IsValid() const {
-        return mString != nullptr;
+        return this->mString != nullptr;
     }
 
     bool operator==(const StringKey &rhs) const {
-        return mHash64 == rhs.mHash64;
+        return this->mHash64 == rhs.mHash64;
     }
 
     bool operator!=(const StringKey &rhs) const {
-        return mHash64 != rhs.mHash64;
+        return this->mHash64 != rhs.mHash64;
     }
-
-    bool operator<(const StringKey &rhs) const {};
 
     operator uint64_t() const {
         return this->mHash64;
     }
 
     operator uint32_t() const {
-        return mHash32;
+        return this->mHash32;
     }
 
   private:

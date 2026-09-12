@@ -1,10 +1,14 @@
+//
+//
+//
+//
 #ifndef _EAXAUDIOPARAMS_HPP
-#define _EAXAUDIOPARAMS_HPP
+#define _EAXAUDIOPARAMS_HPP // Decl: 6
 
-#define SNDUPG_ENGINE_BASE 0x00           // :12
-#define SNDUPG_ENGINE_STREET 0x01         // :13
-#define SNDUPG_ENGINE_PRO (0x01) << 1     // :14
-#define SNDUPG_ENGINE_EXTREME (0x01) << 2 // :15
+#define SNDUPG_ENGINE_BASE 0x00           // Decl: 12
+#define SNDUPG_ENGINE_STREET 0x01         // Decl: 13
+#define SNDUPG_ENGINE_PRO (0x01) << 1     // Decl: 14
+#define SNDUPG_ENGINE_EXTREME (0x01) << 2 // Decl: 15
 
 // Decl: 17
 enum eGAMEMODE {
@@ -35,7 +39,7 @@ enum eSndGameMode {
     SND_FREEROAM = 7,
     SND_CARSHOW = 8,
     SND_LOADING_SCREEN = 9,
-    SND_PURSUITBREAKER = 10
+    SND_PURSUITBREAKER = 10,
 };
 
 #endif

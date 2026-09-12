@@ -8,6 +8,7 @@
 #include <types.h>
 
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/gameplay.h"
+#include "Speed/Indep/Src/Gameplay/GRace.h"
 #include "Speed/Indep/Tools/AttribSys/Runtime/AttribHash.h"
 #include "Speed/Indep/Src/Gameplay/GActivity.h"
 #include "GRace.h"

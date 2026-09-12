@@ -1,13 +1,9 @@
 #ifndef MISC_HERMES_H
 #define MISC_HERMES_H
 
-#include "Speed/Indep/Libs/Support/Utility/FastMem.h"
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
-
 #include <cstddef>
 
+#include "Speed/Indep/Libs/Support/Utility/FastMem.h"
 #include "Speed/Indep/Libs/Support/Utility/UCrc.h"
 #include "Speed/Indep/Libs/Support/Utility/UStandard.h"
 #include "Speed/Indep/Src/Misc/AttribAlloc.h"
@@ -72,7 +68,7 @@ struct _h_HHANDLER__ {
     int unused; // offset 0x0, size 0x4
 };
 
-typedef _h_HHANDLER__ *HHANDLER;
+typedef _h_HHANDLER__ *HHANDLER; // TODO move out of this namespace
 
 // total size: 0x24
 class Handler {
@@ -101,7 +97,7 @@ class Handler {
         pmemberhandler->Handler = handler;
         pmemberhandler->that = that;
 
-        h.CallFn = pmemberhandler->Call;
+        h.CallFn = &MemberHandler<MessageT, Class, V>::Call;
         h.mKind = MessageT::_GetKind();
         h.mKey = reinterpret_cast<HHANDLER>(mKeyNext++);
         h.mID = id;

@@ -556,6 +556,8 @@ void MemoryPool::TraceNewPool() {
     if (this->pDebugName != nullptr) {
         bStrNCpy(packet.Name, this->pDebugName, sizeof(packet.Name) - 1);
     }
+    // TODO probably macro instead of ifdefs here
+    // TODO apply macro for "25"
 #ifdef EA_PLATFORM_GAMECUBE
     bFunkGameCube("CODEINE", 25, &packet, sizeof(packet));
 #else
@@ -873,8 +875,7 @@ void bFree(void *ptr) {
     AllocationHeader *header = &static_cast<AllocationHeader *>(ptr)[-1];
     int pool_num = header->PoolNum;
     MemoryPool *pool = MemoryPools[pool_num];
-    char debug_name[32];
-    memset(debug_name, 0, sizeof(debug_name));
+    char debug_name[32] = {};
     if (bMemoryAutomaticVerifyPoolIntegrity && (bMemoryAllocationNumber % bMemoryAutomaticVerifyPoolIntegrity == 0)) {
         bVerifyPoolIntegrity(pool_num);
     }
@@ -1051,8 +1052,9 @@ void *bMemoryAllocator::Alloc(size_t size, const EA::TagValuePair &flags) {
     while (p != nullptr) {
         switch (p->mTag) {
             case 1:
-                ptr = const_cast<void *>(p->mValue.mPointer);
-                name = reinterpret_cast<char *>(ptr);
+                if (p->mValue.mPointer != nullptr) {
+                    name = static_cast<char *>(const_cast<void *>(p->mValue.mPointer));
+                }
                 break;
             case 2:
                 allocation_params |= BMEMORY_ALIGNMENT(p->mValue.mInt);

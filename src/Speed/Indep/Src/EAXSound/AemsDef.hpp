@@ -156,6 +156,16 @@ enum eEAXGameState {
     EAXGS_EXIT_FE = 11,
 };
 
+// Decl: 400
+enum eAemsUpgradeLevel {
+    AEMS_NO_LEVEL = -1,
+    AEMS_LEVEL0 = 0,
+    AEMS_LEVEL1 = 1,
+    AEMS_LEVEL2 = 2,
+    AEMS_LEVEL3 = 3,
+    AEMS_MAX_LEVEL = 4,
+};
+
 // Decl: 483
 enum eAemsStreamBanks {
     EAX_AEMS_MUSIC_UG0_S = 0,

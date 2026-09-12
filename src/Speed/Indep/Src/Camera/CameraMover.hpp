@@ -1,11 +1,14 @@
 #ifndef CAMERA_CAMERAMOVER_H
 #define CAMERA_CAMERAMOVER_H
 
+#include "Speed/Indep/Libs/Support/Utility/UMath.h"
+#include "Speed/Indep/Src/Camera/Camera.hpp"
 #ifdef EA_PRAGMA_ONCE_SUPPORTED
 #pragma once
 #endif
 
 #include "./Camera.hpp"
+#include "./CameraAI.hpp"
 #include "CameraInfo.hpp"
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/camerainfo.h"
 #include "Speed/Indep/Src/Generated/AttribSys/Classes/ecar.h"
@@ -13,7 +16,16 @@
 #include "Speed/Indep/Src/World/WCollisionMgr.h"
 #include "Speed/Indep/Src/World/WWorldPos.h"
 #include "Speed/Indep/bWare/Inc/bList.hpp"
-#include "Speed/Indep/Src/Camera/CameraInfo.hpp"
+#include "Speed/Indep/Src/World/WCollider.h"
+#include "Speed/Indep/Src/Ecstasy/Ecstasy.hpp"
+#include "Speed/Indep/Src/Ecstasy/eMath.hpp"
+#include "Speed/Indep/Libs/Support/Utility/UListable.h"
+#include "Speed/Indep/Src/Ecstasy/Ecstasy.hpp"
+#include "Speed/Indep/Src/Interfaces/Simables/IVehicle.h"
+#include "Speed/Indep/bWare/Inc/bMath.hpp"
+#include "Speed/Indep/Src/Physics/PVehicle.h"
+#include "Speed/Indep/bWare/Inc/Espresso.hpp"
+#include "Speed/Indep/Src/Camera/ICE/ICEManager.hpp"
 
 class eView;
 
@@ -42,6 +54,10 @@ enum CameraMoverTypes {
 // total size: 0x124
 class CameraAnchor {
   public:
+    float GetVelocityMagnitude() {
+        return UMath::Sqrt(mVelocity.x * mVelocity.x + mVelocity.y * mVelocity.y + mVelocity.z * mVelocity.z);
+    }
+
     bVector3 *GetGeometryPosition() {
         return &mGeomPos;
     }
@@ -86,11 +102,13 @@ class CameraAnchor {
 // total size: 0x80
 class CameraMover : public bTNode<CameraMover>, public WCollisionMgr::ICollisionHandler {
   public:
-    CameraMover();
+    CameraMover(int view_id, CameraMoverTypes type);
 
     CameraMoverTypes GetType() {
         return Type;
     }
+
+    static void ComputeBankedUpVector(bVector3 *up, bVector3 *eye, bVector3 *look, bAngle bank);
 
     WUID GetAnchorID();
 
@@ -111,6 +129,15 @@ class CameraMover : public bTNode<CameraMover>, public WCollisionMgr::ICollision
     virtual void Update(float dT);
     virtual void Render(eView *view);
 
+    void ChopperNoise(bMatrix4 *world_to_camera, float f_scale, bool useWorldTimer);
+    void HandheldNoise(bMatrix4 *world_to_camera, float f_scale, bool useWorldTimer);
+    void TerrainVelocityNoise(bMatrix4 *world_to_camera /* r26 */, CameraAnchor *p_car /* r30 */, float f_speed_scale /* f31 */,
+                              float f_terrain_scale /* f28 */);
+
+    bool IsDriveCamera() {
+        return this->Type == CM_DRIVE_CUBIC;
+    }
+
     virtual CameraAnchor *GetAnchor() {}
 
     virtual void SetLookBack(bool b) {}
@@ -125,7 +152,7 @@ class CameraMover : public bTNode<CameraMover>, public WCollisionMgr::ICollision
 
     virtual bool RenderCarPOV() {}
 
-    virtual float MinDistToWall() {}
+    virtual float MinDistToWall();
 
     virtual unsigned short GetLookbackAngle() {}
 
@@ -155,5 +182,6 @@ class CameraMover : public bTNode<CameraMover>, public WCollisionMgr::ICollision
 };
 
 void CameraMoverRestartRace();
+void UpdateCameraMovers(float dT);
 
 #endif

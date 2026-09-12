@@ -33,6 +33,8 @@ VERSIONS = [
     "GOWE69",  # 0
     "EUROPEGERMILESTONE",  # 1
     "SLES-53558-A124",  # 2
+    "SLUS-21351",  # 3
+    "SPEED_EXE_1_3",  # 4
 ]
 
 parser = argparse.ArgumentParser()
@@ -94,6 +96,12 @@ parser.add_argument(
     help="path to decomp-toolkit binary or source (optional)",
 )
 parser.add_argument(
+    "--delink",
+    metavar="BINARY | DIR",
+    type=Path,
+    help="path to delink binary (optional)",
+)
+parser.add_argument(
     "--objdiff",
     metavar="BINARY | DIR",
     type=Path,
@@ -131,6 +139,7 @@ version_num = VERSIONS.index(config.version)
 # Apply arguments
 config.build_dir = args.build_dir
 config.dtk_path = args.dtk
+config.delink_path = args.delink
 config.objdiff_path = args.objdiff
 config.binutils_path = args.binutils
 config.compilers_path = args.compilers
@@ -145,27 +154,37 @@ if not config.non_matching:
     config.asm_dir = None
 
 # Tool versions
-config.compilers_tag = "20251015"
+config.compilers_tag = "20260903"
 
 if version_num in [0]:
     config.platform = Platform.GC_WII
-    config.dtk_tag = "v1.8.3"
+    config.dtk_tag = "v1.8.32"
     config.binutils_tag = "2.42-1"
 elif version_num in [1]:
     config.platform = Platform.X360
     config.dtk_tag = "v0.1.2"
     config.binutils_tag = "2.42-1"
-elif version_num in [2]:
+elif version_num in [2, 3]:
     config.platform = Platform.PS2
     config.binutils_tag = "2.45"
+elif version_num in [4]:
+    config.platform = Platform.WIN32
+    config.delink_tag = "v0.16.1"
 
 config.objdiff_tag = "v3.7.0"
-config.sjiswrap_tag = "v1.2.0"
-config.wibo_tag = "1.1.0"
+config.sjiswrap_tag = "v1.2.2"
+
+# sjiswrap segfault
+if config.platform == Platform.GC_WII:
+    config.wibo_tag = "1.1.0"
+else:
+    config.wibo_tag = "1.2.0"
 
 # Project
 config.config_path = Path("config") / config.version / "config.yml"
 config.check_sha_path = Path("config") / config.version / "build.sha1"
+
+compilers_path = Path(config.compilers_path) if config.compilers_path else Path("build/compilers")
 
 if config.platform == Platform.GC_WII:
     config.asflags = [
@@ -177,7 +196,15 @@ if config.platform == Platform.GC_WII:
     ]
 
     ldscript_path = Path("config") / config.version / "ldscript.ld"
-    config.ldflags = ["-T", str(ldscript_path)]
+    keep_list_path = Path("config") / config.version / "keep.lst"
+    config.ldflags = [
+        "-strip-unused-data",
+        # "-report-unused",
+        "-keep",
+        str(keep_list_path),
+        "-T",
+        str(ldscript_path),
+    ]
 
     # Optional numeric ID for decomp.me preset
     # Can be overridden in libraries or objects
@@ -205,6 +232,12 @@ elif config.platform == Platform.PS2:
         "-T",
         str(ldscript_path),
     ]  # TODO what about undefined_syms_auto.txt?
+elif config.platform == Platform.WIN32:
+    config.ldflags = [
+        "/NODEFAULTLIB",
+        f"/PDB:./build/{config.version}/{config.version}.pdb",
+        f"/DEBUG",
+    ]
 
 # Use for any additional files that should cause a re-configure when modified
 config.reconfig_deps = []
@@ -231,7 +264,7 @@ if config.platform == Platform.GC_WII:
         "-maxerrors 1",
         "-nosyspath",
         "-RTTI off",
-        "-fp_contract on",
+        "-fp_contract off",
         "-str reuse",
         # "-i include",
         # f"-i build/{config.version}/include",
@@ -277,6 +310,9 @@ if config.platform == Platform.GC_WII:
         "SN_TARGET_NGC",
     ]
 
+    if config.non_matching:
+        cflags_base_prodg.append("-DNON_MATCHING")
+
     # Debug flags
     if args.debug:
         cflags_base_prodg.append("-DDEBUG=1")
@@ -288,6 +324,9 @@ if config.platform == Platform.GC_WII:
         "-mps-nodf",
         # "-mfast-cast",
         "-G0",
+        # "-mstrict-align",
+        # "-mno-bit-align",
+        "-fno-static-dtors",
         "-ffast-math",
         # "-fno-strength-reduce",
         "-fforce-addr",
@@ -317,6 +356,29 @@ if config.platform == Platform.GC_WII:
         # "-fno-ident",
         "-DLUA_NUMBER=float",
         "-DDISABLE_RAIN",
+        "-DDEFAULT_ALLOCATOR=0",
+        "-I src/Speed/Indep/Libs/allocator/1.5.0",
+        "-I src/Speed/Indep/Libs/csis/dev/include",
+        "-I src/Packages/eathread/1.1.0/include",
+        "-I src/Speed/Indep/Libs/snd/9/include",
+        "-I src/Speed/Indep/Libs/spch/dev/include",
+        "-I src/Speed/Indep/Libs/path/5.01.04/include",
+        "-I src/Speed/Indep/Libs/realcore/6.24.00/include/common",
+        "-I src/Speed/Indep/Libs/endian/0.5.2/include",
+    ]
+
+    cflags_snd = [
+        *cflags_base_prodg,
+        "-G0",
+        "-O2",
+        "-fno-strength-reduce",
+        "-fno-strict-aliasing",
+        "-ffast-math",
+        "-mps-float",
+        "-x c++",
+        "-I src/Speed/Indep/Libs/csis/dev/include",
+        "-I src/Speed/Indep/Libs/allocator/1.5.0",
+        "-I src/Speed/Indep/Libs/snd/9/include",
     ]
 
     config.extra_clang_flags = [
@@ -367,6 +429,7 @@ elif config.platform == Platform.X360:
         "/c",  # compile without linking
         "/wd4996",  # get rid of string deprecation warnings for now
         "/wd4355",  # gets rid of the warning 'this' used in base member initializer
+        "/wd4716",
         # "/GL",  # enable LTCG
         # "/GR",  # RTTI
         "/Og",
@@ -382,7 +445,6 @@ elif config.platform == Platform.X360:
         # "/Z7",  # /Zi enables debug info (pdb), /Zd for line numbers only (pdb), /Z7 generates debug info per obj file
         "/EHsc",  # enable exception handling (and extern C notthrow?)
         "/I src/Packages/xenonsdk/2.0.2135.2/installed/include/xbox",
-        "-I src/Packages/eathread/1.1.0/include",
         "/I src/Packages",
         "/I src",
         "/DEA_PLATFORM_XENON",
@@ -403,6 +465,20 @@ elif config.platform == Platform.X360:
         *cflags_base_prodg,
         "/DLUA_NUMBER=float",
         "/DMILESTONE_OPT",
+        "/DDEFAULT_ALLOCATOR=0",
+        "/I src/Speed/Indep/Libs/allocator/1.5.0",
+        "/I src/Speed/Indep/Libs/csis/dev/include",
+        "/I src/Packages/eathread/1.1.0/include",
+        "/I src/Speed/Indep/Libs/snd/9/include",
+        "/I src/Speed/Indep/Libs/spch/dev/include",
+        "/I src/Speed/Indep/Libs/path/5.01.04/include",
+        "/I src/Speed/Indep/Libs/realcore/6.24.00/include/common",
+        "/I src/Speed/Indep/Libs/endian/0.5.2/include",
+    ]
+
+    cflags_snd = [
+        *cflags_game,
+        "/I src/Speed/Indep/Libs/snd/9/include",
     ]
 
     config.extra_clang_flags = [
@@ -417,6 +493,7 @@ elif config.platform == Platform.PS2:
     cflags_base_prodg = [
         "-O2",
         "-g2",
+        "-Wa,-L",  # Keep compiler-generated $LC* local object symbols
         # "-Wall",
         "-Wno-ctor-dtor-privacy",  # because of AttribSys for example
         "-I src/Speed/Indep/Libs/Support/stlps2",
@@ -426,7 +503,6 @@ elif config.platform == Platform.PS2:
         "-I src/Speed/PSX2/bWare/src/ee/gcc/lib/gcc-lib/ee/2.9-ee-991111/include",
         "-I src/Speed/PSX2/bWare/src/ee/gcc/ee",
         "-I src/Speed/PSX2/bWare/src/ee/gcc/lib/gcc-lib/ee/2.9-ee-991111",
-        "-I src/Packages/eathread/1.1.0/include",
         "-I src/Packages",
         "-I src",
         "-DEA_PLATFORM_PLAYSTATION2",  # TODO rename to PS2
@@ -481,6 +557,23 @@ elif config.platform == Platform.PS2:
         # "-fcaller-saves",
         "-DLUA_NUMBER=float",
         "-DMILESTONE_OPT",
+        "-DDEFAULT_ALLOCATOR=0",
+        "-I src/Speed/Indep/Libs/allocator/1.5.0",
+        "-I src/Speed/Indep/Libs/csis/dev/include",
+        "-I src/Packages/eathread/1.1.0/include",
+        "-I src/Speed/Indep/Libs/snd/9/include",
+        "-I src/Speed/Indep/Libs/spch/dev/include",
+        "-I src/Speed/Indep/Libs/path/5.01.04/include",
+        "-I src/Speed/Indep/Libs/realcore/6.24.00/include/common",
+        "-I src/Speed/Indep/Libs/endian/0.5.2/include",
+    ]
+
+    cflags_snd = [
+        *cflags_game,
+        "-x c++",
+        "-I src/Speed/Indep/Libs/csis/dev/include",
+        "-I src/Speed/Indep/Libs/allocator/1.5.0",
+        "-I src/Speed/Indep/Libs/snd/9/include",
     ]
 
     config.extra_clang_flags = [
@@ -499,11 +592,68 @@ elif config.platform == Platform.PS2:
         "-D__builtin_args_info(x)=1",
         "-msoft-float",
     ]
+elif config.platform == Platform.WIN32:
+    config.linker_version = "Win32/7.1"
 
-cflags_cmn = [
-    *cflags_game,
-    #    "-x c++"
-]
+    cflags_base_prodg = [
+        "/nologo",
+        "/c",  # compile without linking
+        "/wd4996",  # get rid of string deprecation warnings for now
+        "/wd4355",  # gets rid of the warning 'this' used in base member initializer
+        # "/Og",
+        # "/Os",
+        # "/Ob2",
+        # "/Oi",
+        # "/Oy",  # maybe
+        "/Ox",
+        # "/Ou",  # enable prescheduling
+        # "/Oz",  # enable inline asm scheduling
+        # "/GF",  # Eliminate Duplicate Strings
+        # "/Gy",  # maybe?
+        "/Z7",  # /Zi enables debug info (pdb), /Zd for line numbers only (pdb), /Z7 generates debug info per obj file
+        "/EHsc",  # enable exception handling (and extern C notthrow?)
+        f"/I {compilers_path / config.linker_version / 'Include'}",
+        "/I src/Packages",
+        "/I src",
+        "/DEA_PLATFORM_WIN32",
+        "/D_USE_MATH_DEFINES",
+        f"/I build/{config.version}/include",
+        f"/DBUILD_VERSION={version_num}",
+        f"/DVERSION_{config.version}",
+    ]
+
+    config.context_defines = [
+        "EA_PLATFORM_WIN32",
+        "EA_REGION_AMERICA",
+        "_USE_MATH_DEFINES",
+        "_WIN32",
+    ]
+
+    cflags_game = [
+        *cflags_base_prodg,
+        "/DLUA_NUMBER=float",
+        "/DDEFAULT_ALLOCATOR=0",
+        "/I src/Speed/Indep/Libs/allocator/1.5.0",
+        "/I src/Speed/Indep/Libs/csis/dev/include",
+        "/I src/Packages/eathread/1.1.0/include",
+        "/I src/Speed/Indep/Libs/snd/9/include",
+        "/I src/Speed/Indep/Libs/spch/dev/include",
+        "/I src/Speed/Indep/Libs/path/5.01.04/include",
+        "/I src/Speed/Indep/Libs/realcore/6.24.00/include/common",
+        "/I src/Speed/Indep/Libs/endian/0.5.2/include",
+    ]
+
+    cflags_snd = [
+        *cflags_game,
+        "/I src/Speed/Indep/Libs/snd/9/include",
+    ]
+
+    config.extra_clang_flags = [
+        "-std=c++98",
+        "-D_WIN32",
+        "-D_WCHAR_T_DEFINED",
+        "-fms-extensions",
+    ]
 
 cflags_libc = [*cflags_base_prodg]
 cflags_eathread = [*cflags_game]
@@ -604,153 +754,293 @@ config.libs = [
     {
         "lib": "snd",
         "toolchain_version": config.linker_version,
-        "cflags": cflags_cmn,
+        "cflags": cflags_snd,
         "host": False,
         "progress_category": "libs",  # str | List[str]
         "objects": [
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/saems.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/saemsamb.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/saemsstr.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/saemstimupdt.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/salloc.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sbadd.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sbpatinf.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sgetpvol.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssballoc.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssbhdrcpy.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssbhdrsze.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssbplay.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssbremove.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssbvalid.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/gc/sscalcfx.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/gc/ssdfx.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/gc/sdspmix.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/seffect.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sevent.cpp"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sfxlevel.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfxrevc.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sgetdata.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sinitdts.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/smemcpy.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/smemman.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/smixer.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/gc/snddrv.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/spatkey.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/spitch.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/spktplay.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/splysdef.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/spoutlat.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/srandom.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/srender.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sresopat.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sserver.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssine.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sst.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sst3dpos.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstcrtap.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstfxlev.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstgetrp.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstgetpv.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssthighp.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssthold.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstlowp.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstop.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstovrhd.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstpmult.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstqreqi.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstrmdry.cpp"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstrstat.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstsetgl.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sststat.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssttmul.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstvol.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssys.cpp"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssysinit.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssysserv.c"),
             Object(
-                NonMatching, "Packages/snd/9/source/library/cmn/ssysveccsismutex.cpp"
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/saems.c",
             ),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/stagpat.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/stimemul.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/stimerem.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/stpparse.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/stretch.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/svecreal.cpp"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/svol.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sx87d16.c"),
             Object(
-                NonMatching, "Packages/snd/9/source/library/extern/coda/cmn/coda.cpp"
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/saemsamb.c",
             ),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/s3dlow.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/gc/saramman.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/satospkr.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sclcptch.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sctlfilt.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sctrldry.cpp"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sdownmix.cpp"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfamplf.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfbpffir8.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfecho.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfft24.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfhpffir8.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfilter.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfir.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfir8.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sflpf.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sflpffir8.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfmixer.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfreson.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfsplit.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfsrc.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sgettag.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/shipass.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sinit16.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sinitut.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sinitxa.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/slib.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/slinklst.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/slinkmix.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/slowpass.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/smemhigh.cpp"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/smixc.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/smixfram.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/smixhip.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/smixlowp.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/smixptch.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/smixtmul.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/SNDI_cos.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/SNDI_mult16.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/SNDI_root1x.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/SNDI_sin.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sover.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/spantoaz.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/spat2hdr.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/spktctoh.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/srrange.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sstopall.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/ssysreal.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/supf.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/suplf.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/supmutf.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/supmutlf.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/supmutpf.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/suppf.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/supxaf.cpp"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/supxalf.cpp"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/supxapf.cpp"),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/saemsmbf.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/saemsmbm.c",
+            ),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/saemstimupdt.c"
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/salloc.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sattrdef.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sbadd.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sballoc.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sbasync.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sbasyncm.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sbhdrcpy.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sbhdrsze.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sbplay.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sbremove.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sbvalid.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/scheckpo.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sclnt100.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sctrldry.cpp",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sdata.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sfxlevel.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/slowpass.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/smemcpy.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/smemdis.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/smemlmt.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/smemlu.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/smemman.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sndfxbus.cpp",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/spatkey.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/spitch.c",
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sgetpvol.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/gc/sscalcfx.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/gc/ssdfx.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/gc/sdspmix.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/seffect.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sevent.cpp"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfxrevc.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sgetdata.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sinitdts.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/smixer.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/gc/snddrv.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/spktplay.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/splysdef.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/spoutlat.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/srandom.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/srender.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sresopat.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sserver.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/ssine.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sst.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sst3dpos.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstcrtap.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstfxlev.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstgetrp.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstgetpv.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/ssthighp.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/ssthold.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstlowp.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstop.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstovrhd.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstpmult.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstqreqi.c"),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstrmdry.cpp"
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstrstat.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstsetgl.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sststat.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/ssttmul.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstvol.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/ssys.cpp"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/ssysinit.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/ssysserv.c"),
             Object(
                 NonMatching,
-                "Packages/snd/9/source/library/extern/coda/cmn/eaxadecf.cpp",
+                "Speed/Indep/Libs/snd/9/source/library/cmn/ssysveccsismutex.cpp",
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/stagpat.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/stimemul.c"),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/stimerem.c",
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/stpparse.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/stretch.c"),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/svecreal.cpp"
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/svol.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sx87d16.c"),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/snd/9/source/library/extern/coda/cmn/coda.cpp",
             ),
             Object(
-                NonMatching, "Packages/snd/9/source/library/extern/coda/cmn/mtdecf.cpp"
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/s3dlow.c",
             ),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sattrdef.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sexithndl.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/sfrsf.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/sgparse.cpp"),
-            Object(NonMatching, "Packages/snd/9/source/library/cmn/SNDI_findprime.c"),
-            Object(NonMatching, "Packages/snd/9/source/library/mix/scrsfl.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/gc/saramman.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/satospkr.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sclcptch.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sctlfilt.c"),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sdownmix.cpp"
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfamplf.c"),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfbpffir8.c"
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfecho.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfft24.c"),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfhpffir8.c"
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfilter.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfir.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfir8.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sflpf.c"),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sflpffir8.c"
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfmixer.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfreson.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfsplit.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfsrc.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sgettag.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/shipass.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sinit16.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sinitut.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sinitxa.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/slib.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/slinklst.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/slinkmix.c"),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/smemhigh.cpp"
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/smixc.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/smixfram.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/smixhip.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/smixlowp.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/smixptch.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/smixtmul.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/SNDI_cos.c"),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/SNDI_mult16.c"
+            ),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/SNDI_root1x.c"
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/SNDI_sin.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sover.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/spantoaz.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/spat2hdr.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/spktctoh.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/srrange.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sstopall.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/ssysreal.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/supf.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/suplf.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/supmutf.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/supmutlf.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/supmutpf.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/suppf.c"),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/supxaf.cpp"),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/supxalf.cpp"
+            ),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/supxapf.cpp"
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/snd/9/source/library/extern/coda/cmn/eaxadecf.cpp",
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/snd/9/source/library/extern/coda/cmn/mtdecf.cpp",
+            ),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sexithndl.c"
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/sfrsf.c"),
+            Object(
+                NonMatching, "Speed/Indep/Libs/snd/9/source/library/cmn/sgparse.cpp"
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/SNDI_findprime.c",
+            ),
+            Object(
+                MatchingFor("GOWE69"),
+                "Speed/Indep/Libs/snd/9/source/library/cmn/sbpatinf.c",
+            ),
+            Object(NonMatching, "Speed/Indep/Libs/snd/9/source/library/mix/scrsfl.c"),
         ],
     },
     {
@@ -761,53 +1051,67 @@ config.libs = [
         "progress_category": "libs",  # str | List[str]
         "objects": [
             Object(
-                NonMatching, "Packages/realcore/6.24.00/source/input/cmn/device.cpp"
-            ),
-            Object(
-                NonMatching, "Packages/realcore/6.24.00/source/file/cmn/filesys.cpp"
-            ),
-            Object(
-                NonMatching, "Packages/realcore/6.24.00/source/file/cmn/filesysopts.cpp"
-            ),
-            Object(
-                NonMatching, "Packages/realcore/6.24.00/source/file/cmn/syncfile.cpp"
-            ),
-            Object(
-                NonMatching, "Packages/realcore/6.24.00/source/file/cmn/hlafile.cpp"
-            ),
-            Object(
-                NonMatching, "Packages/realcore/6.24.00/source/file/cmn/hlsfile.cpp"
-            ),
-            Object(
-                NonMatching, "Packages/realcore/6.24.00/source/system/cmn/timer.cpp"
-            ),
-            Object(
-                NonMatching, "Packages/realcore/6.24.00/source/system/cmn/systask.cpp"
-            ),
-            Object(
-                NonMatching, "Packages/realcore/6.24.00/source/system/gc/threads.cpp"
-            ),
-            Object(
-                NonMatching, "Packages/realcore/6.24.00/source/system/gc/signals.cpp"
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/input/cmn/device.cpp",
             ),
             Object(
                 NonMatching,
-                "Packages/realcore/6.24.00/source/system/debug/cmn/printstr.cpp",
+                "Speed/Indep/Libs/realcore/6.24.00/source/file/cmn/filesys.cpp",
             ),
             Object(
                 NonMatching,
-                "Packages/realcore/6.24.00/source/system/debug/cmn/abortmsg.cpp",
+                "Speed/Indep/Libs/realcore/6.24.00/source/file/cmn/filesysopts.cpp",
             ),
-            Object(
-                NonMatching, "Packages/realcore/6.24.00/source/std/cmn/memclear.cpp"
-            ),
-            Object(NonMatching, "Packages/realcore/6.24.00/source/std/cmn/exit.cpp"),
             Object(
                 NonMatching,
-                "Packages/realcore/6.24.00/source/system/gc/timerthread.cpp",
+                "Speed/Indep/Libs/realcore/6.24.00/source/file/cmn/syncfile.cpp",
             ),
             Object(
-                NonMatching, "Packages/realcore/6.24.00/source/system/gc/memfill.cpp"
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/file/cmn/hlafile.cpp",
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/file/cmn/hlsfile.cpp",
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/system/cmn/timer.cpp",
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/system/cmn/systask.cpp",
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/system/gc/threads.cpp",
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/system/gc/signals.cpp",
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/system/debug/cmn/printstr.cpp",
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/system/debug/cmn/abortmsg.cpp",
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/std/cmn/memclear.cpp",
+            ),
+            Object(
+                NonMatching, "Speed/Indep/Libs/realcore/6.24.00/source/std/cmn/exit.cpp"
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/system/gc/timerthread.cpp",
+            ),
+            Object(
+                NonMatching,
+                "Speed/Indep/Libs/realcore/6.24.00/source/system/gc/memfill.cpp",
             ),
         ],
     },
@@ -848,7 +1152,7 @@ if config.platform == Platform.GC_WII:
                 "host": False,
                 "progress_category": "libs",  # str | List[str]
                 "objects": [
-                    Object(NonMatching, "LibSN/crt0.s"),
+                    Object(MatchingFor("GOWE69"), "LibSN/crt0.s"),
                     Object(NonMatching, "LibSN/cvtll.c"),
                     Object(NonMatching, "LibSN/debug.c"),
                     Object(NonMatching, "LibSN/dummy.c"),
@@ -934,7 +1238,7 @@ if config.platform == Platform.GC_WII:
                 "base",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/base/PPCArch.c",
                     ),
                 ],
@@ -943,7 +1247,7 @@ if config.platform == Platform.GC_WII:
                 "ar",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ar/ar.c",
                     ),
                 ],
@@ -952,7 +1256,7 @@ if config.platform == Platform.GC_WII:
                 "arq",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ar/arq.c",
                     ),
                 ],
@@ -961,15 +1265,15 @@ if config.platform == Platform.GC_WII:
                 "ax",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ax/AXAlloc.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ax/AXAux.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ax/AXCL.c",
                     ),
                     Object(
@@ -977,19 +1281,27 @@ if config.platform == Platform.GC_WII:
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ax/AX.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ax/AXOut.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ax/AXSPB.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ax/AXVPB.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
+                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ax/AXComp.c",
+                    ),
+                    Object(
+                        Matching,
+                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ax/DSPCode.c",
+                    ),
+                    Object(
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ax/AXProf.c",
                     ),
                 ],
@@ -998,7 +1310,7 @@ if config.platform == Platform.GC_WII:
                 "card",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDBios.c",
                     ),
                     Object(
@@ -1010,20 +1322,24 @@ if config.platform == Platform.GC_WII:
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDDir.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDCheck.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDOpen.c",
                         extra_cflags=["-char signed"],
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDMount.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
+                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDNet.c",
+                    ),
+                    Object(
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDFormat.c",
                     ),
                     Object(
@@ -1031,7 +1347,7 @@ if config.platform == Platform.GC_WII:
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDCreate.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDRead.c",
                     ),
                     Object(
@@ -1047,11 +1363,15 @@ if config.platform == Platform.GC_WII:
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDStat.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
+                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDStatEx.c",
+                    ),
+                    Object(
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDUnlock.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/card/CARDRdwr.c",
                     ),
                 ],
@@ -1060,11 +1380,15 @@ if config.platform == Platform.GC_WII:
                 "dsp",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dsp/dsp.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
+                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dsp/dsp_debug.c",
+                    ),
+                    Object(
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dsp/dsp_task.c",
                     ),
                 ],
@@ -1073,23 +1397,19 @@ if config.platform == Platform.GC_WII:
                 "os",
                 [
                     Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSFatal.c",
-                    ),
-                    Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OS.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSAlarm.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSAlloc.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSArena.c",
                     ),
                     Object(
@@ -1097,51 +1417,51 @@ if config.platform == Platform.GC_WII:
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSAudioSystem.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSCache.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSContext.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSError.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSExec.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSFont.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSInterrupt.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSLink.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSMemory.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSMutex.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSReset.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSResetSW.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSRtc.c",
                     ),
                     Object(
@@ -1149,19 +1469,19 @@ if config.platform == Platform.GC_WII:
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSSync.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSThread.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSTime.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/OSReboot.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/os/__ppc_eabi_init.c",
                     ),
                 ],
@@ -1170,7 +1490,7 @@ if config.platform == Platform.GC_WII:
                 "db",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/db/db.c",
                     ),
                 ],
@@ -1179,17 +1499,22 @@ if config.platform == Platform.GC_WII:
                 "mtx",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/mtx/mtx.c",
                         extra_cflags=["-char signed"],
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
+                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/mtx/mtxvec.c",
+                        extra_cflags=["-char signed"],
+                    ),
+                    Object(
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/mtx/mtx44.c",
                         extra_cflags=["-char signed"],
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/mtx/vec.c",
                     ),
                 ],
@@ -1198,37 +1523,42 @@ if config.platform == Platform.GC_WII:
                 "dvd",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dvd/dvdfs.c",
                         extra_cflags=["-char signed"],
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dvd/dvd.c",
                         extra_cflags=["-char signed"],
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dvd/dvdqueue.c",
                         extra_cflags=["-char signed"],
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dvd/dvderror.c",
                         extra_cflags=["-char signed"],
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
+                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dvd/dvdidutils.c",
+                        extra_cflags=["-char signed"],
+                    ),
+                    Object(
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dvd/dvdFatal.c",
                         extra_cflags=["-char signed"],
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dvd/fstload.c",
                         extra_cflags=["-char signed"],
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/dvd/dvdlow.c",
                         extra_cflags=["-char signed"],
                     ),
@@ -1238,8 +1568,17 @@ if config.platform == Platform.GC_WII:
                 "vi",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/vi/vi.c",
+                    ),
+                ],
+            ),
+            DolphinLib(
+                "demo",
+                [
+                    Object(
+                        Matching,
+                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/demo/DEMOPad.c",
                     ),
                 ],
             ),
@@ -1247,11 +1586,11 @@ if config.platform == Platform.GC_WII:
                 "pad",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/pad/Padclamp.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/pad/Pad.c",
                     ),
                 ],
@@ -1260,7 +1599,7 @@ if config.platform == Platform.GC_WII:
                 "ai",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ai/ai.c",
                     ),
                 ],
@@ -1269,27 +1608,27 @@ if config.platform == Platform.GC_WII:
                 "gx",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXInit.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXFrameBuf.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXAttr.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXFifo.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXMisc.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXGeometry.c",
                     ),
                     Object(
@@ -1297,31 +1636,31 @@ if config.platform == Platform.GC_WII:
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXDisplayList.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXLight.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXTexture.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXBump.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXTev.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXPixel.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXTransform.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/gx/GXPerf.c",
                     ),
                 ],
@@ -1330,12 +1669,12 @@ if config.platform == Platform.GC_WII:
                 "exi",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/exi/EXIBios.c",
-                        extra_cflags=["-O3,p"],
+                        extra_cflags=["-O4,p", "-schedule off"],
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/exi/EXIUart.c",
                     ),
                 ],
@@ -1344,134 +1683,24 @@ if config.platform == Platform.GC_WII:
                 "si",
                 [
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/si/SIBios.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/si/SISamplingRate.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/si/SISteering.c",
                     ),
                     Object(
-                        NonMatching,
+                        Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/si/SISteeringXfer.c",
                     ),
                     Object(
                         Matching,
                         "Speed/GameCube/bWare/GameCube/dolphinsdk/src/si/SISteeringAuto.c",
-                    ),
-                ],
-            ),
-            DolphinLib(
-                "ip",
-                [
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPSocket.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPPPPoE.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPPap.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPChap.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPLcp.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IP.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPIcmp.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPRoute.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPFrag.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPUdp.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPEther.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IFFifo.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPTcpTimeWait.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPTcp.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPTcpOutput.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPTcpTimer.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPTcpUser.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPDns.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPDhcp.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPZero.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPPPP.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/ip/IPArp.c",
-                    ),
-                ],
-            ),
-            DolphinLib(
-                "net",
-                [
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/net/eth.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/net/ethsec.c",
-                    ),
-                    Object(
-                        NonMatching,
-                        "Speed/GameCube/bWare/GameCube/dolphinsdk/src/net/md5.c",
                     ),
                 ],
             ),
@@ -1628,35 +1857,35 @@ if config.platform == Platform.X360:
         }
     )
 
-# Custom build step for hashing
-config.custom_build_rules = [
-    {
-        "name": "hashgen",
-        "command": f"$python tools/hasher.py $in $out",
-        "description": "HASH $out",
-    }
-]
+# # Custom build step for hashing
+# config.custom_build_rules = [
+#     {
+#         "name": "hashgen",
+#         "command": f"$python tools/hasher.py $in $out",
+#         "description": "HASH $out",
+#     }
+# ]
 
-# Compile steps to automatically generate the headers containing hashes (e.g. BINHASH)
-precompile_steps = []
+# # Compile steps to automatically generate the headers containing hashes (e.g. BINHASH)
+# precompile_steps = []
 
-sourcelist_files: list[Path] = [
-    Path("src") / object.name for object in config.libs[0]["objects"]
-]
+# sourcelist_files: list[Path] = [
+#     Path("src") / object.name for object in config.libs[0]["objects"]
+# ]
 
-for src_path in sourcelist_files:
-    gen_header = Path(
-        str(src_path).replace("SourceLists", "Src/Generated/Hashes/")
-    ).with_suffix(".h")
-    precompile_steps.append(
-        {
-            "rule": "hashgen",
-            "inputs": str(src_path),
-            "outputs": str(gen_header),
-        }
-    )
+# for src_path in sourcelist_files:
+#     gen_header = Path(
+#         str(src_path).replace("SourceLists", "Src/Generated/Hashes/")
+#     ).with_suffix(".h")
+#     precompile_steps.append(
+#         {
+#             "rule": "hashgen",
+#             "inputs": str(src_path),
+#             "outputs": str(gen_header),
+#         }
+#     )
 
-config.custom_build_steps = {"pre-compile": precompile_steps}
+# config.custom_build_steps = {"pre-compile": precompile_steps}
 
 
 # Optional callback to adjust link order. This can be used to add, remove, or reorder objects.
@@ -1695,3 +1924,5 @@ elif args.mode == "progress":
     calculate_progress(config)
 else:
     sys.exit("Unknown mode: " + args.mode)
+
+# fake commit

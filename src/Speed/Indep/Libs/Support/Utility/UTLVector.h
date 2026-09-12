@@ -3,11 +3,14 @@
 
 #include "Speed/Indep/Libs/Support/Utility/FastMem.h"
 #include "Speed/Indep/Libs/Support/Utility/UMath.h"
+#include "Speed/Indep/Libs/Support/Utility/UTLSequencer.h"
 #include <cstddef>
 
 static const int DEFAULT_VECTOR_ALIGNMENT = 16;
 
 namespace UTL {
+
+// total size: 0x10
 template <typename T, int Alignment = DEFAULT_VECTOR_ALIGNMENT> class Vector {
   public:
     typedef T value_type;
@@ -34,12 +37,12 @@ template <typename T, int Alignment = DEFAULT_VECTOR_ALIGNMENT> class Vector {
 
     virtual ~Vector() {}
 
-    size_type capacity() const {
-        return mCapacity;
-    }
-
     size_type size() const {
         return mSize;
+    }
+
+    size_type capacity() const {
+        return mCapacity;
     }
 
     const_iterator begin() const {
@@ -66,6 +69,7 @@ template <typename T, int Alignment = DEFAULT_VECTOR_ALIGNMENT> class Vector {
         return mBegin[idx];
     }
 
+    // Decl: 182
     void push_back(value_type const &val) {
         if (size() >= capacity()) {
             reserve(GetGrowSize(size() + 1));
@@ -74,10 +78,12 @@ template <typename T, int Alignment = DEFAULT_VECTOR_ALIGNMENT> class Vector {
         mSize++;
     }
 
+    // Decl: 193
     void pop_back() {
         mSize = size() - 1;
     }
 
+    // Decl: 202
     void reserve(size_type num) {
         if (num > capacity()) {
             OnGrowRequest(num);
@@ -97,6 +103,56 @@ template <typename T, int Alignment = DEFAULT_VECTOR_ALIGNMENT> class Vector {
                 }
             }
         }
+    }
+
+    // Decl: 391
+    void insert_sequence(iterator pos, unsigned int num, RepeatSequencer<const value_type> &sequencer) {
+        pointer oldBuffer = mBegin;
+        size_type oldSize = size();
+        size_type oldCapacity = capacity();
+        size_type iPos = this->indexof(pos);
+        size_type newSize = oldSize + num;
+
+        if (newSize > oldCapacity) {
+            OnGrowRequest(size() + num);
+
+            oldSize = size();
+            oldCapacity = capacity();
+            iPos = this->indexof(pos);
+            newSize = size() + num;
+
+            if (newSize > oldCapacity) {
+                mBegin = AllocVectorSpace(newSize, Alignment);
+                mCapacity = newSize;
+            }
+        }
+
+        mSize = newSize;
+
+        if (oldBuffer != mBegin) {
+            for (size_type ii = 0; ii < iPos; ++ii) {
+                new (mBegin + ii) T(oldBuffer[ii]);
+            }
+        }
+
+        for (size_type ii = 0; ii < oldSize - iPos; ++ii) {
+            new (mBegin + (newSize - ii) - 1) T(*(oldBuffer + (oldSize - ii) - 1));
+        }
+
+        for (size_type ii = 0; ii < num; ++ii) {
+            new (&mBegin[iPos + ii]) T(sequencer());
+        }
+
+        if (oldBuffer && oldBuffer != mBegin) {
+            FreeVectorSpace(oldBuffer, oldCapacity);
+        }
+    }
+
+    // Decl: 464
+    iterator insert(iterator pos, const_reference val) {
+        RepeatSequencer<const value_type> sequencer(val);
+        this->insert_sequence(pos, 1, sequencer);
+        return pos;
     }
 
     void make_empty() {
@@ -165,7 +221,6 @@ template <typename T, int Alignment = DEFAULT_VECTOR_ALIGNMENT> class Vector {
     virtual void OnGrowRequest(size_type newSize) {}
 
   private:
-    // total size: 0x10
     pointer mBegin;      // offset 0x0, size 0x4
     size_type mCapacity; // offset 0x4, size 0x4
     size_type mSize;     // offset 0x8, size 0x4

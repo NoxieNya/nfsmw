@@ -90,7 +90,7 @@ void UnloadChunks(bChunk *chunks, int sizeof_chunks, const char *debug_name) {
     while (first_chunk < last_chunk) {
         int num_prev_chunks = 0;
         const int max_prev_chunks = 64;
-        bChunk *prev_chunk_table[64];
+        bChunk *prev_chunk_table[max_prev_chunks];
         for (bChunk *chunk = first_chunk; chunk < last_chunk; chunk = chunk->GetNext()) {
             prev_chunk_table[num_prev_chunks % max_prev_chunks] = chunk;
             num_prev_chunks++;
@@ -160,17 +160,17 @@ void MoveChunks(bChunk *dest_chunks, bChunk *source_chunks, int32 sizeof_chunks,
             current_chunk_class = chunk_class;
         }
     }
-    int movement_offset = (uintptr_t)dest_chunks - (uintptr_t)source_chunks;
+    int movement_offset = (intptr_t)dest_chunks - (intptr_t)source_chunks;
     ChunkMovementOffset = movement_offset;
     chunk_range_table[num_chunk_ranges] = last_chunk;
     if (movement_offset < 0) {
         for (int n = 0; n < num_chunk_ranges; n++) {
-            int size = (uintptr_t)chunk_range_table[n + 1] - (uintptr_t)chunk_range_table[n];
+            int size = (intptr_t)chunk_range_table[n + 1] - (intptr_t)chunk_range_table[n];
             MoveChunksRange(chunk_range_table[n], size, movement_offset, debug_name);
         }
     } else {
         for (int n = num_chunk_ranges - 1; n > -1; n--) {
-            int size = (uintptr_t)chunk_range_table[n + 1] - (uintptr_t)chunk_range_table[n];
+            int size = (intptr_t)chunk_range_table[n + 1] - (intptr_t)chunk_range_table[n];
             MoveChunksRange(chunk_range_table[n], size, movement_offset, debug_name);
         }
     }
@@ -524,23 +524,15 @@ int ServiceResourceLoading() {
 
     while (NumDelayedResourceCallbacks != 0) {
         ProfileNode profile_node("TODO", 0);
-#ifdef EA_PLATFORM_PLAYSTATION2
         DelayedResourceCallback drc = DelayedResourceCallbacks[0];
-#else
-        void (*pCallback)(void *) = DelayedResourceCallbacks[0].pCallback;
-        void *callbackParam = DelayedResourceCallbacks[0].Param;
-#endif
+
         if (NumDelayedResourceCallbacks > 1) {
             bOverlappedMemCpy(&DelayedResourceCallbacks[0], &DelayedResourceCallbacks[1],
                               NumDelayedResourceCallbacks * sizeof(DelayedResourceCallback));
         }
-        NumDelayedResourceCallbacks--;
-#ifdef EA_PLATFORM_PLAYSTATION2
-        drc.pCallback(drc.Param);
-#else
-        pCallback(callbackParam);
-#endif
+        (NumDelayedResourceCallbacks--, drc.pCallback)(drc.Param);
     }
+
     ServiceQueuedFiles();
     if (NumResourcesBeingLoaded != 0) {
         for (ResourceFile *resource_file = ResourceFileList.GetHead(); resource_file != ResourceFileList.EndOfList();
@@ -555,7 +547,7 @@ int ServiceResourceLoading() {
             }
         }
     }
-    return false;
+    return 0;
 }
 
 int IsResourceLoadingComplete() {
@@ -644,51 +636,59 @@ VMFile *GetVMFile() {
     return nullptr;
 }
 
-// UNSOLVED regswap
 void MoveFileIntoVirtualMemoryThenLoadChunks(intptr_t param, int err) {
     VMFile *vm_file = reinterpret_cast<VMFile *>(param);
     if (!vm_file->mInit) {
         return;
     }
+
     void *old_memory = vm_file->mMainMemAddr;
     int vm_file_size = vm_file->mSize;
     unsigned int sizeofchunks = vm_file_size;
-    if (vm_file->mCompressed != 0) {
+
+    if (vm_file->mCompressed) {
         LZHeader *header = reinterpret_cast<LZHeader *>(old_memory);
         bPlatEndianSwap(&header->ID);
         bPlatEndianSwap(&header->Flags);
         bPlatEndianSwap(&header->UncompressedSize);
         bPlatEndianSwap(&header->CompressedSize);
+
         if (LZValidHeader(header)) {
             sizeofchunks = header->UncompressedSize;
-            uint8 *compressed_data = (uint8_t *)old_memory;
+            uint8 *compressed_data = reinterpret_cast<uint8 *>(header);
             old_memory = nullptr;
+
             if (sizeofchunks != 0) {
                 int allocation_params = GetVirtualMemoryAllocParams();
                 void *realloc = bMalloc(sizeofchunks, "TODO2", 0, allocation_params);
+                LZDecompress(compressed_data, static_cast<uint8 *>(realloc));
                 old_memory = realloc;
-                LZDecompress(compressed_data, static_cast<uint8 *>(old_memory));
             }
+
             bFree(compressed_data);
         }
     }
+
     void *new_mem = bMalloc(sizeofchunks, "TODO", 0, GetVirtualMemoryAllocParams());
     bMemCpy(new_mem, old_memory, sizeofchunks);
     vm_file->mVirtMemAddr = new_mem;
+
     if (vm_file->mUsedTrackPool) {
         TheTrackStreamer.FreeUserMemory(old_memory);
     } else {
         bFree(old_memory);
     }
+
     if (new_mem) {
-        EndianSwapChunkHeadersRecursive((bChunk *)new_mem, sizeofchunks);
+        EndianSwapChunkHeadersRecursive(static_cast<bChunk *>(new_mem), sizeofchunks);
     }
-    LoadChunks((bChunk *)new_mem, sizeofchunks, vm_file->mFilename);
+
+    LoadChunks(static_cast<bChunk *>(new_mem), sizeofchunks, vm_file->mFilename);
     vm_file->mSizeOfChunks = sizeofchunks;
 }
 
 void UnloadFileFromVirtualMemory(VMFile *vm_file) {
-    UnloadChunks((bChunk *)vm_file->mVirtMemAddr, vm_file->mSizeOfChunks, vm_file->mFilename);
+    UnloadChunks(static_cast<bChunk *>(vm_file->mVirtMemAddr), vm_file->mSizeOfChunks, vm_file->mFilename);
     bFree(vm_file->mVirtMemAddr);
     vm_file->mFilename[0] = '\0';
     vm_file->mSize = 0;

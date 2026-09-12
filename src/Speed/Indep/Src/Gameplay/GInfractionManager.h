@@ -37,7 +37,9 @@ class GInfractionManager {
 
     void PursuitStarted();
 
-    void ReportResistingArrest() {}
+    void ReportResistingArrest() {
+        this->ReportInfraction(kInfraction_Resist);
+    }
 
     void ReportSpeeding(bool speeding) {}
 
@@ -46,15 +48,15 @@ class GInfractionManager {
     void ReportRacing(bool racing) {}
 
     void ReportAssaultingPoliceOfficer() {
-        ReportInfraction(kInfraction_Assault);
+        this->ReportInfraction(kInfraction_Assault);
     }
 
     void ReportHitAndRun() {
-        ReportInfraction(kInfraction_HitAndRun);
+        this->ReportInfraction(kInfraction_HitAndRun);
     }
 
     void ReportDamageToProperty() {
-        ReportInfraction(kInfraction_Damage);
+        this->ReportInfraction(kInfraction_Damage);
     }
 
     void ReportDrivingOffRoadWay() {

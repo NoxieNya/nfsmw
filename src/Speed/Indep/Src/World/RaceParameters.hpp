@@ -46,7 +46,7 @@ enum RaceTypes {
 // total size: 0xA0
 struct RaceParameters {
     RaceParameters() {
-        InitWithDefaults();
+        this->InitWithDefaults();
     }
 
     void DoSnapshot(ReplaySnapshot *snapshot);
@@ -71,12 +71,16 @@ struct RaceParameters {
     Timer GetTimeTrialTime() {}
     bool IsTimeTrial() {}
     bool IsCareerEventRace() {}
-    bool IsDragRace() {}
+    bool IsDragRace() {
+        return this->bDragRaceFlag || (g_tweakIsDragRace != 0);
+    }
     inline bool IsDriftRace() {
         return this->bDriftRaceFlag || (g_tweakIsDriftRace != 0);
     }
     bool IsBurnout() {}
-    bool IsShortTrackRace() {}
+    bool IsShortTrackRace() {
+        return (this->bShortRaceFlag) || (g_tweakIsShortTrackRace != 0);
+    }
     bool IsDriftPhysics() {}
     bool IsBurnoutPhysics() {}
     bool IsTestTrack() {}

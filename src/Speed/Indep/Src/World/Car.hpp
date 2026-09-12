@@ -37,6 +37,17 @@ enum ControlMode {
     COP_CONTROL = 5,
 };
 
+enum MovementMode {
+    NO_MOVEMENT = 0,
+    PHYSICS_MOVEMENT = 1,
+    TRAFFIC_MOVEMENT = 2,
+    MELLOW_MOVEMENT = 3,
+    ONLINE_MOVEMENT = 4,
+    BELT_MOVEMENT = 5,
+    NIS_MOVEMENT = 6,
+    NUM_MOVEMENT_MODES = 7,
+};
+
 enum DampeningMode {
     NORMAL_DAMPENING = 0,
     WILDCOLLISION_DAMPENING = 1,
@@ -105,37 +116,37 @@ class CarRenderInfo;
 class FrontEndRenderingCar : public bTNode<FrontEndRenderingCar> {
   public:
     void SetPosition(bVector3 *position) {
-        Position = *position;
+        this->Position = *position;
     }
 
     void SetBodyMatrix(bMatrix4 *body_matrix) {
-        BodyMatrix = *body_matrix;
+        this->BodyMatrix = *body_matrix;
     }
 
     void SetTireMatrices(bMatrix4 *tire_matrices) {
         for (int n = 0; n < 4; n++) {
-            TireMatrices[n] = tire_matrices[n];
+            this->TireMatrices[n] = tire_matrices[n];
         }
     }
 
     void SetBrakeMatrices(bMatrix4 *brake_matrices) {
         for (int n = 0; n < 4; n++) {
-            BrakeMatrices[n] = brake_matrices[n];
+            this->BrakeMatrices[n] = brake_matrices[n];
         }
     }
 
     void SetTireMatrix(int n, bMatrix4 *m) {
-        TireMatrices[n] = *m;
+        this->TireMatrices[n] = *m;
     }
 
     void SetBrakeMatrix(int n, bMatrix4 *m) {
-        BrakeMatrices[n] = *m;
+        this->BrakeMatrices[n] = *m;
     }
 
     void SetOverrideModel(eModel *override_model) {}
 
     RideInfo *GetRideInfo() {
-        return &mRideInfo;
+        return &this->mRideInfo;
     }
 
     CarRenderInfo *GetRenderInfo() {
@@ -143,7 +154,7 @@ class FrontEndRenderingCar : public bTNode<FrontEndRenderingCar> {
     }
 
     CarType GetCarType() {
-        return mRideInfo.Type;
+        return this->mRideInfo.Type;
     }
 
     FrontEndRenderingCar(RideInfo *ride_info, int view_id);

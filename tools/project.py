@@ -12,6 +12,7 @@
 
 import io
 import json
+import yaml
 import math
 import os
 import platform
@@ -54,6 +55,7 @@ class Platform(Enum):
     GC_WII = 0
     X360 = 1
     PS2 = 2
+    WIN32 = 3
 
 
 class Object:
@@ -130,7 +132,7 @@ class Object:
             obj.asm_path = (
                 Path(obj.options["asm_dir"]) / obj.options["source"]
             ).with_suffix(".s")
-        obj_extension = ".obj" if config.platform == Platform.X360 else ".o"
+        obj_extension = ".obj" if config.platform in [Platform.X360, Platform.WIN32] else ".o"
         base_name = Path(self.name).with_suffix("")
         obj.src_obj_path = build_dir / "src" / base_name.with_suffix(obj_extension)
         if obj.options["section_renames"]:
@@ -164,6 +166,8 @@ class ProjectConfig:
         self.binutils_path: Optional[Path] = None  # If None, download
         self.dtk_tag: Optional[str] = None  # Git tag
         self.dtk_path: Optional[Path] = None  # If None, download
+        self.delink_tag: Optional[str] = None  # Git tag
+        self.delink_path: Optional[Path] = None  # If None, download
         self.platform: Optional[Platform] = Platform.GC_WII
         self.compilers_tag: Optional[str] = None  # 1
         self.compilers_path: Optional[Path] = None  # If None, download
@@ -196,7 +200,7 @@ class ProjectConfig:
             None  # Object name for generating empty RELs
         )
         self.shift_jis = (
-            False  # Convert source files from UTF-8 to Shift JIS automatically
+            True  # Convert source files from UTF-8 to Shift JIS automatically
         )
         self.reconfig_deps: Optional[List[Path]] = (
             None  # Additional re-configuration dependency files
@@ -491,7 +495,7 @@ def generate_build_ninja(
     python_lib = Path(os.path.relpath(__file__))
     python_lib_dir = python_lib.parent
     n.comment("The arguments passed to configure.py, for rerunning it.")
-    if config.platform == Platform.X360:
+    if config.platform in [Platform.X360, Platform.WIN32]:
         n.variable(
             "configure_args",
             [f'""{arg}""' if " " in arg else arg for arg in sys.argv[1:]],
@@ -561,6 +565,8 @@ def generate_build_ninja(
             )
             cargo_rule_written = True
 
+    dtk = ""
+    delink = ""
     if config.dtk_path is not None and config.dtk_path.is_file():
         dtk = config.dtk_path
     elif config.dtk_path is not None:
@@ -588,8 +594,36 @@ def generate_build_ninja(
                 "tag": config.dtk_tag,
             },
         )
-    elif config.platform != Platform.PS2:
+    elif config.delink_path is not None and config.delink_path.is_file():
+        delink = config.delink_path
+    elif config.delink_path is not None:
+        delink = build_tools_path / "release" / f"dtk{EXE}"
+        write_cargo_rule()
+        n.build(
+            outputs=delink,
+            rule="cargo",
+            inputs=config.delink_path / "Cargo.toml",
+            implicit=config.delink_path / "Cargo.lock",
+            variables={
+                "bin": "delink",
+                "target": build_tools_path,
+            },
+        )
+    elif config.delink_tag:
+        delink = build_tools_path / f"delink{EXE}"
+        n.build(
+            outputs=delink,
+            rule="download_tool",
+            implicit=download_tool,
+            variables={
+                "tool": "delink",
+                "tag": config.delink_tag,
+            },
+        )
+    elif config.platform not in [Platform.PS2, Platform.WIN32]:
         sys.exit("ProjectConfig.dtk_tag missing")
+
+    
 
     if config.objdiff_path is not None and config.objdiff_path.is_file():
         objdiff = config.objdiff_path
@@ -683,6 +717,8 @@ def generate_build_ninja(
                 "tool": "ppc_binutils",
                 "tag": config.binutils_tag,
             }
+    elif config.platform == Platform.WIN32:
+        binutils = Path()
     else:
         sys.exit("ProjectConfig.binutils_tag missing")
 
@@ -697,9 +733,13 @@ def generate_build_ninja(
 
     n.newline()
 
-    download_tool_inputs = [sjiswrap, wrapper, compilers, binutils, objdiff]
+    download_tool_inputs = [wrapper, compilers, objdiff]
+    if config.platform == Platform.GC_WII:
+        download_tool_inputs.append(sjiswrap)
     if config.platform != Platform.PS2:
         download_tool_inputs.append(dtk)
+    if config.platform != Platform.WIN32:
+        download_tool_inputs.append(binutils)
     ###
     # Helper rule for downloading all tools
     ###
@@ -726,6 +766,22 @@ def generate_build_ninja(
     # MWCC with UTF-8 to Shift JIS wrapper
     mwcc_sjis_cmd = f"{wrapper_cmd}{sjiswrap} {mwcc} $cflags -MMD -c $in -o $basedir"
     mwcc_sjis_implicit: List[Optional[Path]] = [*mwcc_implicit, sjiswrap]
+
+    # MWCC for precompiled headers
+    mwcc_pch_cmd = f"{wrapper_cmd}{mwcc} $cflags -MMD -c $in -o $basedir -precompile $basefilestem.mch"
+    mwcc_pch_implicit: List[Optional[Path]] = [*mwcc_implicit]
+
+    # MWCC for precompiled headers with UTF-8 to Shift JIS wrapper
+    mwcc_pch_sjis_cmd = f"{wrapper_cmd}{sjiswrap} {mwcc} $cflags -MMD -c $in -o $basedir -precompile $basefilestem.mch"
+    mwcc_pch_sjis_implicit: List[Optional[Path]] = [*mwcc_implicit, sjiswrap]
+
+    # MWCC with extab post-processing
+    mwcc_extab_cmd = (
+        f'{CHAIN}{mwcc_cmd} && {dtk} extab clean --padding "$extab_padding" $out $out'
+    )
+    mwcc_extab_implicit: List[Optional[Path]] = [*mwcc_implicit, dtk]
+    mwcc_sjis_extab_cmd = f'{CHAIN}{mwcc_sjis_cmd} && {dtk} extab clean --padding "$extab_padding" $out $out'
+    mwcc_sjis_extab_implicit: List[Optional[Path]] = [*mwcc_sjis_implicit, dtk]
 
     # MSVC
     msvc = compiler_path / "cl.exe"
@@ -791,7 +847,7 @@ def generate_build_ninja(
         # As a workaround for https://github.com/encounter/dtk-template/issues/51
         # include macros.inc directly as an implicit dependency
         gnu_as_implicit.append(build_path / "include" / "macros.inc")
-    elif config.platform == Platform.X360:
+    elif config.platform in [Platform.X360, Platform.WIN32]:
         # MSVC linker
         msvc_link = compiler_path / "link.exe"
         ld_cmd = f"{ld_prefix}{wrapper_cmd}{msvc_link} $ldflags /OUT:$out @$out.rsp"
@@ -831,11 +887,19 @@ def generate_build_ninja(
         transform_dep = config.tools_dir / "transform_dep.py"
         mwcc_cmd += f" && $python {transform_dep} $basefile.d $basefile.d"
         mwcc_sjis_cmd += f" && $python {transform_dep} $basefile.d $basefile.d"
+        mwcc_pch_cmd += f" && $python {transform_dep} $basefile.d $basefile.d"
+        mwcc_pch_sjis_cmd += f" && $python {transform_dep} $basefile.d $basefile.d"
+        mwcc_extab_cmd += f" && $python {transform_dep} $basefile.d $basefile.d"
+        mwcc_sjis_extab_cmd += f" && $python {transform_dep} $basefile.d $basefile.d"
+        ngccc_cmd += f" && $python {transform_dep} $basefile.d $basefile.d"
+        ee_gcc_cmd += f" && $python {transform_dep} $basefile.d $basefile.d"
         mwcc_implicit.append(transform_dep)
         mwcc_sjis_implicit.append(transform_dep)
-        ngccc_cmd += f" && $python {transform_dep} $basefile.d $basefile.d"
+        mwcc_pch_implicit.append(transform_dep)
+        mwcc_pch_sjis_implicit.append(transform_dep)
+        mwcc_extab_implicit.append(transform_dep)
+        mwcc_sjis_extab_implicit.append(transform_dep)
         ngccc_implicit.append(transform_dep)
-        ee_gcc_cmd += f" && $python {transform_dep} $basefile.d $basefile.d"
         ee_gcc_implicit.append(transform_dep)
 
     n.comment("Link ELF file")
@@ -908,7 +972,7 @@ def generate_build_ninja(
     )
     n.newline()
 
-    if config.platform != Platform.X360:
+    if config.platform not in [Platform.X360, Platform.WIN32]:
         n.comment("Assemble asm")
         n.rule(
             name="as",
@@ -1081,6 +1145,13 @@ def generate_build_ninja(
             n.newline()
 
     link_outputs: List[Path] = []
+
+    # Splat emits one assembly file for each PS2 subsegment.
+    def ps2_generated_asm_path(obj_name: str) -> Path:
+        source_path = Path(obj_name)
+        asm_name = source_path.with_suffix(source_path.suffix + ".s")
+        return build_path / "asm" / asm_name
+
     if build_config:
         link_steps: List[LinkStep] = []
         used_compiler_versions: Set[str] = set()
@@ -1130,6 +1201,14 @@ def generate_build_ninja(
                 return obj.src_obj_path
             source_added.add(obj.src_obj_path)
 
+            # The old Windows EE-GCC preprocessor accepts a source path with
+            # backslashes, but does not use them when deriving the directory
+            # for quoted includes. Keep the native paths in Ninja's graph,
+            # while passing PS2 source inputs with POSIX separators.
+            ninja_src_path: Union[Path, str] = (
+                src_path.as_posix() if config.platform == Platform.PS2 else src_path
+            )
+
             cflags = obj.options["cflags"]
             extra_cflags = obj.options["extra_cflags"]
             toolchain_version: str = obj.options["toolchain_version"]
@@ -1138,7 +1217,11 @@ def generate_build_ninja(
             ) or toolchain_version.startswith("Wii")
 
             def is_lang_flag(flag):
-                return flag.startswith("-lang") or flag in ("/TP", "/TC", "/Tp", "/Tc")
+                return (
+                    flag.startswith("-lang")
+                    or flag.startswith("-x")
+                    or flag in ("/TP", "/TC", "/Tp", "/Tc")
+                )
 
             # Add appropriate language flag if it doesn't exist already
             # Added directly to the source so it flows to other generation tasks
@@ -1148,7 +1231,7 @@ def generate_build_ninja(
                 # Ensure extra_cflags is a unique instance,
                 # and insert into there to avoid modifying shared sets of flags
                 extra_cflags = obj.options["extra_cflags"] = list(extra_cflags)
-                if config.platform != Platform.X360:
+                if config.platform not in [Platform.X360, Platform.WIN32]:
                     if is_mwcc:
                         if file_is_cpp(src_path):
                             extra_cflags.insert(0, "-lang=c++")
@@ -1170,15 +1253,39 @@ def generate_build_ninja(
             cflags_str = make_flags_str(all_cflags)
             used_compiler_versions.add(toolchain_version)
 
+            lib_name = obj.options["lib"]
+            variables = {
+                "toolchain_version": Path(obj.options["toolchain_version"]),
+                "cflags": cflags_str,
+                "basedir": os.path.dirname(obj.src_obj_path),
+                "basefile": obj.src_obj_path.with_suffix(""),
+            }
+
             if config.platform == Platform.GC_WII:
-                # Add ProDG build rule
+                # Add MWCC/ProDG build rule
                 if is_mwcc:
                     build_rule = "mwcc"
                     build_implicit = mwcc_implicit
+
+                    if obj.options["shift_jis"] and obj.options["extab_padding"] is not None:
+                        build_rule = "mwcc_sjis_extab"
+                        build_implicit = mwcc_sjis_extab_implicit
+                        variables["extab_padding"] = "".join(
+                            f"{i:02x}" for i in obj.options["extab_padding"]
+                        )
+                    elif obj.options["shift_jis"]:
+                        build_rule = "mwcc_sjis"
+                        build_implicit = mwcc_sjis_implicit
+                    elif obj.options["extab_padding"] is not None:
+                        build_rule = "mwcc_extab"
+                        build_implicit = mwcc_extab_implicit
+                        variables["extab_padding"] = "".join(
+                            f"{i:02x}" for i in obj.options["extab_padding"]
+                        )
                 else:
                     build_rule = "prodg"
                     build_implicit = ngccc_implicit
-            elif config.platform == Platform.X360:
+            elif config.platform in [Platform.X360, Platform.WIN32]:
                 # Add MSVC build rule
                 build_rule = "msvc"
                 build_implicit = msvc_implicit
@@ -1187,18 +1294,11 @@ def generate_build_ninja(
                 build_rule = "ee-gcc"
                 build_implicit = ee_gcc_implicit
 
-            lib_name = obj.options["lib"]
-            variables = {
-                "toolchain_version": Path(obj.options["toolchain_version"]),
-                "cflags": cflags_str,
-                "basedir": os.path.dirname(obj.src_obj_path),
-                "basefile": obj.src_obj_path.with_suffix(""),
-            }
             n.comment(f"{obj.name}: {lib_name} (linked {obj.completed})")
             n.build(
                 outputs=obj.src_obj_path,
                 rule=build_rule,
-                inputs=src_path,
+                inputs=ninja_src_path,
                 variables=variables,
                 implicit=build_implicit,
                 order_only="pre-compile",
@@ -1223,7 +1323,7 @@ def generate_build_ninja(
                 n.build(
                     outputs=obj.ctx_path,
                     rule="decompctx",
-                    inputs=src_path,
+                    inputs=ninja_src_path,
                     implicit=decompctx,
                     variables={
                         "includes": includes,
@@ -1276,7 +1376,10 @@ def generate_build_ninja(
 
             # Add assembler build rule
             lib_name = obj.options["lib"]
-            n.comment(f"{obj.name}: {lib_name} (linked {obj.completed})")
+            if lib_name is None:
+                n.comment(f"{obj.name}: generated assembly")
+            else:
+                n.comment(f"{obj.name}: {lib_name} (linked {obj.completed})")
             n.build(
                 outputs=obj_path,
                 rule="as",
@@ -1292,10 +1395,29 @@ def generate_build_ninja(
 
             return obj_path
 
+        def ps2_generated_asm_build(
+            obj_name: str, obj_path: Path
+        ) -> Optional[Path]:
+            generated_obj = Object(False, obj_name)
+            generated_obj.options["add_to_all"] = True
+            generated_obj.options["asflags"] = config.asflags
+            return asm_build(
+                generated_obj,
+                ps2_generated_asm_path(obj_name),
+                obj_path,
+            )
+
         def add_unit(build_obj: BuildConfigUnit, link_step: LinkStep):
             obj_path, obj_name = build_obj["object"], build_obj["name"]
             obj = objects.get(obj_name)
             if obj is None:
+                if config.platform == Platform.PS2 and obj_path is not None:
+                    built_obj_path = ps2_generated_asm_build(
+                        obj_name, Path(obj_path)
+                    )
+                    if built_obj_path is not None:
+                        link_step.add(built_obj_path)
+                        return
                 if config.warn_missing_config and not build_obj["autogenerated"]:
                     print(f"Missing configuration for {obj_name}")
                 if obj_path is not None:
@@ -1325,9 +1447,15 @@ def generate_build_ninja(
                 else:
                     sys.exit(f"Unknown source file type {obj.src_path}")
             else:
-                if config.warn_missing_source or obj.completed:
-                    print(f"Missing source file {obj.src_path}")
-                link_built_obj = False
+                if config.platform == Platform.PS2 and obj_path is not None:
+                    built_obj_path = ps2_generated_asm_build(
+                        obj_name, Path(obj_path)
+                    )
+                    link_built_obj = built_obj_path is not None
+                else:
+                    if config.warn_missing_source or obj.completed:
+                        print(f"Missing source file {obj.src_path}")
+                    link_built_obj = False
 
             # Assembly overrides
             if (
@@ -1392,7 +1520,7 @@ def generate_build_ninja(
         # Link
         ###
         # TODO
-        if config.platform != Platform.X360:
+        if config.platform not in [Platform.X360, Platform.WIN32]:
             for step in link_steps:
                 step.write(n)
                 link_outputs.append(step.output())
@@ -1514,7 +1642,7 @@ def generate_build_ninja(
                 order_only="post-build",
             )
             n.newline()
-        elif config.platform == Platform.X360:
+        elif config.platform in [Platform.X360, Platform.WIN32]:
             # TODO
             n.comment("Check hash")
             ok_path = build_path / "ok"
@@ -1694,8 +1822,16 @@ def generate_build_ninja(
     ###
     # Split DOL/XEX
     ###
+    build_config_path = build_path / "config.json"
     if config.platform == Platform.PS2:
-        build_config_path = build_path / "config.json"
+        split_asm_outputs = None
+        if build_config is not None:
+            split_asm_outputs = list(
+                dict.fromkeys(
+                    ps2_generated_asm_path(unit["name"])
+                    for unit in build_config["units"]
+                )
+            )
         n.comment("Split ELF into relocatable objects")
         n.rule(
             name="split",
@@ -1709,11 +1845,34 @@ def generate_build_ninja(
             outputs=build_config_path,
             rule="split",
             variables={"out_dir": build_path},
+            implicit_outputs=split_asm_outputs,
+        )
+        n.newline()
+    elif config.platform == Platform.WIN32:
+        with config.config_path.open("r", encoding="utf-8") as f:
+            yaml_config = yaml.safe_load(f)
+
+        splits_path = yaml_config["splits_path"]
+        symbols_path = yaml_config["symbols_path"]
+
+        n.comment("Split exe into relocatable objects")
+        n.rule(
+            name="split",
+            command="$python tools/delink_to_config_json.py $in $out_dir",
+            description="SPLIT $in",
+            depfile="$out_dir/dep",
+            deps="gcc",
+        )
+        n.build(
+            inputs=[delink, config.config_path],
+            outputs=build_config_path,
+            rule="split",
+            implicit=[splits_path, symbols_path],
+            variables={"out_dir": build_path},
         )
         n.newline()
     else:
         what_to_split = "xex" if config.platform == Platform.X360 else "dol"
-        build_config_path = build_path / "config.json"
         n.comment(f"Split {what_to_split.upper()} into relocatable objects")
         n.rule(
             name="split",
@@ -1865,6 +2024,7 @@ def generate_objdiff_config(
         "PS2/ee-gcc2.9-991111": "ee-gcc2.9-991111",
         "X360/14.00.2110": "msvc_ppc_14.00.2110",
         "X360/16.00.11886.00": "msvc_ppc_16.00.11886.00",
+        "Win32/7.1": "msvc7.1",
     }
 
     def add_unit(
@@ -2237,7 +2397,7 @@ def generate_compile_commands(
                 return False
 
             for flag in flags:
-                if config.platform == Platform.X360:
+                if config.platform in [Platform.X360, Platform.WIN32]:
                     if flag.startswith("/I "):
                         cflags.extend(flag.split(" "))
                     else:
@@ -2278,6 +2438,7 @@ def generate_compile_commands(
                 "clang-cl.exe",
                 "--target=powerpc-eabi",
                 *cflags,
+                "/c",
                 obj.src_path,
                 "/Fo",
                 obj.src_obj_path,
@@ -2293,6 +2454,16 @@ def generate_compile_commands(
                 "-c",
                 obj.src_path,
                 "-o",
+                obj.src_obj_path,
+            ]
+        elif config.platform == Platform.WIN32:
+             unit_config_args = [
+                "clang-cl.exe",
+                "--target=i686-pc-windows-msvc",
+                *cflags,
+                "/c",
+                obj.src_path,
+                "/Fo",
                 obj.src_obj_path,
             ]
         add_compile_command(obj.src_path, obj.src_obj_path, unit_config_args)
@@ -2365,6 +2536,7 @@ def calculate_progress(config: ProjectConfig) -> None:
         total_code = measures.get("total_code", 0)
         matched_code = measures.get("matched_code", 0)
         matched_code_percent = measures.get("matched_code_percent", 0)
+        fuzzy_match_percent = measures.get("fuzzy_match_percent", 0)
         total_data = measures.get("total_data", 0)
         matched_data = measures.get("matched_data", 0)
         matched_data_percent = measures.get("matched_data_percent", 0)
@@ -2375,7 +2547,7 @@ def calculate_progress(config: ProjectConfig) -> None:
         complete_units = measures.get("complete_units", 0)
 
         progress_print(
-            f"  {name}: {matched_code_percent:.2f}% matched, {complete_code_percent:.2f}% linked ({complete_units} / {total_units} files)"
+            f"  {name}: {fuzzy_match_percent:.2f}% fuzzy, {matched_code_percent:.2f}% matched, {complete_code_percent:.2f}% linked ({complete_units} / {total_units} files)"
         )
         progress_print(
             f"    Code: {matched_code} / {total_code} bytes ({matched_functions} / {total_functions} functions)"

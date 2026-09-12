@@ -214,6 +214,10 @@ class GenericAccessor : private Instance {
         ATTRIB_CODEGEN_GETVALIDATTRIB(StringKey, 0x09925106, index, val);
     }
 
+    const Attrib::StringKey &DESCRIPTION(unsigned int index) const {
+        ATTRIB_CODEGEN_GETVALUEINDEXED(StringKey, 0x09925106, index);
+    }
+
     unsigned int Num_DESCRIPTION() const {
         ATTRIB_CODEGEN_GETLENGTH(0x09925106);
     }

@@ -12,13 +12,17 @@
 #include <ppcintrinsics.h>
 #elif defined(EA_PLATFORM_PLAYSTATION2)
 #include "Speed/PSX2/bWare/Src/ee/include/eetypes.h"
+#elif defined(EA_PLATFORM_WIN32)
+// TODO
 #else
 #error Choose a platform
 #endif
 
-typedef int32 bFix;
-typedef unsigned short bAngle;
-typedef short bSignedAngle;
+static const float PI = M_PI; // Decl: 60
+
+typedef int32 bFix;            // Decl: 71
+typedef unsigned short bAngle; // Decl: 143
+typedef short bSignedAngle;    // Decl: 144
 
 struct bPolar {
     float r;
@@ -93,6 +97,8 @@ inline float bSqrt(float x) {
 // TODO
 #elif defined(EA_PLATFORM_PLAYSTATION2)
 // TODO
+#elif defined(EA_PLATFORM_WIN32)
+// TODO
 #else
 #error Choose a platform
 #endif
@@ -101,10 +107,10 @@ inline float bSqrt(float x) {
 }
 
 inline int bMin(int a, int b) {
-    if (b < a) {
-        return b;
-    } else {
+    if (a < b) {
         return a;
+    } else {
+        return b;
     }
 }
 
@@ -189,7 +195,7 @@ inline float bCeil(float a) {
 
 // TODO is this order correct?
 inline int bClamp(int a, int MINIMUM, int MAXIMUM) {
-    return bMin(bMax(a, MINIMUM), MAXIMUM);
+    return bMin(MAXIMUM, bMax(a, MINIMUM));
 }
 
 inline float bClamp(float a, float MINIMUM, float MAXIMUM) {
@@ -201,7 +207,7 @@ inline bAngle bDegToAng(float degrees) {
 }
 
 inline bAngle bRadToAng(float radians) {
-    return static_cast<int>(radians * (65536.0f / (static_cast<float>(M_TWOPI))));
+    return static_cast<int>(radians * (65536.0f / (2 * PI)));
 }
 
 inline float bAngToRad(bAngle angle) {
@@ -209,7 +215,7 @@ inline float bAngToRad(bAngle angle) {
 }
 
 inline float bDegToRad(float degrees) {
-    return degrees * 0.017453294f;
+    return degrees * (2 * PI / 360.0f);
 }
 
 inline float bAngToDeg(bAngle angle) {
@@ -220,7 +226,9 @@ inline float bCos(float angle) {
     return bSin(angle + bDegToRad(90.0f));
 }
 
-inline float bRadToDeg(float radians) {}
+inline float bRadToDeg(float radians) {
+    return radians * (180.0f / PI);
+}
 
 inline int bEqual(float a, float b, float epsilon) {
     return static_cast<int>(bAbs(a - b) <= epsilon);
@@ -270,10 +278,6 @@ struct bVector2 {
     bVector2 &operator=(const bVector2 &v);
 
     // bVector2(const bVector2 &v) {} // compiler generated
-
-    // bVector2 operator+() {} // not present in dwarf
-
-    // float &operator[](int index) {} // not present in dwarf
 };
 
 bVector2 *bNormalize(bVector2 *dest, const bVector2 *v);
@@ -349,6 +353,18 @@ inline bVector2 bVector2::operator-(const bVector2 &v) const {
     float _x = x1 - x2;
     float _y = y1 - y2;
     return bVector2(_x, _y);
+}
+
+inline bVector2 bAdd(const bVector2 &v1, const bVector2 &v2) {
+    bVector2 dest;
+    bAdd(&dest, &v1, &v2);
+    return dest;
+}
+
+inline bVector2 bSub(const bVector2 &v1, const bVector2 &v2) {
+    bVector2 dest;
+    bSub(&dest, &v1, &v2);
+    return dest;
 }
 
 inline bVector2 *bScale(bVector2 *dest, const bVector2 *v, float scale) {
@@ -566,9 +582,12 @@ inline bVector3 &bVector3::operator-=(const bVector3 &v) {
 }
 
 inline bVector3 *bNeg(bVector3 *dest, const bVector3 *v) {
-    float x;
-    float y;
-    float z;
+    float x = -v->x;
+    float y = -v->y;
+    float z = -v->z;
+
+    bFill(dest, x, y, z);
+    return dest;
 }
 
 inline float bDot(const bVector3 *v1, const bVector3 *v2) {
@@ -626,6 +645,9 @@ inline bVector3 bScale(const bVector3 &v1, const bVector3 &v2) {
 
 inline bVector3 bScaleAdd(const bVector3 &v1, const bVector3 &v2, float scale) {
     bVector3 dest;
+
+    bScaleAdd(&dest, &v1, &v2, scale);
+    return dest;
 }
 
 inline bVector3 bNormalize(const bVector3 &v) {
@@ -674,24 +696,17 @@ struct ALIGN_16 bVector4 {
 
     bVector4 &operator=(const bVector4 &v);
 
-    bVector4 operator+() {}
-
-    bVector4 operator-() {
-        float x1;
-        float y1;
-        float z1;
-        float w1;
-    }
-
-    bVector4 &operator+=(const bVector4 &v);
+    bVector4 operator-(const bVector4 &v);
 
     bVector4 &operator-=(const bVector4 &v) {}
+
+    inline bVector4 &operator+=(const bVector4 &v);
 
     bVector4 &operator*=(float scale);
 
     bVector4 &operator/=(float inv_scale) {}
 
-    int operator==(const bVector4 &v) const {}
+    int operator==(const bVector4 &v) {}
 
     float &operator[](int index) {
         return reinterpret_cast<float *>(this)[index];
@@ -808,10 +823,17 @@ inline bVector4 *bScale(bVector4 *dest, const bVector4 *v, float scale) {
 }
 
 inline bVector4 *bScale(bVector4 *dest, const bVector4 *v1, const bVector4 *v2) {
-    float x;
-    float y;
-    float z;
-    float w;
+    float x = v1->x;
+    float y = v1->y;
+    float z = v1->z;
+    float w = v1->w;
+
+    dest->x = x * v2->x;
+    dest->y = y * v2->y;
+    dest->z = z * v2->z;
+    dest->w = w * v2->w;
+
+    return dest;
 }
 
 inline bVector4 *bMin(bVector4 *dest, const bVector4 *v1, const bVector4 *v2) {}
@@ -1019,6 +1041,7 @@ inline bMatrix4 *bCopy(bMatrix4 *dest, const bMatrix4 *v) {
         : "=o"(dest->v0), "=o"(dest->v1), "=o"(dest->v2), "=o"(dest->v3)
         : "o"(v->v0), "o"(v->v1), "o"(v->v2), "o"(v->v3)
         : "memory");
+#elif defined(EA_PLATFORM_WIN32)
 #else
 #error Choose a platform
 #endif
@@ -1044,6 +1067,7 @@ inline void bIdentity(bMatrix4 *a) {
     asm("sq   %1, %0" : "=o"(a->v1) : "r"(t));
     asm("pextlw %0, %0, $0" : "+r"(t));
     asm("sq   %1, %0" : "=o"(a->v3) : "r"(t));
+#elif defined(EA_PLATFORM_WIN32)
 #else
 #error Choose a platform
 #endif
@@ -1103,7 +1127,7 @@ struct bQuaternion {
         this->w = _w;
     }
 
-    bQuaternion(const bMatrix4 &m);
+    bQuaternion(const bMatrix4 &tm);
 
     void GetMatrix(bMatrix4 *mat) const {
         return this->GetMatrix(*mat);
@@ -1121,12 +1145,8 @@ struct bQuaternion {
 
 void bMatrixToQuaternion(bQuaternion &quat, const bMatrix4 &m);
 
-inline void bMatrixToQuaternion(bQuaternion *quat, const bMatrix4 *m) {
-    return bMatrixToQuaternion(*quat, *m);
-}
-
-inline bQuaternion::bQuaternion(const bMatrix4 &m) {
-    bMatrixToQuaternion(*this, m);
+inline bQuaternion::bQuaternion(const bMatrix4 &tm) {
+    bMatrixToQuaternion(*this, tm);
 }
 
 inline void bMemZero(void *dest, unsigned int size) {

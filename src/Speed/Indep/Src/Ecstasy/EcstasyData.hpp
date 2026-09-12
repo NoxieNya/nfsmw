@@ -217,7 +217,9 @@ class eLightContext;
 
 class eViewPlatInfo;
 
+// TODO: move
 // total size: 0x4
+// Decl: Ecstasy.hpp:725
 class eViewPlatInterface {
   public:
     eViewPlatInfo *GetPlatInfo() {

@@ -1,31 +1,9 @@
 #ifndef MISC_ATTRIB_ASSET_H
 #define MISC_ATTRIB_ASSET_H
 
-#ifdef EA_PRAGMA_ONCE_SUPPORTED
-#pragma once
-#endif
-
 #include "Speed/Indep/Tools/AttribSys/Runtime/AttribLoadAndGo.h"
 
-// TODO is this right to be here?
-
-namespace Attrib {
-
-typedef HashInt AssetID;
-typedef HashInt ExportID;
-typedef HashInt TypeID;
-
-class IGarbageCollector {
-  public:
-    virtual void ReleaseData(AssetID id, void *data, size_t bytes) = 0;
-};
-
-}; // namespace Attrib
-
-class VaultMap : public std::map<unsigned int, Attrib::Vault *> {
-  public:
-    VaultMap();
-};
+class VaultMap : public std::map<unsigned int, Attrib::Vault *> {};
 
 class FileRecord {
   public:
@@ -40,10 +18,7 @@ class FileRecord {
     size_t mBytes;          // offset 0x8, size 0x4
 };
 
-class FileMap : public std::map<Attrib::AssetID, FileRecord> {
-  public:
-    FileMap();
-};
+class FileMap : public std::map<Attrib::AssetID, FileRecord> {};
 
 bool AddDepFile(const char *filename, void *data, size_t bytes);
 bool RemoveDepFile(const char *filename);
